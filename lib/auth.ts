@@ -1,5 +1,5 @@
 import { NextAuthOptions, getServerSession } from 'next-auth'
-import GoogleProvider from 'next-auth/providers/google'
+import CredentialsProvider from 'next-auth/providers/credentials'
 
 export const PLANS = {
   starter: { label: 'Starter', price: 6.99, priceId: process.env.STRIPE_PRICE_STARTER ?? '', ais: ['claude', 'gemini'], color: '#1A73E8' },
@@ -10,38 +10,52 @@ export const PLANS = {
 export type PlanKey = keyof typeof PLANS
 
 export const authOptions: NextAuthOptions = {
-  get adapter() {
-    const { PrismaAdapter } = require('@next-auth/prisma-adapter')
-    const { prisma } = require('./prisma')
-    return PrismaAdapter(prisma)
-  },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? 'placeholder',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? 'placeholder',
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null
+
+        const { prisma } = require('./prisma')
+        const bcrypt = require('bcryptjs')
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        })
+
+        if (!user || !user.password) return null
+
+        const valid = await bcrypt.compare(credentials.password, user.password)
+        if (!valid) return null
+
+        return { id: user.id, email: user.email, name: user.name }
+      },
     }),
   ],
+  session: { strategy: 'jwt' },
   pages: { signIn: '/login', error: '/login' },
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user && token) {
         const { prisma } = require('./prisma')
-        ;(session.user as any).id = user.id
-        const dbUser = await prisma.user.findUnique({ where: { id: user.id } })
+        ;(session.user as any).id = token.id as string
+        const dbUser = await prisma.user.findUnique({ where: { id: token.id as string } })
         ;(session.user as any).plan = dbUser?.plan ?? 'none'
         if (dbUser?.email === process.env.ADMIN_EMAIL) {
           ;(session.user as any).plan = 'admin'
         }
       }
       return session
-    },
-  },
-  events: {
-    async createUser({ user }) {
-      if (user.email === process.env.ADMIN_EMAIL) {
-        const { prisma } = require('./prisma')
-        await prisma.user.update({ where: { id: user.id }, data: { plan: 'admin', subStatus: 'active' } })
-      }
     },
   },
   secret: process.env.NEXTAUTH_SECRET ?? 'fallback-secret',
