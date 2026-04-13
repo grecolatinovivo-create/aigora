@@ -125,9 +125,10 @@ interface AigoraChatProps {
   allowedAis?: string[]
   userPlan?: string
   userName?: string
+  userEmail?: string
 }
 
-export default function AigoraChat({ allowedAis, userPlan, userName: propUserName }: AigoraChatProps) {
+export default function AigoraChat({ allowedAis, userPlan, userName: propUserName, userEmail }: AigoraChatProps) {
   const AI_ORDER = allowedAis?.length ? allowedAis : AI_ORDER_DEFAULT
 
   const [phase, setPhase] = useState<ChatPhase>('start')
@@ -216,6 +217,69 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     return fullText
   }, [typewriteText])
 
+  const runFactCheck = useCallback(async (speakerAiId: string): Promise<void> => {
+    if (stopRequestedRef.current) return
+    // Scegli un interruptore casuale diverso dal parlante
+    const others = AI_ORDER.filter(id => id !== speakerAiId)
+    const interruptorId = others[Math.floor(Math.random() * others.length)]
+    const interruptorName = AI_NAMES[interruptorId]
+    const speakerName = AI_NAMES[speakerAiId]
+
+    let fullText = ''
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          history: chatHistoryRef.current,
+          aiId: interruptorId,
+          action: 'factcheck',
+          interruptorId,
+          speakerName,
+        }),
+      })
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        for (const line of decoder.decode(value, { stream: true }).split('\n')) {
+          if (line.startsWith('data: ')) {
+            const d = line.slice(6).trim()
+            if (d === '[DONE]') break
+            try { fullText += JSON.parse(d).text } catch {}
+          }
+        }
+      }
+    } catch (err) { console.error('factcheck error', err); return }
+
+    // Se l'AI interruptore non ha trovato errori, non mostrare nulla
+    const trimmed = fullText.trim()
+    if (!trimmed || trimmed.toUpperCase().startsWith('PASS')) return
+
+    // Mostra l'interruzione come messaggio nella chat
+    const msgId = `interrupt-${Date.now()}`
+    setMessages(prev => [...prev, {
+      id: msgId,
+      aiId: interruptorId,
+      name: `${interruptorName} ✋`,
+      content: '',
+      isStreaming: true,
+    }])
+    // typewrite
+    await new Promise<void>(resolve => {
+      let i = 0
+      const iv = setInterval(() => {
+        if (stopRequestedRef.current) { clearInterval(iv); resolve(); return }
+        if (i >= trimmed.length) { clearInterval(iv); resolve(); return }
+        i++
+        setMessages(prev => prev.map(m => m.id === msgId ? { ...m, content: trimmed.slice(0, i) } : m))
+      }, 36)
+    })
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isStreaming: false, content: trimmed } : m))
+    chatHistoryRef.current.push({ name: `${interruptorName} (interruzione)`, content: trimmed })
+  }, [AI_ORDER])
+
   const runDebate = useCallback(async (startAi: string) => {
     let currentAi = startAi
     stopRequestedRef.current = false
@@ -230,7 +294,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const detected = detectNextAi(text, AI_ORDER)
       const nextAi = detected || getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
 
-      if (aiTurnCountRef.current % 3 === 0) {
+      // Fact-check ogni 2 turni AI
+      if (aiTurnCountRef.current % 2 === 0 && !stopRequestedRef.current) {
+        await runFactCheck(currentAi)
+      }
+
+      if (aiTurnCountRef.current % 4 === 0) {
         waitingForUserRef.current = true
         setWaitingForUser(true)
         stopRequestedRef.current = true
@@ -239,7 +308,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       await new Promise(r => setTimeout(r, 320))
       currentAi = nextAi
     }
-  }, [streamAiResponse])
+  }, [streamAiResponse, runFactCheck])
 
   const handleStart = () => {
     if (!question.trim()) return
@@ -327,7 +396,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-medium text-purple-300 border border-purple-500/30" style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>
               <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
-              MVP — Claude interpreta tutte e 4 le voci
+              4 intelligenze artificiali · dibattito in tempo reale
             </div>
             <h1 className="text-6xl font-black text-white mb-3 tracking-tight leading-none">
               Ai<span style={{ color: '#A78BFA' }}>GOR</span>À
