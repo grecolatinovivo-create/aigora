@@ -165,18 +165,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     } catch {}
   }, [])
 
+  const currentChatIdRef = useRef(`chat-${Date.now()}`)
+
   const saveCurrentChat = useCallback(() => {
     if (messagesRef.current.length < 2) return
     const title = messagesRef.current.find(m => m.isUser)?.content?.slice(0, 60) ?? 'Chat'
     const chat = {
-      id: `chat-${Date.now()}`,
+      id: currentChatIdRef.current,
       title,
       date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
       messages: messagesRef.current,
       history: chatHistoryRef.current,
     }
     setSavedChats(prev => {
-      const updated = [chat, ...prev].slice(0, 30)
+      const filtered = prev.filter(c => c.id !== currentChatIdRef.current)
+      const updated = [chat, ...filtered].slice(0, 30)
       try { localStorage.setItem('aigora_chats', JSON.stringify(updated)) } catch {}
       return updated
     })
@@ -201,7 +204,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   useEffect(() => {
     messagesRef.current = messages
     scrollToBottom()
-  }, [messages, thinkingAi, waitingForUser, scrollToBottom])
+    if (messages.length >= 2) saveCurrentChat()
+  }, [messages, thinkingAi, waitingForUser, scrollToBottom, saveCurrentChat])
 
   const typewriteText = useCallback((msgId: string, text: string): Promise<void> => {
     return new Promise(resolve => {
@@ -353,6 +357,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handleStart = () => {
     if (!question.trim()) return
+    currentChatIdRef.current = `chat-${Date.now()}`
     chatHistoryRef.current = [{ name: historyName, content: question }]
     usedAisRef.current = []
     aiTurnCountRef.current = 0
