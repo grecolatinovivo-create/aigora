@@ -392,6 +392,26 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12 mobile-start">
         <div className="w-full max-w-lg scale-in">
 
+          {/* Navbar */}
+          <div className="flex items-center justify-between mb-8">
+            <button
+              onClick={() => window.location.href = '/dashboard'}
+              title="Cronologia"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
+              style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+              <span style={{ fontSize: 15 }}>🕐</span>
+              <span>Cronologia</span>
+            </button>
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              title="Profilo"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
+              style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+              <span style={{ fontSize: 15 }}>👤</span>
+              <span>{userEmail ?? 'Profilo'}</span>
+            </button>
+          </div>
+
           {/* Hero */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-medium text-purple-300 border border-purple-500/30" style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>

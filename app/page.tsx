@@ -18,5 +18,5 @@ export default async function Home() {
   }
   const allowedAis = AI_BY_PLAN[plan] ?? ['claude', 'gemini']
 
-  return <AigoraChat allowedAis={allowedAis} userPlan={plan} userName={session.user?.name ?? ''} />
+  return <AigoraChat allowedAis={allowedAis} userPlan={plan} userName={session.user?.name ?? ''} userEmail={session.user?.email ?? ''} />
 }
