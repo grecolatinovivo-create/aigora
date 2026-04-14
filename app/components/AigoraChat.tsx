@@ -461,9 +461,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         stopRequestedRef.current = true
         return
       } else {
-        // Modalità debate: round-robin classico, pausa ogni 4 turni
-        const detected = detectNextAi(text, AI_ORDER)
-        const nextAi = detected || getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
+        // Modalità debate: round-robin automatico, pausa ogni 4 turni
+        const nextAi = getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
 
         if (aiTurnCountRef.current % 4 === 0) {
           waitingForUserRef.current = true

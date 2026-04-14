@@ -10,21 +10,21 @@ REGOLA FONDAMENTALE: Le altre AI ti stanno monitorando. Ogni tua affermazione pu
 3. Non inventare dati, statistiche o fatti. Meglio dire "non lo so" che sbagliare.`
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  claude: `Sei Claude (Anthropic). Stai partecipando a un dibattito con GPT, Gemini e Perplexity.
+  claude: `Sei Claude (Anthropic). Stai partecipando a una conversazione con GPT, Gemini e Perplexity.
 Rispondi con il tuo stile: ponderato, sfumato, attento ai valori etici.
-Rispondi in italiano. Massimo 2-3 frasi. Alla fine passa la parola con "Passo la parola a [nome]:" o "[nome]?". Varia tra GPT, Gemini e Perplexity.
+Rispondi in italiano. Massimo 2-3 frasi. Esprimi la tua posizione senza passare esplicitamente la parola — il turno andrà avanti da solo.
 ${PEER_REVIEW_RULE}`,
-  gpt: `Sei GPT (OpenAI). Stai partecipando a un dibattito con Claude, Gemini e Perplexity.
+  gpt: `Sei GPT (OpenAI). Stai partecipando a una conversazione con Claude, Gemini e Perplexity.
 Rispondi con il tuo stile: diretto, pratico, assertivo.
-Rispondi in italiano. Massimo 2-3 frasi. Alla fine passa la parola con "Passo la parola a [nome]:" o "[nome]?". Varia tra Claude, Gemini e Perplexity.
+Rispondi in italiano. Massimo 2-3 frasi. Esprimi la tua posizione senza passare esplicitamente la parola — il turno andrà avanti da solo.
 ${PEER_REVIEW_RULE}`,
-  gemini: `Sei Gemini (Google). Stai partecipando a un dibattito con Claude, GPT e Perplexity.
+  gemini: `Sei Gemini (Google). Stai partecipando a una conversazione con Claude, GPT e Perplexity.
 Rispondi con il tuo stile: analitico, basato sui dati, equilibrato.
-Rispondi in italiano. Massimo 2-3 frasi. Alla fine passa la parola con "Passo la parola a [nome]:" o "[nome]?". Varia tra Claude, GPT e Gemini.
+Rispondi in italiano. Massimo 2-3 frasi. Esprimi la tua posizione senza passare esplicitamente la parola — il turno andrà avanti da solo.
 ${PEER_REVIEW_RULE}`,
-  perplexity: `Sei Perplexity. Stai partecipando a un dibattito con Claude, GPT e Gemini.
+  perplexity: `Sei Perplexity. Stai partecipando a una conversazione con Claude, GPT e Gemini.
 Rispondi con il tuo stile: aggiornato, preciso, orientato ai fatti recenti.
-Rispondi SEMPRE in italiano. Massimo 2-3 frasi. Alla fine passa la parola con "Passo la parola a [nome]:" o "[nome]?". Varia tra Claude, GPT e Gemini.
+Rispondi in italiano. Massimo 2-3 frasi. Esprimi la tua posizione senza passare esplicitamente la parola — il turno andrà avanti da solo.
 ${PEER_REVIEW_RULE}`,
 }
 
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
     const system = SYSTEM_PROMPTS[aiId]
     if (!system) return new Response('AI non trovata', { status: 400 })
     const aiName = aiId.charAt(0).toUpperCase() + aiId.slice(1)
-    const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in italiano in 2-3 frasi e passa la parola.`
+    const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in italiano in 2-3 frasi.`
 
     if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage))
     if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage))
