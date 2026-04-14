@@ -3,6 +3,13 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 
+const AI_COLOR: Record<string, string> = {
+  claude: '#7C3AED',
+  gpt: '#10A37F',
+  gemini: '#1A73E8',
+  perplexity: '#FF6B2B',
+}
+
 export default async function AdminPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
@@ -15,29 +22,47 @@ export default async function AdminPage() {
     include: {
       chats: {
         orderBy: { updatedAt: 'desc' },
-        select: { id: true, title: true, updatedAt: true, messages: true },
+        select: { id: true, title: true, createdAt: true, updatedAt: true, messages: true },
       },
     },
   })
 
+  const totalChats = users.reduce((acc, u) => acc + u.chats.length, 0)
+  const totalMessages = users.reduce((acc, u) =>
+    acc + u.chats.reduce((a, c) => a + (Array.isArray(c.messages) ? (c.messages as any[]).length : 0), 0), 0)
+
   return (
     <div className="desktop-bg min-h-screen px-6 py-10">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black mb-1">
-            <span style={{ color: '#A78BFA' }}>A</span>
-            <span className="text-white">i</span>
-            <span style={{ color: '#A78BFA' }}>GORÀ</span>
-            <span className="text-white/40 text-xl font-normal ml-3">Admin</span>
-          </h1>
-          <p className="text-white/40 text-sm">{users.length} utenti registrati</p>
+
+        {/* Header */}
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-black mb-1">
+              <span style={{ color: '#A78BFA' }}>A</span>
+              <span className="text-white">i</span>
+              <span style={{ color: '#A78BFA' }}>GORÀ</span>
+              <span className="text-white/40 text-xl font-normal ml-3">Admin</span>
+            </h1>
+            <div className="flex gap-4 mt-2 text-sm text-white/40">
+              <span>{users.length} utenti</span>
+              <span>{totalChats} conversazioni</span>
+              <span>{totalMessages} messaggi totali</span>
+            </div>
+          </div>
+          <a href="/" className="text-white/30 text-sm hover:text-white transition-colors">← Torna all'app</a>
         </div>
 
+        {/* Utenti */}
         <div className="space-y-4">
           {users.map(user => {
-            const totalMessages = user.chats.reduce((acc, chat) => {
+            const userMsgCount = user.chats.reduce((acc, chat) => {
               const msgs = chat.messages as any[]
               return acc + (Array.isArray(msgs) ? msgs.filter((m: any) => m.isUser).length : 0)
+            }, 0)
+            const aiMsgCount = user.chats.reduce((acc, chat) => {
+              const msgs = chat.messages as any[]
+              return acc + (Array.isArray(msgs) ? msgs.filter((m: any) => !m.isUser).length : 0)
             }, 0)
 
             return (
@@ -50,16 +75,20 @@ export default async function AdminPage() {
                   <div className="flex-1 min-w-0">
                     <div className="text-white font-medium text-sm truncate">{user.email}</div>
                     <div className="text-white/40 text-xs mt-0.5">
-                      {user.name && <span className="mr-3">{user.name}</span>}
-                      Iscritto {new Date(user.createdAt).toLocaleDateString('it-IT')}
+                      {user.name && <span className="mr-2">{user.name}</span>}
+                      Iscritto {new Date(user.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.25)' }}>
-                      {(user.plan || 'none').toUpperCase()}
-                    </span>
-                    <span className="text-white/30 text-xs">{user.chats.length} chat · {totalMessages} domande</span>
+                  <div className="flex items-center gap-3 flex-shrink-0 text-right">
+                    <div>
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full block mb-1"
+                        style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.25)' }}>
+                        {(user.plan || 'none').toUpperCase()}
+                      </span>
+                      <span className="text-white/30 text-[10px]">
+                        {user.chats.length} chat · {userMsgCount} domande · {aiMsgCount} risposte AI
+                      </span>
+                    </div>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
                   </div>
                 </summary>
@@ -67,36 +96,68 @@ export default async function AdminPage() {
                 {/* Chat dell'utente */}
                 <div className="border-t border-white/8">
                   {user.chats.length === 0 ? (
-                    <p className="text-white/25 text-sm px-5 py-4">Nessuna chat salvata.</p>
-                  ) : (
-                    user.chats.map(chat => {
-                      const msgs = chat.messages as any[]
-                      const userMsgs = Array.isArray(msgs) ? msgs.filter((m: any) => m.isUser) : []
-                      return (
-                        <details key={chat.id} className="border-b border-white/5 last:border-0">
-                          <summary className="flex items-center gap-3 px-5 py-3 cursor-pointer list-none hover:bg-white/5 transition-colors">
-                            <div className="w-2 h-2 rounded-full bg-purple-400/50 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-white/70 text-[13px] truncate">{chat.title}</div>
-                              <div className="text-white/30 text-[11px]">
-                                {new Date(chat.updatedAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                {' · '}{userMsgs.length} messaggi utente
-                              </div>
+                    <p className="text-white/25 text-sm px-5 py-4">Nessuna conversazione salvata.</p>
+                  ) : user.chats.map(chat => {
+                    const msgs = chat.messages as any[]
+                    const allMsgs = Array.isArray(msgs) ? msgs : []
+                    const duration = allMsgs.length > 1
+                      ? `${allMsgs.length} messaggi`
+                      : '1 messaggio'
+
+                    return (
+                      <details key={chat.id} className="border-b border-white/5 last:border-0">
+                        <summary className="flex items-center gap-3 px-5 py-3 cursor-pointer list-none hover:bg-white/5 transition-colors">
+                          <div className="w-2 h-2 rounded-full bg-purple-400/50 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white/75 text-[13px] font-medium truncate">{chat.title}</div>
+                            <div className="flex items-center gap-3 mt-0.5">
+                              <span className="text-white/30 text-[11px]">
+                                {new Date(chat.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className="text-white/20 text-[11px]">·</span>
+                              <span className="text-white/30 text-[11px]">{duration}</span>
+                              <span className="text-white/20 text-[11px]">·</span>
+                              <span className="text-white/30 text-[11px]">
+                                Ultima modifica: {new Date(chat.updatedAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
                             </div>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
-                          </summary>
-                          {/* Messaggi dell'utente */}
-                          <div className="px-5 pb-4 pt-2 space-y-2 bg-black/20">
-                            {userMsgs.map((msg: any, i: number) => (
-                              <div key={i} className="text-[12px] text-white/60 bg-white/5 rounded-xl px-3 py-2">
+                          </div>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
+                        </summary>
+
+                        {/* Trascrizione completa */}
+                        <div className="px-5 pb-4 pt-2 space-y-2 bg-black/20">
+                          {allMsgs.map((msg: any, i: number) => (
+                            <div key={i} className={`flex gap-2.5 ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
+                              {!msg.isUser && (
+                                <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0 mt-0.5"
+                                  style={{ backgroundColor: AI_COLOR[msg.aiId] || '#6B7280' }}>
+                                  {(msg.name?.[0] || '?').toUpperCase()}
+                                </div>
+                              )}
+                              <div className={`max-w-[75%] rounded-xl px-3 py-2 text-[12px] leading-relaxed ${
+                                msg.isUser
+                                  ? 'text-white'
+                                  : 'text-white/75'
+                              }`} style={{
+                                backgroundColor: msg.isUser
+                                  ? 'rgba(124,58,237,0.4)'
+                                  : `${AI_COLOR[msg.aiId] || '#6B7280'}18`,
+                                border: msg.isUser ? 'none' : `1px solid ${AI_COLOR[msg.aiId] || '#6B7280'}30`,
+                              }}>
+                                {!msg.isUser && (
+                                  <div className="text-[10px] font-bold mb-1" style={{ color: AI_COLOR[msg.aiId] || '#A78BFA' }}>
+                                    {msg.name}
+                                  </div>
+                                )}
                                 {msg.content}
                               </div>
-                            ))}
-                          </div>
-                        </details>
-                      )
-                    })
-                  )}
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )
+                  })}
                 </div>
               </details>
             )
