@@ -71,17 +71,33 @@ function sseStream(gen: AsyncIterable<string>): Response {
   const encoder = new TextEncoder()
   const readable = new ReadableStream({
     async start(controller) {
+      // Keepalive: ogni 5s invia un commento SSE vuoto per evitare timeout del proxy/Vercel
+      const keepalive = setInterval(() => {
+        try { controller.enqueue(encoder.encode(': keepalive\n\n')) } catch {}
+      }, 5000)
       try {
         for await (const text of gen) {
+          if (!text) continue
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
         }
-      } catch (e) { console.error('Stream error:', e) }
-      controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-      controller.close()
+      } catch (e) {
+        console.error('Stream error:', e)
+      } finally {
+        clearInterval(keepalive)
+        try {
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+        } catch {}
+      }
     },
   })
   return new Response(readable, {
-    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' },
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no', // disabilita buffering Nginx/Vercel
+    },
   })
 }
 

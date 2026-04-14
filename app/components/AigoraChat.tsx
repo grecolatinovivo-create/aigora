@@ -510,26 +510,46 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setActiveAi(aiId)
 
     let fullText = ''
+    const controller = new AbortController()
+    // Timeout di sicurezza: se dopo 25s non arriva [DONE], abbandona
+    const timeout = setTimeout(() => controller.abort(), 25000)
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn', needsWebSearch: needsWebSearchRef.current }),
+        signal: controller.signal,
       })
-      const reader = res.body!.getReader()
+
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`)
+
+      const reader = res.body.getReader()
       const decoder = new TextDecoder()
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        for (const line of decoder.decode(value, { stream: true }).split('\n')) {
-          if (line.startsWith('data: ')) {
-            const d = line.slice(6).trim()
-            if (d === '[DONE]') break
-            try { fullText += JSON.parse(d).text } catch {}
-          }
+      let buffer = ''
+      let done = false
+
+      while (!done) {
+        const { done: streamDone, value } = await reader.read()
+        if (streamDone) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        // Tieni l'ultima riga incompleta nel buffer
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d === '[DONE]') { done = true; break }
+          try { fullText += JSON.parse(d).text } catch {}
         }
       }
-    } catch (err) { console.error(err); fullText = '(Errore nella risposta)' }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') console.error('streamAiResponse error:', err)
+      // Se abbiamo già del testo parziale, usalo — altrimenti messaggio di errore
+      if (!fullText) fullText = '(Risposta interrotta)'
+    } finally {
+      clearTimeout(timeout)
+    }
 
     setThinkingAi(null)
     if (stopRequestedRef.current) { setActiveAi(null); return null }
@@ -551,6 +571,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const speakerName = AI_NAMES[speakerAiId]
 
     let fullText = ''
+    const fcController = new AbortController()
+    const fcTimeout = setTimeout(() => fcController.abort(), 15000)
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -562,21 +584,31 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           interruptorId,
           speakerName,
         }),
+        signal: fcController.signal,
       })
-      const reader = res.body!.getReader()
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`)
+      const reader = res.body.getReader()
       const decoder = new TextDecoder()
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        for (const line of decoder.decode(value, { stream: true }).split('\n')) {
-          if (line.startsWith('data: ')) {
-            const d = line.slice(6).trim()
-            if (d === '[DONE]') break
-            try { fullText += JSON.parse(d).text } catch {}
-          }
+      let buffer = '', done = false
+      while (!done) {
+        const { done: sd, value } = await reader.read()
+        if (sd) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d === '[DONE]') { done = true; break }
+          try { fullText += JSON.parse(d).text } catch {}
         }
       }
-    } catch (err) { console.error('factcheck error', err); return }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') console.error('factcheck error', err)
+      return
+    } finally {
+      clearTimeout(fcTimeout)
+    }
 
     // Se l'AI interruptore non ha trovato errori, non mostrare nulla
     const trimmed = fullText.trim()
