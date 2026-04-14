@@ -154,8 +154,36 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [waitingForUser, setWaitingForUser] = useState(false)
   const [turnCount, setTurnCount] = useState(0)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [savedChats, setSavedChats] = useState<{id:string; title:string; date:string; messages: Message[]; history: {name:string;content:string}[]}[]>([])
+
+  // Carica cronologia da localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('aigora_chats')
+      if (raw) setSavedChats(JSON.parse(raw))
+    } catch {}
+  }, [])
+
+  const saveCurrentChat = useCallback(() => {
+    if (messagesRef.current.length < 2) return
+    const title = messagesRef.current.find(m => m.isUser)?.content?.slice(0, 60) ?? 'Chat'
+    const chat = {
+      id: `chat-${Date.now()}`,
+      title,
+      date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+      messages: messagesRef.current,
+      history: chatHistoryRef.current,
+    }
+    setSavedChats(prev => {
+      const updated = [chat, ...prev].slice(0, 30)
+      try { localStorage.setItem('aigora_chats', JSON.stringify(updated)) } catch {}
+      return updated
+    })
+  }, [])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<Message[]>([])
   const chatHistoryRef = useRef<{ name: string; content: string }[]>([])
   const usedAisRef = useRef<string[]>([])
   const stopRequestedRef = useRef(false)
@@ -170,7 +198,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [])
 
-  useEffect(() => { scrollToBottom() }, [messages, thinkingAi, waitingForUser, scrollToBottom])
+  useEffect(() => {
+    messagesRef.current = messages
+    scrollToBottom()
+  }, [messages, thinkingAi, waitingForUser, scrollToBottom])
 
   const typewriteText = useCallback((msgId: string, text: string): Promise<void> => {
     return new Promise(resolve => {
@@ -383,6 +414,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setSynthesis(fullText)
     setIsSynthesizing(false)
     setPhase('done')
+    saveCurrentChat()
   }
 
   const handleReset = () => {
@@ -619,9 +651,48 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   return (
     <div className="desktop-bg min-h-screen flex items-center justify-center p-6 gap-6 chat-layout relative">
 
+      {/* Pannello cronologia */}
+      <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
+        <div className="w-72 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+            <span className="text-white font-bold text-sm">Cronologia</span>
+            <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
+          </div>
+          <div className="flex-1 overflow-y-auto py-2">
+            {savedChats.length === 0 ? (
+              <p className="text-white/25 text-xs text-center mt-8 px-4">Nessuna chat salvata.<br />Le chat vengono salvate dopo la sintesi.</p>
+            ) : (
+              savedChats.map(chat => (
+                <button key={chat.id} onClick={() => {
+                  setMessages(chat.messages)
+                  chatHistoryRef.current = chat.history
+                  setPhase('running')
+                  setShowHistory(false)
+                }}
+                  className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors border-b border-white/5">
+                  <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
+                  <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
+                </button>
+              ))
+            )}
+          </div>
+          <div className="px-5 py-4 border-t border-white/8">
+            <button onClick={() => {
+              setSavedChats([])
+              localStorage.removeItem('aigora_chats')
+            }} className="text-red-400/60 hover:text-red-400 text-xs transition-colors">
+              Cancella cronologia
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay chiusura pannello */}
+      {showHistory && <div className="fixed inset-0 z-40" onClick={() => setShowHistory(false)} />}
+
       {/* Navbar desktop pagina */}
       <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-50">
-        <button onClick={() => { handleReset(); window.location.href = '/dashboard' }}
+        <button onClick={() => setShowHistory(true)}
           className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
           style={{
             backgroundColor: 'rgba(255,255,255,0.05)',
@@ -629,7 +700,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             color: 'rgba(255,255,255,0.4)',
             backdropFilter: 'blur(8px)'
           }}>
-          🕐 Cronologia
+          Cronologia
         </button>
 
         {/* Profilo dropdown */}
