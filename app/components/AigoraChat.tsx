@@ -437,7 +437,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn' }),
+        body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn', needsWebSearch: needsWebSearchRef.current }),
       })
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
@@ -529,6 +529,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   }, [AI_ORDER])
 
   const debateModeRef = useRef<'debate' | 'focused'>('debate')
+  const needsWebSearchRef = useRef(false)
 
   const runDebate = useCallback(async (startAi: string, mode: 'debate' | 'focused' = 'debate') => {
     let currentAi = startAi
@@ -606,6 +607,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const data = await res.json()
       if (data.startAi && AI_ORDER.includes(data.startAi)) startAi = data.startAi
       if (data.mode === 'focused') mode = 'focused'
+      needsWebSearchRef.current = !!data.needsWebSearch
     } catch {}
 
     runDebate(startAi, mode)
