@@ -1,5 +1,5 @@
 'use client'
-// update v2
+// v3
 import { useState, useRef, useEffect, useCallback } from 'react'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
