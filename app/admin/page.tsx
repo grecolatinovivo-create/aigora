@@ -26,6 +26,8 @@ export default async function AdminPage() {
   const plan = (session.user as any)?.plan
   if (plan !== 'admin') redirect('/')
 
+  const adminEmail = process.env.ADMIN_EMAIL
+
   const users = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
@@ -65,6 +67,7 @@ export default async function AdminPage() {
         {/* Utenti */}
         <div className="space-y-4">
           {users.map(user => {
+            const effectivePlan = user.email === adminEmail ? 'admin' : (user.plan || 'none')
             const userMsgCount = user.chats.reduce((acc, chat) => {
               const msgs = chat.messages as any[]
               return acc + (Array.isArray(msgs) ? msgs.filter((m: any) => m.isUser).length : 0)
@@ -78,7 +81,7 @@ export default async function AdminPage() {
               <details key={user.id} className="glass rounded-2xl overflow-hidden">
                 <summary className="flex items-center gap-4 px-5 py-4 cursor-pointer list-none hover:bg-white/5 transition-colors">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                    style={{ backgroundColor: PLAN_STYLE[user.plan || 'none']?.color || '#6B7280' }}>
+                    style={{ backgroundColor: PLAN_STYLE[effectivePlan]?.color || '#6B7280' }}>
                     {(user.name || user.email || '?')[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -91,12 +94,11 @@ export default async function AdminPage() {
                   <div className="flex items-center gap-3 flex-shrink-0 text-right">
                     <div>
                       {(() => {
-                        const p = user.plan || 'none'
-                        const s = PLAN_STYLE[p] || PLAN_STYLE['none']
+                        const s = PLAN_STYLE[effectivePlan] || PLAN_STYLE['none']
                         return (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full inline-block mb-1"
                             style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
-                            {p.toUpperCase()}
+                            {effectivePlan.toUpperCase()}
                           </span>
                         )
                       })()}
