@@ -97,3 +97,36 @@ html, body {
   pointer-events: none;
   z-index: 10;
 }
+
+/* ── Mobile responsive ── */
+@media (max-width: 600px) {
+  /* Schermata start */
+  .mobile-start {
+    min-height: 100dvh;
+    padding: 24px 16px 32px;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+  .mobile-start h1 { font-size: 3rem !important; }
+  .mobile-start .ai-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Schermata chat: nascondi cornice e occupa tutto lo schermo */
+  .phone-shell { display: none !important; }
+  .phone-screen-mobile {
+    display: flex !important;
+    position: fixed;
+    inset: 0;
+    flex-direction: column;
+    z-index: 50;
+  }
+  .synthesis-panel-mobile {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    width: 100% !important;
+    opacity: 1 !important;
+  }
+  .synthesis-panel-mobile > div { width: 100% !important; }
+  .synthesis-panel-mobile .glass-dark { border-radius: 0 !important; height: 100dvh !important; }
+  .chat-layout { padding: 0 !important; align-items: stretch !important; }
+}

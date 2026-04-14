@@ -389,7 +389,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // ── SCHERMATA INIZIALE ────────────────────────────────────────────────────────
   if (phase === 'start') {
     return (
-      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12">
+      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12 mobile-start">
         <div className="w-full max-w-lg scale-in">
 
           {/* Hero */}
@@ -407,7 +407,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
 
           {/* AI cards */}
-          <div className="grid grid-cols-4 gap-2 mb-8">
+          <div className="ai-grid grid grid-cols-4 gap-2 mb-8">
             {AI_ORDER.map(id => (
               <div key={id} className="glass rounded-2xl p-3 flex flex-col items-center gap-2 text-center">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs"
@@ -467,10 +467,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
-    <div className="desktop-bg min-h-screen flex items-center justify-center p-6 gap-6">
+    <div className="desktop-bg min-h-screen flex items-center justify-center p-6 gap-6 chat-layout">
 
-      {/* ── TELEFONO ── */}
-      <div className="relative flex-shrink-0 scale-in" style={{ width: 390, height: 790 }}>
+      {/* ── TELEFONO (desktop) ── */}
+      <div className="phone-shell relative flex-shrink-0 scale-in" style={{ width: 390, height: 790 }}>
 
         {/* Cornice */}
         <div className="absolute inset-0 rounded-[50px] bg-[#1c1c1e]"
@@ -479,7 +479,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         {/* Glare */}
         <div className="phone-glare" />
 
-        {/* Schermo */}
+        {/* Schermo desktop */}
         <div className="absolute rounded-[44px] overflow-hidden flex flex-col"
           style={{ top: 9, left: 9, right: 9, bottom: 9, backgroundColor: bgPreset.value }}>
 
@@ -585,8 +585,78 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         <div className="absolute -right-[5px] top-48 w-[3px] h-20 bg-[#2a2a2a] rounded-r-sm" />
       </div>
 
+      {/* ── SCHERMO NATIVO MOBILE (visibile solo su schermi piccoli) ── */}
+      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value }}>
+
+        {/* Header mobile */}
+        <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-3 safe-top" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+          <div className="flex -space-x-2 flex-shrink-0">
+            {AI_ORDER.map(id => (
+              <div key={id} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[9px] font-bold ring-1"
+                style={{ backgroundColor: AI_COLOR[id], ['--tw-ring-color' as string]: bgPreset.header }}>
+                {AI_NAMES[id][0]}
+              </div>
+            ))}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-[14px] leading-none" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>AiGORÀ</div>
+            <div className="text-[11px] mt-0.5 truncate" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
+              {activeAi ? `${AI_NAMES[activeAi]} sta scrivendo…` : `Turno ${turnCount + 1} · ${AI_ORDER.length} AI`}
+            </div>
+          </div>
+          <div className="flex gap-1.5 flex-shrink-0">
+            {BG_PRESETS.map(p => (
+              <button key={p.value} onClick={() => setBgPreset(p)}
+                className="w-4 h-4 rounded-full transition-transform active:scale-110"
+                style={{ backgroundColor: p.value, outline: bgPreset.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent', outlineOffset: '1px' }} />
+            ))}
+          </div>
+          <button onClick={handleSynthesize} title="Sintetizza"
+            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base transition-all active:scale-95"
+            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
+            📋
+          </button>
+        </div>
+
+        {/* Avatar bar mobile */}
+        <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} />
+
+        {/* Messaggi mobile */}
+        <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
+          {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
+          {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
+          {waitingForUser && <UserTurnPrompt name={displayName} isDark={isDark} />}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input bar mobile */}
+        <div className="flex-shrink-0 flex items-center gap-2 px-3 py-3" style={{
+          backgroundColor: bgPreset.header,
+          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+        }}>
+          <input
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSendMessage() }}
+            placeholder={waitingForUser ? `${displayName}, rispondi…` : 'Scrivi un messaggio…'}
+            className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none transition-all"
+            style={{
+              backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+              border: `1px solid ${waitingForUser ? (isDark ? 'rgba(196,181,253,0.4)' : 'rgba(109,40,217,0.3)') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')}`,
+              color: isDark ? '#f0f0f0' : '#111',
+            }}
+          />
+          <button onClick={handleSendMessage} disabled={!inputText.trim()}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: inputText.trim() ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+          </button>
+        </div>
+      </div>
+
       {/* ── PANNELLO SINTESI ── */}
-      <div className="flex-shrink-0 transition-all duration-500 ease-out"
+      <div className={`flex-shrink-0 transition-all duration-500 ease-out${showSynthesis ? ' synthesis-panel-mobile' : ''}`}
         style={{ width: showSynthesis ? 340 : 0, opacity: showSynthesis ? 1 : 0, overflow: 'hidden' }}>
         <div style={{ width: 340 }}>
           <div className="glass-dark rounded-3xl overflow-hidden slide-in-right" style={{ height: 790 }}>
