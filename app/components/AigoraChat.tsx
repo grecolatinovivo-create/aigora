@@ -236,7 +236,7 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
         <button onClick={() => setShowProfileMenu(p => !p)}
           className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform hover:scale-110"
           style={{ backgroundColor: '#F59E0B', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
-          {(userName.trim() || userEmail || '?')[0].toUpperCase()}
+          {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
         </button>
         {showProfileMenu && (
           <>
