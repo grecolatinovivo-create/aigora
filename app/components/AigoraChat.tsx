@@ -836,7 +836,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
 
             <button
-              onClick={handleStart}
+              onClick={() => handleStart()}
               disabled={!question.trim()}
               className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-25 disabled:cursor-not-allowed"
               style={{ background: question.trim() ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : '#333', boxShadow: question.trim() ? '0 4px 20px rgba(124,58,237,0.4)' : undefined }}

@@ -3,6 +3,15 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 
+const PLAN_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+  admin:      { color: '#F59E0B', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.35)'  },
+  max:        { color: '#FF6B2B', bg: 'rgba(255,107,43,0.15)',  border: 'rgba(255,107,43,0.35)'  },
+  pro:        { color: '#A78BFA', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.35)' },
+  starter:    { color: '#1A73E8', bg: 'rgba(26,115,232,0.15)',  border: 'rgba(26,115,232,0.35)'  },
+  free:       { color: '#10A37F', bg: 'rgba(16,163,127,0.15)',  border: 'rgba(16,163,127,0.35)'  },
+  none:       { color: '#6B7280', bg: 'rgba(107,114,128,0.15)', border: 'rgba(107,114,128,0.35)' },
+}
+
 const AI_COLOR: Record<string, string> = {
   claude: '#7C3AED',
   gpt: '#10A37F',
@@ -69,7 +78,7 @@ export default async function AdminPage() {
               <details key={user.id} className="glass rounded-2xl overflow-hidden">
                 <summary className="flex items-center gap-4 px-5 py-4 cursor-pointer list-none hover:bg-white/5 transition-colors">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                    style={{ backgroundColor: user.plan === 'admin' ? '#F59E0B' : user.plan === 'max' ? '#FF6B2B' : user.plan === 'pro' ? '#7C3AED' : '#1A73E8' }}>
+                    style={{ backgroundColor: PLAN_STYLE[user.plan || 'none']?.color || '#6B7280' }}>
                     {(user.name || user.email || '?')[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -81,10 +90,17 @@ export default async function AdminPage() {
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0 text-right">
                     <div>
-                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full block mb-1"
-                        style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.25)' }}>
-                        {(user.plan || 'none').toUpperCase()}
-                      </span>
+                      {(() => {
+                        const p = user.plan || 'none'
+                        const s = PLAN_STYLE[p] || PLAN_STYLE['none']
+                        return (
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full inline-block mb-1"
+                            style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
+                            {p.toUpperCase()}
+                          </span>
+                        )
+                      })()}
+                      <br/>
                       <span className="text-white/30 text-[10px]">
                         {user.chats.length} chat · {userMsgCount} domande · {aiMsgCount} risposte AI
                       </span>
