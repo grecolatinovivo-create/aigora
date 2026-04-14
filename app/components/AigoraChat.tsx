@@ -574,7 +574,24 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
-    <div className="desktop-bg min-h-screen flex items-center justify-center p-6 gap-6 chat-layout">
+    <div className="desktop-bg min-h-screen flex items-center justify-center p-6 gap-6 chat-layout relative">
+
+      {/* Navbar pagina */}
+      <div className="absolute top-5 left-6 right-6 flex items-center justify-between z-50">
+        <button onClick={() => { handleReset(); window.location.href = '/dashboard' }}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
+          style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+          Cronologia
+        </button>
+        <button onClick={() => signOut({ callbackUrl: '/login' })}
+          className="flex items-center gap-2 transition-all hover:scale-105"
+          title="Esci">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+            style={{ backgroundColor: '#F59E0B' }}>
+            {(displayName || userEmail || '?')[0].toUpperCase()}
+          </div>
+        </button>
+      </div>
 
       {/* ── TELEFONO (desktop) ── */}
       <div className="phone-shell relative flex-shrink-0 scale-in" style={{ width: 390, height: 790 }}>
