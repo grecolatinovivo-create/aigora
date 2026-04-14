@@ -12,6 +12,16 @@ const PLAN_STYLE: Record<string, { color: string; bg: string; border: string }> 
   none:       { color: '#6B7280', bg: 'rgba(107,114,128,0.15)', border: 'rgba(107,114,128,0.35)' },
 }
 
+const USD_TO_EUR = 0.92
+
+function formatCost(usd: number): string {
+  const eur = usd * USD_TO_EUR
+  if (eur === 0) return '€0.000000'
+  if (eur >= 1) return `€${eur.toFixed(4)}`
+  if (eur >= 0.0001) return `€${eur.toFixed(6)}`
+  return `€${eur.toExponential(2)}`
+}
+
 const AI_COLOR: Record<string, string> = {
   claude: '#7C3AED',
   gpt: '#10A37F',
@@ -80,9 +90,12 @@ export default async function AdminPage() {
         {/* Widget costi API */}
         <div className="glass rounded-2xl p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-bold text-base">Costi API</h2>
-            <span className="text-2xl font-black" style={{ color: totalCost > 10 ? '#FF6B2B' : '#10A37F' }}>
-              ${totalCost.toFixed(4)}
+            <div>
+              <h2 className="text-white font-bold text-base">Costi API</h2>
+              <div className="text-white/25 text-[10px] mt-0.5">tasso indicativo 1 USD = {USD_TO_EUR} EUR</div>
+            </div>
+            <span className="text-2xl font-black" style={{ color: totalCost * USD_TO_EUR > 10 ? '#FF6B2B' : '#10A37F' }}>
+              {formatCost(totalCost)}
             </span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -96,7 +109,7 @@ export default async function AdminPage() {
               return (
                 <div key={key} className="rounded-xl p-3" style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>
                   <div className="text-xs font-bold mb-1" style={{ color }}>{label}</div>
-                  <div className="text-white font-bold text-lg">${(u?.cost ?? 0).toFixed(4)}</div>
+                  <div className="text-white font-bold text-lg">{formatCost(u?.cost ?? 0)}</div>
                   <div className="text-white/40 text-[10px] mt-1">
                     {u?.calls ?? 0} chiamate · {((u?.inputTokens ?? 0) + (u?.outputTokens ?? 0)).toLocaleString()} token
                   </div>
