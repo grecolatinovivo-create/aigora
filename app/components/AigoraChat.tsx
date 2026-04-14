@@ -144,55 +144,38 @@ function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
-// ── Topic suggeriti rotanti (3 righe × 2 colonne) ────────────────────────────
+// ── Topic suggeriti rotanti (3 righe × 2 colonne, cambiano tutti insieme) ─────
 function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
-  const SLOTS = 6 // 3 righe × 2 colonne
-  const [visible, setVisible] = useState<string[]>(() => {
-    const shuffled = [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5)
-    return shuffled.slice(0, SLOTS)
-  })
-  const [fading, setFading] = useState<number | null>(null)
-  const poolRef = useRef<string[]>([])
+  const SLOTS = 6
+  const [visible, setVisible] = useState<string[]>(() =>
+    [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5).slice(0, SLOTS)
+  )
+  const [show, setShow] = useState(true)
 
   useEffect(() => {
-    // Pool dei topic non ancora mostrati
-    poolRef.current = TOPIC_SUGGESTIONS.filter(t => !visible.includes(t))
-  }, [])
-
-  useEffect(() => {
-    let slotIndex = 0
     const interval = setInterval(() => {
-      if (poolRef.current.length === 0) {
-        // Ricarica pool escludendo i visibili attuali
-        poolRef.current = TOPIC_SUGGESTIONS.filter(t => !visible.includes(t))
-        if (poolRef.current.length === 0) return
-      }
-      const newTopic = poolRef.current.shift()!
-      const idx = slotIndex % SLOTS
-      slotIndex++
-      setFading(idx)
+      // Fade out
+      setShow(false)
       setTimeout(() => {
+        // Nuovi 6 topic random diversi dagli attuali
         setVisible(prev => {
-          const next = [...prev]
-          next[idx] = newTopic
-          return next
+          const others = TOPIC_SUGGESTIONS.filter(t => !prev.includes(t))
+          const pool = others.length >= SLOTS ? others : TOPIC_SUGGESTIONS
+          return [...pool].sort(() => Math.random() - 0.5).slice(0, SLOTS)
         })
-        setFading(null)
-      }, 300)
+        // Fade in
+        setShow(true)
+      }, 400)
     }, 5000)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="grid grid-cols-2 gap-1.5" style={{ marginBottom: '8px' }}>
+    <div className="grid grid-cols-2 gap-1.5" style={{ marginBottom: '8px', transition: 'opacity 0.4s ease', opacity: show ? 1 : 0 }}>
       {visible.map((t, i) => (
         <button key={i} onClick={() => onSelect(t)}
-          className="text-center px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all"
-          style={{
-            fontSize: 'clamp(9px, 2.5vw, 11px)',
-            opacity: fading === i ? 0 : 1,
-            transition: 'opacity 0.3s ease',
-          }}>
+          className="text-center px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-colors"
+          style={{ fontSize: 'clamp(9px, 2.5vw, 11px)' }}>
           {t}
         </button>
       ))}
