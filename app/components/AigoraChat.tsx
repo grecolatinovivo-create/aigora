@@ -310,6 +310,32 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [turnCount, setTurnCount] = useState(0)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [mobileFontSize, setMobileFontSize] = useState(14)
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
+
+  const startListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) { alert('Il tuo browser non supporta il riconoscimento vocale.'); return }
+    const rec = new SpeechRecognition()
+    rec.lang = navigator.language || 'it-IT'
+    rec.continuous = false
+    rec.interimResults = false
+    rec.onstart = () => setIsListening(true)
+    rec.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript
+      setInputText(transcript)
+      setIsListening(false)
+    }
+    rec.onerror = () => setIsListening(false)
+    rec.onend = () => setIsListening(false)
+    recognitionRef.current = rec
+    rec.start()
+  }, [])
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop()
+    setIsListening(false)
+  }, [])
   const [showHistory, setShowHistory] = useState(false)
   const [bubbleTopics, setBubbleTopics] = useState(() => getRandomBubbleTopics())
   const usedBubbleTopicsRef = useRef(new Set(getRandomBubbleTopics()))
@@ -1012,6 +1038,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 boxShadow: waitingForUser ? (isDark ? '0 0 0 2px rgba(196,181,253,0.15)' : '0 0 0 2px rgba(109,40,217,0.1)') : undefined,
               }}
             />
+            <button onClick={isListening ? stopListening : startListening}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+              style={{ backgroundColor: isListening ? '#ef4444' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'), boxShadow: isListening ? '0 0 10px rgba(239,68,68,0.5)' : undefined }}>
+              <svg width="12" height="14" viewBox="0 0 24 28" fill={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')}>
+                <rect x="8" y="0" width="8" height="16" rx="4"/>
+                <path d="M4 12a8 8 0 0 0 16 0" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2" fill="none"/>
+                <line x1="12" y1="20" x2="12" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
+                <line x1="8" y1="24" x2="16" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
+              </svg>
+            </button>
             <button onClick={handleSendMessage} disabled={!inputText.trim()}
               className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 hover:scale-105 active:scale-95"
               style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: inputText.trim() ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
@@ -1249,6 +1285,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 color: isDark ? '#f0f0f0' : '#111',
               }}
             />
+            <button onClick={isListening ? stopListening : startListening}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95"
+              style={{ backgroundColor: isListening ? '#ef4444' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'), boxShadow: isListening ? '0 0 12px rgba(239,68,68,0.5)' : undefined }}>
+              <svg width="14" height="16" viewBox="0 0 24 28" fill={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')}>
+                <rect x="8" y="0" width="8" height="16" rx="4"/>
+                <path d="M4 12a8 8 0 0 0 16 0" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2" fill="none"/>
+                <line x1="12" y1="20" x2="12" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
+                <line x1="8" y1="24" x2="16" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
+              </svg>
+            </button>
             <button onClick={handleSendMessage} disabled={!inputText.trim()}
               className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 active:scale-95"
               style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: inputText.trim() ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
