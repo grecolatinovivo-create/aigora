@@ -530,13 +530,27 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (messages.length >= 2) saveCurrentChat()
   }, [messages, thinkingAi, waitingForUser, scrollToBottom, saveCurrentChat])
 
+  const wasDebatingRef = useRef(false) // stava girando il debate quando si è andati in cronologia
+
   // Stop loop quando si va in cronologia/profilo, riprende quando si torna in running
   useEffect(() => {
     if (phase === 'history' || phase === 'profile') {
+      // Salva se stava girando (non in pausa per input utente)
+      wasDebatingRef.current = !waitingForUserRef.current && !stopRequestedRef.current
       stopRequestedRef.current = true
       setActiveAi(null)
       setThinkingAi(null)
+    } else if (phase === 'running') {
+      stopRequestedRef.current = false
+      // Se stava girando prima di andare in cronologia, riprende
+      if (wasDebatingRef.current) {
+        wasDebatingRef.current = false
+        const lastAi = usedAisRef.current[usedAisRef.current.length - 1] || AI_ORDER[0]
+        const nextAi = getDefaultNextAi(lastAi, [], AI_ORDER)
+        setTimeout(() => runDebate(nextAi, debateModeRef.current), 300)
+      }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
 
   const typewriteText = useCallback((msgId: string, text: string): Promise<void> => {
