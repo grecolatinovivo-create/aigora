@@ -10,7 +10,6 @@ export interface Message {
   isSynthesis?: boolean
 }
 
-// Colori per sfondo chiaro
 const AI_BUBBLE_LIGHT: Record<string, { bg: string; nameColor: string; textColor: string }> = {
   claude:     { bg: '#e8e0f8', nameColor: '#6d28d9', textColor: '#1a1a2e' },
   gpt:        { bg: '#d4f5e9', nameColor: '#065f46', textColor: '#0a2a1e' },
@@ -18,7 +17,6 @@ const AI_BUBBLE_LIGHT: Record<string, { bg: string; nameColor: string; textColor
   perplexity: { bg: '#ffe8d6', nameColor: '#c2410c', textColor: '#2e1406' },
 }
 
-// Colori per sfondo scuro
 const AI_BUBBLE_DARK: Record<string, { bg: string; nameColor: string; textColor: string }> = {
   claude:     { bg: '#2D1B69', nameColor: '#c4b5fd', textColor: '#ede8ff' },
   gpt:        { bg: '#0a2e22', nameColor: '#6ee7b7', textColor: '#d4f5e9' },
@@ -33,21 +31,13 @@ const AI_AVATAR: Record<string, string> = {
   perplexity: '#FF6B2B',
 }
 
-// Converte **testo** → grassetto, *testo* → grassetto, _testo_ → corsivo
 function renderText(text: string, isStreaming: boolean) {
   if (!text) return isStreaming ? <span className="typewriter-cursor">&nbsp;</span> : <span>…</span>
-  // Ordine importante: prima il doppio asterisco, poi il singolo
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_)/)
   const nodes = parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>
-    }
-    if (part.startsWith('*') && part.endsWith('*')) {
-      return <strong key={i}>{part.slice(1, -1)}</strong>
-    }
-    if (part.startsWith('_') && part.endsWith('_')) {
-      return <em key={i}>{part.slice(1, -1)}</em>
-    }
+    if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
+    if (part.startsWith('*') && part.endsWith('*')) return <strong key={i}>{part.slice(1, -1)}</strong>
+    if (part.startsWith('_') && part.endsWith('_')) return <em key={i}>{part.slice(1, -1)}</em>
     return <span key={i}>{part}</span>
   })
   return <span className={isStreaming ? 'typewriter-cursor' : ''}>{nodes}</span>
@@ -56,20 +46,18 @@ function renderText(text: string, isStreaming: boolean) {
 interface MessageBubbleProps {
   message: Message
   bgTheme?: 'black' | 'white'
+  fontSize?: number
 }
 
-export default function MessageBubble({ message, bgTheme = 'black' }: MessageBubbleProps) {
+export default function MessageBubble({ message, bgTheme = 'black', fontSize = 13 }: MessageBubbleProps) {
   const isDark = bgTheme === 'white'
 
-  // Messaggio utente — destra, verde WhatsApp
   if (message.isUser) {
     return (
       <div className="flex justify-end px-3 mb-1 message-enter">
         <div className="max-w-[78%]">
-          <div
-            className="rounded-2xl rounded-br-sm px-3 py-2 text-[13px] leading-relaxed text-white"
-            style={{ backgroundColor: '#005c4b' }}
-          >
+          <div className="rounded-2xl rounded-br-sm px-3 py-2 leading-relaxed text-white"
+            style={{ backgroundColor: '#005c4b', fontSize }}>
             {message.content}
           </div>
         </div>
@@ -83,24 +71,16 @@ export default function MessageBubble({ message, bgTheme = 'black' }: MessageBub
 
   return (
     <div className="flex items-end gap-2 px-3 mb-1 message-enter">
-      <div
-        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mb-0.5"
-        style={{ backgroundColor: avatarColor }}
-      >
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mb-0.5"
+        style={{ backgroundColor: avatarColor }}>
         {message.name[0]}
       </div>
-
       <div className="max-w-[78%]">
-        <div
-          className="text-[11px] font-semibold mb-0.5 ml-1"
-          style={{ color: bubble.nameColor }}
-        >
+        <div className="text-[11px] font-semibold mb-0.5 ml-1" style={{ color: bubble.nameColor }}>
           {message.name}
         </div>
-        <div
-          className="rounded-2xl rounded-bl-sm px-3 py-2 text-[13px] leading-relaxed"
-          style={{ backgroundColor: bubble.bg, color: bubble.textColor }}
-        >
+        <div className="rounded-2xl rounded-bl-sm px-3 py-2 leading-relaxed"
+          style={{ backgroundColor: bubble.bg, color: bubble.textColor, fontSize }}>
           {renderText(message.content, !!message.isStreaming)}
         </div>
       </div>

@@ -40,7 +40,7 @@ const FLOATING_TOPICS = [
   'Il futuro è distopico?',
 ]
 
-type ChatPhase = 'start' | 'running' | 'done' | 'history'
+type ChatPhase = 'start' | 'running' | 'done' | 'history' | 'profile'
 
 function detectNextAi(text: string, aiOrder: string[]): string | null {
   const lower = text.toLowerCase()
@@ -849,31 +849,89 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   <div className="text-white/20 text-4xl">💬</div>
                   <p className="text-white/30 text-sm text-center px-8">Nessuna conversazione salvata.<br/>Le chat vengono salvate automaticamente.</p>
                 </div>
-              ) : savedChats.map((chat, i) => (
+              ) : savedChats.map((chat) => (
                 <button key={chat.id} onClick={() => {
                   setMessages(chat.messages)
                   chatHistoryRef.current = chat.history
                   setPhase('running')
                 }}
-                  className="w-full flex items-center gap-3 px-4 py-3 active:bg-white/5 transition-colors"
-                  style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                  style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white"
                     style={{ backgroundColor: '#7C3AED' }}>
                     {(chat.title[0] || '?').toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
-                    <div className="text-white text-[14px] font-medium truncate">{chat.title}</div>
-                    <div className="text-white/35 text-[12px] mt-0.5">{chat.date}</div>
+                    <div className="text-[14px] font-medium truncate" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>{chat.title}</div>
+                    <div className="text-[12px] mt-0.5" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)' }}>{chat.date}</div>
                   </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'} strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                 </button>
               ))}
             </div>
           </div>
         )}
 
+        {/* Schermata profilo mobile */}
+        {phase === 'profile' && (
+          <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
+            {/* Header */}
+            <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
+              style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+              <button onClick={() => setPhase('running')}
+                className="w-9 h-9 flex items-center justify-center rounded-full"
+                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'white' : '#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <span className="font-bold text-lg" style={{ color: isDark ? '#fff' : '#111' }}>Profilo</span>
+            </div>
+
+            {/* Corpo profilo */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Avatar grande */}
+              <div className="flex flex-col items-center pt-10 pb-8 px-6" style={{ backgroundColor: bgPreset.header }}>
+                <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-white mb-4"
+                  style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 20px rgba(245,158,11,0.4)' }}>
+                  {(displayName || userEmail || '?')[0].toUpperCase()}
+                </div>
+                <div className="text-xl font-bold mb-1" style={{ color: isDark ? '#fff' : '#111' }}>
+                  {displayName || 'Utente'}
+                </div>
+                <div className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
+                  {userEmail}
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="mt-3 mx-4 rounded-2xl overflow-hidden" style={{ backgroundColor: bgPreset.header, border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                <div className="px-4 py-3.5 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>Piano</div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="font-semibold text-sm" style={{ color: '#F59E0B' }}>{(userPlan ?? 'free').toUpperCase()}</span>
+                  </div>
+                </div>
+                <div className="px-4 py-3.5">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>Email</div>
+                  <div className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>{userEmail}</div>
+                </div>
+              </div>
+
+              {/* Esci */}
+              <div className="mt-3 mx-4 rounded-2xl overflow-hidden" style={{ backgroundColor: bgPreset.header, border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                <button onClick={() => signOut({ callbackUrl: '/login' })}
+                  className="w-full px-4 py-4 text-left text-sm font-semibold text-red-500">
+                  Esci dall'account
+                </button>
+              </div>
+
+              <div className="h-8" />
+            </div>
+          </div>
+        )}
+
         {/* Schermata chat mobile */}
-        {phase !== 'history' && <>
+        {phase !== 'history' && phase !== 'profile' && <>
 
           {/* Header mobile */}
           <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
@@ -909,7 +967,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
                 📋
               </button>
-              <button onClick={() => setShowProfileMenu(p => !p)}
+              <button onClick={() => setPhase('profile')}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                 style={{ backgroundColor: '#F59E0B' }}>
                 {(displayName || userEmail || '?')[0].toUpperCase()}
@@ -917,35 +975,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
           </div>
 
-          {/* Dropdown profilo mobile */}
-          {showProfileMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-              <div className="absolute top-28 right-3 w-56 rounded-2xl overflow-hidden shadow-2xl z-50"
-                style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
-                <div className="px-4 py-3 border-b border-white/8">
-                  <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
-                  <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                    style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
-                    {(userPlan ?? 'free').toUpperCase()}
-                  </div>
-                </div>
-                <button onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="w-full px-4 py-3 text-left text-sm text-red-400 font-medium">
-                  Esci dall'account
-                </button>
-              </div>
-            </>
-          )}
-
           {/* Avatar bar mobile */}
           <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} />
 
           {/* Messaggi mobile */}
-          <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value, fontSize: mobileFontSize }}>
-            {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
+          <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
+            {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
             {waitingForUser && <UserTurnPrompt name={displayName} isDark={isDark} />}
             <div ref={messagesEndRef} />
