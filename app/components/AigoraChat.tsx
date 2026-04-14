@@ -174,9 +174,9 @@ function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
     <div className="grid grid-cols-2 gap-1.5" style={{ marginBottom: '8px', transition: 'opacity 0.4s ease', opacity: show ? 1 : 0 }}>
       {visible.map((t, i) => (
         <button key={i} onClick={() => onSelect(t)}
-          className="text-center px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-colors"
-          style={{ fontSize: 'clamp(9px, 2.5vw, 11px)' }}>
-          {t}
+          className="text-center px-3 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-colors flex items-center justify-center"
+          style={{ fontSize: 'clamp(9px, 2.5vw, 11px)', height: '32px', overflow: 'hidden' }}>
+          <span className="truncate">{t}</span>
         </button>
       ))}
     </div>
