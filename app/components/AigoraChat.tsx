@@ -236,7 +236,7 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
         <button onClick={() => setShowProfileMenu(p => !p)}
           className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform hover:scale-110"
           style={{ backgroundColor: '#F59E0B', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
-          {(displayName || userEmail || '?')[0].toUpperCase()}
+          {(userName.trim() || userEmail || '?')[0].toUpperCase()}
         </button>
         {showProfileMenu && (
           <>
@@ -1079,7 +1079,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               <div className="flex flex-col items-center pt-10 pb-8 px-6" style={{ backgroundColor: bgPreset.header }}>
                 <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-white mb-4"
                   style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 20px rgba(245,158,11,0.4)' }}>
-                  {(displayName || userEmail || '?')[0].toUpperCase()}
+                  {(userName.trim() || userEmail || '?')[0].toUpperCase()}
                 </div>
                 <div className="text-xl font-bold mb-1" style={{ color: isDark ? '#fff' : '#111' }}>
                   {displayName || 'Utente'}
@@ -1157,7 +1157,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               <button onClick={() => setPhase('profile')}
                 className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                 style={{ backgroundColor: '#F59E0B' }}>
-                {(displayName || userEmail || '?')[0].toUpperCase()}
+                {(userName.trim() || userEmail || '?')[0].toUpperCase()}
               </button>
             </div>
           </div>
