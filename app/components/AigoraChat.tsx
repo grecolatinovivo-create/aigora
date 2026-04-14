@@ -716,8 +716,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             onChange={e => setNameInput(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter' && nameInput.trim()) {
-                setUserName(nameInput.trim())
+                const n = nameInput.trim()
+                setUserName(n)
                 setNameConfirmed(true)
+                fetch('/api/user/name', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n }) }).catch(() => {})
               }
             }}
             className="w-full px-4 py-3 rounded-xl bg-white/5 text-white placeholder-white/25 border border-white/10 focus:outline-none focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/10 text-sm mb-4 transition-all duration-200"
@@ -725,8 +727,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <button
             onClick={() => {
               if (nameInput.trim()) {
-                setUserName(nameInput.trim())
+                const n = nameInput.trim()
+                setUserName(n)
                 setNameConfirmed(true)
+                fetch('/api/user/name', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n }) }).catch(() => {})
               }
             }}
             disabled={!nameInput.trim()}
