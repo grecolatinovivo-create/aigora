@@ -22,12 +22,41 @@ html, body {
 }
 
 /* ── Animazioni ── */
-@keyframes float-bubble {
-  0%   { transform: translateY(0px) scale(1);      opacity: 0; }
-  12%  { opacity: 0.75; }
-  50%  { transform: translateY(-28px) scale(1.05); opacity: 0.85; }
-  88%  { opacity: 0.75; }
-  100% { transform: translateY(0px) scale(1);      opacity: 0; }
+@keyframes bubble-1 {
+  0%   { transform: translate(0px, 0px);      opacity: 0;    }
+  10%  { opacity: 0.75; }
+  25%  { transform: translate(8px, -14px);   }
+  45%  { transform: translate(-10px, -22px);  opacity: 0.85; }
+  65%  { transform: translate(14px, -10px);  }
+  85%  { transform: translate(-6px, -18px);   opacity: 0.75; }
+  100% { transform: translate(0px, 0px);      opacity: 0;    }
+}
+@keyframes bubble-2 {
+  0%   { transform: translate(0px, 0px);      opacity: 0;    }
+  10%  { opacity: 0.7; }
+  20%  { transform: translate(-12px, -8px);  }
+  40%  { transform: translate(6px, -20px);    opacity: 0.8;  }
+  60%  { transform: translate(-14px, -28px); }
+  80%  { transform: translate(10px, -12px);   opacity: 0.7;  }
+  100% { transform: translate(0px, 0px);      opacity: 0;    }
+}
+@keyframes bubble-3 {
+  0%   { transform: translate(0px, 0px);      opacity: 0;    }
+  10%  { opacity: 0.75; }
+  30%  { transform: translate(16px, -18px);  }
+  50%  { transform: translate(-8px, -8px);    opacity: 0.85; }
+  70%  { transform: translate(12px, -24px);  }
+  88%  { transform: translate(-4px, -14px);   opacity: 0.75; }
+  100% { transform: translate(0px, 0px);      opacity: 0;    }
+}
+@keyframes bubble-4 {
+  0%   { transform: translate(0px, 0px);      opacity: 0;    }
+  10%  { opacity: 0.7; }
+  25%  { transform: translate(-16px, -20px); }
+  48%  { transform: translate(8px, -30px);    opacity: 0.8;  }
+  68%  { transform: translate(-10px, -16px); }
+  85%  { transform: translate(6px, -24px);    opacity: 0.7;  }
+  100% { transform: translate(0px, 0px);      opacity: 0;    }
 }
 @keyframes fade-in-up {
   from { opacity: 0; transform: translateY(10px); }

@@ -3,66 +3,6 @@ import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 
-const BUBBLES = [
-  "L'IA sostituirà i lavori creativi?",
-  'Esiste il libero arbitrio?',
-  'Il cambiamento climatico è ancora reversibile?',
-  'Social media: bene o male per la democrazia?',
-  'Dovremmo colonizzare Marte?',
-  'La coscienza è solo chimica?',
-  'Etica dell\'AI: chi decide?',
-  'Il futuro è distopico?',
-]
-
-const BUBBLE_POSITIONS = [
-  { top: '8%',  left: '4%',  delay: '0s',    duration: '7s'  },
-  { top: '18%', right: '3%', delay: '1.2s',  duration: '8s'  },
-  { top: '35%', left: '1%',  delay: '2.5s',  duration: '6.5s'},
-  { top: '55%', right: '2%', delay: '0.8s',  duration: '9s'  },
-  { top: '70%', left: '3%',  delay: '3s',    duration: '7.5s'},
-  { top: '80%', right: '4%', delay: '1.8s',  duration: '8.5s'},
-  { top: '45%', left: '2%',  delay: '4s',    duration: '6s'  },
-  { top: '25%', right: '5%', delay: '2s',    duration: '9.5s'},
-]
-
-function FloatingBubbles() {
-  return (
-    <>
-      <style>{`
-        @keyframes float-bubble {
-          0%   { transform: translateY(0px) scale(1);   opacity: 0.55; }
-          50%  { transform: translateY(-14px) scale(1.03); opacity: 0.8; }
-          100% { transform: translateY(0px) scale(1);   opacity: 0.55; }
-        }
-        .bubble-float {
-          animation: float-bubble var(--dur) ease-in-out infinite;
-          animation-delay: var(--delay);
-        }
-      `}</style>
-      {BUBBLES.map((text, i) => {
-        const pos = BUBBLE_POSITIONS[i]
-        return (
-          <div key={i}
-            className="bubble-float absolute hidden md:block px-3 py-2 rounded-full text-[11px] font-medium text-white/60 border border-white/10 whitespace-nowrap pointer-events-none select-none"
-            style={{
-              ...pos,
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              backdropFilter: 'blur(8px)',
-              ['--dur' as string]: pos.duration,
-              ['--delay' as string]: pos.delay,
-              maxWidth: 220,
-              whiteSpace: 'normal',
-              textAlign: 'center',
-              lineHeight: 1.3,
-            }}>
-            {text}
-          </div>
-        )
-      })}
-    </>
-  )
-}
-
 function AuthCard() {
   const [tab, setTab] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
@@ -175,8 +115,7 @@ function AuthCard() {
 
 export default function LoginPage() {
   return (
-    <div className="desktop-bg min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      <FloatingBubbles />
+    <div className="desktop-bg min-h-screen flex items-center justify-center px-4">
       <Suspense>
         <AuthCard />
       </Suspense>

@@ -462,6 +462,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           const pos = positions[i % positions.length]
           const delays = ['0s','1.5s','3s','0.7s','2.2s','4s','1s','2.8s']
           const durs   = ['4s','5s','4.5s','5.5s','4.2s','5.2s','4.8s','5.8s']
+          const anims  = ['bubble-1','bubble-2','bubble-3','bubble-4']
           return (
             <div key={i}
               className="absolute hidden xl:block px-3 py-2 rounded-full text-[11px] font-medium pointer-events-none select-none"
@@ -474,7 +475,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 maxWidth: 190,
                 textAlign: 'center',
                 lineHeight: 1.35,
-                animation: `float-bubble ${durs[i % durs.length]} ease-in-out infinite`,
+                animation: `${anims[i % 4]} ${durs[i % durs.length]} ease-in-out infinite`,
                 animationDelay: delays[i % delays.length],
               }}>
               {text}
