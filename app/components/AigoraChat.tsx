@@ -139,7 +139,7 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
 }) {
   return (
     <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 h-14"
-      style={{ backgroundColor: 'rgba(7,7,15,0.7)', borderBottom: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(16px)' }}>
+      style={{ backgroundColor: 'rgba(7,7,15,0.4)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
 
       {/* Sinistra — Cronologia */}
       <button onClick={onCronologia}
@@ -152,8 +152,10 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
       </button>
 
       {/* Centro — Logo */}
-      <span className="absolute left-1/2 -translate-x-1/2 text-white font-black text-lg tracking-tight">
-        Ai<span style={{ color: '#A78BFA' }}>GOR</span>À
+      <span className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight">
+        <span style={{ color: '#A78BFA' }}>A</span>
+        <span className="text-white">i</span>
+        <span style={{ color: '#A78BFA' }}>GORÀ</span>
       </span>
 
       {/* Destra — Profilo */}
