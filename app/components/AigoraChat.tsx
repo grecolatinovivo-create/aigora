@@ -305,10 +305,16 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
                 </div>
               </div>
               {userPlan === 'admin' && (
-                <button onClick={() => window.location.href = '/admin'}
-                  className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
-                  ⚙️ Pannello Admin
-                </button>
+                <>
+                  <button onClick={() => window.location.href = `/u/${encodeURIComponent(displayName)}`}
+                    className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
+                    👤 Il mio profilo
+                  </button>
+                  <button onClick={() => window.location.href = '/admin'}
+                    className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
+                    ⚙️ Pannello Admin
+                  </button>
+                </>
               )}
               <button onClick={onSignOut}
                 className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium">
@@ -364,6 +370,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [synthesis, setSynthesis] = useState<string | null>(null)
   const [isSynthesizing, setIsSynthesizing] = useState(false)
   const [showSynthesis, setShowSynthesis] = useState(false)
+  const [isPublic, setIsPublic] = useState(false)
+  const [portfolioSaved, setPortfolioSaved] = useState(false)
   const [waitingForUser, setWaitingForUser] = useState(false)
   const [turnCount, setTurnCount] = useState(0)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -839,6 +847,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }
 
+  const handleTogglePortfolio = async () => {
+    const newValue = !isPublic
+    setIsPublic(newValue)
+    setPortfolioSaved(false)
+    try {
+      await fetch('/api/chats/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: currentChatIdRef.current, isPublic: newValue }),
+      })
+      setPortfolioSaved(true)
+      setTimeout(() => setPortfolioSaved(false), 2000)
+    } catch {}
+  }
+
   const handleSynthesize = async () => {
     setIsSynthesizing(true)
     setShowSynthesis(true)
@@ -879,6 +902,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setMessages([]); setQuestion(''); setInputText(''); setUserName('')
     setPhase('start'); setActiveAi(null); setThinkingAi(null)
     setSynthesis(null); setShowSynthesis(false); setWaitingForUser(false)
+    setIsPublic(false); setPortfolioSaved(false)
     setTurnCount(0)
     chatHistoryRef.current = []; usedAisRef.current = []
     aiTurnCountRef.current = 0
@@ -1445,7 +1469,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 {synthesis && <p className="text-white/80 text-[14px] leading-[1.8] whitespace-pre-wrap">{synthesis}</p>}
               </div>
               {phase === 'done' && !isSynthesizing && (
-                <div className="p-4 border-t border-white/8">
+                <div className="p-4 border-t border-white/8 space-y-2">
+                  {/* Portfolio — solo admin */}
+                  {userPlan === 'admin' && (
+                    <button onClick={handleTogglePortfolio}
+                      className="w-full py-2.5 rounded-xl text-sm font-medium transition-all"
+                      style={{
+                        backgroundColor: isPublic ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)',
+                        border: isPublic ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                        color: isPublic ? '#A78BFA' : 'rgba(255,255,255,0.4)',
+                      }}>
+                      {portfolioSaved ? '✓ Salvato!' : isPublic ? '📂 Nel portfolio · rimuovi' : '📂 Aggiungi al portfolio'}
+                    </button>
+                  )}
                   <button onClick={handleReset}
                     className="w-full py-3 rounded-xl text-white/60 text-sm font-medium"
                     style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
@@ -1541,10 +1577,24 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               )}
 
               {phase === 'done' && !isSynthesizing && (
-                <button onClick={handleReset}
-                  className="mt-6 w-full glass rounded-xl py-3 text-white/60 hover:text-white text-sm font-medium transition-all hover:bg-white/10">
-                  🔄 Nuovo dibattito
-                </button>
+                <div className="mt-6 space-y-2">
+                  {/* Portfolio — solo admin */}
+                  {userPlan === 'admin' && (
+                    <button onClick={handleTogglePortfolio}
+                      className="w-full rounded-xl py-3 text-sm font-medium transition-all"
+                      style={{
+                        backgroundColor: isPublic ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.05)',
+                        border: isPublic ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.12)',
+                        color: isPublic ? '#A78BFA' : 'rgba(255,255,255,0.45)',
+                      }}>
+                      {portfolioSaved ? '✓ Salvato!' : isPublic ? '📂 Nel portfolio · rimuovi' : '📂 Aggiungi al portfolio'}
+                    </button>
+                  )}
+                  <button onClick={handleReset}
+                    className="w-full glass rounded-xl py-3 text-white/60 hover:text-white text-sm font-medium transition-all hover:bg-white/10">
+                    🔄 Nuovo dibattito
+                  </button>
+                </div>
               )}
             </div>
           </div>
