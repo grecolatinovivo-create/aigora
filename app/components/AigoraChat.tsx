@@ -1057,8 +1057,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', marginBottom: '8px' }}
               />
 
-              {/* Topic suggeriti — 3 righe × 2 colonne, ruotano ogni 5s */}
-              <RotatingTopics onSelect={setQuestion} />
+              {/* Topic suggeriti — solo mobile */}
+              <div className="lg:hidden">
+                <RotatingTopics onSelect={setQuestion} />
+              </div>
 
               {/* CTA */}
               <button
