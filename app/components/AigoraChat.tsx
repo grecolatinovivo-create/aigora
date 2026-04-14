@@ -40,7 +40,7 @@ const FLOATING_TOPICS = [
   'Il futuro è distopico?',
 ]
 
-type ChatPhase = 'start' | 'running' | 'done'
+type ChatPhase = 'start' | 'running' | 'done' | 'history'
 
 function detectNextAi(text: string, aiOrder: string[]): string | null {
   const lower = text.toLowerCase()
@@ -820,67 +820,184 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         <div className="absolute -right-[5px] top-48 w-[3px] h-20 bg-[#2a2a2a] rounded-r-sm" />
       </div>
 
-      {/* ── SCHERMO NATIVO MOBILE (visibile solo su schermi piccoli) ── */}
-      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value }}>
+      {/* ── SCHERMO NATIVO MOBILE ── */}
+      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, height: '100dvh', overflow: 'hidden' }}>
 
-        {/* Header mobile */}
-        <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-3 safe-top" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-          <div className="flex -space-x-2 flex-shrink-0">
-            {AI_ORDER.map(id => (
-              <div key={id} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[9px] font-bold ring-1"
-                style={{ backgroundColor: AI_COLOR[id], ['--tw-ring-color' as string]: bgPreset.header }}>
-                {AI_NAMES[id][0]}
-              </div>
-            ))}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-[14px] leading-none" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>AiGORÀ</div>
-            <div className="text-[11px] mt-0.5 truncate" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
-              {activeAi ? `${AI_NAMES[activeAi]} sta scrivendo…` : `Turno ${turnCount + 1} · ${AI_ORDER.length} AI`}
+        {/* Schermata cronologia mobile */}
+        {phase === 'history' && (
+          <div className="flex flex-col h-full" style={{ backgroundColor: '#07070f' }}>
+            {/* Header cronologia */}
+            <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-14 pb-4 border-b border-white/8">
+              <button onClick={() => setPhase(messages.length > 0 ? 'running' : 'start')}
+                className="w-9 h-9 flex items-center justify-center rounded-full"
+                style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <span className="text-white font-bold text-lg flex-1">Conversazioni</span>
+              <button onClick={() => { handleReset(); setPhase('start') }}
+                className="text-[13px] font-semibold" style={{ color: '#A78BFA' }}>
+                + Nuova
+              </button>
+            </div>
+            {/* Lista chat */}
+            <div className="flex-1 overflow-y-auto">
+              {savedChats.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3">
+                  <div className="text-white/20 text-4xl">💬</div>
+                  <p className="text-white/30 text-sm text-center px-8">Nessuna conversazione salvata.<br/>Le chat vengono salvate automaticamente.</p>
+                </div>
+              ) : savedChats.map((chat, i) => (
+                <button key={chat.id} onClick={() => {
+                  setMessages(chat.messages)
+                  chatHistoryRef.current = chat.history
+                  setPhase('running')
+                }}
+                  className="w-full flex items-center gap-3 px-4 py-3 active:bg-white/5 transition-colors"
+                  style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white"
+                    style={{ backgroundColor: '#7C3AED' }}>
+                    {(chat.title[0] || '?').toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="text-white text-[14px] font-medium truncate">{chat.title}</div>
+                    <div className="text-white/35 text-[12px] mt-0.5">{chat.date}</div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+              ))}
             </div>
           </div>
-          <button onClick={handleSynthesize}
-            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base transition-all active:scale-95"
-            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
-            📋
-          </button>
-        </div>
+        )}
 
-        {/* Avatar bar mobile */}
-        <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} />
+        {/* Schermata chat mobile */}
+        {phase !== 'history' && <>
 
-        {/* Messaggi mobile */}
-        <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
-          {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
-          {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
-          {waitingForUser && <UserTurnPrompt name={displayName} isDark={isDark} />}
-          <div ref={messagesEndRef} />
-        </div>
+          {/* Header mobile */}
+          <div className="flex-shrink-0 flex items-center gap-2 px-3 pt-12 pb-3 border-b"
+            style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+            {/* < Cronologia */}
+            <button onClick={() => setPhase('history')}
+              className="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-full active:scale-95"
+              style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
 
-        {/* Input bar mobile */}
-        <div className="flex-shrink-0 flex items-center gap-2 px-3 py-3" style={{
-          backgroundColor: bgPreset.header,
-          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-        }}>
-          <input
-            value={inputText}
-            onChange={e => setInputText(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSendMessage() }}
-            placeholder={waitingForUser ? `${displayName}, rispondi…` : 'Scrivi un messaggio…'}
-            className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none transition-all"
-            style={{
-              backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-              border: `1px solid ${waitingForUser ? (isDark ? 'rgba(196,181,253,0.4)' : 'rgba(109,40,217,0.3)') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')}`,
-              color: isDark ? '#f0f0f0' : '#111',
-            }}
-          />
-          <button onClick={handleSendMessage} disabled={!inputText.trim()}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 active:scale-95"
-            style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: inputText.trim() ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-          </button>
-        </div>
+            {/* Titolo centrale */}
+            <div className="flex-1 min-w-0 text-center">
+              <div className="font-bold text-[14px]" style={{ color: isDark ? '#fff' : '#111' }}>AiGORÀ</div>
+              <div className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
+                {activeAi ? `${AI_NAMES[activeAi]} sta scrivendo…` : `Turno ${turnCount + 1}`}
+              </div>
+            </div>
+
+            {/* Profilo + Sintesi */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button onClick={handleSynthesize}
+                className="w-9 h-9 flex items-center justify-center rounded-full active:scale-95 text-base"
+                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
+                📋
+              </button>
+              <button onClick={() => setShowProfileMenu(p => !p)}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                style={{ backgroundColor: '#F59E0B' }}>
+                {(displayName || userEmail || '?')[0].toUpperCase()}
+              </button>
+            </div>
+          </div>
+
+          {/* Dropdown profilo mobile */}
+          {showProfileMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+              <div className="absolute top-28 right-3 w-56 rounded-2xl overflow-hidden shadow-2xl z-50"
+                style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
+                <div className="px-4 py-3 border-b border-white/8">
+                  <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
+                  <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                    style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                    {(userPlan ?? 'free').toUpperCase()}
+                  </div>
+                </div>
+                <button onClick={() => signOut({ callbackUrl: '/login' })}
+                  className="w-full px-4 py-3 text-left text-sm text-red-400 font-medium">
+                  Esci dall'account
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Avatar bar mobile */}
+          <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} />
+
+          {/* Messaggi mobile */}
+          <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
+            {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
+            {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
+            {waitingForUser && <UserTurnPrompt name={displayName} isDark={isDark} />}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Pannello sintesi mobile — slide da destra */}
+          {showSynthesis && (
+            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: '#07070f' }}>
+              <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-14 pb-4 border-b border-white/8">
+                <button onClick={() => setShowSynthesis(false)}
+                  className="w-9 h-9 flex items-center justify-center rounded-full"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <div>
+                  <div className="text-white font-bold text-base">Sintesi</div>
+                  <div className="text-white/35 text-[11px]">{messages.filter(m => !m.isUser).length} messaggi analizzati</div>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5">
+                {isSynthesizing && !synthesis && (
+                  <div className="flex gap-2 items-center mt-8">
+                    {[0,150,300].map(d => <span key={d} className="w-2 h-2 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+                  </div>
+                )}
+                {synthesis && <p className="text-white/80 text-[14px] leading-[1.8] whitespace-pre-wrap">{synthesis}</p>}
+              </div>
+              {phase === 'done' && !isSynthesizing && (
+                <div className="p-4 border-t border-white/8">
+                  <button onClick={handleReset}
+                    className="w-full py-3 rounded-xl text-white/60 text-sm font-medium"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                    🔄 Nuovo dibattito
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Input bar mobile */}
+          <div className="flex-shrink-0 flex items-center gap-2 px-3 py-3" style={{
+            backgroundColor: bgPreset.header,
+            borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+          }}>
+            <input
+              value={inputText}
+              onChange={e => setInputText(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSendMessage() }}
+              placeholder={waitingForUser ? `${displayName}, rispondi…` : 'Scrivi un messaggio…'}
+              className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none transition-all"
+              style={{
+                backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                border: `1px solid ${waitingForUser ? (isDark ? 'rgba(196,181,253,0.4)' : 'rgba(109,40,217,0.3)') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')}`,
+                color: isDark ? '#f0f0f0' : '#111',
+              }}
+            />
+            <button onClick={handleSendMessage} disabled={!inputText.trim()}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: inputText.trim() ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+            </button>
+          </div>
+        </>}
       </div>
 
       {/* ── PANNELLO SINTESI ── */}

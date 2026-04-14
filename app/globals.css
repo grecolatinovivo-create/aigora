@@ -204,6 +204,8 @@ html, body {
     inset: 0;
     flex-direction: column;
     z-index: 50;
+    overflow: hidden;
+    height: 100dvh;
   }
   .synthesis-panel-mobile {
     position: fixed;
