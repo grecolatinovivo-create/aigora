@@ -107,13 +107,14 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
   }
 }
 
-async function* streamPerplexity(system: string, historyText: string, lastMessage: string): AsyncIterable<string> {
+async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false): AsyncIterable<string> {
   if (!process.env.PERPLEXITY_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
   const userMessage = historyText ? `Conversazione:\n\n${historyText}\n\n${lastMessage}` : lastMessage
+  const model = needsWebSearch ? 'sonar-pro' : 'sonar'
   const stream = await client.chat.completions.create({
-    model: 'sonar', max_tokens: 180, stream: true,
+    model, max_tokens: 180, stream: true,
     messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
   })
   for await (const chunk of stream) {
@@ -122,8 +123,8 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
   }
 }
 
-// Routing intelligente — Claude decide quale AI risponde per prima e in che modalità
-async function routeQuestion(question: string, availableAis: string[]): Promise<{ startAi: string; mode: 'debate' | 'focused' }> {
+// Routing intelligente — Claude decide AI, modalità e se serve web search
+async function routeQuestion(question: string, availableAis: string[]): Promise<{ startAi: string; mode: 'debate' | 'focused'; needsWebSearch: boolean }> {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const available = availableAis.join(', ')
@@ -134,9 +135,10 @@ async function routeQuestion(question: string, availableAis: string[]): Promise<
       role: 'user',
       content: `Hai queste AI disponibili: ${available}.
 
-Analizza la domanda e rispondi con DUE informazioni separate da "|":
+Analizza la domanda e rispondi con TRE informazioni separate da "|":
 1. L'AI più adatta a rispondere per prima
-2. La modalità: "debate" se è una domanda aperta/filosofica/di opinione, "focused" se è una richiesta pratica e specifica (scrivi, crea, spiega, dimmi, calcola, ecc.)
+2. La modalità: "debate" se è una domanda aperta/filosofica/di opinione, "focused" se è una richiesta pratica e specifica
+3. "web" se la domanda richiede dati in tempo reale (notizie, sport, meteo, prezzi, classifiche, eventi recenti), "noweb" altrimenti
 
 Regole per l'AI:
 - "perplexity": notizie recenti, fatti attuali, aggiornamenti
@@ -146,7 +148,7 @@ Regole per l'AI:
 
 Domanda: "${question}"
 
-Esempio risposta: gpt|focused
+Esempio risposta: perplexity|debate|web
 Rispondi SOLO con il formato richiesto.`,
     }],
   })
@@ -154,15 +156,17 @@ Rispondi SOLO con il formato richiesto.`,
   const parts = raw.split('|')
   const aiRaw = parts[0]?.trim()
   const modeRaw = parts[1]?.trim()
+  const webRaw = parts[2]?.trim()
 
   const startAi = availableAis.includes(aiRaw) ? aiRaw : (availableAis.includes('claude') ? 'claude' : availableAis[0])
   const mode: 'debate' | 'focused' = modeRaw === 'focused' ? 'focused' : 'debate'
-  return { startAi, mode }
+  const needsWebSearch = webRaw === 'web'
+  return { startAi, mode, needsWebSearch }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { history, aiId, action, interruptorId, speakerName, availableAis, question } = await req.json()
+    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch } = await req.json()
     const historyText = history.length > 0
       ? history.map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
       : ''
@@ -202,7 +206,7 @@ export async function POST(req: NextRequest) {
     if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage))
     if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage))
     if (aiId === 'gemini')     return sseStream(streamGemini(system, historyText, lastMessage))
-    if (aiId === 'perplexity') return sseStream(streamPerplexity(system, historyText, lastMessage))
+    if (aiId === 'perplexity') return sseStream(streamPerplexity(system, historyText, lastMessage, needsWebSearch))
 
     return new Response('AI non trovata', { status: 400 })
   } catch (error) {
