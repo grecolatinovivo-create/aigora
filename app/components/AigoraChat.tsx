@@ -494,33 +494,33 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         {/* Bubble fluttuanti (solo desktop xl+) */}
         {allTopics.map((text, i) => {
           const positions = [
-            { top: '15%',  left: 'calc(50% - 420px)' },
-            { top: '32%',  right: 'calc(50% - 420px)' },
-            { top: '48%',  left: 'calc(50% - 410px)' },
-            { top: '65%',  right: 'calc(50% - 410px)' },
-            { top: '20%',  left: 'calc(50% - 430px)' },
-            { top: '55%',  right: 'calc(50% - 430px)' },
-            { top: '72%',  left: 'calc(50% - 405px)' },
-            { top: '38%',  right: 'calc(50% - 405px)' },
+            { top: '12%', left: '8%'  },
+            { top: '22%', right: '9%' },
+            { top: '38%', left: '5%'  },
+            { top: '55%', right: '6%' },
+            { top: '68%', left: '10%' },
+            { top: '78%', right: '8%' },
+            { top: '45%', left: '7%'  },
+            { top: '30%', right: '7%' },
           ]
           const pos = positions[i % positions.length]
-          const delays = ['0s', '1.8s', '3.6s', '0.9s', '2.7s', '4.5s', '1.4s', '3.2s']
-          const durs = ['5s', '6s', '5.5s', '6.5s', '5.2s', '6.2s', '5.8s', '6.8s']
-          const anims = ['float-1', 'float-2', 'float-3', 'float-4']
+          const delays = ['0s', '2s', '4s', '1s', '3s', '5s', '1.5s', '3.5s']
+          const durs   = ['9s', '11s', '10s', '12s', '9.5s', '11.5s', '10.5s', '12.5s']
+          const anims  = ['float-1', 'float-2', 'float-3', 'float-4']
 
           return (
             <div key={i}
-              className="absolute hidden xl:block px-4 py-2.5 rounded-full text-[12px] font-medium pointer-events-none select-none will-change-transform"
+              className="absolute hidden xl:block px-4 py-2.5 rounded-full text-[12px] font-medium pointer-events-none select-none"
               style={{
                 ...pos,
-                color: 'rgba(255,255,255,0.65)',
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(10px)',
+                color: 'rgba(255,255,255,0.55)',
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(8px)',
                 maxWidth: '200px',
                 textAlign: 'center',
                 lineHeight: 1.4,
-                animation: `${anims[i % 4]} ${durs[i % durs.length]} cubic-bezier(0.4, 0.0, 0.2, 1) infinite`,
+                animation: `${anims[i % 4]} ${durs[i % durs.length]} ease-in-out infinite`,
                 animationDelay: delays[i % delays.length],
               }}>
               {text}
@@ -529,56 +529,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         })}
 
         <div className="w-full max-w-lg scale-in relative z-10">
-
-          {/* Navbar desktop */}
-          <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={() => window.location.href = '/dashboard'}
-              title="Cronologia"
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: 'rgba(255,255,255,0.4)',
-                backdropFilter: 'blur(8px)'
-              }}>
-              <span style={{ fontSize: '14px' }}>🕐</span>
-              <span>Cronologia</span>
-            </button>
-
-            {/* Profilo dropdown */}
-            <div className="relative">
-              <button onClick={() => setShowProfileMenu(p => !p)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform duration-200 hover:scale-110 active:scale-95"
-                style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>
-                {(userEmail || '?')[0].toUpperCase()}
-              </button>
-
-              {/* Dropdown menu */}
-              {showProfileMenu && (
-                <div className="absolute right-0 top-12 w-56 rounded-2xl overflow-hidden shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
-                  style={{
-                    backgroundColor: 'rgba(15,15,20,0.95)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    backdropFilter: 'blur(16px)'
-                  }}>
-                  <div className="px-4 py-3 border-b border-white/8">
-                    <div className="text-white font-semibold text-sm truncate">{displayName || userEmail || '—'}</div>
-                    <div className="text-white/40 text-[11px] truncate mt-1">{userEmail}</div>
-                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                      style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
-                      {(userPlan ?? 'FREE').toUpperCase()}
-                    </div>
-                  </div>
-                  <button onClick={() => { signOut({ callbackUrl: '/login' }); setShowProfileMenu(false) }}
-                    className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors duration-150 font-medium">
-                    Esci
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Hero */}
           <div className="text-center mb-10">
