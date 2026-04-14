@@ -35,7 +35,7 @@ export default function PricingPage() {
   return (
     <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-16">
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-black text-white mb-3">Ai<span style={{ color: '#A78BFA' }}>GOR</span>À</h1>
+        <h1 className="text-5xl font-black mb-3"><span style={{ color: '#A78BFA' }}>A</span><span className="text-white">i</span><span style={{ color: '#A78BFA' }}>GORÀ</span></h1>
         <p className="text-white/50 text-base">Scegli il piano e inizia il dibattito</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-4xl">

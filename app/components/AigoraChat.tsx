@@ -598,8 +598,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
               4 intelligenze artificiali · dibattito in tempo reale
             </div>
-            <h1 className="text-6xl font-black text-white mb-3 tracking-tight leading-none">
-              Ai<span style={{ color: '#A78BFA' }}>GOR</span>À
+            <h1 className="text-6xl font-black mb-3 tracking-tight leading-none">
+              <span style={{ color: '#A78BFA' }}>A</span><span className="text-white">i</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
             </h1>
             <p className="text-white/50 text-sm leading-relaxed max-w-sm mx-auto">
               Poni una domanda e assisti al dibattito in tempo reale tra le quattro principali intelligenze artificiali
@@ -736,15 +736,18 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
 
           {/* Chat header */}
-          <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-            {/* Cronologia sx */}
-            <button onClick={() => { handleReset(); window.location.href = '/dashboard' }}
-              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-105 active:scale-95"
-              style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
-              🕐
-            </button>
+          <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+            {/* Avatar sovrapposti */}
+            <div className="flex -space-x-2 flex-shrink-0">
+              {AI_ORDER.map(id => (
+                <div key={id} className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[8px] font-bold ring-1"
+                  style={{ backgroundColor: AI_COLOR[id], ['--tw-ring-color' as string]: bgPreset.header }}>
+                  {AI_NAMES[id][0]}
+                </div>
+              ))}
+            </div>
 
-            <div className="flex-1 min-w-0 text-center">
+            <div className="flex-1 min-w-0">
               <div className="font-semibold text-[13px] leading-none" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>AiGORÀ</div>
               <div className="text-[10px] mt-0.5 truncate" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
                 {activeAi ? `${AI_NAMES[activeAi]} sta scrivendo…` : `Turno ${turnCount + 1} · 4 AI`}
@@ -760,11 +763,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               ))}
             </div>
 
-            {/* Profilo dx */}
-            <button onClick={() => signOut({ callbackUrl: '/login' })} title="Esci"
+            {/* Sintesi */}
+            <button onClick={handleSynthesize} title="Sintetizza"
               className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-105"
               style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
-              👤
+              📋
             </button>
           </div>
 
