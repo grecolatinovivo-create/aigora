@@ -52,7 +52,7 @@ export default function RegisterPage() {
     <div className="desktop-bg min-h-screen flex items-center justify-center px-4">
       <div className="glass rounded-3xl p-8 w-full max-w-sm scale-in">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-white mb-2">Ai<span style={{ color: '#A78BFA' }}>GOR</span>À</h1>
+          <h1 className="text-4xl font-black mb-2"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></h1>
           <p className="text-white/50 text-sm">Crea un account</p>
         </div>
 

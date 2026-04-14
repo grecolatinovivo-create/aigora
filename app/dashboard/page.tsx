@@ -32,7 +32,7 @@ function DashboardContent() {
   return (
     <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="glass rounded-3xl p-8 w-full max-w-md scale-in text-center">
-        <h1 className="text-3xl font-black mb-1"><span style={{ color: '#A78BFA' }}>A</span><span className="text-white">i</span><span style={{ color: '#A78BFA' }}>GORÀ</span></h1>
+        <h1 className="text-3xl font-black mb-1"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></h1>
         <p className="text-white/40 text-sm mb-6">Benvenuto, {session?.user?.name || session?.user?.email}</p>
 
         {success && (

@@ -65,8 +65,7 @@ export default async function UserProfilePage({ params }: { params: { username: 
       }}>
         <a href="/" style={{ textDecoration: 'none' }}>
           <span style={{ fontSize: '18px', fontWeight: 900 }}>
-            <span style={{ color: '#A78BFA' }}>A</span>
-            <span style={{ color: 'white' }}>i</span>
+            <span style={{ color: 'white' }}>Ai</span>
             <span style={{ color: '#A78BFA' }}>GORÀ</span>
           </span>
         </a>

@@ -278,8 +278,7 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
 
       {/* Centro — Logo */}
       <span className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight">
-        <span style={{ color: '#A78BFA' }}>A</span>
-        <span className="text-white">i</span>
+        <span className="text-white">Ai</span>
         <span style={{ color: '#A78BFA' }}>GORÀ</span>
       </span>
 
@@ -1033,8 +1032,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               {/* Logo */}
               <h1 className="font-black tracking-tight leading-none"
                 style={{ fontSize: 'clamp(2.8rem, 14vw, 4rem)', marginBottom: '8px' }}>
-                <span style={{ color: '#A78BFA' }}>A</span>
-                <span className="text-white">i</span>
+                <span className="text-white">Ai</span>
                 <span style={{ color: '#A78BFA' }}>GORÀ</span>
               </h1>
               {/* Sottotitolo */}

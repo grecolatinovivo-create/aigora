@@ -73,8 +73,7 @@ export default async function AdminPage() {
         <div className="mb-8 flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-black mb-1">
-              <span style={{ color: '#A78BFA' }}>A</span>
-              <span className="text-white">i</span>
+              <span className="text-white">Ai</span>
               <span style={{ color: '#A78BFA' }}>GORÀ</span>
               <span className="text-white/40 text-xl font-normal ml-3">Admin</span>
             </h1>

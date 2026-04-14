@@ -52,7 +52,7 @@ function AuthCard() {
     <div className="glass rounded-3xl p-8 w-full max-w-sm scale-in relative z-10">
       {/* Logo */}
       <div className="text-center mb-6">
-        <h1 className="text-4xl font-black mb-1"><span style={{ color: '#A78BFA' }}>A</span><span className="text-white">i</span><span style={{ color: '#A78BFA' }}>GORÀ</span></h1>
+        <h1 className="text-4xl font-black mb-1"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></h1>
         <p className="text-white/40 text-xs">Il dibattito delle intelligenze artificiali</p>
       </div>
 
