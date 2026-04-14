@@ -616,8 +616,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTurnCount(0)
     setPhase('running')
 
-    // Routing intelligente — Claude decide chi inizia e che modalità usare
-    let startAi = 'claude'
+    // AI iniziale: random tra quelle disponibili
+    const startAi = AI_ORDER[Math.floor(Math.random() * AI_ORDER.length)]
+
+    // Routing intelligente solo per modalità e web search (in background)
     let mode: 'debate' | 'focused' = 'debate'
     try {
       const res = await fetch('/api/chat', {
@@ -626,7 +628,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({ action: 'route', question: q, availableAis: AI_ORDER, history: [] }),
       })
       const data = await res.json()
-      if (data.startAi && AI_ORDER.includes(data.startAi)) startAi = data.startAi
       if (data.mode === 'focused') mode = 'focused'
       needsWebSearchRef.current = !!data.needsWebSearch
     } catch {}
