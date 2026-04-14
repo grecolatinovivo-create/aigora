@@ -132,11 +132,11 @@ export default async function UserProfilePage({ params }: { params: { username: 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {publicChats.map(chat => {
               const messages = chat.messages as any[]
-              const aiIds = [...new Set(
+              const aiIds = Array.from(new Set(
                 (Array.isArray(messages) ? messages : [])
                   .filter((m: any) => !m.isUser && m.aiId)
                   .map((m: any) => m.aiId)
-              )] as string[]
+              )) as string[]
               const msgCount = Array.isArray(messages) ? messages.length : 0
               const date = new Date(chat.updatedAt).toLocaleDateString('it-IT', {
                 day: '2-digit', month: 'short', year: 'numeric',
