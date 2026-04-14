@@ -33,6 +33,13 @@ const TOPIC_SUGGESTIONS = [
   'Dovremmo colonizzare Marte?',
 ]
 
+// Topic aggiuntivi per le bubble fluttuanti
+const FLOATING_TOPICS = [
+  'La coscienza è solo chimica?',
+  'Chi controlla l\'IA?',
+  'Il futuro è distopico?',
+]
+
 type ChatPhase = 'start' | 'running' | 'done'
 
 function detectNextAi(text: string, aiOrder: string[]): string | null {
@@ -392,26 +399,60 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
   if (!nameConfirmed) {
     return (
-      <div className="desktop-bg min-h-screen flex items-center justify-center px-4 relative">
-        {/* Navbar */}
-        <div className="absolute top-6 left-4 right-4 flex items-center justify-between">
+      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 relative">
+        {/* Navbar desktop */}
+        <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
           <button onClick={() => window.location.href = '/dashboard'}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
-            style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
-            <span style={{ fontSize: 15 }}>🕐</span>
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.4)',
+              backdropFilter: 'blur(8px)'
+            }}>
+            <span style={{ fontSize: '14px' }}>🕐</span>
             <span>Cronologia</span>
           </button>
-          <button onClick={() => signOut({ callbackUrl: '/login' })}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
-            style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
-            <span style={{ fontSize: 15 }}>👤</span>
-            <span>{userEmail ?? 'Profilo'}</span>
-          </button>
+
+          {/* Profilo dropdown */}
+          <div className="relative">
+            <button onClick={() => setShowProfileMenu(p => !p)}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform duration-200 hover:scale-110 active:scale-95"
+              style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>
+              {(userEmail || '?')[0].toUpperCase()}
+            </button>
+
+            {/* Dropdown menu */}
+            {showProfileMenu && (
+              <div className="absolute right-0 top-12 w-56 rounded-2xl overflow-hidden shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
+                style={{
+                  backgroundColor: 'rgba(15,15,20,0.95)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(16px)'
+                }}>
+                <div className="px-4 py-3 border-b border-white/8">
+                  <div className="text-white font-semibold text-sm truncate">{displayName || userEmail || '—'}</div>
+                  <div className="text-white/40 text-[11px] truncate mt-1">{userEmail}</div>
+                  <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                    style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                    {(userPlan ?? 'FREE').toUpperCase()}
+                  </div>
+                </div>
+                <button onClick={() => { signOut({ callbackUrl: '/login' }); setShowProfileMenu(false) }}
+                  className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors duration-150 font-medium">
+                  Esci
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="glass rounded-3xl p-8 w-full max-w-xs scale-in text-center">
-          <div className="text-3xl mb-2">👋</div>
-          <h2 className="text-2xl font-black text-white mb-1">Come ti chiami?</h2>
-          <p className="text-white/40 text-sm mb-6">Il tuo nome apparirà nel dibattito</p>
+
+        {/* Card nome centrale */}
+        <div className="glass rounded-3xl p-8 w-full max-w-sm scale-in text-center">
+          <div className="text-5xl mb-4">👋</div>
+          <h2 className="text-2xl font-black text-white mb-2">Come ti chiami?</h2>
+          <p className="text-white/50 text-sm mb-8">Il tuo nome apparirà nel dibattito tra le AI</p>
           <input
             autoFocus
             type="text"
@@ -419,18 +460,23 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             value={nameInput}
             onChange={e => setNameInput(e.target.value)}
             onKeyDown={e => {
-              if (e.key === 'Enter') {
-                const n = nameInput.trim()
-                setUserName(n)
+              if (e.key === 'Enter' && nameInput.trim()) {
+                setUserName(nameInput.trim())
                 setNameConfirmed(true)
               }
             }}
-            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/30 border border-white/10 focus:outline-none focus:border-purple-400 text-sm mb-3"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 text-white placeholder-white/25 border border-white/10 focus:outline-none focus:border-purple-400/50 focus:ring-2 focus:ring-purple-500/10 text-sm mb-4 transition-all duration-200"
           />
           <button
-            onClick={() => { const n = nameInput.trim(); setUserName(n); setNameConfirmed(true) }}
-            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-            style={{ background: 'linear-gradient(135deg, #7C3AED, #A78BFA)' }}>
+            onClick={() => {
+              if (nameInput.trim()) {
+                setUserName(nameInput.trim())
+                setNameConfirmed(true)
+              }
+            }}
+            disabled={!nameInput.trim()}
+            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: nameInput.trim() ? 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)' : '#333', boxShadow: nameInput.trim() ? '0 4px 20px rgba(124, 58, 237, 0.35)' : undefined }}>
             Entra nel dibattito →
           </button>
         </div>
@@ -440,43 +486,41 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA INIZIALE ────────────────────────────────────────────────────────
   if (phase === 'start') {
+    const allTopics = TOPIC_SUGGESTIONS.concat(FLOATING_TOPICS)
+
     return (
       <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12 mobile-start relative overflow-hidden">
 
-        {/* Bubble fluttuanti */}
-        {TOPIC_SUGGESTIONS.concat([
-          'La coscienza è solo chimica?',
-          'Chi controlla l\'AI?',
-          'Il futuro è distopico?',
-        ]).map((text, i) => {
-          // Posizioni vicino alla card: sx e dx subito fuori dal max-w-lg
+        {/* Bubble fluttuanti (solo desktop xl+) */}
+        {allTopics.map((text, i) => {
           const positions = [
-            { top: '12%',  left: 'calc(50% - 380px)' },
-            { top: '28%',  right: 'calc(50% - 380px)' },
-            { top: '44%',  left: 'calc(50% - 370px)' },
-            { top: '60%',  right: 'calc(50% - 370px)' },
-            { top: '76%',  left: 'calc(50% - 360px)' },
-            { top: '20%',  right: 'calc(50% - 360px)' },
-            { top: '52%',  left: 'calc(50% - 390px)' },
-            { top: '68%',  right: 'calc(50% - 390px)' },
+            { top: '15%',  left: 'calc(50% - 420px)' },
+            { top: '32%',  right: 'calc(50% - 420px)' },
+            { top: '48%',  left: 'calc(50% - 410px)' },
+            { top: '65%',  right: 'calc(50% - 410px)' },
+            { top: '20%',  left: 'calc(50% - 430px)' },
+            { top: '55%',  right: 'calc(50% - 430px)' },
+            { top: '72%',  left: 'calc(50% - 405px)' },
+            { top: '38%',  right: 'calc(50% - 405px)' },
           ]
           const pos = positions[i % positions.length]
-          const delays = ['0s','1.5s','3s','0.7s','2.2s','4s','1s','2.8s']
-          const durs   = ['4s','5s','4.5s','5.5s','4.2s','5.2s','4.8s','5.8s']
-          const anims  = ['bubble-1','bubble-2','bubble-3','bubble-4']
+          const delays = ['0s', '1.8s', '3.6s', '0.9s', '2.7s', '4.5s', '1.4s', '3.2s']
+          const durs = ['5s', '6s', '5.5s', '6.5s', '5.2s', '6.2s', '5.8s', '6.8s']
+          const anims = ['float-1', 'float-2', 'float-3', 'float-4']
+
           return (
             <div key={i}
-              className="absolute hidden xl:block px-3 py-2 rounded-full text-[11px] font-medium pointer-events-none select-none"
+              className="absolute hidden xl:block px-4 py-2.5 rounded-full text-[12px] font-medium pointer-events-none select-none will-change-transform"
               style={{
                 ...pos,
-                color: 'rgba(255,255,255,0.6)',
+                color: 'rgba(255,255,255,0.65)',
                 backgroundColor: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)',
-                maxWidth: 190,
+                border: '1px solid rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)',
+                maxWidth: '200px',
                 textAlign: 'center',
-                lineHeight: 1.35,
-                animation: `${anims[i % 4]} ${durs[i % durs.length]} ease-in-out infinite`,
+                lineHeight: 1.4,
+                animation: `${anims[i % 4]} ${durs[i % durs.length]} cubic-bezier(0.4, 0.0, 0.2, 1) infinite`,
                 animationDelay: delays[i % delays.length],
               }}>
               {text}
@@ -486,24 +530,54 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
         <div className="w-full max-w-lg scale-in relative z-10">
 
-          {/* Navbar */}
+          {/* Navbar desktop */}
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={() => window.location.href = '/dashboard'}
               title="Cronologia"
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
-              style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
-              <span style={{ fontSize: 15 }}>🕐</span>
+              className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: 'rgba(255,255,255,0.4)',
+                backdropFilter: 'blur(8px)'
+              }}>
+              <span style={{ fontSize: '14px' }}>🕐</span>
               <span>Cronologia</span>
             </button>
-            <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              title="Profilo"
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
-              style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
-              <span style={{ fontSize: 15 }}>👤</span>
-              <span>{userEmail ?? 'Profilo'}</span>
-            </button>
+
+            {/* Profilo dropdown */}
+            <div className="relative">
+              <button onClick={() => setShowProfileMenu(p => !p)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform duration-200 hover:scale-110 active:scale-95"
+                style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>
+                {(userEmail || '?')[0].toUpperCase()}
+              </button>
+
+              {/* Dropdown menu */}
+              {showProfileMenu && (
+                <div className="absolute right-0 top-12 w-56 rounded-2xl overflow-hidden shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
+                  style={{
+                    backgroundColor: 'rgba(15,15,20,0.95)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(16px)'
+                  }}>
+                  <div className="px-4 py-3 border-b border-white/8">
+                    <div className="text-white font-semibold text-sm truncate">{displayName || userEmail || '—'}</div>
+                    <div className="text-white/40 text-[11px] truncate mt-1">{userEmail}</div>
+                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                      style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                      {(userPlan ?? 'FREE').toUpperCase()}
+                    </div>
+                  </div>
+                  <button onClick={() => { signOut({ callbackUrl: '/login' }); setShowProfileMenu(false) }}
+                    className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors duration-150 font-medium">
+                    Esci
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Hero */}
@@ -583,38 +657,47 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   return (
     <div className="desktop-bg min-h-screen flex items-center justify-center p-6 gap-6 chat-layout relative">
 
-      {/* Navbar pagina */}
-      <div className="absolute top-5 left-6 right-6 flex items-center justify-between z-50">
+      {/* Navbar desktop pagina */}
+      <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-50">
         <button onClick={() => { handleReset(); window.location.href = '/dashboard' }}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
-          style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
-          Cronologia
+          className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'rgba(255,255,255,0.4)',
+            backdropFilter: 'blur(8px)'
+          }}>
+          🕐 Cronologia
         </button>
+
+        {/* Profilo dropdown */}
         <div className="relative">
           <button onClick={() => setShowProfileMenu(p => !p)}
-            className="flex items-center gap-2 transition-all hover:scale-105">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
-              style={{ backgroundColor: '#F59E0B' }}>
-              {(displayName || userEmail || '?')[0].toUpperCase()}
-            </div>
+            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform duration-200 hover:scale-110 active:scale-95"
+            style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>
+            {(displayName || userEmail || '?')[0].toUpperCase()}
           </button>
 
-          {/* Menu profilo */}
+          {/* Menu profilo dropdown */}
           {showProfileMenu && (
-            <div className="absolute right-0 top-10 w-52 rounded-2xl overflow-hidden shadow-2xl z-50"
-              style={{ backgroundColor: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
+            <div className="absolute right-0 top-12 w-56 rounded-2xl overflow-hidden shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
+              style={{
+                backgroundColor: 'rgba(15,15,20,0.95)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(16px)'
+              }}>
               <div className="px-4 py-3 border-b border-white/8">
-                <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
-                <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
-                <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                  style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                  {(userPlan ?? 'free').toUpperCase()}
+                <div className="text-white font-semibold text-sm truncate">{displayName || userEmail || '—'}</div>
+                <div className="text-white/40 text-[11px] truncate mt-1">{userEmail}</div>
+                <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                  {(userPlan ?? 'FREE').toUpperCase()}
                 </div>
               </div>
-              <button onClick={() => signOut({ callbackUrl: '/login' })}
-                className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors">
-                Esci dall'account
+              <button onClick={() => { signOut({ callbackUrl: '/login' }); setShowProfileMenu(false) }}
+                className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors duration-150 font-medium">
+                Esci
               </button>
             </div>
           )}

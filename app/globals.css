@@ -21,7 +21,48 @@ html, body {
     radial-gradient(ellipse 50% 40% at 60% 20%, rgba(26,115,232,0.10) 0%, transparent 50%);
 }
 
-/* ── Animazioni ── */
+/* ── Animazioni Floating Topics ── */
+@keyframes float-1 {
+  0%   { transform: translate(0px, 0px);        opacity: 0;    }
+  5%   { opacity: 0.7; }
+  25%  { transform: translate(12px, -18px);    }
+  50%  { transform: translate(-16px, -28px);    opacity: 0.85; }
+  75%  { transform: translate(18px, -12px);    }
+  95%  { opacity: 0.7; }
+  100% { transform: translate(0px, 0px);        opacity: 0;    }
+}
+
+@keyframes float-2 {
+  0%   { transform: translate(0px, 0px);        opacity: 0;    }
+  8%   { opacity: 0.75; }
+  28%  { transform: translate(-14px, -16px);   }
+  52%  { transform: translate(10px, -32px);     opacity: 0.85; }
+  72%  { transform: translate(-18px, -14px);   }
+  92%  { opacity: 0.7; }
+  100% { transform: translate(0px, 0px);        opacity: 0;    }
+}
+
+@keyframes float-3 {
+  0%   { transform: translate(0px, 0px);        opacity: 0;    }
+  6%   { opacity: 0.7; }
+  30%  { transform: translate(16px, -20px);    }
+  55%  { transform: translate(-12px, -24px);    opacity: 0.85; }
+  75%  { transform: translate(14px, -16px);    }
+  94%  { opacity: 0.65; }
+  100% { transform: translate(0px, 0px);        opacity: 0;    }
+}
+
+@keyframes float-4 {
+  0%   { transform: translate(0px, 0px);        opacity: 0;    }
+  7%   { opacity: 0.75; }
+  27%  { transform: translate(-18px, -22px);   }
+  50%  { transform: translate(14px, -30px);     opacity: 0.85; }
+  73%  { transform: translate(-10px, -18px);   }
+  93%  { opacity: 0.7; }
+  100% { transform: translate(0px, 0px);        opacity: 0;    }
+}
+
+/* ── Animazioni legacy bubble (mantenute per compatibilità) ── */
 @keyframes bubble-1 {
   0%   { transform: translate(0px, 0px);      opacity: 0;    }
   10%  { opacity: 0.75; }
@@ -92,9 +133,21 @@ html, body {
   to   { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes animate-in-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-in-from-top-2 {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .message-enter   { animation: fade-in-up 0.28s ease-out forwards; }
 .scale-in        { animation: scale-in 0.3s ease-out forwards; }
 .slide-in-right  { animation: slide-in-right 0.35s ease-out forwards; }
+.animate-in.fade-in { animation: animate-in-fade 0.2s ease-out forwards; }
+.animate-in.slide-in-from-top-2 { animation: slide-in-from-top-2 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 
 .typewriter-cursor::after {
   content: '▋';
