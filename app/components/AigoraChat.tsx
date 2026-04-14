@@ -253,7 +253,7 @@ function UserTurnPrompt({ name, isDark }: { name: string; isDark: boolean }) {
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
-function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut }: {
+function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount }: {
   onCronologia: () => void
   displayName: string
   userEmail?: string
@@ -261,6 +261,7 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
   showProfileMenu: boolean
   setShowProfileMenu: (v: boolean | ((p: boolean) => boolean)) => void
   onSignOut: () => void
+  unreadCount?: number
 }) {
   return (
     <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 h-14"
@@ -289,6 +290,12 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
           style={{ backgroundColor: '#F59E0B', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
           {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
         </button>
+        {(unreadCount ?? 0) > 0 && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white pointer-events-none"
+            style={{ backgroundColor: '#7C3AED' }}>
+            {unreadCount}
+          </div>
+        )}
         {showProfileMenu && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
@@ -460,6 +467,64 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     })
   }, [])
   const [savedChats, setSavedChats] = useState<{id:string; title:string; date:string; messages: Message[]; history: {name:string;content:string}[]}[]>([])
+  const [socialTab, setSocialTab] = useState<'solo' | 'feed' | 'crea'>('solo')
+  const [rooms, setRooms] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [createTopic, setCreateTopic] = useState('')
+  const [createVisibility, setCreateVisibility] = useState<'public' | 'private'>('public')
+  const [createAis, setCreateAis] = useState(['claude', 'gemini', 'perplexity', 'gpt'])
+  const [createInvited, setCreateInvited] = useState<{id:string; name:string}[]>([])
+  const [userSearch, setUserSearch] = useState('')
+  const [userResults, setUserResults] = useState<any[]>([])
+  const [creatingRoom, setCreatingRoom] = useState(false)
+
+  // Carica rooms e notifiche (solo admin)
+  useEffect(() => {
+    if (userPlan !== 'admin') return
+    fetch('/api/rooms').then(r => r.json()).then(d => { if (d.rooms) setRooms(d.rooms) }).catch(() => {})
+    fetch('/api/notifications').then(r => r.json()).then(d => {
+      if (d.notifications) {
+        setNotifications(d.notifications)
+        setUnreadCount(d.notifications.filter((n: any) => !n.read).length)
+      }
+    }).catch(() => {})
+  }, [userPlan])
+
+  // Ricerca utenti con debounce
+  useEffect(() => {
+    if (userSearch.length < 2) { setUserResults([]); return }
+    const t = setTimeout(() => {
+      fetch(`/api/users/search?q=${encodeURIComponent(userSearch)}`)
+        .then(r => r.json()).then(d => setUserResults(d.users ?? [])).catch(() => {})
+    }, 300)
+    return () => clearTimeout(t)
+  }, [userSearch])
+
+  const handleCreateRoom = async () => {
+    if (!createTopic.trim()) return
+    setCreatingRoom(true)
+    try {
+      const res = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: createTopic,
+          visibility: createVisibility,
+          aiIds: createAis,
+          invitedUserIds: createInvited.map(u => u.id),
+        }),
+      })
+      const data = await res.json()
+      if (data.room) {
+        setRooms(prev => [data.room, ...prev])
+        setCreateTopic('')
+        setCreateInvited([])
+        setSocialTab('feed')
+      }
+    } catch {}
+    setCreatingRoom(false)
+  }
 
   // Carica cronologia dal server
   useEffect(() => {
@@ -916,6 +981,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     showProfileMenu,
     setShowProfileMenu,
     onSignOut: () => signOut({ callbackUrl: '/login' }),
+    unreadCount,
   }
 
   if (!nameConfirmed) {
@@ -1023,6 +1089,25 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           <div className="w-full max-w-lg flex flex-col" style={{ gap: '14px' }}>
 
+            {/* ── TAB SOCIAL (solo admin) ── */}
+            {userPlan === 'admin' && (
+              <div className="flex rounded-2xl overflow-hidden p-1" style={{ backgroundColor: 'rgba(255,255,255,0.05)', gap: '4px' }}>
+                {([['solo', '✦ Solo'], ['feed', '🏛 Feed'], ['crea', '＋ Crea']] as const).map(([tab, label]) => (
+                  <button key={tab} onClick={() => setSocialTab(tab)}
+                    className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                    style={{
+                      backgroundColor: socialTab === tab ? 'rgba(124,58,237,0.5)' : 'transparent',
+                      color: socialTab === tab ? 'white' : 'rgba(255,255,255,0.35)',
+                    }}>
+                    {label}
+                    {tab === 'feed' && unreadCount > 0 && (
+                      <span className="ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-black" style={{ backgroundColor: '#7C3AED', color: 'white' }}>{unreadCount}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* ── HERO ── */}
             <div className="text-center">
               {/* Badge — nascosto su mobile piccolo per risparmiare spazio */}
@@ -1073,38 +1158,207 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               ))}
             </div>
 
-            {/* ── Form domanda ── */}
-            <div className="glass rounded-3xl" style={{ padding: '12px' }}>
-              <textarea
-                value={question}
-                onChange={e => setQuestion(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStart() } }}
-                placeholder="Poni una domanda alle AI…"
-                rows={3}
-                className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-purple-500/50 placeholder:text-white/20 resize-none leading-relaxed transition-colors"
-                style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', marginBottom: '8px' }}
-              />
-
-              {/* Topic suggeriti — solo mobile */}
-              <div className="lg:hidden">
-                <RotatingTopics onSelect={setQuestion} />
+            {/* ── TAB SOLO: form normale ── */}
+            {(!userPlan || userPlan !== 'admin' || socialTab === 'solo') && (
+              <div className="glass rounded-3xl" style={{ padding: '12px' }}>
+                <textarea
+                  value={question}
+                  onChange={e => setQuestion(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStart() } }}
+                  placeholder="Poni una domanda alle AI…"
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-purple-500/50 placeholder:text-white/20 resize-none leading-relaxed transition-colors"
+                  style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', marginBottom: '8px' }}
+                />
+                <div className="lg:hidden">
+                  <RotatingTopics onSelect={setQuestion} />
+                </div>
+                <button
+                  onClick={() => handleStart()}
+                  disabled={!question.trim()}
+                  className="w-full rounded-xl font-semibold text-white transition-all disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98]"
+                  style={{
+                    padding: '13px',
+                    fontSize: 'clamp(13px, 3.5vw, 15px)',
+                    background: question.trim() ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : '#333',
+                    boxShadow: question.trim() ? '0 4px 24px rgba(124,58,237,0.45)' : undefined,
+                  }}>
+                  Avvia il dibattito →
+                </button>
               </div>
+            )}
 
-              {/* CTA */}
-              <button
-                onClick={() => handleStart()}
-                disabled={!question.trim()}
-                className="w-full rounded-xl font-semibold text-white transition-all disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98]"
-                style={{
-                  padding: '13px',
-                  fontSize: 'clamp(13px, 3.5vw, 15px)',
-                  background: question.trim() ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : '#333',
-                  boxShadow: question.trim() ? '0 4px 24px rgba(124,58,237,0.45)' : undefined,
-                }}
-              >
-                Avvia il dibattito →
-              </button>
-            </div>
+            {/* ── TAB FEED ── */}
+            {userPlan === 'admin' && socialTab === 'feed' && (
+              <div className="flex flex-col gap-3">
+                {/* Notifiche pendenti */}
+                {notifications.filter(n => !n.read).map((n: any) => (
+                  <div key={n.id} className="glass rounded-2xl p-4" style={{ borderColor: 'rgba(124,58,237,0.3)', backgroundColor: 'rgba(124,58,237,0.07)' }}>
+                    <div className="text-sm text-white/80 mb-2">
+                      {n.type === 'room_invite' && <span><strong className="text-white">{n.fromName}</strong> ti ha invitato: <em className="text-white/70">"{n.roomTopic}"</em></span>}
+                      {n.type === 'follow' && <span><strong className="text-white">{n.fromName}</strong> ha iniziato a seguirti</span>}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={async () => {
+                        await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: n.id }) })
+                        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
+                        setUnreadCount(c => Math.max(0, c - 1))
+                      }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
+                        Accetta
+                      </button>
+                      <button onClick={async () => {
+                        await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: n.id }) })
+                        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
+                        setUnreadCount(c => Math.max(0, c - 1))
+                      }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white/40" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+                        Rifiuta
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Lista room */}
+                {rooms.length === 0 ? (
+                  <div className="text-center py-8 text-white/25 text-sm">Nessun dibattito ancora.<br/>Creane uno!</div>
+                ) : rooms.map((room: any) => {
+                  const aiColors: Record<string,string> = { claude:'#7C3AED', gpt:'#10A37F', gemini:'#1A73E8', perplexity:'#FF6B2B' }
+                  const aiNames: Record<string,string> = { claude:'Claude', gpt:'GPT', gemini:'Gemini', perplexity:'Perplexity' }
+                  const ais: string[] = Array.isArray(room.aiIds) ? room.aiIds : []
+                  return (
+                    <div key={room.id} className="glass rounded-2xl p-4" style={{ cursor: 'pointer' }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {room.status === 'live' ? (
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold" style={{ backgroundColor:'rgba(239,68,68,0.15)', color:'#f87171', border:'1px solid rgba(239,68,68,0.25)' }}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse inline-block" />LIVE
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-white/30" style={{ backgroundColor:'rgba(255,255,255,0.06)' }}>CONCLUSO</span>
+                          )}
+                          {room.visibility === 'private' && <span className="text-[10px] text-white/30">🔒</span>}
+                        </div>
+                        <span className="text-[10px] text-white/25">{new Date(room.createdAt).toLocaleDateString('it-IT', { day:'2-digit', month:'short' })}</span>
+                      </div>
+                      <div className="text-sm font-bold text-white mb-2 leading-snug">{room.topic}</div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex">
+                          {room.participants?.slice(0,5).map((p: any, i: number) => (
+                            <div key={p.id} className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white border border-black/30"
+                              style={{ backgroundColor:'#F59E0B', marginLeft: i > 0 ? '-5px' : '0' }}>
+                              {(p.user?.name || '?')[0].toUpperCase()}
+                            </div>
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-white/30">{room.participants?.length} {room.participants?.length === 1 ? 'umano' : 'umani'}</span>
+                        <div className="flex gap-1">
+                          {ais.map(id => (
+                            <span key={id} className="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                              style={{ backgroundColor:`${aiColors[id]}22`, color: aiColors[id] }}>
+                              {aiNames[id]}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* ── TAB CREA ── */}
+            {userPlan === 'admin' && socialTab === 'crea' && (
+              <div className="glass rounded-3xl p-4 flex flex-col gap-3">
+                <div className="text-xs font-bold text-white/40 uppercase tracking-wide">Tema del dibattito</div>
+                <textarea
+                  value={createTopic}
+                  onChange={e => setCreateTopic(e.target.value)}
+                  placeholder="Es. L'IA sostituirà i lavori creativi?"
+                  rows={2}
+                  className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-purple-500/50 placeholder:text-white/20 resize-none"
+                />
+
+                {/* Visibilità */}
+                <div>
+                  <div className="text-xs font-bold text-white/40 uppercase tracking-wide mb-2">Visibilità</div>
+                  <div className="flex gap-2">
+                    {(['public','private'] as const).map(v => (
+                      <button key={v} onClick={() => setCreateVisibility(v)}
+                        className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                        style={{
+                          backgroundColor: createVisibility === v ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.05)',
+                          border: createVisibility === v ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                          color: createVisibility === v ? '#A78BFA' : 'rgba(255,255,255,0.35)',
+                        }}>
+                        {v === 'public' ? '🌍 Pubblico' : '🔒 Privato'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI */}
+                <div>
+                  <div className="text-xs font-bold text-white/40 uppercase tracking-wide mb-2">AI partecipanti</div>
+                  <div className="flex gap-2 flex-wrap">
+                    {[['claude','Claude','#7C3AED'],['gemini','Gemini','#1A73E8'],['perplexity','Perplexity','#FF6B2B'],['gpt','GPT','#10A37F']].map(([id,name,color]) => {
+                      const active = createAis.includes(id)
+                      return (
+                        <button key={id} onClick={() => setCreateAis(prev => active ? prev.filter(a => a !== id) : [...prev, id])}
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                          style={{
+                            backgroundColor: active ? `${color}25` : 'rgba(255,255,255,0.05)',
+                            border: active ? `1px solid ${color}50` : '1px solid rgba(255,255,255,0.1)',
+                            color: active ? color : 'rgba(255,255,255,0.35)',
+                          }}>
+                          {name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Invita */}
+                <div>
+                  <div className="text-xs font-bold text-white/40 uppercase tracking-wide mb-2">Invita amici (max 4)</div>
+                  <input
+                    value={userSearch}
+                    onChange={e => setUserSearch(e.target.value)}
+                    placeholder="Cerca per nome…"
+                    className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-purple-500/50 placeholder:text-white/20 mb-2"
+                  />
+                  {userResults.length > 0 && (
+                    <div className="flex flex-col gap-1 mb-2">
+                      {userResults.filter(u => !createInvited.find(i => i.id === u.id)).map((u: any) => (
+                        <button key={u.id} onClick={() => { if (createInvited.length < 4) { setCreateInvited(prev => [...prev, { id: u.id, name: u.name || u.email }]); setUserSearch(''); setUserResults([]) } }}
+                          className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-colors text-left">
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0" style={{ backgroundColor:'#7C3AED' }}>
+                            {(u.name || u.email || '?')[0].toUpperCase()}
+                          </div>
+                          <span className="text-sm text-white/70">{u.name || u.email}</span>
+                          <span className="ml-auto text-[10px] text-purple-400">+ aggiungi</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {createInvited.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {createInvited.map(u => (
+                        <span key={u.id} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                          style={{ backgroundColor:'rgba(124,58,237,0.15)', border:'1px solid rgba(124,58,237,0.3)', color:'#A78BFA' }}>
+                          {u.name}
+                          <button onClick={() => setCreateInvited(prev => prev.filter(i => i.id !== u.id))} className="opacity-50 hover:opacity-100 ml-0.5">×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button onClick={handleCreateRoom} disabled={!createTopic.trim() || creatingRoom}
+                  className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-30"
+                  style={{ background:'linear-gradient(135deg,#7C3AED,#5B21B6)', boxShadow:'0 4px 20px rgba(124,58,237,0.4)' }}>
+                  {creatingRoom ? 'Creazione…' : 'Lancia il dibattito →'}
+                </button>
+              </div>
+            )}
 
           </div>
         </div>
