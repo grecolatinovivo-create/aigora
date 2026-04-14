@@ -24,6 +24,12 @@ model User {
   accounts Account[]
   sessions Session[]
   chats    Chat[]
+
+  hostedRooms   Room[]            @relation("RoomHost")
+  roomParticipations RoomParticipant[]
+  followers     Follow[]          @relation("Following")
+  following     Follow[]          @relation("Follower")
+  notifications Notification[]
 }
 
 model ApiUsage {
@@ -42,8 +48,63 @@ model Chat {
   title     String
   messages  Json
   history   Json
+  isPublic  Boolean  @default(false)
+  slug      String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── SOCIAL ────────────────────────────────────────────
+
+model Room {
+  id         String   @id @default(cuid())
+  hostId     String
+  topic      String
+  visibility String   @default("private") // "public" | "private"
+  status     String   @default("live")    // "live" | "ended"
+  aiIds      Json                          // array di AI selezionate
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  host         User              @relation("RoomHost", fields: [hostId], references: [id], onDelete: Cascade)
+  participants RoomParticipant[]
+}
+
+model RoomParticipant {
+  id       String   @id @default(cuid())
+  roomId   String
+  userId   String
+  role     String   @default("participant") // "host" | "participant" | "spectator"
+  joinedAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower",  fields: [followerId],  references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // "room_invite" | "follow" | "follow_request"
+  fromId    String?
+  roomId    String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
