@@ -609,32 +609,24 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value }}>
 
         {/* Header mobile */}
-        <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-3 safe-top" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-          <div className="flex -space-x-2 flex-shrink-0">
-            {AI_ORDER.map(id => (
-              <div key={id} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[9px] font-bold ring-1"
-                style={{ backgroundColor: AI_COLOR[id], ['--tw-ring-color' as string]: bgPreset.header }}>
-                {AI_NAMES[id][0]}
-              </div>
-            ))}
-          </div>
-          <div className="flex-1 min-w-0">
+        <div className="flex-shrink-0 flex items-center gap-2 px-3 py-3 safe-top" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+          {/* Cronologia sx */}
+          <button onClick={() => { handleReset(); window.location.href = '/dashboard' }}
+            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base transition-all active:scale-95"
+            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
+            🕐
+          </button>
+          <div className="flex-1 min-w-0 text-center">
             <div className="font-semibold text-[14px] leading-none" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>AiGORÀ</div>
             <div className="text-[11px] mt-0.5 truncate" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
               {activeAi ? `${AI_NAMES[activeAi]} sta scrivendo…` : `Turno ${turnCount + 1} · ${AI_ORDER.length} AI`}
             </div>
           </div>
-          <div className="flex gap-1.5 flex-shrink-0">
-            {BG_PRESETS.map(p => (
-              <button key={p.value} onClick={() => setBgPreset(p)}
-                className="w-4 h-4 rounded-full transition-transform active:scale-110"
-                style={{ backgroundColor: p.value, outline: bgPreset.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent', outlineOffset: '1px' }} />
-            ))}
-          </div>
-          <button onClick={handleSynthesize} title="Sintetizza"
+          {/* Profilo dx */}
+          <button onClick={() => signOut({ callbackUrl: '/login' })}
             className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base transition-all active:scale-95"
             style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
-            📋
+            👤
           </button>
         </div>
 
