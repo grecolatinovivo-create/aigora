@@ -616,8 +616,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTurnCount(0)
     setPhase('running')
 
-    // AI iniziale: random tra quelle disponibili
-    const startAi = AI_ORDER[Math.floor(Math.random() * AI_ORDER.length)]
+    // AI iniziale: random tra quelle disponibili, preferibilmente non Claude
+    const nonClaude = AI_ORDER.filter(ai => ai !== 'claude')
+    const pool = nonClaude.length > 0 ? nonClaude : AI_ORDER
+    const startAi = pool[Math.floor(Math.random() * pool.length)]
 
     // Routing intelligente solo per modalità e web search (in background)
     let mode: 'debate' | 'focused' = 'debate'
