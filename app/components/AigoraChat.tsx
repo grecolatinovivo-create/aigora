@@ -154,7 +154,7 @@ function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // Fade out
+      // Fade out graduale (600ms)
       setShow(false)
       setTimeout(() => {
         // Nuovi 6 topic random diversi dagli attuali
@@ -163,15 +163,15 @@ function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
           const pool = others.length >= SLOTS ? others : TOPIC_SUGGESTIONS
           return [...pool].sort(() => Math.random() - 0.5).slice(0, SLOTS)
         })
-        // Fade in
+        // Fade in graduale (600ms)
         setShow(true)
-      }, 400)
-    }, 5000)
+      }, 600)
+    }, 10000)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="grid grid-cols-2 gap-1.5" style={{ marginBottom: '8px', transition: 'opacity 0.4s ease', opacity: show ? 1 : 0 }}>
+    <div className="grid grid-cols-2 gap-1.5" style={{ marginBottom: '8px', transition: 'opacity 0.6s ease', opacity: show ? 1 : 0 }}>
       {visible.map((t, i) => (
         <button key={i} onClick={() => onSelect(t)}
           className="text-center px-3 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-colors flex items-center justify-center"
