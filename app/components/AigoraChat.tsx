@@ -356,22 +356,40 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   }, [])
 
   const currentChatIdRef = useRef(`chat-${Date.now()}`)
+  const chatTitleRef = useRef<string>('')
 
-  const saveCurrentChat = useCallback(() => {
+  const saveCurrentChat = useCallback(async () => {
     if (messagesRef.current.length < 2) return
-    const title = messagesRef.current.find(m => m.isUser)?.content?.slice(0, 60) ?? 'Chat'
+
+    // Genera titolo contestuale la prima volta (quando abbiamo almeno 1 msg AI)
+    const msgs = messagesRef.current
+    const userMsg = msgs.find(m => m.isUser)?.content ?? ''
+    const aiMsg = msgs.find(m => !m.isUser)?.content ?? ''
+
+    if (!chatTitleRef.current && aiMsg) {
+      try {
+        const res = await fetch('/api/chats/title', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: userMsg, firstReply: aiMsg }),
+        })
+        const data = await res.json()
+        if (data.title) chatTitleRef.current = data.title
+      } catch {}
+    }
+
+    const title = chatTitleRef.current || userMsg.slice(0, 60) || 'Chat'
     const chat = {
       id: currentChatIdRef.current,
       title,
       date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-      messages: messagesRef.current,
+      messages: msgs,
       history: chatHistoryRef.current,
     }
     setSavedChats(prev => {
       const filtered = prev.filter(c => c.id !== currentChatIdRef.current)
       return [chat, ...filtered].slice(0, 50)
     })
-    // Salva su Neon
     fetch('/api/chats', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -589,6 +607,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (!q) return
     if (overrideQuestion) setQuestion(overrideQuestion)
     currentChatIdRef.current = `chat-${Date.now()}`
+    chatTitleRef.current = ''
     chatHistoryRef.current = [{ name: historyName, content: q }]
     usedAisRef.current = []
     aiTurnCountRef.current = 0
