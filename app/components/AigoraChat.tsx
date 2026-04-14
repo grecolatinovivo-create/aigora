@@ -530,58 +530,38 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
         {/* Bubble fluttuanti (solo desktop xl+) */}
         {[
-          "L'IA sostituirà i lavori creativi?",
-          'Esiste il libero arbitrio?',
-          'Il cambiamento climatico è reversibile?',
-          'Social media: bene o male?',
-          'Dovremmo colonizzare Marte?',
-          'La coscienza è solo chimica?',
-          'Chi controlla l\'IA?',
-          'Il futuro è distopico?',
-          'Siamo soli nell\'universo?',
-          'L\'arte può essere artificiale?',
-          'Etica e tecnologia: compatibili?',
-          'La privacy è ancora un diritto?',
-        ].map((text, i) => {
-          // Ai lati della card (max-w-lg = ~512px), distribuite in altezza solo nella metà superiore/media
-          const positions = [
-            { top: '22%', left: 'calc(50% - 420px)'  },
-            { top: '32%', right: 'calc(50% - 420px)' },
-            { top: '42%', left: 'calc(50% - 410px)'  },
-            { top: '52%', right: 'calc(50% - 410px)' },
-            { top: '28%', left: 'calc(50% - 430px)'  },
-            { top: '38%', right: 'calc(50% - 430px)' },
-            { top: '48%', left: 'calc(50% - 415px)'  },
-            { top: '35%', right: 'calc(50% - 415px)' },
-            { top: '25%', right: 'calc(50% - 425px)' },
-            { top: '45%', left: 'calc(50% - 425px)'  },
-            { top: '55%', right: 'calc(50% - 420px)' },
-            { top: '30%', left: 'calc(50% - 420px)'  },
-          ]
-          const pos = positions[i % positions.length]
-          const delays = ['0s','2s','4s','1s','3s','5s','1.5s','3.5s','0.5s','2.5s','4.5s','6s']
-          const durs   = ['13s','15s','14s','16s','13.5s','15.5s','14.5s','16.5s','12.5s','14.5s','15s','13s']
-          const anims  = ['float-1','float-2','float-3','float-4']
-
-          return (
-            <div key={i}
-              className="absolute hidden xl:block px-4 py-2.5 rounded-full text-[11px] font-medium pointer-events-none select-none"
-              style={{
-                ...pos,
-                color: 'rgba(255,255,255,0.5)',
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(8px)',
-                maxWidth: '180px',
-                textAlign: 'center',
-                lineHeight: 1.4,
-                animation: `${anims[i % 4]} ${durs[i % durs.length]} ease-in-out infinite`,
-                animationDelay: delays[i % delays.length],
-              }}>
-              {text}
-            </div>
-          )
-        })}
+          // Sinistra — distribuite su tutta l'altezza, in posizioni orizzontali variabili
+          { text: "L'IA sostituirà i lavori creativi?", top:  '8%', left:  '4%', delay: '0s',   dur: '14s', anim: 'float-1' },
+          { text: 'Esiste il libero arbitrio?',          top: '22%', left:  '9%', delay: '3s',   dur: '13s', anim: 'float-3' },
+          { text: 'Dovremmo colonizzare Marte?',         top: '38%', left:  '3%', delay: '1.5s', dur: '15s', anim: 'float-2' },
+          { text: 'Chi controlla l\'IA?',                top: '54%', left: '10%', delay: '4s',   dur: '12s', anim: 'float-4' },
+          { text: 'L\'arte può essere artificiale?',     top: '70%', left:  '5%', delay: '2s',   dur: '14s', anim: 'float-1' },
+          { text: 'La privacy è ancora un diritto?',     top: '84%', left:  '8%', delay: '5s',   dur: '13s', anim: 'float-3' },
+          // Destra — stessa cosa specchiata
+          { text: 'Il futuro è distopico?',              top:  '8%', right:  '6%', delay: '1s',   dur: '13s', anim: 'float-2' },
+          { text: 'La coscienza è solo chimica?',        top: '22%', right:  '3%', delay: '4.5s', dur: '15s', anim: 'float-4' },
+          { text: 'Social media: bene o male?',          top: '38%', right:  '9%', delay: '2s',   dur: '12s', anim: 'float-1' },
+          { text: 'Siamo soli nell\'universo?',           top: '54%', right:  '4%', delay: '0.5s', dur: '14s', anim: 'float-3' },
+          { text: 'Etica e tecnologia: compatibili?',    top: '70%', right:  '7%', delay: '3.5s', dur: '13s', anim: 'float-2' },
+          { text: 'Il cambiamento climatico è reversibile?', top: '84%', right: '2%', delay: '1.5s', dur: '15s', anim: 'float-4' },
+        ].map(({ text, top, left, right, delay, dur, anim }: any, i) => (
+          <div key={i}
+            className="absolute hidden xl:block px-4 py-2 rounded-full text-[11px] pointer-events-none select-none"
+            style={{
+              top, left, right,
+              color: 'rgba(255,255,255,0.35)',
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              backdropFilter: 'blur(6px)',
+              maxWidth: '160px',
+              textAlign: 'center',
+              lineHeight: 1.4,
+              animation: `${anim} ${dur} ease-in-out infinite`,
+              animationDelay: delay,
+            }}>
+            {text}
+          </div>
+        ))}
 
         <div className="w-full max-w-lg scale-in relative z-10">
 
