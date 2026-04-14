@@ -305,10 +305,10 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
               </div>
               {userPlan === 'admin' && (
                 <>
-                  <button onClick={() => window.location.href = `/${encodeURIComponent(displayName)}`}
-                    className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
-                    👤 Il mio profilo
-                  </button>
+                  <a href={`/${encodeURIComponent(displayName)}`}
+                    className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2">
+                    🔗 Il mio profilo pubblico
+                  </a>
                   <button onClick={() => window.location.href = '/admin'}
                     className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                     ⚙️ Pannello Admin
