@@ -134,6 +134,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [phase, setPhase] = useState<ChatPhase>('start')
   const [question, setQuestion] = useState('')
   const [userName, setUserName] = useState(propUserName ?? '')
+  const [nameConfirmed, setNameConfirmed] = useState(!!(propUserName?.trim()))
+  const [nameInput, setNameInput] = useState('')
   const [inputText, setInputText] = useState('')
   const [bgPreset, setBgPreset] = useState(BG_PRESETS[0])
   const [messages, setMessages] = useState<Message[]>([])
@@ -386,11 +388,86 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     aiTurnCountRef.current = 0
   }
 
+  // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
+  if (!nameConfirmed) {
+    return (
+      <div className="desktop-bg min-h-screen flex items-center justify-center px-4">
+        <div className="glass rounded-3xl p-8 w-full max-w-xs scale-in text-center">
+          <div className="text-3xl mb-2">👋</div>
+          <h2 className="text-2xl font-black text-white mb-1">Come ti chiami?</h2>
+          <p className="text-white/40 text-sm mb-6">Il tuo nome apparirà nel dibattito</p>
+          <input
+            autoFocus
+            type="text"
+            placeholder="Il tuo nome…"
+            value={nameInput}
+            onChange={e => setNameInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                const n = nameInput.trim()
+                setUserName(n)
+                setNameConfirmed(true)
+              }
+            }}
+            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/30 border border-white/10 focus:outline-none focus:border-purple-400 text-sm mb-3"
+          />
+          <button
+            onClick={() => { const n = nameInput.trim(); setUserName(n); setNameConfirmed(true) }}
+            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #A78BFA)' }}>
+            Entra nel dibattito →
+          </button>
+          <button
+            onClick={() => { setUserName(''); setNameConfirmed(true) }}
+            className="mt-3 text-white/25 text-xs hover:text-white/50 transition-colors">
+            Continua senza nome
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // ── SCHERMATA INIZIALE ────────────────────────────────────────────────────────
   if (phase === 'start') {
     return (
-      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12 mobile-start">
-        <div className="w-full max-w-lg scale-in">
+      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12 mobile-start relative overflow-hidden">
+
+        {/* Bubble fluttuanti */}
+        {TOPIC_SUGGESTIONS.concat([
+          'La coscienza è solo chimica?',
+          'Chi controlla l\'AI?',
+          'Il futuro è distopico?',
+        ]).map((text, i) => {
+          const positions = [
+            { top: '6%',  left: '3%'  }, { top: '15%', right: '2%' },
+            { top: '32%', left: '1%'  }, { top: '58%', right: '3%' },
+            { top: '72%', left: '4%'  }, { top: '82%', right: '2%' },
+            { top: '44%', left: '2%'  }, { top: '22%', right: '4%' },
+          ]
+          const pos = positions[i % positions.length]
+          const delays = ['0s','1.3s','2.7s','0.6s','3.1s','1.9s','4s','2.2s']
+          const durs   = ['7s','8.5s','6.5s','9s','7.5s','8s','6s','9.5s']
+          return (
+            <div key={i}
+              className="absolute hidden lg:block px-3 py-2 rounded-full text-[11px] font-medium pointer-events-none select-none"
+              style={{
+                ...pos,
+                color: 'rgba(255,255,255,0.5)',
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(6px)',
+                maxWidth: 200,
+                textAlign: 'center',
+                lineHeight: 1.35,
+                animation: `float-bubble ${durs[i % durs.length]} ease-in-out infinite`,
+                animationDelay: delays[i % delays.length],
+              }}>
+              {text}
+            </div>
+          )
+        })}
+
+        <div className="w-full max-w-lg scale-in relative z-10">
 
           {/* Navbar */}
           <div className="flex items-center justify-between mb-8">

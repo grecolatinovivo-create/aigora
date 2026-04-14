@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json()
+    const { email, password, name } = await req.json()
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email e password sono obbligatorie.' }, { status: 400 })
@@ -24,9 +24,10 @@ export async function POST(req: NextRequest) {
     await prisma.user.create({
       data: {
         email,
+        name: name ?? null,
         password: hashed,
-        plan: 'none',
-        subStatus: 'inactive',
+        plan: 'free',
+        subStatus: 'active',
       },
     })
 
