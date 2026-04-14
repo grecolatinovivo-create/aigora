@@ -189,6 +189,12 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
                   {(userPlan ?? 'free').toUpperCase()}
                 </div>
               </div>
+              {userPlan === 'admin' && (
+                <button onClick={() => window.location.href = '/admin'}
+                  className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
+                  ⚙️ Pannello Admin
+                </button>
+              )}
               <button onClick={onSignOut}
                 className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium">
                 Esci dall'account
