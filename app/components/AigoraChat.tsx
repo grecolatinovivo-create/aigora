@@ -562,12 +562,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Form */}
           <div className="glass rounded-3xl p-5 space-y-3">
-            <input
-              value={userName}
-              onChange={e => setUserName(e.target.value)}
-              placeholder="Il tuo nome (opzionale)"
-              className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-purple-500/50 placeholder:text-white/20 transition-colors"
-            />
             <div className="relative">
               <textarea
                 value={question}
