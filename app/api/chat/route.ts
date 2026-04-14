@@ -122,12 +122,50 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
   }
 }
 
+// Routing intelligente — Claude decide quale AI deve rispondere per prima
+async function routeQuestion(question: string, availableAis: string[]): Promise<string> {
+  const Anthropic = (await import('@anthropic-ai/sdk')).default
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const available = availableAis.join(', ')
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 10,
+    messages: [{
+      role: 'user',
+      content: `Hai queste AI disponibili: ${available}.
+
+Regole di routing:
+- "perplexity": domande su notizie recenti, fatti attuali, "cosa sta succedendo", ricerche aggiornate
+- "gpt": scrittura creativa, mail, lettere, contratti, testi pratici, coding, compiti concreti
+- "gemini": analisi dati, confronti strutturati, domande tecniche con dati
+- "claude": filosofia, etica, dibattiti profondi, ragionamento astratto, domande aperte
+
+Domanda dell'utente: "${question}"
+
+Rispondi SOLO con il nome dell'AI (es: gpt). Nient'altro.`,
+    }],
+  })
+  const raw = (response.content[0] as any).text.trim().toLowerCase()
+  // Verifica che l'AI sia disponibile, altrimenti fallback a claude (o prima disponibile)
+  if (availableAis.includes(raw)) return raw
+  return availableAis.includes('claude') ? 'claude' : availableAis[0]
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { history, aiId, action, interruptorId, speakerName } = await req.json()
+    const { history, aiId, action, interruptorId, speakerName, availableAis, question } = await req.json()
     const historyText = history.length > 0
       ? history.map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
       : ''
+
+    // Routing intelligente — chiamata prima di iniziare il dibattito
+    if (action === 'route') {
+      const ais = availableAis || ['claude', 'gemini', 'perplexity', 'gpt']
+      const startAi = await routeQuestion(question, ais)
+      return new Response(JSON.stringify({ startAi }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
 
     if (action === 'synthesize') {
       const systemMod = 'Sei un moderatore neutrale. Produci una sintesi chiara e bilanciata.'

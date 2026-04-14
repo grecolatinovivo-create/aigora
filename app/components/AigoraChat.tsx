@@ -50,6 +50,25 @@ function detectNextAi(text: string, aiOrder: string[]): string | null {
   }
   return null
 }
+
+// Rileva se l'utente menziona direttamente un'AI nel suo messaggio
+function detectUserMention(text: string, aiOrder: string[]): string | null {
+  const lower = text.toLowerCase()
+  for (const aiId of aiOrder) {
+    const name = AI_NAMES[aiId].toLowerCase()
+    // Controlla menzioni dirette: "@claude", "claude,", "claude:", "hey claude", ecc.
+    if (
+      lower.includes(`@${name}`) ||
+      lower.startsWith(`${name},`) ||
+      lower.startsWith(`${name}:`) ||
+      lower.includes(`hey ${name}`) ||
+      lower.includes(`senti ${name}`) ||
+      lower.includes(`${name} cosa`) ||
+      lower.includes(`${name}, `)
+    ) return aiId
+  }
+  return null
+}
 function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[]): string {
   const others = aiOrder.filter(id => id !== currentAi)
   const unused = others.filter(id => !usedAis.includes(id))
@@ -272,6 +291,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (messages.length >= 2) saveCurrentChat()
   }, [messages, thinkingAi, waitingForUser, scrollToBottom, saveCurrentChat])
 
+  // Stop loop quando si va in cronologia/profilo, riprende quando si torna in running
+  useEffect(() => {
+    if (phase === 'history' || phase === 'profile') {
+      stopRequestedRef.current = true
+      setActiveAi(null)
+      setThinkingAi(null)
+    }
+  }, [phase])
+
   const typewriteText = useCallback((msgId: string, text: string): Promise<void> => {
     return new Promise(resolve => {
       let i = 0
@@ -420,7 +448,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }, [streamAiResponse, runFactCheck])
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!question.trim()) return
     currentChatIdRef.current = `chat-${Date.now()}`
     chatHistoryRef.current = [{ name: historyName, content: question }]
@@ -430,7 +458,20 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setMessages([{ id: 'user-0', aiId: 'user', name: displayName, content: question, isUser: true }])
     setTurnCount(0)
     setPhase('running')
-    runDebate('claude')
+
+    // Routing intelligente — Claude decide chi inizia
+    let startAi = 'claude'
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'route', question, availableAis: AI_ORDER, history: [] }),
+      })
+      const data = await res.json()
+      if (data.startAi && AI_ORDER.includes(data.startAi)) startAi = data.startAi
+    } catch {}
+
+    runDebate(startAi)
   }
 
   const handleSendMessage = () => {
@@ -440,17 +481,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const userMsg: Message = { id: `user-${Date.now()}`, aiId: 'user', name: displayName, content: text, isUser: true }
     chatHistoryRef.current.push({ name: historyName, content: text })
     setMessages(prev => [...prev, userMsg])
-    // Usa il ref (non lo state) per evitare closure stale
+
     if (waitingForUserRef.current || stopRequestedRef.current) {
       waitingForUserRef.current = false
       setWaitingForUser(false)
       aiTurnCountRef.current = 0
       stopRequestedRef.current = false
+
+      // Controlla se l'utente menziona un'AI direttamente
+      const mentioned = detectUserMention(text, AI_ORDER)
       const lastAi = usedAisRef.current[usedAisRef.current.length - 1] || 'claude'
-      setTimeout(() => runDebate(getDefaultNextAi(lastAi, [], AI_ORDER)), 150)
+      const nextAi = mentioned || getDefaultNextAi(lastAi, [], AI_ORDER)
+      setTimeout(() => runDebate(nextAi), 150)
     }
-    // Se la loop è ancora in corso, il messaggio è già in chatHistoryRef
-    // e verrà letto al prossimo turno — non serve fare nulla
   }
 
   const handleSynthesize = async () => {
