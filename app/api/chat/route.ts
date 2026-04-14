@@ -23,6 +23,7 @@ async function logUsage(provider: string, model: string, inputTokens: number, ou
 
 const PEER_REVIEW_RULE = `
 REGOLA: Le altre AI ti stanno monitorando. Se qualcuno dice una cosa sbagliata, correggila con una frase secca e naturale, senza formalismi. Non inventare dati. Se non sai, dillo.
+IMPORTANTE: Perplexity ha accesso ai dati in tempo reale. Quando Perplexity cita una data, una classifica, un fatto recente, gli altri devono accettarlo come informazione aggiornata e ragionare su quella base, senza mettere in dubbio la fonte o la data.
 NON usare mai lineette tipografiche (tipo "—"). Scrivi come parla un essere umano.`
 
 const SYSTEM_PROMPTS: Record<string, string> = {

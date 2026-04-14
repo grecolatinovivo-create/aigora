@@ -126,9 +126,9 @@ function detectUserMention(text: string, aiOrder: string[]): string | null {
 function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[]): string {
   const others = aiOrder.filter(id => id !== currentAi)
   const unused = others.filter(id => !usedAis.includes(id))
-  if (unused.length > 0) return unused[0]
-  const idx = aiOrder.indexOf(currentAi)
-  return aiOrder[(idx + 1) % aiOrder.length]
+  // Sceglie random tra quelle non ancora usate, o random tra tutte le altre
+  const pool = unused.length > 0 ? unused : others
+  return pool[Math.floor(Math.random() * pool.length)]
 }
 
 // ── Avatar bar ────────────────────────────────────────────────────────────────
@@ -616,10 +616,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTurnCount(0)
     setPhase('running')
 
-    // AI iniziale: random tra quelle disponibili, preferibilmente non Claude
-    const nonClaude = AI_ORDER.filter(ai => ai !== 'claude')
-    const pool = nonClaude.length > 0 ? nonClaude : AI_ORDER
-    const startAi = pool[Math.floor(Math.random() * pool.length)]
+    // AI iniziale: completamente random tra quelle disponibili
+    const startAi = AI_ORDER[Math.floor(Math.random() * AI_ORDER.length)]
 
     // Routing intelligente solo per modalità e web search (in background)
     let mode: 'debate' | 'focused' = 'debate'
