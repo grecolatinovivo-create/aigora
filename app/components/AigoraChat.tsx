@@ -448,25 +448,30 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           'Chi controlla l\'AI?',
           'Il futuro è distopico?',
         ]).map((text, i) => {
+          // Posizioni vicino alla card: sx e dx subito fuori dal max-w-lg
           const positions = [
-            { top: '6%',  left: '3%'  }, { top: '15%', right: '2%' },
-            { top: '32%', left: '1%'  }, { top: '58%', right: '3%' },
-            { top: '72%', left: '4%'  }, { top: '82%', right: '2%' },
-            { top: '44%', left: '2%'  }, { top: '22%', right: '4%' },
+            { top: '12%',  left: 'calc(50% - 380px)' },
+            { top: '28%',  right: 'calc(50% - 380px)' },
+            { top: '44%',  left: 'calc(50% - 370px)' },
+            { top: '60%',  right: 'calc(50% - 370px)' },
+            { top: '76%',  left: 'calc(50% - 360px)' },
+            { top: '20%',  right: 'calc(50% - 360px)' },
+            { top: '52%',  left: 'calc(50% - 390px)' },
+            { top: '68%',  right: 'calc(50% - 390px)' },
           ]
           const pos = positions[i % positions.length]
-          const delays = ['0s','1.3s','2.7s','0.6s','3.1s','1.9s','4s','2.2s']
-          const durs   = ['7s','8.5s','6.5s','9s','7.5s','8s','6s','9.5s']
+          const delays = ['0s','1.5s','3s','0.7s','2.2s','4s','1s','2.8s']
+          const durs   = ['4s','5s','4.5s','5.5s','4.2s','5.2s','4.8s','5.8s']
           return (
             <div key={i}
-              className="absolute hidden lg:block px-3 py-2 rounded-full text-[11px] font-medium pointer-events-none select-none"
+              className="absolute hidden xl:block px-3 py-2 rounded-full text-[11px] font-medium pointer-events-none select-none"
               style={{
                 ...pos,
-                color: 'rgba(255,255,255,0.5)',
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(6px)',
-                maxWidth: 200,
+                color: 'rgba(255,255,255,0.6)',
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(8px)',
+                maxWidth: 190,
                 textAlign: 'center',
                 lineHeight: 1.35,
                 animation: `float-bubble ${durs[i % durs.length]} ease-in-out infinite`,
