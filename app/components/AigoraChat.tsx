@@ -492,32 +492,50 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12 mobile-start relative overflow-hidden">
 
         {/* Bubble fluttuanti (solo desktop xl+) */}
-        {allTopics.map((text, i) => {
+        {[
+          "L'IA sostituirà i lavori creativi?",
+          'Esiste il libero arbitrio?',
+          'Il cambiamento climatico è reversibile?',
+          'Social media: bene o male?',
+          'Dovremmo colonizzare Marte?',
+          'La coscienza è solo chimica?',
+          'Chi controlla l\'IA?',
+          'Il futuro è distopico?',
+          'Siamo soli nell\'universo?',
+          'L\'arte può essere artificiale?',
+          'Etica e tecnologia: compatibili?',
+          'La privacy è ancora un diritto?',
+        ].map((text, i) => {
+          // Ai lati della card (max-w-lg = ~512px), distribuite in altezza solo nella metà superiore/media
           const positions = [
-            { top: '12%', left: '8%'  },
-            { top: '22%', right: '9%' },
-            { top: '38%', left: '5%'  },
-            { top: '55%', right: '6%' },
-            { top: '68%', left: '10%' },
-            { top: '78%', right: '8%' },
-            { top: '45%', left: '7%'  },
-            { top: '30%', right: '7%' },
+            { top: '10%', left: '18%'  },
+            { top: '18%', right: '18%' },
+            { top: '28%', left: '14%'  },
+            { top: '35%', right: '15%' },
+            { top: '48%', left: '17%'  },
+            { top: '55%', right: '16%' },
+            { top: '22%', left: '20%'  },
+            { top: '42%', right: '19%' },
+            { top: '14%', right: '22%' },
+            { top: '32%', left: '16%'  },
+            { top: '60%', right: '20%' },
+            { top: '50%', left: '22%'  },
           ]
           const pos = positions[i % positions.length]
-          const delays = ['0s', '2s', '4s', '1s', '3s', '5s', '1.5s', '3.5s']
-          const durs   = ['9s', '11s', '10s', '12s', '9.5s', '11.5s', '10.5s', '12.5s']
-          const anims  = ['float-1', 'float-2', 'float-3', 'float-4']
+          const delays = ['0s','2s','4s','1s','3s','5s','1.5s','3.5s','0.5s','2.5s','4.5s','6s']
+          const durs   = ['13s','15s','14s','16s','13.5s','15.5s','14.5s','16.5s','12.5s','14.5s','15s','13s']
+          const anims  = ['float-1','float-2','float-3','float-4']
 
           return (
             <div key={i}
-              className="absolute hidden xl:block px-4 py-2.5 rounded-full text-[12px] font-medium pointer-events-none select-none"
+              className="absolute hidden xl:block px-4 py-2.5 rounded-full text-[11px] font-medium pointer-events-none select-none"
               style={{
                 ...pos,
-                color: 'rgba(255,255,255,0.55)',
+                color: 'rgba(255,255,255,0.5)',
                 backgroundColor: 'rgba(255,255,255,0.04)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 backdropFilter: 'blur(8px)',
-                maxWidth: '200px',
+                maxWidth: '180px',
                 textAlign: 'center',
                 lineHeight: 1.4,
                 animation: `${anims[i % 4]} ${durs[i % durs.length]} ease-in-out infinite`,
