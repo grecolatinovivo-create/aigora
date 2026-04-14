@@ -584,14 +584,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }, [streamAiResponse, runFactCheck, AI_ORDER])
 
-  const handleStart = async () => {
-    if (!question.trim()) return
+  const handleStart = async (overrideQuestion?: string) => {
+    const q = (overrideQuestion ?? question).trim()
+    if (!q) return
+    if (overrideQuestion) setQuestion(overrideQuestion)
     currentChatIdRef.current = `chat-${Date.now()}`
-    chatHistoryRef.current = [{ name: historyName, content: question }]
+    chatHistoryRef.current = [{ name: historyName, content: q }]
     usedAisRef.current = []
     aiTurnCountRef.current = 0
     stopRequestedRef.current = false
-    setMessages([{ id: 'user-0', aiId: 'user', name: displayName, content: question, isUser: true }])
+    setMessages([{ id: 'user-0', aiId: 'user', name: displayName, content: q, isUser: true }])
     setTurnCount(0)
     setPhase('running')
 
@@ -602,7 +604,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'route', question, availableAis: AI_ORDER, history: [] }),
+        body: JSON.stringify({ action: 'route', question: q, availableAis: AI_ORDER, history: [] }),
       })
       const data = await res.json()
       if (data.startAi && AI_ORDER.includes(data.startAi)) startAi = data.startAi
@@ -758,14 +760,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           { top: '680px', right: 'calc(50% - 560px)', delay: '3.5s', dur: '13s', anim: 'float-2' },
           { top: '780px', right: 'calc(50% - 540px)', delay: '1.5s', dur: '15s', anim: 'float-4' },
         ].map(({ top, left, right, delay, dur, anim }: any, i) => (
-          <div key={i}
-            className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] pointer-events-none select-none"
+          <button key={i}
+            className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] select-none cursor-pointer transition-all hover:scale-105 hover:brightness-125"
             onAnimationIteration={() => rotateBubble(i)}
+            onClick={() => handleStart(bubbleTopics[i])}
             style={{
               top, left, right,
-              color: 'rgba(255,255,255,0.35)',
-              backgroundColor: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.06)',
+              color: 'rgba(255,255,255,0.5)',
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.12)',
               backdropFilter: 'blur(6px)',
               maxWidth: '160px',
               textAlign: 'center',
@@ -774,7 +777,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               animationDelay: delay,
             }}>
             {bubbleTopics[i]}
-          </div>
+          </button>
         ))}
 
         <div className="w-full max-w-lg scale-in relative z-10">
