@@ -418,35 +418,61 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     chatHistoryRef.current.push({ name: `${interruptorName} (interruzione)`, content: trimmed })
   }, [AI_ORDER])
 
-  const runDebate = useCallback(async (startAi: string) => {
+  const debateModeRef = useRef<'debate' | 'focused'>('debate')
+
+  const runDebate = useCallback(async (startAi: string, mode: 'debate' | 'focused' = 'debate') => {
     let currentAi = startAi
     stopRequestedRef.current = false
+    debateModeRef.current = mode
+
     while (!stopRequestedRef.current) {
       const text = await streamAiResponse(currentAi)
       if (!text || stopRequestedRef.current) break
+
       chatHistoryRef.current.push({ name: AI_NAMES[currentAi], content: text })
       usedAisRef.current.push(currentAi)
       aiTurnCountRef.current += 1
       setTurnCount(aiTurnCountRef.current)
 
-      const detected = detectNextAi(text, AI_ORDER)
-      const nextAi = detected || getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
-
-      // Fact-check ogni 2 turni AI
+      // Fact-check ogni 2 turni
       if (aiTurnCountRef.current % 2 === 0 && !stopRequestedRef.current) {
         await runFactCheck(currentAi)
       }
 
-      if (aiTurnCountRef.current % 4 === 0) {
+      if (debateModeRef.current === 'focused') {
+        // Modalità focused: dopo ogni risposta dell'AI principale, aspetta l'utente.
+        // Ogni 3 turni lascia intervenire un'altra AI spontaneamente.
+        if (aiTurnCountRef.current % 3 === 0 && !stopRequestedRef.current) {
+          // Un'altra AI interviene brevemente
+          const others = AI_ORDER.filter(id => id !== currentAi)
+          const intruder = others[Math.floor(Math.random() * others.length)]
+          await new Promise(r => setTimeout(r, 400))
+          const intruderText = await streamAiResponse(intruder)
+          if (intruderText && !stopRequestedRef.current) {
+            chatHistoryRef.current.push({ name: AI_NAMES[intruder], content: intruderText })
+          }
+        }
+        // Aspetta sempre l'utente dopo ogni turno
         waitingForUserRef.current = true
         setWaitingForUser(true)
         stopRequestedRef.current = true
         return
+      } else {
+        // Modalità debate: round-robin classico, pausa ogni 4 turni
+        const detected = detectNextAi(text, AI_ORDER)
+        const nextAi = detected || getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
+
+        if (aiTurnCountRef.current % 4 === 0) {
+          waitingForUserRef.current = true
+          setWaitingForUser(true)
+          stopRequestedRef.current = true
+          return
+        }
+        await new Promise(r => setTimeout(r, 320))
+        currentAi = nextAi
       }
-      await new Promise(r => setTimeout(r, 320))
-      currentAi = nextAi
     }
-  }, [streamAiResponse, runFactCheck])
+  }, [streamAiResponse, runFactCheck, AI_ORDER])
 
   const handleStart = async () => {
     if (!question.trim()) return
@@ -459,8 +485,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTurnCount(0)
     setPhase('running')
 
-    // Routing intelligente — Claude decide chi inizia
+    // Routing intelligente — Claude decide chi inizia e che modalità usare
     let startAi = 'claude'
+    let mode: 'debate' | 'focused' = 'debate'
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -469,9 +496,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       })
       const data = await res.json()
       if (data.startAi && AI_ORDER.includes(data.startAi)) startAi = data.startAi
+      if (data.mode === 'focused') mode = 'focused'
     } catch {}
 
-    runDebate(startAi)
+    runDebate(startAi, mode)
   }
 
   const handleSendMessage = () => {
@@ -488,11 +516,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       aiTurnCountRef.current = 0
       stopRequestedRef.current = false
 
-      // Controlla se l'utente menziona un'AI direttamente
+      // Se l'utente menziona un'AI, quella risponde in modalità focused (1-a-1)
       const mentioned = detectUserMention(text, AI_ORDER)
+      if (mentioned) {
+        setTimeout(() => runDebate(mentioned, 'focused'), 150)
+        return
+      }
+
+      // Altrimenti riprende la modalità corrente
       const lastAi = usedAisRef.current[usedAisRef.current.length - 1] || 'claude'
-      const nextAi = mentioned || getDefaultNextAi(lastAi, [], AI_ORDER)
-      setTimeout(() => runDebate(nextAi), 150)
+      const nextAi = getDefaultNextAi(lastAi, [], AI_ORDER)
+      setTimeout(() => runDebate(nextAi, debateModeRef.current), 150)
     }
   }
 

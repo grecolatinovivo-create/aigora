@@ -122,33 +122,42 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
   }
 }
 
-// Routing intelligente — Claude decide quale AI deve rispondere per prima
-async function routeQuestion(question: string, availableAis: string[]): Promise<string> {
+// Routing intelligente — Claude decide quale AI risponde per prima e in che modalità
+async function routeQuestion(question: string, availableAis: string[]): Promise<{ startAi: string; mode: 'debate' | 'focused' }> {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const available = availableAis.join(', ')
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 10,
+    max_tokens: 20,
     messages: [{
       role: 'user',
       content: `Hai queste AI disponibili: ${available}.
 
-Regole di routing:
-- "perplexity": domande su notizie recenti, fatti attuali, "cosa sta succedendo", ricerche aggiornate
-- "gpt": scrittura creativa, mail, lettere, contratti, testi pratici, coding, compiti concreti
-- "gemini": analisi dati, confronti strutturati, domande tecniche con dati
-- "claude": filosofia, etica, dibattiti profondi, ragionamento astratto, domande aperte
+Analizza la domanda e rispondi con DUE informazioni separate da "|":
+1. L'AI più adatta a rispondere per prima
+2. La modalità: "debate" se è una domanda aperta/filosofica/di opinione, "focused" se è una richiesta pratica e specifica (scrivi, crea, spiega, dimmi, calcola, ecc.)
 
-Domanda dell'utente: "${question}"
+Regole per l'AI:
+- "perplexity": notizie recenti, fatti attuali, aggiornamenti
+- "gpt": scrittura creativa, mail, lettere, contratti, coding, compiti pratici
+- "gemini": analisi dati, confronti strutturati, domande tecniche
+- "claude": filosofia, etica, dibattiti, ragionamento astratto
 
-Rispondi SOLO con il nome dell'AI (es: gpt). Nient'altro.`,
+Domanda: "${question}"
+
+Esempio risposta: gpt|focused
+Rispondi SOLO con il formato richiesto.`,
     }],
   })
   const raw = (response.content[0] as any).text.trim().toLowerCase()
-  // Verifica che l'AI sia disponibile, altrimenti fallback a claude (o prima disponibile)
-  if (availableAis.includes(raw)) return raw
-  return availableAis.includes('claude') ? 'claude' : availableAis[0]
+  const parts = raw.split('|')
+  const aiRaw = parts[0]?.trim()
+  const modeRaw = parts[1]?.trim()
+
+  const startAi = availableAis.includes(aiRaw) ? aiRaw : (availableAis.includes('claude') ? 'claude' : availableAis[0])
+  const mode: 'debate' | 'focused' = modeRaw === 'focused' ? 'focused' : 'debate'
+  return { startAi, mode }
 }
 
 export async function POST(req: NextRequest) {
@@ -161,8 +170,8 @@ export async function POST(req: NextRequest) {
     // Routing intelligente — chiamata prima di iniziare il dibattito
     if (action === 'route') {
       const ais = availableAis || ['claude', 'gemini', 'perplexity', 'gpt']
-      const startAi = await routeQuestion(question, ais)
-      return new Response(JSON.stringify({ startAi }), {
+      const result = await routeQuestion(question, ais)
+      return new Response(JSON.stringify(result), {
         headers: { 'Content-Type': 'application/json' },
       })
     }
