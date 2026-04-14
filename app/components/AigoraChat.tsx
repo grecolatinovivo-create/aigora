@@ -218,6 +218,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [waitingForUser, setWaitingForUser] = useState(false)
   const [turnCount, setTurnCount] = useState(0)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [mobileFontSize, setMobileFontSize] = useState(14)
   const [showHistory, setShowHistory] = useState(false)
   const [savedChats, setSavedChats] = useState<{id:string; title:string; date:string; messages: Message[]; history: {name:string;content:string}[]}[]>([])
 
@@ -821,19 +822,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       </div>
 
       {/* ── SCHERMO NATIVO MOBILE ── */}
-      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, height: '100dvh', overflow: 'hidden' }}>
+      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, height: '100dvh', overflow: 'hidden' }}
+        ref={el => { if (el) document.body.style.backgroundColor = bgPreset.value }}>
 
         {/* Schermata cronologia mobile */}
         {phase === 'history' && (
-          <div className="flex flex-col h-full" style={{ backgroundColor: '#07070f' }}>
+          <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
             {/* Header cronologia */}
-            <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-14 pb-4 border-b border-white/8">
+            <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
+              style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
               <button onClick={() => setPhase(messages.length > 0 ? 'running' : 'start')}
                 className="w-9 h-9 flex items-center justify-center rounded-full"
-                style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'white' : '#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
-              <span className="text-white font-bold text-lg flex-1">Conversazioni</span>
+              <span className="font-bold text-lg flex-1" style={{ color: isDark ? '#fff' : '#111' }}>Conversazioni</span>
               <button onClick={() => { handleReset(); setPhase('start') }}
                 className="text-[13px] font-semibold" style={{ color: '#A78BFA' }}>
                 + Nuova
@@ -873,8 +876,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         {phase !== 'history' && <>
 
           {/* Header mobile */}
-          <div className="flex-shrink-0 flex items-center gap-2 px-3 pt-12 pb-3 border-b"
-            style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+          <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
+            style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             {/* < Cronologia */}
             <button onClick={() => setPhase('history')}
               className="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-full active:scale-95"
@@ -890,8 +893,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </div>
             </div>
 
-            {/* Profilo + Sintesi */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Font size + Sintesi + Profilo */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {/* Font - + */}
+              <div className="flex items-center rounded-full overflow-hidden" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
+                <button onClick={() => setMobileFontSize(s => Math.max(12, s - 1))}
+                  className="w-8 h-8 flex items-center justify-center text-base font-bold active:scale-95"
+                  style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>−</button>
+                <button onClick={() => setMobileFontSize(s => Math.min(20, s + 1))}
+                  className="w-8 h-8 flex items-center justify-center text-base font-bold active:scale-95"
+                  style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>+</button>
+              </div>
               <button onClick={handleSynthesize}
                 className="w-9 h-9 flex items-center justify-center rounded-full active:scale-95 text-base"
                 style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
@@ -932,7 +944,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} />
 
           {/* Messaggi mobile */}
-          <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
+          <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value, fontSize: mobileFontSize }}>
             {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
             {waitingForUser && <UserTurnPrompt name={displayName} isDark={isDark} />}
@@ -941,16 +953,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Pannello sintesi mobile — slide da destra */}
           {showSynthesis && (
-            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: '#07070f' }}>
-              <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-14 pb-4 border-b border-white/8">
+            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: bgPreset.value }}>
+              <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
+                style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
                 <button onClick={() => setShowSynthesis(false)}
                   className="w-9 h-9 flex items-center justify-center rounded-full"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                  style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'white' : '#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
                 <div>
-                  <div className="text-white font-bold text-base">Sintesi</div>
-                  <div className="text-white/35 text-[11px]">{messages.filter(m => !m.isUser).length} messaggi analizzati</div>
+                  <div className="font-bold text-base" style={{ color: isDark ? '#fff' : '#111' }}>Sintesi</div>
+                  <div className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }}>{messages.filter(m => !m.isUser).length} messaggi analizzati</div>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
