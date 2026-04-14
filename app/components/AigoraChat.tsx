@@ -222,6 +222,18 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const AI_ORDER = allowedAis?.length ? allowedAis : AI_ORDER_DEFAULT
 
   const [phase, setPhase] = useState<ChatPhase>('start')
+  const [currentTime, setCurrentTime] = useState(() => {
+    const now = new Date()
+    return `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
+  })
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date()
+      setCurrentTime(`${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`)
+    }
+    const interval = setInterval(tick, 10000)
+    return () => clearInterval(interval)
+  }, [])
   const [question, setQuestion] = useState('')
   const [userName, setUserName] = useState(propUserName ?? '')
   const [nameConfirmed, setNameConfirmed] = useState(!!(propUserName?.trim()))
@@ -798,7 +810,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Status bar */}
           <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-1.5" style={{ backgroundColor: bgPreset.header }}>
-            <span className="text-[11px] font-semibold tabular-nums" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>9:41</span>
+            <span className="text-[11px] font-semibold tabular-nums" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>{currentTime}</span>
             <div className="w-[72px] h-[18px] bg-[#1c1c1e] rounded-full absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
               <div className="w-1.5 h-1.5 bg-[#333] rounded-full" />
             </div>
