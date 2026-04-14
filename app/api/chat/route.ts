@@ -298,7 +298,6 @@ export async function POST(req: NextRequest) {
     const system = SYSTEM_PROMPTS[aiId]
     if (!system) return new Response('AI non trovata', { status: 400 })
     const aiName = aiId.charAt(0).toUpperCase() + aiId.slice(1)
-    const today = new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
     const perplexityExtra = aiId === 'perplexity' ? ` Oggi è ${today}: cerca dati aggiornati a questa data, non usare informazioni vecchie.` : ''
     const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`
 
