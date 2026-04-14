@@ -31,6 +31,19 @@ const TOPIC_SUGGESTIONS = [
   'Il cambiamento climatico è ancora reversibile?',
   'Social media: bene o male per la democrazia?',
   'Dovremmo colonizzare Marte?',
+  'La coscienza è solo chimica?',
+  'Chi controlla l\'IA?',
+  'Siamo soli nell\'universo?',
+  'L\'arte può essere artificiale?',
+  'La privacy è ancora un diritto?',
+  'Il capitalismo ha un futuro?',
+  'Esiste la verità oggettiva?',
+  'Possiamo sconfiggere la morte?',
+  'L\'IA può avere emozioni?',
+  'Il nucleare è la soluzione energetica?',
+  'Dobbiamo regolamentare l\'IA?',
+  'I social ci rendono più soli?',
+  'La guerra è inevitabile?',
 ]
 
 // 60 domande per le bubble fluttuanti
@@ -129,6 +142,62 @@ function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[
   // Sceglie random tra quelle non ancora usate, o random tra tutte le altre
   const pool = unused.length > 0 ? unused : others
   return pool[Math.floor(Math.random() * pool.length)]
+}
+
+// ── Topic suggeriti rotanti (3 righe × 2 colonne) ────────────────────────────
+function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
+  const SLOTS = 6 // 3 righe × 2 colonne
+  const [visible, setVisible] = useState<string[]>(() => {
+    const shuffled = [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5)
+    return shuffled.slice(0, SLOTS)
+  })
+  const [fading, setFading] = useState<number | null>(null)
+  const poolRef = useRef<string[]>([])
+
+  useEffect(() => {
+    // Pool dei topic non ancora mostrati
+    poolRef.current = TOPIC_SUGGESTIONS.filter(t => !visible.includes(t))
+  }, [])
+
+  useEffect(() => {
+    let slotIndex = 0
+    const interval = setInterval(() => {
+      if (poolRef.current.length === 0) {
+        // Ricarica pool escludendo i visibili attuali
+        poolRef.current = TOPIC_SUGGESTIONS.filter(t => !visible.includes(t))
+        if (poolRef.current.length === 0) return
+      }
+      const newTopic = poolRef.current.shift()!
+      const idx = slotIndex % SLOTS
+      slotIndex++
+      setFading(idx)
+      setTimeout(() => {
+        setVisible(prev => {
+          const next = [...prev]
+          next[idx] = newTopic
+          return next
+        })
+        setFading(null)
+      }, 300)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="grid grid-cols-2 gap-1.5" style={{ marginBottom: '8px' }}>
+      {visible.map((t, i) => (
+        <button key={i} onClick={() => onSelect(t)}
+          className="text-center px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all"
+          style={{
+            fontSize: 'clamp(9px, 2.5vw, 11px)',
+            opacity: fading === i ? 0 : 1,
+            transition: 'opacity 0.3s ease',
+          }}>
+          {t}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 // ── Avatar bar ────────────────────────────────────────────────────────────────
@@ -972,17 +1041,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', marginBottom: '8px' }}
               />
 
-              {/* Topic suggeriti — scroll orizzontale */}
-              <div className="flex gap-1.5 overflow-x-auto pb-1"
-                style={{ scrollbarWidth: 'none', marginBottom: '8px' }}>
-                {TOPIC_SUGGESTIONS.map(t => (
-                  <button key={t} onClick={() => setQuestion(t)}
-                    className="flex-shrink-0 px-3 py-1 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all whitespace-nowrap"
-                    style={{ fontSize: 'clamp(9px, 2.5vw, 11px)' }}>
-                    {t}
-                  </button>
-                ))}
-              </div>
+              {/* Topic suggeriti — 3 righe × 2 colonne, ruotano ogni 5s */}
+              <RotatingTopics onSelect={setQuestion} />
 
               {/* CTA */}
               <button
@@ -998,54 +1058,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               >
                 Avvia il dibattito →
               </button>
-            </div>
-
-            {/* ── Profilo + cronologia (mobile) — identici alla Navbar della chat ── */}
-            <div className="lg:hidden flex items-center justify-between">
-              {/* Cronologia — stesso stile della Navbar */}
-              <button onClick={() => setPhase('history')}
-                className="flex items-center gap-2 text-sm font-medium transition-all hover:text-white"
-                style={{ color: 'rgba(255,255,255,0.45)' }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z"/><path d="M12 7v5l3 3"/>
-                </svg>
-                Cronologia
-              </button>
-              {/* Tondo utente — identico alla Navbar (ambra) */}
-              <div className="relative">
-                <button onClick={() => setShowProfileMenu(p => !p)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform hover:scale-110"
-                  style={{ backgroundColor: '#F59E0B', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
-                  {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
-                </button>
-                {showProfileMenu && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                    <div className="absolute right-0 bottom-11 w-56 rounded-2xl overflow-hidden shadow-2xl z-50"
-                      style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
-                      <div className="px-4 py-3 border-b border-white/8">
-                        <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
-                        <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
-                        <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                          style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
-                          {(userPlan ?? 'free').toUpperCase()}
-                        </div>
-                      </div>
-                      {userPlan === 'admin' && (
-                        <button onClick={() => window.location.href = '/admin'}
-                          className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
-                          ⚙️ Pannello Admin
-                        </button>
-                      )}
-                      <button onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium">
-                        Esci dall'account
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
             </div>
 
           </div>
