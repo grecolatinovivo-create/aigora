@@ -173,7 +173,7 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
     model, max_tokens: 180, stream: true,
     // NON passare stream_options: Perplexity API non lo supporta e causa errori silenti
     messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
-  } as any)
+  } as any) as any
   let outputText = ''
   let inputTokens = 0, outputTokens = 0
   for await (const chunk of stream) {
