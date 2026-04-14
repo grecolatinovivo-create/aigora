@@ -146,6 +146,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [showSynthesis, setShowSynthesis] = useState(false)
   const [waitingForUser, setWaitingForUser] = useState(false)
   const [turnCount, setTurnCount] = useState(0)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatHistoryRef = useRef<{ name: string; content: string }[]>([])
@@ -589,14 +590,35 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
           Cronologia
         </button>
-        <button onClick={() => signOut({ callbackUrl: '/login' })}
-          className="flex items-center gap-2 transition-all hover:scale-105"
-          title="Esci">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
-            style={{ backgroundColor: '#F59E0B' }}>
-            {(displayName || userEmail || '?')[0].toUpperCase()}
-          </div>
-        </button>
+        <div className="relative">
+          <button onClick={() => setShowProfileMenu(p => !p)}
+            className="flex items-center gap-2 transition-all hover:scale-105">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+              style={{ backgroundColor: '#F59E0B' }}>
+              {(displayName || userEmail || '?')[0].toUpperCase()}
+            </div>
+          </button>
+
+          {/* Menu profilo */}
+          {showProfileMenu && (
+            <div className="absolute right-0 top-10 w-52 rounded-2xl overflow-hidden shadow-2xl z-50"
+              style={{ backgroundColor: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
+              <div className="px-4 py-3 border-b border-white/8">
+                <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
+                <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
+                <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  {(userPlan ?? 'free').toUpperCase()}
+                </div>
+              </div>
+              <button onClick={() => signOut({ callbackUrl: '/login' })}
+                className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors">
+                Esci dall'account
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── TELEFONO (desktop) ── */}
