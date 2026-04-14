@@ -696,7 +696,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       {showHistory && <div className="fixed inset-0 z-40" onClick={() => setShowHistory(false)} />}
 
       {/* Navbar desktop pagina */}
-      <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-50">
+      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-50">
         <button onClick={() => setShowHistory(true)}
           className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
           style={{
