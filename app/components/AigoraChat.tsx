@@ -56,16 +56,7 @@ function detectUserMention(text: string, aiOrder: string[]): string | null {
   const lower = text.toLowerCase()
   for (const aiId of aiOrder) {
     const name = AI_NAMES[aiId].toLowerCase()
-    // Controlla menzioni dirette: "@claude", "claude,", "claude:", "hey claude", ecc.
-    if (
-      lower.includes(`@${name}`) ||
-      lower.startsWith(`${name},`) ||
-      lower.startsWith(`${name}:`) ||
-      lower.includes(`hey ${name}`) ||
-      lower.includes(`senti ${name}`) ||
-      lower.includes(`${name} cosa`) ||
-      lower.includes(`${name}, `)
-    ) return aiId
+    if (lower.includes(name)) return aiId
   }
   return null
 }
