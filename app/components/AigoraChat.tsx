@@ -312,30 +312,63 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [mobileFontSize, setMobileFontSize] = useState(14)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<any>(null)
-
-  const startListening = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SpeechRecognition) { alert('Il tuo browser non supporta il riconoscimento vocale.'); return }
-    const rec = new SpeechRecognition()
-    rec.lang = navigator.language || 'it-IT'
-    rec.continuous = false
-    rec.interimResults = false
-    rec.onstart = () => setIsListening(true)
-    rec.onresult = (e: any) => {
-      const transcript = e.results[0][0].transcript
-      setInputText(transcript)
-      setIsListening(false)
-    }
-    rec.onerror = () => setIsListening(false)
-    rec.onend = () => setIsListening(false)
-    recognitionRef.current = rec
-    rec.start()
-  }, [])
+  const listeningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const stopListening = useCallback(() => {
-    recognitionRef.current?.stop()
+    if (listeningTimeoutRef.current) { clearTimeout(listeningTimeoutRef.current); listeningTimeoutRef.current = null }
+    try { recognitionRef.current?.stop() } catch {}
+    recognitionRef.current = null
     setIsListening(false)
   }, [])
+
+  // Cleanup al dismount
+  useEffect(() => { return () => { stopListening() } }, [stopListening])
+
+  const startListening = useCallback(() => {
+    // Se già in ascolto, ferma
+    if (recognitionRef.current) { stopListening(); return }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) { alert('Il tuo browser non supporta il riconoscimento vocale.'); return }
+
+    const rec = new SpeechRecognition()
+    rec.lang = 'it-IT'
+    rec.continuous = false
+    rec.interimResults = false
+    rec.maxAlternatives = 1
+
+    rec.onstart = () => {
+      setIsListening(true)
+      // Timeout di sicurezza: se dopo 10s non ha finito, forza lo stop
+      listeningTimeoutRef.current = setTimeout(() => { stopListening() }, 10000)
+    }
+
+    rec.onresult = (e: any) => {
+      const transcript = Array.from(e.results as any[])
+        .map((r: any) => r[0].transcript)
+        .join('')
+        .trim()
+      if (transcript) setInputText(prev => prev ? prev + ' ' + transcript : transcript)
+      stopListening()
+    }
+
+    rec.onerror = (e: any) => {
+      // 'no-speech' è normale (silenzio), non mostrare errore
+      if (e.error !== 'no-speech') console.warn('Speech recognition error:', e.error)
+      stopListening()
+    }
+
+    rec.onend = () => { stopListening() }
+
+    recognitionRef.current = rec
+    try {
+      rec.start()
+    } catch {
+      // Se start() fallisce (es. già in corso), resetta
+      recognitionRef.current = null
+      setIsListening(false)
+    }
+  }, [stopListening])
   const [showHistory, setShowHistory] = useState(false)
   const [bubbleTopics, setBubbleTopics] = useState(() => getRandomBubbleTopics())
   const usedBubbleTopicsRef = useRef(new Set(getRandomBubbleTopics()))
