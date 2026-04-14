@@ -3,6 +3,24 @@ import { NextRequest } from 'next/server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// Prezzi per 1M token (USD)
+const PRICES: Record<string, { input: number; output: number }> = {
+  'claude-haiku-4-5-20251001': { input: 0.25,  output: 1.25  },
+  'gpt-4.1-mini':              { input: 0.40,  output: 1.60  },
+  'gemini-2.0-flash':          { input: 0.10,  output: 0.40  },
+  'sonar':                     { input: 1.00,  output: 1.00  },
+  'sonar-pro':                 { input: 3.00,  output: 3.00  },
+}
+
+async function logUsage(provider: string, model: string, inputTokens: number, outputTokens: number) {
+  try {
+    const prices = PRICES[model] ?? { input: 0, output: 0 }
+    const costUsd = (inputTokens * prices.input + outputTokens * prices.output) / 1_000_000
+    const { prisma } = await import('@/lib/prisma')
+    await prisma.apiUsage.create({ data: { provider, model, inputTokens, outputTokens, costUsd } })
+  } catch {}
+}
+
 const PEER_REVIEW_RULE = `
 REGOLA FONDAMENTALE: Le altre AI ti stanno monitorando. Ogni tua affermazione può essere corretta pubblicamente.
 1. Afferma solo ciò di cui sei assolutamente sicuro. Se hai dubbi, dillo ("non ho certezza, ma...").
@@ -85,6 +103,8 @@ async function* streamClaude(system: string, historyText: string, lastMessage: s
   for await (const chunk of stream) {
     if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') yield chunk.delta.text
   }
+  const usage = (await stream.finalMessage()).usage
+  logUsage('anthropic', 'claude-haiku-4-5-20251001', usage.input_tokens, usage.output_tokens)
 }
 
 async function* streamGPT(system: string, historyText: string, lastMessage: string): AsyncIterable<string> {
@@ -96,11 +116,14 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
     messages.push({ role: 'assistant', content: 'Ho letto la conversazione. Procedo con il mio turno.' })
   }
   messages.push({ role: 'user', content: lastMessage })
-  const stream = await client.chat.completions.create({ model: 'gpt-4.1-mini', max_tokens: 180, stream: true, messages })
+  const stream = await client.chat.completions.create({ model: 'gpt-4.1-mini', max_tokens: 180, stream: true, stream_options: { include_usage: true }, messages })
+  let inputTokens = 0, outputTokens = 0
   for await (const chunk of stream) {
     const text = chunk.choices[0]?.delta?.content
     if (text) yield text
+    if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens; outputTokens = chunk.usage.completion_tokens }
   }
+  logUsage('openai', 'gpt-4.1-mini', inputTokens, outputTokens)
 }
 
 async function* streamGemini(system: string, historyText: string, lastMessage: string): AsyncIterable<string> {
@@ -114,6 +137,9 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
     const text = chunk.text()
     if (text) yield text
   }
+  const finalResp = await result.response
+  const usage = finalResp.usageMetadata
+  if (usage) logUsage('google', 'gemini-2.0-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0)
 }
 
 async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false): AsyncIterable<string> {
@@ -123,13 +149,16 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
   const userMessage = historyText ? `Conversazione:\n\n${historyText}\n\n${lastMessage}` : lastMessage
   const model = needsWebSearch ? 'sonar-pro' : 'sonar'
   const stream = await client.chat.completions.create({
-    model, max_tokens: 180, stream: true,
+    model, max_tokens: 180, stream: true, stream_options: { include_usage: true },
     messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
   })
+  let inputTokens = 0, outputTokens = 0
   for await (const chunk of stream) {
     const text = chunk.choices[0]?.delta?.content
     if (text) yield text
+    if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens; outputTokens = chunk.usage.completion_tokens }
   }
+  logUsage('perplexity', model, inputTokens, outputTokens)
 }
 
 // Routing intelligente — Claude decide AI, modalità e se serve web search

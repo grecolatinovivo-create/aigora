@@ -28,6 +28,19 @@ export default async function AdminPage() {
 
   const adminEmail = process.env.ADMIN_EMAIL
 
+  // Costi API
+  const usageRaw = await prisma.apiUsage.findMany({ orderBy: { createdAt: 'desc' } })
+  const usageByProvider: Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }> = {}
+  let totalCost = 0
+  for (const u of usageRaw) {
+    if (!usageByProvider[u.provider]) usageByProvider[u.provider] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
+    usageByProvider[u.provider].calls++
+    usageByProvider[u.provider].cost += u.costUsd
+    usageByProvider[u.provider].inputTokens += u.inputTokens
+    usageByProvider[u.provider].outputTokens += u.outputTokens
+    totalCost += u.costUsd
+  }
+
   const users = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
@@ -62,6 +75,35 @@ export default async function AdminPage() {
             </div>
           </div>
           <a href="/" className="text-white/30 text-sm hover:text-white transition-colors">← Torna all'app</a>
+        </div>
+
+        {/* Widget costi API */}
+        <div className="glass rounded-2xl p-5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-bold text-base">Costi API</h2>
+            <span className="text-2xl font-black" style={{ color: totalCost > 10 ? '#FF6B2B' : '#10A37F' }}>
+              ${totalCost.toFixed(4)}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { key: 'anthropic', label: 'Claude', color: '#7C3AED' },
+              { key: 'openai',    label: 'GPT',    color: '#10A37F' },
+              { key: 'google',    label: 'Gemini', color: '#1A73E8' },
+              { key: 'perplexity',label: 'Perplexity', color: '#FF6B2B' },
+            ].map(({ key, label, color }) => {
+              const u = usageByProvider[key]
+              return (
+                <div key={key} className="rounded-xl p-3" style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>
+                  <div className="text-xs font-bold mb-1" style={{ color }}>{label}</div>
+                  <div className="text-white font-bold text-lg">${(u?.cost ?? 0).toFixed(4)}</div>
+                  <div className="text-white/40 text-[10px] mt-1">
+                    {u?.calls ?? 0} chiamate · {((u?.inputTokens ?? 0) + (u?.outputTokens ?? 0)).toLocaleString()} token
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {/* Utenti */}
