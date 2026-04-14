@@ -148,7 +148,6 @@ export default async function UserProfilePage({ params }: { params: { username: 
                   background: 'rgba(255,255,255,0.04)',
                   border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '20px', padding: '18px 20px',
-                  transition: 'all 0.2s',
                 }}>
                   <div style={{
                     fontSize: '15px', fontWeight: 700,
@@ -156,8 +155,6 @@ export default async function UserProfilePage({ params }: { params: { username: 
                   }}>
                     {chat.title}
                   </div>
-
-                  {/* AI partecipanti */}
                   <div style={{ display: 'flex', gap: '5px', marginBottom: '10px', flexWrap: 'wrap' }}>
                     {aiIds.map(id => (
                       <span key={id} style={{
@@ -171,7 +168,6 @@ export default async function UserProfilePage({ params }: { params: { username: 
                       </span>
                     ))}
                   </div>
-
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
                     fontSize: '11px', color: 'rgba(255,255,255,0.3)',

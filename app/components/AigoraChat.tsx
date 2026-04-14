@@ -306,7 +306,7 @@ function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMen
               </div>
               {userPlan === 'admin' && (
                 <>
-                  <button onClick={() => window.location.href = `/u/${encodeURIComponent(displayName)}`}
+                  <button onClick={() => window.location.href = `/${encodeURIComponent(displayName)}`}
                     className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                     👤 Il mio profilo
                   </button>
