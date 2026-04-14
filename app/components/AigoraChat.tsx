@@ -244,12 +244,22 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [showHistory, setShowHistory] = useState(false)
   const [savedChats, setSavedChats] = useState<{id:string; title:string; date:string; messages: Message[]; history: {name:string;content:string}[]}[]>([])
 
-  // Carica cronologia da localStorage
+  // Carica cronologia dal server
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('aigora_chats')
-      if (raw) setSavedChats(JSON.parse(raw))
-    } catch {}
+    fetch('/api/chats')
+      .then(r => r.json())
+      .then(data => {
+        if (data.chats) {
+          setSavedChats(data.chats.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            date: new Date(c.updatedAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+            messages: c.messages,
+            history: c.history,
+          })))
+        }
+      })
+      .catch(() => {})
   }, [])
 
   const currentChatIdRef = useRef(`chat-${Date.now()}`)
@@ -266,10 +276,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
     setSavedChats(prev => {
       const filtered = prev.filter(c => c.id !== currentChatIdRef.current)
-      const updated = [chat, ...filtered].slice(0, 30)
-      try { localStorage.setItem('aigora_chats', JSON.stringify(updated)) } catch {}
-      return updated
+      return [chat, ...filtered].slice(0, 50)
     })
+    // Salva su Neon
+    fetch('/api/chats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: chat.id, title: chat.title, messages: chat.messages, history: chat.history }),
+    }).catch(() => {})
   }, [])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -771,7 +785,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <div className="px-5 py-4 border-t border-white/8">
             <button onClick={() => {
               setSavedChats([])
-              localStorage.removeItem('aigora_chats')
             }} className="text-red-400/60 hover:text-red-400 text-xs transition-colors">
               Cancella cronologia
             </button>
