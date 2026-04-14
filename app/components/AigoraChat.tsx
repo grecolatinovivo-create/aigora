@@ -508,18 +508,18 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         ].map((text, i) => {
           // Ai lati della card (max-w-lg = ~512px), distribuite in altezza solo nella metà superiore/media
           const positions = [
-            { top: '10%', left: '18%'  },
-            { top: '18%', right: '18%' },
-            { top: '28%', left: '14%'  },
-            { top: '35%', right: '15%' },
-            { top: '48%', left: '17%'  },
-            { top: '55%', right: '16%' },
-            { top: '22%', left: '20%'  },
-            { top: '42%', right: '19%' },
-            { top: '14%', right: '22%' },
-            { top: '32%', left: '16%'  },
-            { top: '60%', right: '20%' },
-            { top: '50%', left: '22%'  },
+            { top: '22%', left: 'calc(50% - 420px)'  },
+            { top: '32%', right: 'calc(50% - 420px)' },
+            { top: '42%', left: 'calc(50% - 410px)'  },
+            { top: '52%', right: 'calc(50% - 410px)' },
+            { top: '28%', left: 'calc(50% - 430px)'  },
+            { top: '38%', right: 'calc(50% - 430px)' },
+            { top: '48%', left: 'calc(50% - 415px)'  },
+            { top: '35%', right: 'calc(50% - 415px)' },
+            { top: '25%', right: 'calc(50% - 425px)' },
+            { top: '45%', left: 'calc(50% - 425px)'  },
+            { top: '55%', right: 'calc(50% - 420px)' },
+            { top: '30%', left: 'calc(50% - 420px)'  },
           ]
           const pos = positions[i % positions.length]
           const delays = ['0s','2s','4s','1s','3s','5s','1.5s','3.5s','0.5s','2.5s','4.5s','6s']
