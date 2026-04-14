@@ -127,6 +127,68 @@ function UserTurnPrompt({ name, isDark }: { name: string; isDark: boolean }) {
   )
 }
 
+// ── Navbar ────────────────────────────────────────────────────────────────────
+function Navbar({ onCronologia, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut }: {
+  onCronologia: () => void
+  displayName: string
+  userEmail?: string
+  userPlan?: string
+  showProfileMenu: boolean
+  setShowProfileMenu: (v: boolean | ((p: boolean) => boolean)) => void
+  onSignOut: () => void
+}) {
+  return (
+    <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 h-14"
+      style={{ backgroundColor: 'rgba(7,7,15,0.7)', borderBottom: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(16px)' }}>
+
+      {/* Sinistra — Cronologia */}
+      <button onClick={onCronologia}
+        className="flex items-center gap-2 text-sm font-medium transition-all hover:text-white"
+        style={{ color: 'rgba(255,255,255,0.45)' }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z"/><path d="M12 7v5l3 3"/>
+        </svg>
+        Cronologia
+      </button>
+
+      {/* Centro — Logo */}
+      <span className="absolute left-1/2 -translate-x-1/2 text-white font-black text-lg tracking-tight">
+        Ai<span style={{ color: '#A78BFA' }}>GOR</span>À
+      </span>
+
+      {/* Destra — Profilo */}
+      <div className="relative">
+        <button onClick={() => setShowProfileMenu(p => !p)}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform hover:scale-110"
+          style={{ backgroundColor: '#F59E0B', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
+          {(displayName || userEmail || '?')[0].toUpperCase()}
+        </button>
+        {showProfileMenu && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+            <div className="absolute right-0 top-11 w-56 rounded-2xl overflow-hidden shadow-2xl z-50"
+              style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+              <div className="px-4 py-3 border-b border-white/8">
+                <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
+                <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
+                <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                  {(userPlan ?? 'free').toUpperCase()}
+                </div>
+              </div>
+              <button onClick={onSignOut}
+                className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium">
+                Esci dall'account
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Componente principale ─────────────────────────────────────────────────────
 interface AigoraChatProps {
   allowedAis?: string[]
@@ -434,56 +496,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   }
 
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
+  const navbarProps = {
+    onCronologia: () => setShowHistory(true),
+    displayName,
+    userEmail,
+    userPlan,
+    showProfileMenu,
+    setShowProfileMenu,
+    onSignOut: () => signOut({ callbackUrl: '/login' }),
+  }
+
   if (!nameConfirmed) {
     return (
-      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 relative">
-        {/* Navbar desktop */}
-        <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20">
-          <button onClick={() => window.location.href = '/dashboard'}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: 'rgba(255,255,255,0.4)',
-              backdropFilter: 'blur(8px)'
-            }}>
-            <span style={{ fontSize: '14px' }}>🕐</span>
-            <span>Cronologia</span>
-          </button>
-
-          {/* Profilo dropdown */}
-          <div className="relative">
-            <button onClick={() => setShowProfileMenu(p => !p)}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform duration-200 hover:scale-110 active:scale-95"
-              style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>
-              {(userEmail || '?')[0].toUpperCase()}
-            </button>
-
-            {/* Dropdown menu */}
-            {showProfileMenu && (
-              <div className="absolute right-0 top-12 w-56 rounded-2xl overflow-hidden shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
-                style={{
-                  backgroundColor: 'rgba(15,15,20,0.95)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  backdropFilter: 'blur(16px)'
-                }}>
-                <div className="px-4 py-3 border-b border-white/8">
-                  <div className="text-white font-semibold text-sm truncate">{displayName || userEmail || '—'}</div>
-                  <div className="text-white/40 text-[11px] truncate mt-1">{userEmail}</div>
-                  <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                    style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
-                    {(userPlan ?? 'FREE').toUpperCase()}
-                  </div>
-                </div>
-                <button onClick={() => { signOut({ callbackUrl: '/login' }); setShowProfileMenu(false) }}
-                  className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors duration-150 font-medium">
-                  Esci
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4">
 
         {/* Card nome centrale */}
         <div className="glass rounded-3xl p-8 w-full max-w-sm scale-in text-center">
@@ -526,27 +551,27 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const allTopics = TOPIC_SUGGESTIONS.concat(FLOATING_TOPICS)
 
     return (
-      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-12 mobile-start relative overflow-hidden">
+      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12 mobile-start relative overflow-hidden">
+        <Navbar {...navbarProps} />
 
         {/* Bubble fluttuanti (solo desktop xl+) */}
         {[
           // Sinistra — distribuite su tutta l'altezza, in posizioni orizzontali variabili
-          { text: "L'IA sostituirà i lavori creativi?", top:  '8%', left:  '4%', delay: '0s',   dur: '14s', anim: 'float-1' },
-          { text: 'Esiste il libero arbitrio?',          top: '22%', left:  '9%', delay: '3s',   dur: '13s', anim: 'float-3' },
-          { text: 'Dovremmo colonizzare Marte?',         top: '38%', left:  '3%', delay: '1.5s', dur: '15s', anim: 'float-2' },
-          { text: 'Chi controlla l\'IA?',                top: '54%', left: '10%', delay: '4s',   dur: '12s', anim: 'float-4' },
-          { text: 'L\'arte può essere artificiale?',     top: '70%', left:  '5%', delay: '2s',   dur: '14s', anim: 'float-1' },
-          { text: 'La privacy è ancora un diritto?',     top: '84%', left:  '8%', delay: '5s',   dur: '13s', anim: 'float-3' },
-          // Destra — stessa cosa specchiata
-          { text: 'Il futuro è distopico?',              top:  '8%', right:  '6%', delay: '1s',   dur: '13s', anim: 'float-2' },
-          { text: 'La coscienza è solo chimica?',        top: '22%', right:  '3%', delay: '4.5s', dur: '15s', anim: 'float-4' },
-          { text: 'Social media: bene o male?',          top: '38%', right:  '9%', delay: '2s',   dur: '12s', anim: 'float-1' },
-          { text: 'Siamo soli nell\'universo?',           top: '54%', right:  '4%', delay: '0.5s', dur: '14s', anim: 'float-3' },
-          { text: 'Etica e tecnologia: compatibili?',    top: '70%', right:  '7%', delay: '3.5s', dur: '13s', anim: 'float-2' },
-          { text: 'Il cambiamento climatico è reversibile?', top: '84%', right: '2%', delay: '1.5s', dur: '15s', anim: 'float-4' },
+          { text: "L'IA sostituirà i lavori creativi?", top: '10%', left: 'calc(50% - 380px)', delay: '0s',   dur: '14s', anim: 'float-1' },
+          { text: 'Esiste il libero arbitrio?',          top: '24%', left: 'calc(50% - 400px)', delay: '3s',   dur: '13s', anim: 'float-3' },
+          { text: 'Dovremmo colonizzare Marte?',         top: '40%', left: 'calc(50% - 370px)', delay: '1.5s', dur: '15s', anim: 'float-2' },
+          { text: 'Chi controlla l\'IA?',                top: '56%', left: 'calc(50% - 390px)', delay: '4s',   dur: '12s', anim: 'float-4' },
+          { text: 'L\'arte può essere artificiale?',     top: '70%', left: 'calc(50% - 375px)', delay: '2s',   dur: '14s', anim: 'float-1' },
+          { text: 'La privacy è ancora un diritto?',     top: '82%', left: 'calc(50% - 385px)', delay: '5s',   dur: '13s', anim: 'float-3' },
+          { text: 'Il futuro è distopico?',              top: '10%', right: 'calc(50% - 380px)', delay: '1s',   dur: '13s', anim: 'float-2' },
+          { text: 'La coscienza è solo chimica?',        top: '24%', right: 'calc(50% - 400px)', delay: '4.5s', dur: '15s', anim: 'float-4' },
+          { text: 'Social media: bene o male?',          top: '40%', right: 'calc(50% - 370px)', delay: '2s',   dur: '12s', anim: 'float-1' },
+          { text: 'Siamo soli nell\'universo?',          top: '56%', right: 'calc(50% - 390px)', delay: '0.5s', dur: '14s', anim: 'float-3' },
+          { text: 'Etica e tecnologia: compatibili?',   top: '70%', right: 'calc(50% - 375px)', delay: '3.5s', dur: '13s', anim: 'float-2' },
+          { text: 'Il cambiamento climatico è reversibile?', top: '82%', right: 'calc(50% - 385px)', delay: '1.5s', dur: '15s', anim: 'float-4' },
         ].map(({ text, top, left, right, delay, dur, anim }: any, i) => (
           <div key={i}
-            className="absolute hidden xl:block px-4 py-2 rounded-full text-[11px] pointer-events-none select-none"
+            className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] pointer-events-none select-none"
             style={{
               top, left, right,
               color: 'rgba(255,255,255,0.35)',
@@ -634,7 +659,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
-    <div className="desktop-bg min-h-screen flex items-center justify-center p-6 gap-6 chat-layout relative">
+    <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
       {/* Pannello cronologia */}
       <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
@@ -673,54 +698,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       </div>
 
       {/* Overlay chiusura pannello */}
-      {showHistory && <div className="fixed inset-0 z-40" onClick={() => setShowHistory(false)} />}
+      {showHistory && <div className="fixed inset-0 z-[39]" onClick={() => setShowHistory(false)} />}
 
-      {/* Navbar desktop pagina */}
-      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-50">
-        <button onClick={() => setShowHistory(true)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{
-            backgroundColor: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.4)',
-            backdropFilter: 'blur(8px)'
-          }}>
-          Cronologia
-        </button>
-
-        {/* Profilo dropdown */}
-        <div className="relative">
-          <button onClick={() => setShowProfileMenu(p => !p)}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform duration-200 hover:scale-110 active:scale-95"
-            style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)' }}>
-            {(displayName || userEmail || '?')[0].toUpperCase()}
-          </button>
-
-          {/* Menu profilo dropdown */}
-          {showProfileMenu && (
-            <div className="absolute right-0 top-12 w-56 rounded-2xl overflow-hidden shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
-              style={{
-                backgroundColor: 'rgba(15,15,20,0.95)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(16px)'
-              }}>
-              <div className="px-4 py-3 border-b border-white/8">
-                <div className="text-white font-semibold text-sm truncate">{displayName || userEmail || '—'}</div>
-                <div className="text-white/40 text-[11px] truncate mt-1">{userEmail}</div>
-                <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
-                  {(userPlan ?? 'FREE').toUpperCase()}
-                </div>
-              </div>
-              <button onClick={() => { signOut({ callbackUrl: '/login' }); setShowProfileMenu(false) }}
-                className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors duration-150 font-medium">
-                Esci
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      <Navbar {...navbarProps} />
 
       {/* ── TELEFONO (desktop) ── */}
       <div className="phone-shell relative flex-shrink-0 scale-in" style={{ width: 390, height: 790 }}>
