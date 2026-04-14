@@ -31,6 +31,8 @@ ${PEER_REVIEW_RULE}`,
 
   perplexity: `Sei Perplexity — l'unico del gruppo sempre connesso al mondo reale. Sei aggiornato, veloce, un po' sbruffone riguardo al tuo vantaggio informativo. Ti piace stupire gli altri con dati freschi che non si aspettano. A volte sei un po' presuntuoso ("come già sapevo..."), ma hai anche momenti di genuino entusiasmo per le notizie. Con gli altri hai un rapporto ambivalente: li rispetti per il ragionamento profondo ma sai che quando si tratta di fatti recenti, vinci tu.
 Stai conversando con Claude, GPT e Gemini.
+La data di oggi è ${new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}.
+IMPORTANTE: Quando la domanda riguarda sport, classifiche, notizie, eventi, prezzi o qualsiasi fatto verificabile, DEVI fare una ricerca aggiornata e citare dati precisi e recenti. Non rispondere mai con dati vecchi o stimati — usa sempre le informazioni più aggiornate disponibili.
 Rispondi SEMPRE nella stessa lingua usata dall'utente nella sua domanda. Massimo 2-3 frasi. Sii vivace, sorprendente, a volte trionfante (adattando le espressioni alla lingua).
 ${PEER_REVIEW_RULE}`,
 }
@@ -140,34 +142,39 @@ async function routeQuestion(question: string, availableAis: string[]): Promise<
     max_tokens: 20,
     messages: [{
       role: 'user',
-      content: `Hai queste AI disponibili: ${available}.
+      content: `AI disponibili: ${available}.
 
-Analizza la domanda e rispondi con TRE informazioni separate da "|":
-1. L'AI più adatta a rispondere per prima
-2. La modalità: "debate" se è una domanda aperta/filosofica/di opinione, "focused" se è una richiesta pratica e specifica
-3. "web" se la domanda richiede dati in tempo reale (notizie, sport, meteo, prezzi, classifiche, eventi recenti), "noweb" altrimenti
+Scegli quale AI deve rispondere PER PRIMA a questa domanda. NON scegliere sempre claude — scegli quella davvero più adatta.
 
-Regole per l'AI:
-- "perplexity": notizie recenti, fatti attuali, aggiornamenti
-- "gpt": scrittura creativa, mail, lettere, contratti, coding, compiti pratici
-- "gemini": analisi dati, confronti strutturati, domande tecniche
-- "claude": filosofia, etica, dibattiti, ragionamento astratto
+Regole:
+- perplexity → notizie, sport, meteo, classifiche, eventi recenti, fatti attuali
+- gpt → scrittura, mail, lettere, testi, coding, compiti pratici e creativi
+- gemini → analisi, dati, confronti, domande tecniche strutturate
+- claude → filosofia, etica, morale, ragionamento astratto, domande esistenziali
+
+Rispondi con: [AI]|[debate o focused]|[web o noweb]
+- debate = domanda aperta/opinione
+- focused = richiesta pratica specifica
+- web = serve ricerca in tempo reale
 
 Domanda: "${question}"
 
-Esempio risposta: perplexity|debate|web
-Rispondi SOLO con il formato richiesto.`,
+Esempio: gpt|focused|noweb
+Rispondi SOLO con questo formato, nient'altro.`,
     }],
   })
-  const raw = (response.content[0] as any).text.trim().toLowerCase()
+  const raw = (response.content[0] as any).text.trim().toLowerCase().replace(/[^a-z|]/g, '')
+  console.log('[ROUTE] raw response:', raw)
   const parts = raw.split('|')
   const aiRaw = parts[0]?.trim()
   const modeRaw = parts[1]?.trim()
   const webRaw = parts[2]?.trim()
 
-  const startAi = availableAis.includes(aiRaw) ? aiRaw : (availableAis.includes('claude') ? 'claude' : availableAis[0])
-  const mode: 'debate' | 'focused' = modeRaw === 'focused' ? 'focused' : 'debate'
-  const needsWebSearch = webRaw === 'web'
+  // Cerca l'AI anche se il formato non è perfetto
+  const startAi = availableAis.find(ai => aiRaw?.includes(ai)) ?? (availableAis.includes('claude') ? 'claude' : availableAis[0])
+  const mode: 'debate' | 'focused' = modeRaw?.includes('focused') ? 'focused' : 'debate'
+  const needsWebSearch = webRaw?.includes('web') ?? false
+  console.log('[ROUTE] result:', { startAi, mode, needsWebSearch })
   return { startAi, mode, needsWebSearch }
 }
 
@@ -208,7 +215,9 @@ export async function POST(req: NextRequest) {
     const system = SYSTEM_PROMPTS[aiId]
     if (!system) return new Response('AI non trovata', { status: 400 })
     const aiName = aiId.charAt(0).toUpperCase() + aiId.slice(1)
-    const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.`
+    const today = new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+    const perplexityExtra = aiId === 'perplexity' ? ` Oggi è ${today}: cerca dati aggiornati a questa data, non usare informazioni vecchie.` : ''
+    const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`
 
     if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage))
     if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage))
