@@ -33,12 +33,75 @@ const TOPIC_SUGGESTIONS = [
   'Dovremmo colonizzare Marte?',
 ]
 
-// Topic aggiuntivi per le bubble fluttuanti
-const FLOATING_TOPICS = [
+// 60 domande per le bubble fluttuanti
+const ALL_BUBBLE_TOPICS = [
   'La coscienza è solo chimica?',
   'Chi controlla l\'IA?',
   'Il futuro è distopico?',
+  'Siamo soli nell\'universo?',
+  'L\'arte può essere artificiale?',
+  'Etica e tecnologia: compatibili?',
+  'La privacy è ancora un diritto?',
+  'Il capitalismo ha un futuro?',
+  'Esiste la verità oggettiva?',
+  'La democrazia è in crisi?',
+  'Dobbiamo temere i robot?',
+  'L\'amore è solo chimica?',
+  'Il progresso è sempre positivo?',
+  'Esiste il bene e il male?',
+  'La scuola prepara al futuro?',
+  'I social ci rendono più soli?',
+  'La morte ha un significato?',
+  'Può una macchina essere creativa?',
+  'Il denaro fa la felicità?',
+  'Siamo davvero liberi?',
+  'L\'umanità sopravviverà al 2100?',
+  'Dobbiamo ridurre la popolazione?',
+  'La guerra è inevitabile?',
+  'Esiste una morale universale?',
+  'Il lavoro dà senso alla vita?',
+  'Possiamo fidarci della scienza?',
+  'La religione è ancora necessaria?',
+  'I confini nazionali hanno senso?',
+  'Il futuro appartiene all\'Asia?',
+  'Dobbiamo vivere su altri pianeti?',
+  'L\'IA può avere emozioni?',
+  'Chi possiede i dati ci governa?',
+  'La carne sintetica salverà il pianeta?',
+  'Il metaverso cambierà la realtà?',
+  'Possiamo sconfiggere la morte?',
+  'Il giornalismo è ancora credibile?',
+  'La musica generata dall\'AI è arte?',
+  'Esiste ancora la classe media?',
+  'I vaccini hanno cambiato la storia?',
+  'La globalizzazione è finita?',
+  'Il nucleare è la soluzione energetica?',
+  'Abbiamo già superato il punto di non ritorno?',
+  'L\'uomo è fondamentalmente buono o cattivo?',
+  'La libertà di parola ha dei limiti?',
+  'Può l\'IA essere più empatica degli umani?',
+  'Il sonno è tempo sprecato?',
+  'Esiste un diritto universale alla salute?',
+  'I videogiochi fanno bene o male?',
+  'La solitudine è un problema moderno?',
+  'Dobbiamo regolamentare l\'IA?',
+  'Il femminismo ha raggiunto i suoi obiettivi?',
+  'La crittografia protegge la libertà?',
+  'Possiamo fidarci dei media?',
+  'Il tempo libero aumenta o diminuisce?',
+  'L\'educazione cambierà con l\'IA?',
+  'La nostalgia blocca il progresso?',
+  'Esiste un\'intelligenza oltre la nostra?',
+  'Il corpo umano è obsoleto?',
+  'La storia si ripete davvero?',
+  'Dobbiamo avere paura dell\'ignoto?',
 ]
+
+// Estrae 12 domande random senza ripetizioni
+function getRandomBubbleTopics(): string[] {
+  const shuffled = [...ALL_BUBBLE_TOPICS].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, 12)
+}
 
 type ChatPhase = 'start' | 'running' | 'done' | 'history' | 'profile'
 
@@ -248,6 +311,30 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [mobileFontSize, setMobileFontSize] = useState(14)
   const [showHistory, setShowHistory] = useState(false)
+  const [bubbleTopics, setBubbleTopics] = useState(() => getRandomBubbleTopics())
+  const usedBubbleTopicsRef = useRef(new Set(getRandomBubbleTopics()))
+
+  const rotateBubble = useCallback((index: number) => {
+    setBubbleTopics(prev => {
+      const currentSet = new Set(prev)
+      // Trova una domanda non usata attualmente
+      const available = ALL_BUBBLE_TOPICS.filter(t => !currentSet.has(t))
+      if (available.length === 0) {
+        // Se le abbiamo usate tutte, ricomincia
+        usedBubbleTopicsRef.current = new Set(prev)
+        const fresh = ALL_BUBBLE_TOPICS.filter(t => !currentSet.has(t))
+        if (fresh.length === 0) return prev
+        const next = [...prev]
+        next[index] = fresh[Math.floor(Math.random() * fresh.length)]
+        return next
+      }
+      const newTopic = available[Math.floor(Math.random() * available.length)]
+      const next = [...prev]
+      next[index] = newTopic
+      usedBubbleTopicsRef.current.add(newTopic)
+      return next
+    })
+  }, [])
   const [savedChats, setSavedChats] = useState<{id:string; title:string; date:string; messages: Message[]; history: {name:string;content:string}[]}[]>([])
 
   // Carica cronologia dal server
@@ -650,30 +737,28 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA INIZIALE ────────────────────────────────────────────────────────
   if (phase === 'start') {
-    const allTopics = TOPIC_SUGGESTIONS.concat(FLOATING_TOPICS)
-
     return (
       <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12 mobile-start relative overflow-hidden">
         <Navbar {...navbarProps} />
 
-        {/* Bubble fluttuanti (solo desktop xl+) */}
+        {/* Bubble fluttuanti (solo desktop xl+) — 12 attive, ruotano tra 60 domande */}
         {[
-          // Sinistra — distribuite su tutta l'altezza, in posizioni orizzontali variabili
-          { text: "L'IA sostituirà i lavori creativi?", top: '220px', left: 'calc(50% - 560px)', delay: '0s',   dur: '14s', anim: 'float-1' },
-          { text: 'Esiste il libero arbitrio?',          top: '340px', left: 'calc(50% - 540px)', delay: '3s',   dur: '13s', anim: 'float-3' },
-          { text: 'Dovremmo colonizzare Marte?',         top: '460px', left: 'calc(50% - 560px)', delay: '1.5s', dur: '15s', anim: 'float-2' },
-          { text: 'Chi controlla l\'IA?',                top: '580px', left: 'calc(50% - 540px)', delay: '4s',   dur: '12s', anim: 'float-4' },
-          { text: 'L\'arte può essere artificiale?',     top: '680px', left: 'calc(50% - 560px)', delay: '2s',   dur: '14s', anim: 'float-1' },
-          { text: 'La privacy è ancora un diritto?',     top: '780px', left: 'calc(50% - 540px)', delay: '5s',   dur: '13s', anim: 'float-3' },
-          { text: 'Il futuro è distopico?',              top: '220px', right: 'calc(50% - 560px)', delay: '1s',   dur: '13s', anim: 'float-2' },
-          { text: 'La coscienza è solo chimica?',        top: '340px', right: 'calc(50% - 540px)', delay: '4.5s', dur: '15s', anim: 'float-4' },
-          { text: 'Social media: bene o male?',          top: '460px', right: 'calc(50% - 560px)', delay: '2s',   dur: '12s', anim: 'float-1' },
-          { text: 'Siamo soli nell\'universo?',          top: '580px', right: 'calc(50% - 540px)', delay: '0.5s', dur: '14s', anim: 'float-3' },
-          { text: 'Etica e tecnologia: compatibili?',   top: '680px', right: 'calc(50% - 560px)', delay: '3.5s', dur: '13s', anim: 'float-2' },
-          { text: 'Il cambiamento climatico è reversibile?', top: '780px', right: 'calc(50% - 540px)', delay: '1.5s', dur: '15s', anim: 'float-4' },
-        ].map(({ text, top, left, right, delay, dur, anim }: any, i) => (
+          { top: '220px', left: 'calc(50% - 560px)', delay: '0s',   dur: '14s', anim: 'float-1' },
+          { top: '340px', left: 'calc(50% - 540px)', delay: '3s',   dur: '13s', anim: 'float-3' },
+          { top: '460px', left: 'calc(50% - 560px)', delay: '1.5s', dur: '15s', anim: 'float-2' },
+          { top: '580px', left: 'calc(50% - 540px)', delay: '4s',   dur: '12s', anim: 'float-4' },
+          { top: '680px', left: 'calc(50% - 560px)', delay: '2s',   dur: '14s', anim: 'float-1' },
+          { top: '780px', left: 'calc(50% - 540px)', delay: '5s',   dur: '13s', anim: 'float-3' },
+          { top: '220px', right: 'calc(50% - 560px)', delay: '1s',   dur: '13s', anim: 'float-2' },
+          { top: '340px', right: 'calc(50% - 540px)', delay: '4.5s', dur: '15s', anim: 'float-4' },
+          { top: '460px', right: 'calc(50% - 560px)', delay: '2s',   dur: '12s', anim: 'float-1' },
+          { top: '580px', right: 'calc(50% - 540px)', delay: '0.5s', dur: '14s', anim: 'float-3' },
+          { top: '680px', right: 'calc(50% - 560px)', delay: '3.5s', dur: '13s', anim: 'float-2' },
+          { top: '780px', right: 'calc(50% - 540px)', delay: '1.5s', dur: '15s', anim: 'float-4' },
+        ].map(({ top, left, right, delay, dur, anim }: any, i) => (
           <div key={i}
             className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] pointer-events-none select-none"
+            onAnimationIteration={() => rotateBubble(i)}
             style={{
               top, left, right,
               color: 'rgba(255,255,255,0.35)',
@@ -686,7 +771,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               animation: `${anim} ${dur} ease-in-out infinite`,
               animationDelay: delay,
             }}>
-            {text}
+            {bubbleTopics[i]}
           </div>
         ))}
 
