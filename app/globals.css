@@ -156,6 +156,12 @@ html, body {
 
 .waiting-pulse { animation: waiting-pulse 1.8s ease-in-out infinite; }
 
+@keyframes input-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0); border-color: rgba(124,58,237,0.2); }
+  50%       { box-shadow: 0 0 18px 4px rgba(124,58,237,0.25); border-color: rgba(124,58,237,0.6); }
+}
+.input-waiting { animation: input-glow 2s ease-in-out infinite; }
+
 /* ── Glassmorphism ── */
 .glass {
   background: rgba(255,255,255,0.04);

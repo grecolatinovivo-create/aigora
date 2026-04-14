@@ -967,7 +967,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
             {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
-            {waitingForUser && <UserTurnPrompt name={displayName} isDark={isDark} />}
             <div ref={messagesEndRef} />
           </div>
 
@@ -980,11 +979,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSendMessage() }}
-              placeholder={waitingForUser ? `${displayName}, rispondi…` : 'Scrivi un messaggio…'}
-              className="flex-1 rounded-full px-3.5 py-2 text-[12px] outline-none transition-all"
+              placeholder='Scrivi un messaggio…'
+              className={`flex-1 rounded-full px-3.5 py-2 text-[12px] outline-none transition-all${waitingForUser ? ' input-waiting' : ''}`}
               style={{
                 backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                border: `1px solid ${waitingForUser ? (isDark ? 'rgba(196,181,253,0.4)' : 'rgba(109,40,217,0.3)') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')}`,
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
                 color: isDark ? '#f0f0f0' : '#111',
                 boxShadow: waitingForUser ? (isDark ? '0 0 0 2px rgba(196,181,253,0.15)' : '0 0 0 2px rgba(109,40,217,0.1)') : undefined,
               }}
@@ -1170,7 +1169,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
             {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
-            {waitingForUser && <UserTurnPrompt name={displayName} isDark={isDark} />}
             <div ref={messagesEndRef} />
           </div>
 
@@ -1219,11 +1217,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSendMessage() }}
-              placeholder={waitingForUser ? `${displayName}, rispondi…` : 'Scrivi un messaggio…'}
-              className="flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none transition-all"
+              placeholder='Scrivi un messaggio…'
+              className={`flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none transition-all${waitingForUser ? ' input-waiting' : ''}`}
               style={{
                 backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                border: `1px solid ${waitingForUser ? (isDark ? 'rgba(196,181,253,0.4)' : 'rgba(109,40,217,0.3)') : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')}`,
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
                 color: isDark ? '#f0f0f0' : '#111',
               }}
             />
