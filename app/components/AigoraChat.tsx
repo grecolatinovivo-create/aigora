@@ -792,8 +792,46 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // ── SCHERMATA INIZIALE ────────────────────────────────────────────────────────
   if (phase === 'start') {
     return (
-      <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12 mobile-start relative overflow-hidden">
-        <Navbar {...navbarProps} />
+      <div className="desktop-bg min-h-screen lg:min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12 mobile-start relative overflow-hidden">
+        {/* Navbar visibile solo su desktop */}
+        <div className="hidden lg:block">
+          <Navbar {...navbarProps} />
+        </div>
+        {/* Navbar mobile semplificata con solo profilo */}
+        <div className="lg:hidden fixed top-0 right-0 p-4 z-50">
+          <button onClick={() => setShowProfileMenu(p => !p)}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white"
+            style={{ backgroundColor: '#F59E0B' }}>
+            {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
+          </button>
+          {showProfileMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+              <div className="absolute right-0 top-14 w-52 rounded-2xl overflow-hidden shadow-2xl z-50"
+                style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+                <div className="px-4 py-3 border-b border-white/8">
+                  <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
+                  <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                    style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                    {(userPlan ?? 'free').toUpperCase()}
+                  </div>
+                </div>
+                {userPlan === 'admin' && (
+                  <button onClick={() => window.location.href = '/admin'}
+                    className="w-full px-4 py-3 text-left text-sm text-amber-400 font-medium border-b border-white/8">
+                    ⚙️ Pannello Admin
+                  </button>
+                )}
+                <button onClick={() => signOut({ callbackUrl: '/login' })}
+                  className="w-full px-4 py-3 text-left text-sm text-red-400 font-medium">
+                  Esci dall'account
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Bubble fluttuanti (solo desktop xl+) — 12 attive, ruotano tra 60 domande */}
         {[
