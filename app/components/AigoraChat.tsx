@@ -792,48 +792,65 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // ── SCHERMATA INIZIALE ────────────────────────────────────────────────────────
   if (phase === 'start') {
     return (
-      <div className="desktop-bg min-h-screen lg:min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12 mobile-start relative overflow-hidden">
-        {/* Navbar visibile solo su desktop */}
-        <div className="hidden lg:block">
+      <div className="desktop-bg relative overflow-hidden"
+        style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+
+        {/* ── Navbar desktop ── */}
+        <div className="hidden lg:block flex-shrink-0">
           <Navbar {...navbarProps} />
         </div>
-        {/* Navbar mobile semplificata con solo profilo */}
-        <div className="lg:hidden fixed top-0 right-0 p-4 z-50">
-          <button onClick={() => setShowProfileMenu(p => !p)}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white"
-            style={{ backgroundColor: '#F59E0B' }}>
-            {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
-          </button>
-          {showProfileMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-              <div className="absolute right-0 top-14 w-52 rounded-2xl overflow-hidden shadow-2xl z-50"
-                style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
-                <div className="px-4 py-3 border-b border-white/8">
-                  <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
-                  <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                    style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
-                    {(userPlan ?? 'free').toUpperCase()}
+
+        {/* ── Header mobile: logo + avatar profilo ── */}
+        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-5 z-50"
+          style={{ paddingTop: 'max(52px, env(safe-area-inset-top))', paddingBottom: '8px' }}>
+          {/* Logo compatto */}
+          <span className="text-xl font-black tracking-tight select-none">
+            <span style={{ color: '#A78BFA' }}>A</span>
+            <span className="text-white">i</span>
+            <span style={{ color: '#A78BFA' }}>GORÀ</span>
+          </span>
+          {/* Avatar profilo */}
+          <div className="relative">
+            <button onClick={() => setShowProfileMenu(p => !p)}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+              style={{ backgroundColor: '#7C3AED', boxShadow: '0 0 0 2px rgba(167,139,250,0.3)' }}>
+              {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
+            </button>
+            {showProfileMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                <div className="absolute right-0 top-11 w-52 rounded-2xl overflow-hidden shadow-2xl z-50"
+                  style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+                  <div className="px-4 py-3 border-b border-white/8">
+                    <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
+                    <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                      style={{ backgroundColor: 'rgba(124,58,237,0.15)', color: '#A78BFA', border: '1px solid rgba(124,58,237,0.3)' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#A78BFA' }} />
+                      {(userPlan ?? 'free').toUpperCase()}
+                    </div>
                   </div>
-                </div>
-                {userPlan === 'admin' && (
-                  <button onClick={() => window.location.href = '/admin'}
-                    className="w-full px-4 py-3 text-left text-sm text-amber-400 font-medium border-b border-white/8">
-                    ⚙️ Pannello Admin
+                  {userPlan === 'admin' && (
+                    <button onClick={() => window.location.href = '/admin'}
+                      className="w-full px-4 py-3 text-left text-sm text-amber-400 font-medium border-b border-white/8">
+                      ⚙️ Pannello Admin
+                    </button>
+                  )}
+                  <button onClick={() => setPhase('history')}
+                    className="w-full px-4 py-3 text-left text-sm text-white/60 font-medium border-b border-white/8">
+                    📋 Cronologia chat
                   </button>
-                )}
-                <button onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="w-full px-4 py-3 text-left text-sm text-red-400 font-medium">
-                  Esci dall'account
-                </button>
-              </div>
-            </>
-          )}
+                  <button onClick={() => signOut({ callbackUrl: '/login' })}
+                    className="w-full px-4 py-3 text-left text-sm text-red-400 font-medium">
+                    Esci dall'account
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Bubble fluttuanti (solo desktop xl+) — 12 attive, ruotano tra 60 domande */}
+        {/* ── Bubble fluttuanti (solo desktop xl+) ── */}
         {[
           { top: '220px', left: 'calc(50% - 560px)', delay: '0s',   dur: '14s', anim: 'float-1' },
           { top: '340px', left: 'calc(50% - 540px)', delay: '3s',   dur: '13s', anim: 'float-3' },
@@ -868,11 +885,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </button>
         ))}
 
-        <div className="w-full max-w-lg scale-in relative z-10">
+        {/* ── Contenuto principale ── */}
+        <div className="flex-1 flex flex-col items-center justify-between lg:justify-center relative z-10 px-5 pb-safe"
+          style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))', gap: '0' }}>
 
-          {/* Hero */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-medium text-purple-300 border border-purple-500/30" style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>
+          {/* BLOCCO HERO — solo desktop (mobile ha già il logo nell'header) */}
+          <div className="hidden lg:block text-center mb-10 scale-in">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-medium text-purple-300 border border-purple-500/30"
+              style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>
               <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
               4 intelligenze artificiali · dibattito in tempo reale
             </div>
@@ -884,25 +904,45 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </p>
           </div>
 
-          {/* AI cards */}
-          <div className="ai-grid grid grid-cols-4 gap-2 mb-8">
-            {AI_ORDER.map(id => (
-              <div key={id} className="glass rounded-2xl p-3 flex flex-col items-center gap-2 text-center">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                  style={{ backgroundColor: AI_COLOR[id], boxShadow: `0 4px 14px ${AI_COLOR[id]}55` }}>
-                  {id === 'gemini' ? 'Ge' : AI_NAMES[id][0]}
-                </div>
-                <div>
-                  <div className="text-white text-[11px] font-semibold">{AI_NAMES[id]}</div>
-                  <div className="text-white/35 text-[9px] mt-0.5">{AI_DESC[id]}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <div className="w-full max-w-lg scale-in flex flex-col gap-4 lg:gap-0">
 
-          {/* Form */}
-          <div className="glass rounded-3xl p-5 space-y-3">
-            <div className="relative">
+            {/* TAGLINE MOBILE — sotto l'header, sopra le AI cards */}
+            <div className="lg:hidden text-center" style={{ marginTop: '4px' }}>
+              <p className="text-white/40 text-xs leading-relaxed">
+                Poni una domanda · le AI dibattono in tempo reale
+              </p>
+            </div>
+
+            {/* ── AI cards ── */}
+            <div className="ai-grid grid grid-cols-4 gap-2 lg:mb-8">
+              {AI_ORDER.map(id => (
+                <div key={id} className="glass rounded-2xl flex flex-col items-center gap-2 text-center"
+                  style={{ padding: '10px 6px' }}>
+                  {/* Avatar con glow */}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                    style={{ backgroundColor: AI_COLOR[id], boxShadow: `0 4px 16px ${AI_COLOR[id]}60` }}>
+                    {id === 'gemini' ? 'Ge' : AI_NAMES[id][0]}
+                  </div>
+                  <div>
+                    <div className="text-white font-semibold leading-tight" style={{ fontSize: '11px' }}>
+                      {AI_NAMES[id]}
+                    </div>
+                    {/* Descrizione visibile solo desktop */}
+                    <div className="hidden lg:block text-white/35 mt-0.5" style={{ fontSize: '9px' }}>
+                      {AI_DESC[id]}
+                    </div>
+                    {/* Pallino colorato su mobile al posto della descrizione */}
+                    <div className="lg:hidden flex justify-center mt-1">
+                      <span className="w-1 h-1 rounded-full opacity-50" style={{ backgroundColor: AI_COLOR[id] }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Form domanda ── */}
+            <div className="glass rounded-3xl" style={{ padding: '14px' }}>
+              {/* Textarea */}
               <textarea
                 value={question}
                 onChange={e => setQuestion(e.target.value)}
@@ -910,27 +950,42 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 placeholder="Poni una domanda alle AI…"
                 rows={3}
                 className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-purple-500/50 placeholder:text-white/20 resize-none leading-relaxed transition-colors"
+                style={{ marginBottom: '10px' }}
               />
+
+              {/* Topic suggeriti — scrollabili su mobile */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1 lg:flex-wrap"
+                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', marginBottom: '10px' }}>
+                {TOPIC_SUGGESTIONS.map(t => (
+                  <button key={t} onClick={() => setQuestion(t)}
+                    className="flex-shrink-0 text-[10px] px-3 py-1 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all whitespace-nowrap">
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={() => handleStart()}
+                disabled={!question.trim()}
+                className="w-full rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98]"
+                style={{
+                  padding: '13px',
+                  background: question.trim() ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : '#333',
+                  boxShadow: question.trim() ? '0 4px 24px rgba(124,58,237,0.45)' : undefined,
+                }}
+              >
+                Avvia il dibattito →
+              </button>
             </div>
 
-            {/* Topic suggeriti */}
-            <div className="flex flex-wrap gap-1.5">
-              {TOPIC_SUGGESTIONS.map(t => (
-                <button key={t} onClick={() => setQuestion(t)}
-                  className="text-[10px] px-2.5 py-1 rounded-full border border-white/10 text-white/40 hover:text-white/70 hover:border-white/25 transition-all">
-                  {t}
-                </button>
-              ))}
-            </div>
-
+            {/* ── Link cronologia (solo mobile, sotto il form) ── */}
             <button
-              onClick={() => handleStart()}
-              disabled={!question.trim()}
-              className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-25 disabled:cursor-not-allowed"
-              style={{ background: question.trim() ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : '#333', boxShadow: question.trim() ? '0 4px 20px rgba(124,58,237,0.4)' : undefined }}
-            >
-              Avvia il dibattito →
+              onClick={() => setPhase('history')}
+              className="lg:hidden text-center text-white/25 text-xs py-1 hover:text-white/50 transition-colors">
+              📋 Cronologia chat
             </button>
+
           </div>
         </div>
       </div>
