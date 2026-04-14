@@ -100,7 +100,7 @@ export default async function UserProfilePage({ params }: { params: { username: 
           <div>
             <div style={{ fontSize: '22px', fontWeight: 800 }}>{user.name}</div>
             <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '3px' }}>
-              Membro dal {new Date(user.createdAt).toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+              Membro da {new Date(user.createdAt).toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
             </div>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '5px',

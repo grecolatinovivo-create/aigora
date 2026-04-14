@@ -989,7 +989,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           { top: '840px', right: 'calc(50% - 545px)', delay: '1.5s', dur: '15s', anim: 'float-4' },
         ].map(({ top, left, right, delay, dur, anim }: any, i) => (
           <button key={i}
-            className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] select-none cursor-pointer transition-all hover:scale-105 hover:brightness-125"
+            className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] cursor-pointer transition-all hover:scale-105 hover:brightness-125"
             onAnimationIteration={() => rotateBubble(i)}
             onClick={() => handleStart(bubbleTopics[i])}
             style={{
@@ -1003,6 +1003,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               lineHeight: 1.4,
               animation: `${anim} ${dur} ease-in-out infinite`,
               animationDelay: delay,
+              zIndex: 20,
+              pointerEvents: 'auto',
             }}>
             {bubbleTopics[i]}
           </button>
