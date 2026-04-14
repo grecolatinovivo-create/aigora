@@ -167,15 +167,28 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
   const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
   const userMessage = historyText ? `Conversazione:\n\n${historyText}\n\n${lastMessage}` : lastMessage
   const model = 'sonar-pro'
+  // Perplexity non supporta stream_options — usiamo una chiamata non-streaming per avere i token usage
+  // e una streaming per il testo, oppure stimiamo i token dal testo
   const stream = await client.chat.completions.create({
-    model, max_tokens: 180, stream: true, stream_options: { include_usage: true },
+    model, max_tokens: 180, stream: true,
+    // NON passare stream_options: Perplexity API non lo supporta e causa errori silenti
     messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
-  })
+  } as any)
+  let outputText = ''
   let inputTokens = 0, outputTokens = 0
   for await (const chunk of stream) {
     const text = chunk.choices[0]?.delta?.content
-    if (text) yield text
-    if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens; outputTokens = chunk.usage.completion_tokens }
+    if (text) { yield text; outputText += text }
+    // Perplexity a volte manda usage nell'ultimo chunk
+    if ((chunk as any).usage) {
+      inputTokens = (chunk as any).usage.prompt_tokens ?? 0
+      outputTokens = (chunk as any).usage.completion_tokens ?? 0
+    }
+  }
+  // Se non abbiamo ricevuto usage, stima approssimativa (4 char ≈ 1 token)
+  if (outputTokens === 0 && outputText.length > 0) {
+    outputTokens = Math.ceil(outputText.length / 4)
+    inputTokens = Math.ceil((system.length + userMessage.length) / 4)
   }
   logUsage('perplexity', model, inputTokens, outputTokens)
 }

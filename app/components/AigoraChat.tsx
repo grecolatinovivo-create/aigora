@@ -1000,38 +1000,46 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </button>
             </div>
 
-            {/* ── Profilo + cronologia (mobile) ── */}
+            {/* ── Profilo + cronologia (mobile) — identici alla Navbar della chat ── */}
             <div className="lg:hidden flex items-center justify-between">
+              {/* Cronologia — stesso stile della Navbar */}
               <button onClick={() => setPhase('history')}
-                className="text-white/25 text-xs hover:text-white/50 transition-colors">
-                📋 Cronologia
+                className="flex items-center gap-2 text-sm font-medium transition-all hover:text-white"
+                style={{ color: 'rgba(255,255,255,0.45)' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z"/><path d="M12 7v5l3 3"/>
+                </svg>
+                Cronologia
               </button>
+              {/* Tondo utente — identico alla Navbar (ambra) */}
               <div className="relative">
                 <button onClick={() => setShowProfileMenu(p => !p)}
-                  className="flex items-center gap-2 text-xs text-white/30 hover:text-white/60 transition-colors">
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                    style={{ backgroundColor: '#7C3AED' }}>
-                    {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
-                  </span>
-                  <span>{displayName !== 'Tu' ? displayName : userEmail}</span>
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform hover:scale-110"
+                  style={{ backgroundColor: '#F59E0B', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
+                  {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
                 </button>
                 {showProfileMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                    <div className="absolute right-0 bottom-9 w-52 rounded-2xl overflow-hidden shadow-2xl z-50"
+                    <div className="absolute right-0 bottom-11 w-56 rounded-2xl overflow-hidden shadow-2xl z-50"
                       style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
                       <div className="px-4 py-3 border-b border-white/8">
                         <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
                         <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
+                        <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                          style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                          {(userPlan ?? 'free').toUpperCase()}
+                        </div>
                       </div>
                       {userPlan === 'admin' && (
                         <button onClick={() => window.location.href = '/admin'}
-                          className="w-full px-4 py-3 text-left text-sm text-amber-400 font-medium border-b border-white/8">
+                          className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                           ⚙️ Pannello Admin
                         </button>
                       )}
                       <button onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="w-full px-4 py-3 text-left text-sm text-red-400 font-medium">
+                        className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium">
                         Esci dall'account
                       </button>
                     </div>
