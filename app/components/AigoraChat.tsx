@@ -391,7 +391,22 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
   if (!nameConfirmed) {
     return (
-      <div className="desktop-bg min-h-screen flex items-center justify-center px-4">
+      <div className="desktop-bg min-h-screen flex items-center justify-center px-4 relative">
+        {/* Navbar */}
+        <div className="absolute top-6 left-4 right-4 flex items-center justify-between">
+          <button onClick={() => window.location.href = '/dashboard'}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
+            style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+            <span style={{ fontSize: 15 }}>🕐</span>
+            <span>Cronologia</span>
+          </button>
+          <button onClick={() => signOut({ callbackUrl: '/login' })}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
+            style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+            <span style={{ fontSize: 15 }}>👤</span>
+            <span>{userEmail ?? 'Profilo'}</span>
+          </button>
+        </div>
         <div className="glass rounded-3xl p-8 w-full max-w-xs scale-in text-center">
           <div className="text-3xl mb-2">👋</div>
           <h2 className="text-2xl font-black text-white mb-1">Come ti chiami?</h2>
@@ -416,11 +431,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
             style={{ background: 'linear-gradient(135deg, #7C3AED, #A78BFA)' }}>
             Entra nel dibattito →
-          </button>
-          <button
-            onClick={() => { setUserName(''); setNameConfirmed(true) }}
-            className="mt-3 text-white/25 text-xs hover:text-white/50 transition-colors">
-            Continua senza nome
           </button>
         </div>
       </div>
