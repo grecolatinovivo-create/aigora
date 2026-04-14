@@ -332,7 +332,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (!SpeechRecognition) { alert('Il tuo browser non supporta il riconoscimento vocale.'); return }
 
     const rec = new SpeechRecognition()
-    rec.lang = 'it-IT'
+    rec.lang = navigator.language || 'en-US'
     rec.continuous = false
     rec.interimResults = false
     rec.maxAlternatives = 1
