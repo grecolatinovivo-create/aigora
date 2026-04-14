@@ -557,18 +557,18 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         {/* Bubble fluttuanti (solo desktop xl+) */}
         {[
           // Sinistra — distribuite su tutta l'altezza, in posizioni orizzontali variabili
-          { text: "L'IA sostituirà i lavori creativi?", top: '10%', left: 'calc(50% - 380px)', delay: '0s',   dur: '14s', anim: 'float-1' },
-          { text: 'Esiste il libero arbitrio?',          top: '24%', left: 'calc(50% - 400px)', delay: '3s',   dur: '13s', anim: 'float-3' },
-          { text: 'Dovremmo colonizzare Marte?',         top: '40%', left: 'calc(50% - 370px)', delay: '1.5s', dur: '15s', anim: 'float-2' },
-          { text: 'Chi controlla l\'IA?',                top: '56%', left: 'calc(50% - 390px)', delay: '4s',   dur: '12s', anim: 'float-4' },
-          { text: 'L\'arte può essere artificiale?',     top: '70%', left: 'calc(50% - 375px)', delay: '2s',   dur: '14s', anim: 'float-1' },
-          { text: 'La privacy è ancora un diritto?',     top: '82%', left: 'calc(50% - 385px)', delay: '5s',   dur: '13s', anim: 'float-3' },
-          { text: 'Il futuro è distopico?',              top: '10%', right: 'calc(50% - 380px)', delay: '1s',   dur: '13s', anim: 'float-2' },
-          { text: 'La coscienza è solo chimica?',        top: '24%', right: 'calc(50% - 400px)', delay: '4.5s', dur: '15s', anim: 'float-4' },
-          { text: 'Social media: bene o male?',          top: '40%', right: 'calc(50% - 370px)', delay: '2s',   dur: '12s', anim: 'float-1' },
-          { text: 'Siamo soli nell\'universo?',          top: '56%', right: 'calc(50% - 390px)', delay: '0.5s', dur: '14s', anim: 'float-3' },
-          { text: 'Etica e tecnologia: compatibili?',   top: '70%', right: 'calc(50% - 375px)', delay: '3.5s', dur: '13s', anim: 'float-2' },
-          { text: 'Il cambiamento climatico è reversibile?', top: '82%', right: 'calc(50% - 385px)', delay: '1.5s', dur: '15s', anim: 'float-4' },
+          { text: "L'IA sostituirà i lavori creativi?", top: '10%', left: 'calc(50% - 560px)', delay: '0s',   dur: '14s', anim: 'float-1' },
+          { text: 'Esiste il libero arbitrio?',          top: '24%', left: 'calc(50% - 540px)', delay: '3s',   dur: '13s', anim: 'float-3' },
+          { text: 'Dovremmo colonizzare Marte?',         top: '40%', left: 'calc(50% - 560px)', delay: '1.5s', dur: '15s', anim: 'float-2' },
+          { text: 'Chi controlla l\'IA?',                top: '56%', left: 'calc(50% - 540px)', delay: '4s',   dur: '12s', anim: 'float-4' },
+          { text: 'L\'arte può essere artificiale?',     top: '70%', left: 'calc(50% - 560px)', delay: '2s',   dur: '14s', anim: 'float-1' },
+          { text: 'La privacy è ancora un diritto?',     top: '82%', left: 'calc(50% - 540px)', delay: '5s',   dur: '13s', anim: 'float-3' },
+          { text: 'Il futuro è distopico?',              top: '10%', right: 'calc(50% - 560px)', delay: '1s',   dur: '13s', anim: 'float-2' },
+          { text: 'La coscienza è solo chimica?',        top: '24%', right: 'calc(50% - 540px)', delay: '4.5s', dur: '15s', anim: 'float-4' },
+          { text: 'Social media: bene o male?',          top: '40%', right: 'calc(50% - 560px)', delay: '2s',   dur: '12s', anim: 'float-1' },
+          { text: 'Siamo soli nell\'universo?',          top: '56%', right: 'calc(50% - 540px)', delay: '0.5s', dur: '14s', anim: 'float-3' },
+          { text: 'Etica e tecnologia: compatibili?',   top: '70%', right: 'calc(50% - 560px)', delay: '3.5s', dur: '13s', anim: 'float-2' },
+          { text: 'Il cambiamento climatico è reversibile?', top: '82%', right: 'calc(50% - 540px)', delay: '1.5s', dur: '15s', anim: 'float-4' },
         ].map(({ text, top, left, right, delay, dur, anim }: any, i) => (
           <div key={i}
             className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] pointer-events-none select-none"
