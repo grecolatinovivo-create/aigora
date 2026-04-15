@@ -2321,23 +2321,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   <p className="text-white/30 text-sm text-center px-8">Nessuna conversazione salvata.<br/>Le chat vengono salvate automaticamente.</p>
                 </div>
               ) : savedChats.map((chat) => (
-                <button key={chat.id} onClick={() => {
-                  setMessages(chat.messages)
-                  chatHistoryRef.current = chat.history
-                  setPhase('running')
-                }}
-                  className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
-                  style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}` }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white"
-                    style={{ backgroundColor: '#7C3AED' }}>
-                    {(chat.title[0] || '?').toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="text-[14px] font-medium truncate" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>{chat.title}</div>
-                    <div className="text-[12px] mt-0.5" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)' }}>{chat.date}</div>
-                  </div>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'} strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
-                </button>
+                <SwipeableChatRow
+                  key={chat.id}
+                  chat={chat}
+                  onOpen={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running') }}
+                  onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
+                />
               ))}
             </div>
           </div>
@@ -2380,7 +2369,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </div>
             </div>
 
-            {/* Font size + Sintesi + Profilo */}
+            {/* Font size + Colori + Sintesi + Profilo */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {/* Font - + */}
               <div className="flex items-center rounded-full overflow-hidden" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
@@ -2390,6 +2379,25 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 <button onClick={() => setMobileFontSize(s => Math.min(20, s + 1))}
                   className="w-8 h-8 flex items-center justify-center text-base font-bold active:scale-95"
                   style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>+</button>
+              </div>
+              {/* Picker colori — stesso drawer del desktop */}
+              <div className="relative">
+                <button onClick={() => setShowColorPicker(p => !p)}
+                  className="w-8 h-8 rounded-full border-2 active:scale-95 transition-transform"
+                  style={{ backgroundColor: bgPreset.value, borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }} />
+                {showColorPicker && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
+                    <div className="absolute right-0 top-10 z-50 flex gap-1.5 p-2 rounded-2xl shadow-2xl"
+                      style={{ backgroundColor: isDark ? 'rgba(12,12,20,0.97)' : 'rgba(255,255,255,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+                      {BG_PRESETS.map(p => (
+                        <button key={p.value} onClick={() => { setBgPreset(p); setShowColorPicker(false) }}
+                          className="w-7 h-7 rounded-full transition-all active:scale-110"
+                          style={{ backgroundColor: p.value, outline: bgPreset.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent', outlineOffset: '2px', border: '1px solid rgba(0,0,0,0.1)' }} />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
               <button onClick={handleSynthesize}
                 className="w-9 h-9 flex items-center justify-center rounded-full active:scale-95 text-base"
