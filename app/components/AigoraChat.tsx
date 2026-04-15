@@ -587,6 +587,19 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
   const [copied, setCopied] = useState(false)
+  const [isPortrait, setIsPortrait] = useState(false)
+  const [hintDismissed, setHintDismissed] = useState(false)
+
+  useEffect(() => {
+    const check = () => {
+      const portrait = window.innerHeight > window.innerWidth
+      setIsPortrait(portrait)
+      if (!portrait) setHintDismissed(false) // reset hint se ruota di nuovo
+    }
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const availableForArbiter = AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== teamBAI).map(a => a.id)
 
@@ -618,171 +631,220 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col"
-      style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(239,68,68,0.12) 0%, transparent 60%)' }}>
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-y-auto py-8"
+      style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,0.14) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(239,68,68,0.1) 0%, transparent 60%)' }}>
 
-      {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-5 border-b border-white/8"
-        style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', paddingBottom: '14px', backgroundColor: 'rgba(7,7,15,0.6)', backdropFilter: 'blur(20px)' }}>
+      {/* Navbar */}
+      <div className="fixed top-0 left-0 right-0 h-[52px] flex items-center justify-between px-6 z-50"
+        style={{ backgroundColor: 'rgba(7,7,15,0.5)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
         <button onClick={step === 'share' ? () => setStep('teams') : step === 'teams' ? () => setStep('topic') : onBack}
-          className="w-8 h-8 flex items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          className="flex items-center gap-2 text-sm font-medium transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Indietro
         </button>
-        <div>
-          <div className="font-bold text-white text-sm">⚔️ 2 vs 2</div>
-          <div className="text-[10px] text-white/40">
-            {step === 'topic' ? "Scegli l'argomento" : step === 'teams' ? 'Configura le squadre' : 'Condividi il link'}
-          </div>
-        </div>
-        <div className="ml-auto flex gap-2">
+        <span className="font-black text-lg"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></span>
+        {/* Step dots */}
+        <div className="flex gap-2">
           {['topic', 'teams', 'share'].map((s, i) => (
-            <div key={s} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
-              style={{ backgroundColor: step === s ? '#3b82f6' : 'rgba(255,255,255,0.1)', color: step === s ? 'white' : 'rgba(255,255,255,0.4)' }}>
-              {i + 1}
-            </div>
+            <div key={s} className="w-2 h-2 rounded-full transition-all"
+              style={{ background: step === s ? '#3b82f6' : 'rgba(255,255,255,0.2)', transform: step === s ? 'scale(1.3)' : 'scale(1)' }} />
           ))}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-6">
-
-        {/* STEP 1 — Topic */}
-        {step === 'topic' && (
-          <div className="flex flex-col gap-5 max-w-lg mx-auto">
+      {/* ── HINT ROTAZIONE (solo mobile portrait, solo step teams) ── */}
+      {isPortrait && !hintDismissed && step === 'teams' && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center pb-8 pointer-events-none">
+          <div className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl scale-in"
+            style={{ background: 'rgba(20,20,32,0.95)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }}>
+            {/* Icona telefono che ruota */}
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+              style={{ animation: 'rotate-hint 2.5s ease-in-out infinite', transformOrigin: 'center' }}>
+              <rect x="5" y="2" width="14" height="20" rx="2" />
+              <path d="M12 18h.01" />
+            </svg>
             <div>
-              <div className="text-white font-black text-xl mb-2">Su cosa volete dibattere?</div>
-              <div className="text-white/40 text-sm">L'argomento sarà assegnato a entrambe le squadre.</div>
+              <div className="text-white text-xs font-bold">Ruota il telefono</div>
+              <div className="text-white/40 text-[10px]">per la migliore esperienza</div>
             </div>
-            <textarea value={topic} onChange={e => setTopic(e.target.value)}
-              placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030" rows={3}
-              className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-4 py-3 text-sm outline-none focus:border-blue-500/50 placeholder:text-white/20 resize-none" autoFocus />
-            <div className="flex flex-wrap gap-2">
-              {['Il nucleare è necessario per il clima', 'I social media fanno bene alla democrazia', 'Il lavoro da remoto è più produttivo', "L'IA è una minaccia per l'umanità"].map(t => (
-                <button key={t} onClick={() => setTopic(t)}
-                  className="text-[10px] px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all">{t}</button>
-              ))}
-            </div>
-            <button onClick={() => topic.trim() && setStep('teams')} disabled={!topic.trim()}
-              className="w-full py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-30"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.4)' }}>
-              Continua →
-            </button>
+            <button onClick={() => setHintDismissed(true)} className="ml-2 text-white/30 hover:text-white/60 transition-colors text-lg leading-none">✕</button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* STEP 2 — Squadre */}
-        {step === 'teams' && (
-          <div className="flex flex-col gap-6 max-w-lg mx-auto">
-            <div className="text-white font-black text-xl">Configura le squadre</div>
+      {/* ── TABLET ── */}
+      <div className="scale-in relative mt-2" style={{ width: 600, maxWidth: '95vw' }}>
+        {/* Cornice tablet */}
+        <div className="absolute inset-0 rounded-[28px]"
+          style={{ background: '#1c1c1e', boxShadow: '0 0 0 1.5px #3a3a3c, 0 40px 100px rgba(0,0,0,0.85), 0 0 0 0.5px #555 inset' }} />
+        {/* Glare */}
+        <div className="absolute rounded-t-[22px] pointer-events-none"
+          style={{ top: 6, left: 6, right: 6, height: '35%', background: 'linear-gradient(160deg, rgba(255,255,255,0.06) 0%, transparent 60%)', zIndex: 10 }} />
+        {/* Tasto home (tablet, in basso centrato) */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-24 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
+        {/* Camera (tablet, in alto centrato) */}
+        <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full" style={{ background: '#2a2a2e', border: '1px solid #3a3a3c' }} />
 
-            {/* Squadra A — tu */}
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)' }}>
-              <div className="text-sm font-black mb-3" style={{ color: '#60a5fa' }}>🔵 SQUADRA A — tu</div>
-              <div className="flex flex-col gap-3">
-                <div>
-                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-1">Il tuo nome</label>
-                  <input value={teamAHuman} onChange={e => setTeamAHuman(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500/50"
-                    placeholder="Il tuo nome" />
+        {/* Screen */}
+        <div className="relative overflow-hidden flex flex-col"
+          style={{ margin: '6px', borderRadius: 22, background: '#0d0d14', minHeight: 520 }}>
+
+          {/* ── STEP 1: Topic ── */}
+          {step === 'topic' && (
+            <div className="flex flex-col items-center justify-center flex-1 px-10 py-10 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-black text-white mb-1">Su cosa volete sfidarvi?</div>
+                <div className="text-sm text-white/40">L'argomento sarà assegnato a entrambe le squadre.</div>
+              </div>
+              <textarea value={topic} onChange={e => setTopic(e.target.value)}
+                placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030" rows={3}
+                className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-5 py-4 text-sm outline-none focus:border-blue-500/40 placeholder:text-white/20 resize-none"
+                autoFocus />
+              <div className="flex flex-wrap gap-2 justify-center">
+                {['Il nucleare è necessario per il clima', 'I social media fanno bene alla democrazia', 'Il lavoro da remoto è più produttivo', "L'IA è una minaccia per l'umanità"].map(t => (
+                  <button key={t} onClick={() => setTopic(t)}
+                    className="text-[11px] px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all">{t}</button>
+                ))}
+              </div>
+              <button onClick={() => topic.trim() && setStep('teams')} disabled={!topic.trim()}
+                className="px-10 py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-30 transition-all hover:scale-[1.02]"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.4)' }}>
+                Continua →
+              </button>
+            </div>
+          )}
+
+          {/* ── STEP 2: Squadre — layout tablet a due colonne ── */}
+          {step === 'teams' && (
+            <div className="flex flex-col flex-1 px-6 py-6 gap-5">
+
+              {/* Topic recap */}
+              <div className="text-center px-4 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[10px] text-white/30 uppercase tracking-widest mb-0.5">Argomento</div>
+                <div className="text-sm font-semibold text-white/80 truncate">"{topic}"</div>
+              </div>
+
+              {/* Due colonne: A | B */}
+              <div className="flex gap-4 flex-1">
+
+                {/* Squadra A */}
+                <div className="flex-1 flex flex-col gap-3 rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.22)' }}>
+                  <div className="text-xs font-black" style={{ color: '#60a5fa' }}>🔵 SQUADRA A — tu</div>
+                  <div>
+                    <label className="text-[10px] text-white/35 uppercase tracking-wide block mb-1.5">Il tuo nome</label>
+                    <input value={teamAHuman} onChange={e => setTeamAHuman(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500/40"
+                      placeholder="Il tuo nome" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-white/35 uppercase tracking-wide block mb-2">AI alleata</label>
+                    <div className="flex flex-col gap-1.5">
+                      {AI_OPTIONS.filter(a => a.id !== teamBAI && a.id !== arbiter).map(ai => (
+                        <button key={ai.id} onClick={() => setTeamAAI(ai.id)}
+                          className="px-3 py-2 rounded-xl text-xs font-bold transition-all text-left flex items-center gap-2"
+                          style={{ backgroundColor: teamAAI === ai.id ? `${ai.color}20` : 'rgba(255,255,255,0.04)', border: teamAAI === ai.id ? `1px solid ${ai.color}45` : '1px solid rgba(255,255,255,0.08)', color: teamAAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: teamAAI === ai.id ? ai.color : 'rgba(255,255,255,0.2)' }} />
+                          {ai.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-2">AI alleata</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {AI_OPTIONS.filter(a => a.id !== teamBAI && a.id !== arbiter).map(ai => (
-                      <button key={ai.id} onClick={() => setTeamAAI(ai.id)}
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                        style={{ backgroundColor: teamAAI === ai.id ? `${ai.color}25` : 'rgba(255,255,255,0.05)', border: teamAAI === ai.id ? `1px solid ${ai.color}50` : '1px solid rgba(255,255,255,0.1)', color: teamAAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
-                        {ai.name}
-                      </button>
-                    ))}
+
+                {/* Squadra B */}
+                <div className="flex-1 flex flex-col gap-3 rounded-2xl p-4" style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.22)' }}>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-black" style={{ color: '#f87171' }}>🔴 SQUADRA B</div>
+                    <div className="text-[9px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>Via link</div>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-white/20 text-xs">L'avversario entrerà<br/>usando il link che genererai</div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-white/35 uppercase tracking-wide block mb-2">AI alleata per B</label>
+                    <div className="flex flex-col gap-1.5">
+                      {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== arbiter).map(ai => (
+                        <button key={ai.id} onClick={() => setTeamBAI(ai.id)}
+                          className="px-3 py-2 rounded-xl text-xs font-bold transition-all text-left flex items-center gap-2"
+                          style={{ backgroundColor: teamBAI === ai.id ? `${ai.color}20` : 'rgba(255,255,255,0.04)', border: teamBAI === ai.id ? `1px solid ${ai.color}45` : '1px solid rgba(255,255,255,0.08)', color: teamBAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: teamBAI === ai.id ? ai.color : 'rgba(255,255,255,0.2)' }} />
+                          {ai.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Squadra B — avversario */}
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-sm font-black" style={{ color: '#f87171' }}>🔴 SQUADRA B — avversario</div>
-                <div className="text-[9px] px-2 py-1 rounded-full font-bold" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>Entra via link</div>
-              </div>
-              <div>
-                <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-2">AI alleata per B</label>
-                <div className="flex gap-2 flex-wrap">
-                  {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== arbiter).map(ai => (
-                    <button key={ai.id} onClick={() => setTeamBAI(ai.id)}
+              {/* Arbitro — riga sotto le due colonne */}
+              <div className="rounded-2xl px-5 py-3 flex items-center gap-4" style={{ background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                <div className="text-xs font-black flex-shrink-0" style={{ color: '#A78BFA' }}>⚖️ ARBITRO</div>
+                <div className="flex gap-2 flex-wrap flex-1">
+                  {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== teamBAI).map(ai => (
+                    <button key={ai.id} onClick={() => setArbiter(ai.id)}
                       className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                      style={{ backgroundColor: teamBAI === ai.id ? `${ai.color}25` : 'rgba(255,255,255,0.05)', border: teamBAI === ai.id ? `1px solid ${ai.color}50` : '1px solid rgba(255,255,255,0.1)', color: teamBAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
+                      style={{ backgroundColor: arbiter === ai.id ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.05)', border: arbiter === ai.id ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(255,255,255,0.08)', color: arbiter === ai.id ? '#A78BFA' : 'rgba(255,255,255,0.35)' }}>
                       {ai.name}
                     </button>
                   ))}
                 </div>
+                <div className="text-[10px] text-white/25 flex-shrink-0">Verdetto finale</div>
               </div>
-            </div>
 
-            {/* Arbitro */}
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)' }}>
-              <div className="text-sm font-black mb-3" style={{ color: '#A78BFA' }}>⚖️ ARBITRO</div>
-              <div className="flex gap-2 flex-wrap">
-                {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== teamBAI).map(ai => (
-                  <button key={ai.id} onClick={() => setArbiter(ai.id)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                    style={{ backgroundColor: arbiter === ai.id ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.05)', border: arbiter === ai.id ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(255,255,255,0.1)', color: arbiter === ai.id ? '#A78BFA' : 'rgba(255,255,255,0.4)' }}>
-                    {ai.name}
-                  </button>
-                ))}
-              </div>
-              <div className="text-[10px] text-white/30 mt-2">Osserva il dibattito e pronuncia il verdetto finale</div>
-            </div>
-
-            <button onClick={handleCreate} disabled={creating}
-              className="w-full py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 transition-all"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #ef4444)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}>
-              {creating ? 'Creo il duello…' : '⚔️ Crea il duello →'}
-            </button>
-          </div>
-        )}
-
-        {/* STEP 3 — Condividi */}
-        {step === 'share' && (
-          <div className="flex flex-col items-center gap-6 max-w-sm mx-auto pt-4">
-            <div className="text-5xl">⚔️</div>
-            <div className="text-center">
-              <div className="text-white font-black text-2xl mb-2">Duello creato!</div>
-              <div className="text-white/40 text-sm">Condividi il link o il codice con il tuo avversario. La partita inizia quando entra.</div>
-            </div>
-
-            {/* Codice grande */}
-            <div className="w-full rounded-3xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Codice di accesso</div>
-              <div className="text-4xl font-black text-white tracking-widest mb-4" style={{ fontVariantNumeric: 'tabular-nums' }}>{roomCode}</div>
-              <button onClick={handleCopy}
-                className="w-full py-3 rounded-2xl text-sm font-bold transition-all"
-                style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.08)', border: copied ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)', color: copied ? '#10A37F' : 'rgba(255,255,255,0.7)' }}>
-                {copied ? '✓ Link copiato!' : '📋 Copia link'}
+              {/* CTA */}
+              <button onClick={handleCreate} disabled={creating}
+                className="w-full py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 transition-all hover:scale-[1.01]"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #ef4444)', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}>
+                {creating ? 'Creo il duello…' : '⚔️ Crea il duello →'}
               </button>
             </div>
+          )}
 
-            {/* Riepilogo */}
-            <div className="w-full rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Riepilogo</div>
-              <div className="text-xs text-white/60 mb-2 truncate">📌 {topic}</div>
-              <div className="flex gap-3">
-                <div className="flex-1 text-[10px]" style={{ color: '#60a5fa' }}>🔵 {teamAHuman} + {AI_NAMES[teamAAI]}</div>
-                <div className="flex-1 text-[10px] text-right" style={{ color: '#f87171' }}>🔴 Avversario + {AI_NAMES[teamBAI]}</div>
+          {/* ── STEP 3: Condividi ── */}
+          {step === 'share' && (
+            <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-6">
+              <div className="text-5xl">⚔️</div>
+              <div className="text-center">
+                <div className="text-2xl font-black text-white mb-1">Duello creato!</div>
+                <div className="text-white/40 text-sm">Condividi il codice con il tuo avversario.<br/>La partita inizia quando entra.</div>
               </div>
-              <div className="text-[10px] text-white/30 mt-2 text-center">⚖️ Arbitro: {AI_NAMES[arbiter]}</div>
+
+              {/* Codice */}
+              <div className="w-full rounded-3xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Codice di accesso</div>
+                <div className="text-5xl font-black text-white tracking-[0.15em] mb-5">{roomCode}</div>
+                <button onClick={handleCopy}
+                  className="w-full py-3 rounded-2xl text-sm font-bold transition-all"
+                  style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.07)', border: copied ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)', color: copied ? '#10A37F' : 'rgba(255,255,255,0.65)' }}>
+                  {copied ? '✓ Link copiato!' : '📋 Copia link da condividere'}
+                </button>
+              </div>
+
+              {/* Riepilogo squadre */}
+              <div className="w-full flex gap-3">
+                <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                  <div className="text-[9px] font-black uppercase text-blue-400 mb-1">🔵 Squadra A</div>
+                  <div className="text-xs text-white/70">{teamAHuman}</div>
+                  <div className="text-[10px] text-white/30">+ {AI_NAMES[teamAAI]}</div>
+                </div>
+                <div className="flex-shrink-0 flex items-center text-white/20 font-black text-sm">vs</div>
+                <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <div className="text-[9px] font-black uppercase text-red-400 mb-1">🔴 Squadra B</div>
+                  <div className="text-xs text-white/40 italic">In attesa…</div>
+                  <div className="text-[10px] text-white/30">+ {AI_NAMES[teamBAI]}</div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { humanName: 'Avversario', aiId: teamBAI }, arbiterAiId: arbiter, roomCode, roomId })}
+                className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
+                style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
+                Entra nella sala d'attesa →
+              </button>
             </div>
+          )}
 
-            <button
-              onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { humanName: 'Avversario', aiId: teamBAI }, arbiterAiId: arbiter, roomCode, roomId })}
-              className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-              Entra nella sala d'attesa →
-            </button>
-          </div>
-        )}
-
+        </div>
       </div>
     </div>
   )
