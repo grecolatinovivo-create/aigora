@@ -346,7 +346,7 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
           {(() => {
             const isSelected = selected === 'classico'
             return (
-              <div onClick={() => setSelected('classico')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
+              <div onClick={() => selected === 'classico' ? onSelect('classico') : setSelected('classico')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
                 style={{ animationDelay: '0.05s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
                 <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 160, height: 336 }}>
                   <div className="absolute inset-0 rounded-[38px]"
@@ -400,7 +400,7 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
           {(() => {
             const isSelected = selected === '2v2'
             return (
-              <div onClick={() => setSelected('2v2')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
+              <div onClick={() => selected === '2v2' ? onSelect('2v2') : setSelected('2v2')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
                 style={{ animationDelay: '0.15s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05) translateY(-8px)' : 'scale(1)' }}>
                 <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 190, height: 400 }}>
                   <div className="absolute inset-0 rounded-[38px]"
@@ -463,7 +463,7 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
           {(() => {
             const isSelected = selected === 'devil'
             return (
-              <div onClick={() => setSelected('devil')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
+              <div onClick={() => selected === 'devil' ? onSelect('devil') : setSelected('devil')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
                 style={{ animationDelay: '0.25s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
                 <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 160, height: 336 }}>
                   <div className="absolute inset-0 rounded-[38px]"
@@ -2479,8 +2479,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       setPhase('running')
     } else if (mode === '2v2') {
       setShow2v2Setup(true)
+    } else if (mode === 'classico') {
+      // Torna alla chat normale (fase new → l'utente inserisce topic)
+      setSelectedMode(null)
+      setPhase('new')
     }
-    // classico: non fa niente di speciale
   }
 
   const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
