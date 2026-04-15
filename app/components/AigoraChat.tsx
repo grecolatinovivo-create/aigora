@@ -952,6 +952,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const { publish } = useAbly({
     roomId: activeRoom?.id ?? null,
+    userId: userEmail ?? '',
+    userName: displayName,
     onEvent: handleRoomEvent,
     enabled: !!activeRoom,
   })
@@ -1804,14 +1806,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     </div>
                     <div className="flex gap-2">
                       <button onClick={async () => {
-                        await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: n.id }) })
+                        if (n.roomId) await fetch(`/api/rooms/${n.roomId}/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'accept' }) })
+                        else await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: n.id }) })
                         setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
                         setUnreadCount(c => Math.max(0, c - 1))
+                        if (n.roomId) { await fetch('/api/rooms').then(r => r.json()).then(d => { if (d.rooms) setRooms(d.rooms) }) }
                       }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
                         Accetta
                       </button>
                       <button onClick={async () => {
-                        await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: n.id }) })
+                        if (n.roomId) await fetch(`/api/rooms/${n.roomId}/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject' }) })
+                        else await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: n.id }) })
                         setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
                         setUnreadCount(c => Math.max(0, c - 1))
                       }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white/40" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>

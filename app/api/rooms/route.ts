@@ -45,35 +45,61 @@ export async function POST(req: NextRequest) {
   const { topic, visibility, aiIds, invitedUserIds } = await req.json()
   if (!topic?.trim()) return NextResponse.json({ error: 'Tema mancante' }, { status: 400 })
 
-  const room = await prisma.room.create({
-    data: {
-      hostId: user.id,
-      topic: topic.trim(),
-      visibility: visibility ?? 'private',
-      aiIds: aiIds ?? ['claude', 'gemini', 'perplexity', 'gpt'],
-      participants: {
-        create: [
-          { userId: user.id, role: 'host' },
-          ...(invitedUserIds ?? []).map((uid: string) => ({ userId: uid, role: 'participant' })),
-        ],
-      },
-    },
-    include: {
-      participants: { include: { user: { select: { id: true, name: true } } } },
-    },
-  })
+  // Validazione whitelist AI
+  const VALID_AIS = ['claude', 'gemini', 'perplexity', 'gpt']
+  const validatedAiIds = (aiIds ?? VALID_AIS).filter((id: string) => VALID_AIS.includes(id))
+  if (validatedAiIds.length === 0) return NextResponse.json({ error: 'Nessuna AI valida selezionata' }, { status: 400 })
 
-  // Crea notifiche per gli invitati
+  // Validazione visibility
+  const validVisibility = ['public', 'private'].includes(visibility) ? visibility : 'private'
+
+  // Verifica che gli invitati esistano
+  const validInvitedIds: string[] = []
   if (invitedUserIds?.length) {
-    await prisma.notification.createMany({
-      data: invitedUserIds.map((uid: string) => ({
-        userId: uid,
-        type: 'room_invite',
-        fromId: user.id,
-        roomId: room.id,
-      })),
+    const invitedUsers = await prisma.user.findMany({
+      where: { id: { in: invitedUserIds }, blocked: false },
+      select: { id: true },
     })
+    validInvitedIds.push(...invitedUsers.map(u => u.id))
   }
+
+  // Limite: max 5 room attive per utente
+  const activeRooms = await prisma.room.count({ where: { hostId: user.id, status: 'live' } })
+  if (activeRooms >= 5) return NextResponse.json({ error: 'Hai troppi dibattiti attivi (max 5)' }, { status: 400 })
+
+  // Transazione atomica
+  const room = await prisma.$transaction(async (tx) => {
+    const newRoom = await tx.room.create({
+      data: {
+        hostId: user.id,
+        topic: topic.trim().slice(0, 500),
+        visibility: validVisibility,
+        aiIds: validatedAiIds,
+        participants: {
+          create: [
+            { userId: user.id, role: 'host' },
+            ...validInvitedIds.map((uid: string) => ({ userId: uid, role: 'participant' })),
+          ],
+        },
+      },
+      include: {
+        participants: { include: { user: { select: { id: true, name: true } } } },
+      },
+    })
+
+    if (validInvitedIds.length) {
+      await tx.notification.createMany({
+        data: validInvitedIds.map((uid: string) => ({
+          userId: uid,
+          type: 'room_invite',
+          fromId: user.id,
+          roomId: newRoom.id,
+        })),
+      })
+    }
+
+    return newRoom
+  })
 
   return NextResponse.json({ room })
 }
