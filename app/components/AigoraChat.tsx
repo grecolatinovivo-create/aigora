@@ -958,7 +958,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           <div className="absolute pointer-events-none rounded-[14px]" style={{ top: 14, left: 14, right: 14, bottom: 14, background: 'linear-gradient(155deg, rgba(255,255,255,0.05) 0%, transparent 50%)', zIndex: 16 }} />
 
           {/* Screen vero */}
-          <div className="relative overflow-hidden flex flex-col" style={{ margin: '14px', borderRadius: 10, background: '#0d0d14', height: 540, zIndex: 10 }}>
+          <div className="relative overflow-hidden flex flex-col" style={{ margin: '14px', borderRadius: 10, background: '#0d0d14', height: 568, zIndex: 10 }}>
 
           {/* ── STEP 1: Topic ── */}
           {step === 'topic' && (
