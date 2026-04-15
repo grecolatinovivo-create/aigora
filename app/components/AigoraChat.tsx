@@ -610,10 +610,11 @@ function UserTurnPrompt({ name, isDark }: { name: string; isDark: boolean }) {
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
-function Navbar({ onCronologia, onFeed, onCrea, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount }: {
+function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount }: {
   onCronologia: () => void
   onFeed?: () => void
   onCrea?: () => void
+  onNewChat?: () => void
   displayName: string
   userEmail?: string
   userPlan?: string
@@ -636,11 +637,12 @@ function Navbar({ onCronologia, onFeed, onCrea, displayName, userEmail, userPlan
         Cronologia
       </button>
 
-      {/* Centro — Logo */}
-      <span className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight">
+      {/* Centro — Logo cliccabile → nuova chat */}
+      <button onClick={onNewChat}
+        className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight hover:opacity-80 active:scale-95 transition-all">
         <span className="text-white">Ai</span>
         <span style={{ color: '#A78BFA' }}>GORÀ</span>
-      </span>
+      </button>
 
       {/* Destra — Profilo */}
       <div className="relative">
@@ -1499,6 +1501,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     onCronologia: () => setShowHistory(true),
     onFeed: () => { setSocialTab('feed'); setShowSocialPanel(true) },
     onCrea: () => { setSocialTab('crea'); setShowSocialPanel(true) },
+    onNewChat: () => { handleReset(); setPhase('new') },
     displayName,
     userEmail,
     userPlan: effectivePlan,
