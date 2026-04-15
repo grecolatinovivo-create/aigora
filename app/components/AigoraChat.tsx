@@ -335,13 +335,13 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
             <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
             Scegli il formato del dibattito
           </div>
-          <h1 className="text-3xl font-black text-white mb-2">Come vuoi dibattere?</h1>
-          <p className="text-white/40 text-sm">Tre formati diversi, un'unica arena.</p>
+          <h1 className="text-3xl font-black text-white mb-2">Scegli il formato Multiplayer</h1>
+          <p className="text-white/40 text-sm">Due formati speciali per dibattiti competitivi.</p>
         </div>
 
         {/* Tre cellulari */}
         <div className="flex items-end justify-center gap-8 flex-wrap">
-          {(['classico', '2v2', 'devil'] as GameMode[]).map(mode => {
+          {(['2v2', 'devil'] as GameMode[]).map(mode => {
             const isSelected = selected === mode
             const m = MODE_INFO[mode]
             return (
@@ -866,7 +866,41 @@ function DevilsAdvocateScreen({ session, onMessage, onEndTurn, loading, isDark, 
   )
 }
 
-// ── Tipi 2 vs 2 ───────────────────────────────────────────────────────────────
+// ── Topic suggeriti rotanti (3 righe × 2 colonne, cambiano tutti insieme) ─────
+function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
+  const SLOTS = 6
+  const [visible, setVisible] = useState<string[]>(() =>
+    [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5).slice(0, SLOTS)
+  )
+  const [show, setShow] = useState(true)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShow(false)
+      setTimeout(() => {
+        setVisible(prev => {
+          const others = TOPIC_SUGGESTIONS.filter(t => !prev.includes(t))
+          const pool = others.length >= SLOTS ? others : TOPIC_SUGGESTIONS
+          return [...pool].sort(() => Math.random() - 0.5).slice(0, SLOTS)
+        })
+        setShow(true)
+      }, 600)
+    }, 10000)
+    return () => clearInterval(interval)
+  }, [])
+  return (
+    <div style={{ marginBottom: '8px', transition: 'opacity 0.6s ease', opacity: show ? 1 : 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'repeat(3, 44px)', gap: '6px' }}>
+      {visible.map((t, i) => (
+        <button key={i} onClick={() => onSelect(t)}
+          className="text-center px-3 rounded-2xl border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-colors flex items-center justify-center"
+          style={{ fontSize: 'clamp(9px, 2.5vw, 11px)', lineHeight: 1.3, overflow: 'hidden' }}>
+          {t}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Tipi e costanti per i formati multiplayer ─────────────────────────────────
 interface TwoVsTwoConfig {
   topic: string
   teamA: { humanName: string; aiId: string }
@@ -899,14 +933,13 @@ const DEVIL_POSITIONS = [
   { position: "La privacy è sopravvalutata nella società moderna", side: 'defend' as const },
 ]
 const MODE_INFO = {
-  classico: { label: 'Classico', desc: 'Dibattito libero con le AI. Fino a 5 umani, nessun turno forzato.', btn: 'Avvia il dibattito →', color: '#10A37F' },
   '2v2': { label: '2 vs 2', desc: "Due squadre si sfidano. Ogni squadra ha un umano e un'AI alleata. Un'AI arbitro pronuncia il verdetto finale.", btn: 'Scegli le squadre →', color: '#3b82f6' },
   devil: { label: "Devil's Advocate", desc: "L'app ti assegna una posizione — anche scomoda — e devi difenderla contro le AI. Punteggio finale sulla solidità degli argomenti.", btn: 'Accetta la sfida →', color: '#ef4444' },
 }
 
 function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void; onClose: () => void }) {
   const [selected, setSelected] = useState<GameMode>('2v2')
-  const info = MODE_INFO[selected]
+  const info = MODE_INFO[selected as keyof typeof MODE_INFO] ?? MODE_INFO['2v2']
   return (
     <div className="fixed inset-0 z-[80] flex flex-col items-center justify-center"
       style={{ backgroundColor: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 60%)' }}>
@@ -925,13 +958,14 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
             <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
             Scegli il formato del dibattito
           </div>
-          <h1 className="text-3xl font-black text-white mb-2">Come vuoi dibattere?</h1>
-          <p className="text-white/40 text-sm">Tre formati diversi, un'unica arena.</p>
+          <h1 className="text-3xl font-black text-white mb-2">Scegli il formato Multiplayer</h1>
+          <p className="text-white/40 text-sm">Due formati speciali per dibattiti competitivi.</p>
         </div>
         <div className="flex items-end justify-center gap-8 flex-wrap">
-          {(['classico', '2v2', 'devil'] as GameMode[]).map(mode => {
+          {(['2v2', 'devil'] as GameMode[]).map(mode => {
             const isSelected = selected === mode
-            const m = MODE_INFO[mode]
+            const m = MODE_INFO[mode as keyof typeof MODE_INFO]
+            if (!m) return null
             return (
               <div key={mode} onClick={() => setSelected(mode)}
                 className="flex flex-col items-center gap-3 cursor-pointer transition-all duration-300"
@@ -940,9 +974,9 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
                   <div className="absolute inset-0 rounded-[34px]"
                     style={{ background: '#1c1c1e', boxShadow: isSelected ? `0 0 0 2px ${m.color}, 0 0 40px ${m.color}50, 0 30px 80px rgba(0,0,0,0.8)` : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
                   <div className="absolute rounded-[28px] overflow-hidden flex flex-col items-center justify-center gap-3"
-                    style={{ top: 5, left: 5, right: 5, bottom: 5, backgroundColor: mode === 'classico' ? '#f5f0e8' : '#0d0d14' }}>
-                    <div className="text-3xl">{mode === 'classico' ? '💬' : mode === '2v2' ? '⚔️' : '😈'}</div>
-                    <div className="font-black text-sm" style={{ color: mode === 'classico' ? '#111' : '#fff' }}>{m.label}</div>
+                    style={{ top: 5, left: 5, right: 5, bottom: 5, backgroundColor: '#0d0d14' }}>
+                    <div className="text-3xl">{mode === '2v2' ? '⚔️' : '😈'}</div>
+                    <div className="font-black text-sm text-white">{m.label}</div>
                     {mode === '2v2' && <div className="flex items-center gap-2"><span className="px-2 py-1 rounded-lg text-[9px] font-bold" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}>A</span><span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>vs</span><span className="px-2 py-1 rounded-lg text-[9px] font-bold" style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>B</span></div>}
                     {mode === 'devil' && <div className="flex items-center gap-1"><span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 900 }}>7.2</span><span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9 }}>/10</span></div>}
                   </div>
@@ -1633,20 +1667,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
   const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
-  const [devilLoading, setDevilLoading] = useState(false)
-
-  // ── Selezione formato ─────────────────────────────────────────────────────
-  const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
-  const [showModeSelect, setShowModeSelect] = useState(false)
-
-  // ── 2 vs 2 ────────────────────────────────────────────────────────────────
-  const [show2v2Setup, setShow2v2Setup] = useState(false)
-  const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
-  const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
-
-  // ── Devil's Advocate ──────────────────────────────────────────────────────
-  const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
-  const [devilInput, setDevilInput] = useState('')
   const [devilLoading, setDevilLoading] = useState(false)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [closingAiProfile, setClosingAiProfile] = useState(false)
@@ -2355,320 +2375,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         return getDefaultNextAi(lastAi, [], AI_ORDER)
       })()
       setTimeout(() => runDebate(startAi, 'debate'), 150)
-    }
-  }
-
-  // ── Logica formato multiplayer ────────────────────────────────────────────
-  const handleSelectMode = (mode: GameMode) => {
-    setSelectedMode(mode)
-    setShowModeSelect(false)
-    if (mode === 'devil') {
-      const pick = DEVIL_POSITIONS[Math.floor(Math.random() * DEVIL_POSITIONS.length)]
-      setDevilSession({ position: pick.position, side: pick.side, round: 1, score: 5.0, messages: [] })
-      setPhase('running')
-    } else if (mode === '2v2') {
-      setShow2v2Setup(true)
-    } else {
-      setSelectedMode(null)
-    }
-  }
-
-  const handle2v2Start = (config: TwoVsTwoConfig) => {
-    setShow2v2Setup(false)
-    setTwoVsTwoState({
-      config,
-      messages: [],
-      currentTurn: 'A',
-      round: 1,
-      maxRounds: 4,
-      ended: false,
-      verdict: null,
-    })
-    setPhase('running')
-  }
-
-  const handle2v2HumanMessage = async (text: string) => {
-    if (!twoVsTwoState || twoVsTwoLoading) return
-    const { config, currentTurn } = twoVsTwoState
-    const author = currentTurn === 'A' ? config.teamA.humanName : config.teamB.humanName
-
-    setTwoVsTwoState(prev => prev ? {
-      ...prev,
-      messages: [...prev.messages, { team: currentTurn, isAI: false, author, content: text }],
-    } : prev)
-
-    // Dopo il messaggio umano, l'AI alleata risponde automaticamente
-    await handle2v2AIResponse(currentTurn, text)
-  }
-
-  const handle2v2AIResponse = async (team: 'A' | 'B', trigger: string) => {
-    if (!twoVsTwoState) return
-    setTwoVsTwoLoading(true)
-    const { config } = twoVsTwoState
-    const aiId = team === 'A' ? config.teamA.aiId : config.teamB.aiId
-    const aiName = AI_NAMES[aiId]
-    const sideDesc = team === 'A' ? 'PRO' : 'CONTRO'
-
-    // Costruisci history
-    const history = twoVsTwoState.messages.map(m => ({
-      name: m.isAI ? AI_NAMES[m.aiId ?? ''] : m.author,
-      content: m.content,
-    }))
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'turn',
-          aiId,
-          history: [
-            { name: 'Sistema', content: `Sei ${aiName}, membro della Squadra ${team} (posizione ${sideDesc}) nel dibattito su: "${config.topic}". Supporta e rafforza gli argomenti della tua squadra. Sii diretto e incisivo, 2-3 frasi.` },
-            ...history,
-            { name: 'Sistema', content: `Il tuo alleato ha detto: "${trigger}". Rafforza questo punto o aggiungine uno nuovo.` }
-          ],
-          needsWebSearch: false,
-        }),
-      })
-      if (!res.ok || !res.body) throw new Error()
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = '', aiText = '', done = false
-      const msgIdx = twoVsTwoState.messages.length + 1
-
-      setTwoVsTwoState(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, { team, isAI: true, aiId, author: aiName, content: '', streaming: true }],
-      } : prev)
-
-      while (!done) {
-        const { done: sd, value } = await reader.read()
-        if (sd) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          const d = line.slice(6).trim()
-          if (d === '[DONE]') { done = true; break }
-          try { aiText += JSON.parse(d).text } catch {}
-          setTwoVsTwoState(prev => {
-            if (!prev) return prev
-            const msgs = [...prev.messages]
-            msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: aiText, streaming: true }
-            return { ...prev, messages: msgs }
-          })
-        }
-      }
-
-      // Finalizza messaggio AI e passa il turno
-      const nextTeam: 'A' | 'B' = team === 'A' ? 'B' : 'A'
-      setTwoVsTwoState(prev => {
-        if (!prev) return prev
-        const msgs = [...prev.messages]
-        msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: aiText, streaming: false }
-        const newRound = team === 'B' ? prev.round + 1 : prev.round
-        const ended = newRound > prev.maxRounds
-        return { ...prev, messages: msgs, currentTurn: ended ? team : nextTeam, round: newRound, ended }
-      })
-
-      // Se finito, chiedi verdetto arbitro
-      if (twoVsTwoState.round >= twoVsTwoState.maxRounds && team === 'B') {
-        await handle2v2Verdict()
-      }
-
-    } catch {}
-    setTwoVsTwoLoading(false)
-  }
-
-  const handle2v2Verdict = async () => {
-    if (!twoVsTwoState) return
-    setTwoVsTwoLoading(true)
-    const { config } = twoVsTwoState
-    const arbId = config.arbiterAiId
-    const arbName = AI_NAMES[arbId]
-
-    const history = twoVsTwoState.messages.map(m => ({
-      name: m.isAI ? AI_NAMES[m.aiId ?? ''] : m.author,
-      content: m.content,
-    }))
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'turn',
-          aiId: arbId,
-          history: [
-            { name: 'Sistema', content: `Sei ${arbName}, arbitro imparziale del dibattito su: "${config.topic}". Squadra A (${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}) vs Squadra B (${config.teamB.humanName} + ${AI_NAMES[config.teamB.aiId]}). Analizza il dibattito e pronuncia il tuo verdetto con: 1) Chi ha vinto e perché 2) L'argomento più forte di ciascuna squadra. Sii diretto e imparziale.` },
-            ...history,
-          ],
-          needsWebSearch: false,
-        }),
-      })
-      if (!res.ok || !res.body) throw new Error()
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = '', verdict = '', done = false
-
-      setTwoVsTwoState(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, { team: 'arbiter', isAI: true, aiId: arbId, author: arbName, content: '', streaming: true }],
-        ended: true,
-      } : prev)
-
-      while (!done) {
-        const { done: sd, value } = await reader.read()
-        if (sd) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          const d = line.slice(6).trim()
-          if (d === '[DONE]') { done = true; break }
-          try { verdict += JSON.parse(d).text } catch {}
-          setTwoVsTwoState(prev => {
-            if (!prev) return prev
-            const msgs = [...prev.messages]
-            msgs[msgs.length - 1] = { team: 'arbiter', isAI: true, aiId: arbId, author: arbName, content: verdict, streaming: true }
-            return { ...prev, messages: msgs, verdict }
-          })
-        }
-      }
-      setTwoVsTwoState(prev => {
-        if (!prev) return prev
-        const msgs = [...prev.messages]
-        msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], streaming: false }
-        return { ...prev, messages: msgs }
-      })
-    } catch {}
-    setTwoVsTwoLoading(false)
-  }
-
-  const handleDevilMessage = async (text: string) => {
-    if (!devilSession) return
-    setDevilLoading(true)
-
-    const updatedMsgs = [...devilSession.messages, { role: 'user' as const, content: text }]
-    setDevilSession(prev => prev ? { ...prev, messages: updatedMsgs } : prev)
-
-    try {
-      // Scegli un'AI attaccante casuale
-      const attackerIds = ['claude', 'gpt', 'gemini']
-      const attackerId = attackerIds[devilSession.round % attackerIds.length]
-      const attackerName = AI_NAMES[attackerId]
-
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'turn',
-          aiId: attackerId,
-          history: [
-            { name: 'Sistema', content: `Sei ${attackerName} in un gioco Devil's Advocate. L'utente deve difendere la posizione: "${devilSession.position}". Il tuo compito è attaccarla con argomenti forti e concreti, cercando di smontare la tesi. Sii diretto e pungente. 2-3 frasi max.` },
-            ...updatedMsgs.map(m => ({ name: m.role === 'user' ? 'Utente' : m.aiId ?? 'AI', content: m.content }))
-          ],
-          needsWebSearch: false,
-        }),
-      })
-
-      if (!res.ok || !res.body) throw new Error('Stream error')
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = '', aiText = '', done = false
-      const aiMsgId = `devil-${Date.now()}`
-
-      // Aggiungi messaggio AI vuoto
-      setDevilSession(prev => prev ? {
-        ...prev,
-        messages: [...updatedMsgs, { role: 'ai', aiId: attackerId, content: '' }]
-      } : prev)
-
-      while (!done) {
-        const { done: sd, value } = await reader.read()
-        if (sd) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          const d = line.slice(6).trim()
-          if (d === '[DONE]') { done = true; break }
-          try { aiText += JSON.parse(d).text } catch {}
-          setDevilSession(prev => {
-            if (!prev) return prev
-            const msgs = [...prev.messages]
-            msgs[msgs.length - 1] = { role: 'ai', aiId: attackerId, content: aiText }
-            return { ...prev, messages: msgs }
-          })
-        }
-      }
-
-      // Calcola nuovo punteggio (semplice euristica basata sulla lunghezza e parole chiave)
-      const argStrength = Math.min(text.length / 20, 3) + (text.includes('perché') || text.includes('quindi') || text.includes('infatti') ? 1 : 0)
-      const newScore = Math.min(10, Math.max(0, devilSession.score + (argStrength > 2 ? 0.3 : -0.2)))
-
-      setDevilSession(prev => prev ? { ...prev, score: newScore } : prev)
-
-    } catch (e) {
-      console.error('Devil error:', e)
-    }
-    setDevilLoading(false)
-  }
-
-  const handleDevilEndTurn = async () => {
-    if (!devilSession) return
-    const newRound = devilSession.round + 1
-
-    if (newRound > 4) {
-      // Verdetto finale da Claude
-      setDevilLoading(true)
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'turn',
-            aiId: 'claude',
-            history: [
-              { name: 'Sistema', content: `Sei un giudice imparziale. L'utente ha difeso la posizione: "${devilSession.position}". Analizza gli argomenti usati e dai un verdetto finale con: 1) Punteggio da 0 a 10 sulla solidità degli argomenti 2) Il punto più forte usato 3) Il punto più debole. Sii conciso e diretto.` },
-              ...devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
-            ],
-            needsWebSearch: false,
-          }),
-        })
-        if (res.ok && res.body) {
-          const reader = res.body.getReader()
-          const decoder = new TextDecoder()
-          let buffer = '', verdict = '', done = false
-          setDevilSession(prev => prev ? { ...prev, messages: [...prev.messages, { role: 'ai', aiId: 'claude', content: '⚖️ Verdetto finale:\n' }], round: newRound } : prev)
-          while (!done) {
-            const { done: sd, value } = await reader.read()
-            if (sd) break
-            buffer += decoder.decode(value, { stream: true })
-            const lines = buffer.split('\n')
-            buffer = lines.pop() ?? ''
-            for (const line of lines) {
-              if (!line.startsWith('data: ')) continue
-              const d = line.slice(6).trim()
-              if (d === '[DONE]') { done = true; break }
-              try { verdict += JSON.parse(d).text } catch {}
-              setDevilSession(prev => {
-                if (!prev) return prev
-                const msgs = [...prev.messages]
-                msgs[msgs.length - 1] = { role: 'ai', aiId: 'claude', content: '⚖️ Verdetto finale:\n' + verdict }
-                return { ...prev, messages: msgs }
-              })
-            }
-          }
-        }
-      } catch {}
-      setDevilLoading(false)
-    } else {
-      setDevilSession(prev => prev ? { ...prev, round: newRound } : prev)
     }
   }
 
