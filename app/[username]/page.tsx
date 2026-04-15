@@ -46,7 +46,8 @@ export default async function UserProfilePage({ params }: { params: { username: 
     max: '#FF6B2B', pro: '#7C3AED', starter: '#1A73E8',
     free: '#10A37F', admin: '#F59E0B', none: '#6B7280',
   }
-  const planColor = planColors[user.plan ?? 'none'] ?? '#6B7280'
+  const effectivePlan = user.email === process.env.ADMIN_EMAIL ? 'admin' : (user.plan ?? 'free')
+  const planColor = planColors[effectivePlan] ?? '#6B7280'
 
   return (
     <div style={{
@@ -129,7 +130,7 @@ export default async function UserProfilePage({ params }: { params: { username: 
               backgroundColor: `${planColor}20`, color: planColor,
               border: `1px solid ${planColor}40`,
             }}>
-              {(user.plan ?? 'free').toUpperCase()}
+              {effectivePlan.toUpperCase()}
             </div>
           </div>
           <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
