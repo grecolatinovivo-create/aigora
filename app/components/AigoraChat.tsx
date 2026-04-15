@@ -648,11 +648,17 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmai
 
       {/* Destra — Profilo */}
       <div className="relative">
-        <button onClick={() => setShowProfileMenu(p => !p)}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform hover:scale-110"
-          style={{ backgroundColor: '#F59E0B', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
-          {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
-        </button>
+        {(() => {
+          const pc: Record<string,string> = { admin:'#F59E0B', max:'#FF6B2B', pro:'#A78BFA', starter:'#1A73E8', free:'#10A37F', none:'#6B7280' }
+          const c = pc[userPlan ?? 'free'] ?? '#6B7280'
+          return (
+            <button onClick={() => setShowProfileMenu(p => !p)}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-transform hover:scale-110"
+              style={{ backgroundColor: c, boxShadow: `0 2px 10px ${c}55` }}>
+              {(displayName !== 'Tu' ? displayName : (userEmail || '?'))[0].toUpperCase()}
+            </button>
+          )
+        })()}
         {(unreadCount ?? 0) > 0 && (
           <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white pointer-events-none"
             style={{ backgroundColor: '#7C3AED' }}>
@@ -679,7 +685,7 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmai
                   </div>
                 )
               })()}
-              {userPlan === 'admin' && (
+              {effectivePlan === 'admin' && (
                 <>
                   <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
                     className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2">
@@ -1773,7 +1779,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
 
             {/* ── TAB FEED ── */}
-            {userPlan === 'admin' && socialTab === 'feed' && (
+            {effectivePlan === 'admin' && socialTab === 'feed' && (
               <div className="flex flex-col gap-3">
                 {/* Notifiche pendenti */}
                 {notifications.filter(n => !n.read).map((n: any) => (
@@ -1850,7 +1856,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             )}
 
             {/* ── TAB CREA ── */}
-            {userPlan === 'admin' && socialTab === 'crea' && (
+            {effectivePlan === 'admin' && socialTab === 'crea' && (
               <div className="glass rounded-3xl p-4 flex flex-col gap-3">
                 <div className="text-xs font-bold text-white/40 uppercase tracking-wide">Tema del dibattito</div>
                 <textarea
@@ -2038,7 +2044,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       {showHistory && <div className="fixed inset-0 z-[39]" onClick={() => setShowHistory(false)} />}
 
       {/* ── PANNELLO SOCIAL ── */}
-      {userPlan === 'admin' && (
+      {effectivePlan === 'admin' && (
         <>
           <div className={`fixed top-0 right-0 h-full z-50 transition-all duration-300 ease-out ${showSocialPanel ? 'w-80' : 'w-0'} overflow-hidden`}>
             <div className="w-80 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderLeft: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
@@ -2285,7 +2291,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
 
             {/* Invita (solo admin) */}
-            {userPlan === 'admin' && (
+            {effectivePlan === 'admin' && (
               <button onClick={() => setShowInvitePanel(true)} title="Invita amici"
                 className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-105"
                 style={{ backgroundColor: isDark ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)', color: '#A78BFA' }}>
@@ -2623,11 +2629,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' }}>
                 📋
               </button>
-              <button onClick={() => setPhase('profile')}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                style={{ backgroundColor: '#F59E0B' }}>
-                {(userName.trim() || userEmail || '?')[0].toUpperCase()}
-              </button>
+              {(() => {
+                const pc: Record<string,string> = { admin:'#F59E0B', max:'#FF6B2B', pro:'#A78BFA', starter:'#1A73E8', free:'#10A37F', none:'#6B7280' }
+                const c = pc[effectivePlan ?? 'free'] ?? '#6B7280'
+                return (
+                  <button onClick={() => setPhase('profile')}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                    style={{ backgroundColor: c }}>
+                    {(userName.trim() || userEmail || '?')[0].toUpperCase()}
+                  </button>
+                )
+              })()}
             </div>
           </div>
 
@@ -2817,7 +2829,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               {phase === 'done' && !isSynthesizing && (
                 <div className="p-4 border-t border-white/8 space-y-2">
                   {/* Portfolio — solo admin */}
-                  {userPlan === 'admin' && (
+                  {effectivePlan === 'admin' && (
                     <button onClick={handleTogglePortfolio}
                       className="w-full py-2.5 rounded-xl text-sm font-medium transition-all"
                       style={{
@@ -2932,7 +2944,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               {phase === 'done' && !isSynthesizing && (
                 <div className="mt-6 space-y-2">
                   {/* Portfolio — solo admin */}
-                  {userPlan === 'admin' && (
+                  {effectivePlan === 'admin' && (
                     <button onClick={handleTogglePortfolio}
                       className="w-full rounded-xl py-3 text-sm font-medium transition-all"
                       style={{
