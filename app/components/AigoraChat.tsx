@@ -3472,7 +3472,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
-    <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
+    <div className={`desktop-bg min-h-screen flex items-center justify-center p-6 gap-6 chat-layout relative${phase === 'running' && selectedMode === '2v2' ? '' : ' pt-14'}`}>
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
       {messages.length === 0 && selectedMode !== '2v2' && [
@@ -3749,11 +3749,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <Navbar {...navbarProps} />
 
       {/* ── TELEFONO (desktop) ── */}
-      <div className="flex flex-col items-center flex-shrink-0" style={{ gap: phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? 16 : 0 }}>
-      {/* Titolo sopra il telefono — solo in 2v2 */}
+      <div className="flex flex-col items-center flex-shrink-0" style={{ gap: phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? 24 : 0 }}>
+      {/* Titolo + tema sopra il telefono — solo in 2v2 */}
       {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
-        <div className="font-black uppercase tracking-[0.2em] scale-in" style={{ fontSize: 22, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.25em' }}>
-          2 VS 2
+        <div className="text-center scale-in">
+          <div className="font-black uppercase" style={{ fontSize: 32, letterSpacing: '0.3em', color: 'white' }}>
+            2 VS 2
+          </div>
+          <div className="text-sm mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            {twoVsTwoState.config.topic}
+          </div>
         </div>
       )}
       {/* Wrapper fiamme — separato dalla cornice così il glow non viene sovrascr */}
@@ -3942,7 +3947,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                       <div className="text-[7px] font-semibold mb-0.5 px-1" style={{ color: msg.isAI ? aiColor : teamColor }}>
                         {msg.author}{msg.isAI && <span className="ml-1 opacity-50">AI</span>}
                       </div>
-                      <div className="px-2 py-1.5 text-[9px] leading-[1.4]"
+                      <div className="px-3 py-2 text-xs leading-relaxed"
                         style={{ background: msg.isAI ? `${aiColor}20` : msgBg, color: msgColor, borderRadius: borderR }}>
                         {msg.streaming && !msg.content
                           ? <span className="flex gap-1 items-center py-0.5">{[0,150,300].map(d=><span key={d} className="w-1 h-1 rounded-full bg-white/40 animate-bounce" style={{animationDelay:`${d}ms`}}/>)}</span>

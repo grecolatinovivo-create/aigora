@@ -111,13 +111,14 @@ html, body {
   to   { opacity: 1; transform: scale(1); }
 }
 @keyframes fire-glow {
-  0%   { box-shadow: 0 0 30px 8px rgba(239,68,68,0.7),  0 0 60px 20px rgba(251,146,60,0.4),  0 0 100px 40px rgba(234,179,8,0.15); }
-  25%  { box-shadow: 0 0 40px 12px rgba(251,146,60,0.8), 0 0 80px 28px rgba(239,68,68,0.4),  0 0 120px 50px rgba(234,179,8,0.2); }
-  50%  { box-shadow: 0 0 35px 10px rgba(234,179,8,0.7),  0 0 70px 24px rgba(251,146,60,0.5), 0 0 110px 45px rgba(239,68,68,0.2); }
-  75%  { box-shadow: 0 0 45px 14px rgba(239,68,68,0.6),  0 0 85px 30px rgba(234,179,8,0.4),  0 0 130px 55px rgba(251,146,60,0.15); }
-  100% { box-shadow: 0 0 30px 8px rgba(239,68,68,0.7),  0 0 60px 20px rgba(251,146,60,0.4),  0 0 100px 40px rgba(234,179,8,0.15); }
+  0%   { box-shadow:  0 -12px 40px 6px rgba(239,68,68,0.6),   12px 0 30px 4px rgba(251,146,60,0.3),  0 12px 20px 2px rgba(234,179,8,0.2),  -10px 0 25px 3px rgba(239,68,68,0.25); }
+  20%  { box-shadow:  0 -8px  50px 10px rgba(251,146,60,0.7), 8px  0 40px 8px rgba(239,68,68,0.4),   0 18px 30px 5px rgba(251,146,60,0.15), -14px 0 35px 6px rgba(234,179,8,0.3); }
+  40%  { box-shadow:  0 -18px 35px 5px rgba(234,179,8,0.5),   16px 0 20px 3px rgba(234,179,8,0.35),  0 8px  40px 8px rgba(239,68,68,0.3),   -8px  0 45px 8px rgba(251,146,60,0.4); }
+  60%  { box-shadow:  0 -10px 45px 8px rgba(251,146,60,0.65), 6px  0 50px 9px rgba(239,68,68,0.3),   0 15px 25px 4px rgba(234,179,8,0.25),  -16px 0 30px 4px rgba(239,68,68,0.35); }
+  80%  { box-shadow:  0 -14px 30px 4px rgba(239,68,68,0.55),  14px 0 35px 6px rgba(251,146,60,0.45), 0 10px 45px 9px rgba(251,146,60,0.2),  -10px 0 20px 2px rgba(234,179,8,0.3); }
+  100% { box-shadow:  0 -12px 40px 6px rgba(239,68,68,0.6),   12px 0 30px 4px rgba(251,146,60,0.3),  0 12px 20px 2px rgba(234,179,8,0.2),  -10px 0 25px 3px rgba(239,68,68,0.25); }
 }
-.phone-fire { animation: fire-glow 1.8s ease-in-out infinite; }
+.phone-fire { animation: fire-glow 4.5s ease-in-out infinite; }
 @keyframes rotate-hint {
   0%   { transform: rotate(0deg); }
   30%  { transform: rotate(-90deg); }
