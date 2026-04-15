@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import AvatarUpload from './AvatarUpload'
 
 const AI_COLOR: Record<string, string> = {
   claude: '#7C3AED',
@@ -25,10 +28,13 @@ export async function generateMetadata({ params }: { params: { username: string 
 }
 
 export default async function UserProfilePage({ params }: { params: { username: string } }) {
-  const user = await prisma.user.findFirst({
-    where: { name: { equals: params.username, mode: 'insensitive' } },
-  })
+  const [user, session] = await Promise.all([
+    prisma.user.findFirst({ where: { name: { equals: params.username, mode: 'insensitive' } } }),
+    getServerSession(authOptions),
+  ])
   if (!user) notFound()
+
+  const isOwner = session?.user?.email === user.email
 
   const publicChats = await prisma.chat.findMany({
     where: { userId: user.id, isPublic: true },
@@ -99,15 +105,12 @@ export default async function UserProfilePage({ params }: { params: { username: 
           marginBottom: '24px',
           display: 'flex', alignItems: 'center', gap: '20px',
         }}>
-          <div style={{
-            width: '64px', height: '64px', borderRadius: '50%',
-            backgroundColor: planColor,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '24px', fontWeight: 700, color: 'white', flexShrink: 0,
-            boxShadow: `0 0 0 4px ${planColor}30`,
-          }}>
-            {initial}
-          </div>
+          <AvatarUpload
+            initial={initial}
+            planColor={planColor}
+            initialImage={user.image ?? null}
+            isOwner={isOwner}
+          />
           <div>
             <div style={{ fontSize: '22px', fontWeight: 800 }}>{user.name}</div>
             <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '3px' }}>

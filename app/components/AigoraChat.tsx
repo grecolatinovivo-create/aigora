@@ -184,8 +184,31 @@ function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
   )
 }
 
+// ── Comprimi immagine sul client ──────────────────────────────────────────────
+async function compressImage(file: File, maxW: number, maxH: number): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const canvas = document.createElement('canvas')
+      let w = img.naturalWidth, h = img.naturalHeight
+      // Scala proporzionalmente
+      if (w > h) { if (w > maxW) { h = Math.round(h * maxW / w); w = maxW } }
+      else { if (h > maxH) { w = Math.round(w * maxH / h); h = maxH } }
+      canvas.width = w; canvas.height = h
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0, w, h)
+      canvas.toBlob(blob => {
+        resolve(new File([blob!], 'avatar.jpg', { type: 'image/jpeg' }))
+      }, 'image/jpeg', 0.7)
+    }
+    img.src = url
+  })
+}
+
 // ── Schermata Profilo ─────────────────────────────────────────────────────────
-function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset, isDark, onBack, onSignOut }: {
+function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset, isDark, onBack, onSignOut, userImage, onImageChange }: {
   displayName: string
   userEmail?: string
   userPlan?: string
@@ -194,13 +217,33 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
   isDark: boolean
   onBack: () => void
   onSignOut: () => void
+  userImage?: string | null
+  onImageChange?: (img: string | null) => void
 }) {
   const [following, setFollowing] = useState<any[]>([])
   const [followers, setFollowers] = useState<any[]>([])
   const [profileTab, setProfileTab] = useState<'chat' | 'following' | 'followers'>('chat')
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const planColors: Record<string, string> = { max:'#FF6B2B', pro:'#7C3AED', starter:'#1A73E8', free:'#10A37F', admin:'#F59E0B', none:'#6B7280' }
   const planColor = planColors[userPlan ?? 'none'] ?? '#6B7280'
   const publicChats = savedChats.filter((c: any) => c.isPublic)
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAvatar(true)
+    // Ridimensiona sul client prima di inviare
+    const compressed = await compressImage(file, 80, 80)
+    const form = new FormData()
+    form.append('avatar', compressed)
+    try {
+      const res = await fetch('/api/user/avatar', { method: 'POST', body: form })
+      const data = await res.json()
+      if (data.image) onImageChange?.(data.image)
+    } catch {}
+    setUploadingAvatar(false)
+  }
 
   useEffect(() => {
     fetch('/api/follow').then(r => r.json()).then(d => {
@@ -239,9 +282,24 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
       <div className="flex-1 overflow-y-auto">
         {/* Avatar + info */}
         <div className="flex items-center gap-4 px-5 pt-6 pb-5" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${borderColor}` }}>
-          <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-white flex-shrink-0"
-            style={{ backgroundColor: planColor, boxShadow: `0 0 0 3px ${planColor}30` }}>
-            {(displayName || '?')[0].toUpperCase()}
+          {/* Avatar cliccabile per cambio foto */}
+          <div className="relative flex-shrink-0 cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+            <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-2xl font-black text-white"
+              style={{ backgroundColor: planColor, boxShadow: `0 0 0 3px ${planColor}30` }}>
+              {userImage
+                ? <img src={userImage} alt="avatar" className="w-full h-full object-cover" />
+                : (displayName || '?')[0].toUpperCase()
+              }
+            </div>
+            {/* Overlay modifica */}
+            <div className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+              style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              {uploadingAvatar
+                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              }
+            </div>
+            <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-lg truncate" style={{ color: textColor }}>{displayName}</div>
@@ -568,6 +626,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [showSynthesis, setShowSynthesis] = useState(false)
   const [isPublic, setIsPublic] = useState(false)
   const [portfolioSaved, setPortfolioSaved] = useState(false)
+  const [userImage, setUserImage] = useState<string | null>(null)
+  const [showColorPicker, setShowColorPicker] = useState(false)
   const [waitingForUser, setWaitingForUser] = useState(false)
   const [turnCount, setTurnCount] = useState(0)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -719,7 +779,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       ))
     } else if (event.type === 'presence') {
       setOnlineUsers(prev => {
-        if (event.action === 'enter') return [...new Set([...prev, event.userName])]
+        if (event.action === 'enter') return Array.from(new Set([...prev, event.userName]))
         return prev.filter(u => u !== event.userName)
       })
     }
@@ -2011,13 +2071,36 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </button>
             )}
 
-            {/* Picker colori */}
-            <div className="flex gap-1 flex-shrink-0">
-              {BG_PRESETS.map(p => (
-                <button key={p.value} onClick={() => setBgPreset(p)} title={p.label}
-                  className="w-3.5 h-3.5 rounded-full transition-transform hover:scale-110"
-                  style={{ backgroundColor: p.value, outline: bgPreset.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent', outlineOffset: '1px' }} />
-              ))}
+            {/* Picker colori — drawer */}
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setShowColorPicker(p => !p)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 border-2"
+                style={{
+                  backgroundColor: bgPreset.value,
+                  borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
+                }}
+                title="Cambia sfondo"
+              />
+              {showColorPicker && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
+                  <div className="absolute right-0 top-9 z-50 flex gap-1.5 p-2 rounded-2xl shadow-2xl"
+                    style={{ backgroundColor: isDark ? 'rgba(12,12,20,0.97)' : 'rgba(255,255,255,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+                    {BG_PRESETS.map(p => (
+                      <button key={p.value} onClick={() => { setBgPreset(p); setShowColorPicker(false) }}
+                        title={p.label}
+                        className="w-6 h-6 rounded-full transition-all hover:scale-110"
+                        style={{
+                          backgroundColor: p.value,
+                          outline: bgPreset.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent',
+                          outlineOffset: '2px',
+                          border: '1px solid rgba(0,0,0,0.1)',
+                        }} />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Sintesi */}
@@ -2148,6 +2231,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             isDark={isDark}
             onBack={() => setPhase(messages.length > 0 ? 'running' : 'start')}
             onSignOut={() => signOut({ callbackUrl: '/login' })}
+            userImage={userImage}
+            onImageChange={setUserImage}
           />
         )}
 
