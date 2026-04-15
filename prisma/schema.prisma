@@ -25,6 +25,7 @@ model User {
   sessions Session[]
   chats    Chat[]
 
+  activeSessions ActiveSession[]
   hostedRooms   Room[]            @relation("RoomHost")
   roomParticipations RoomParticipant[]
   followers     Follow[]          @relation("Following")
@@ -96,6 +97,21 @@ model Follow {
   following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
+}
+
+model ActiveSession {
+  id         String   @id @default(cuid())
+  userId     String
+  token      String   @unique
+  ip         String?
+  country    String?
+  userAgent  String?
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model EmailVerification {

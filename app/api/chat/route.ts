@@ -277,6 +277,14 @@ export async function POST(req: NextRequest) {
     // Verifica piano — l'utente può usare solo le AI del suo piano
     const session = await getServerSession(authOptions)
     if (session?.user?.email && aiId && action !== 'route' && action !== 'synthesize' && action !== 'factcheck') {
+      // Rate limit per account: max 50 turni/ora (anti account-sharing)
+      const accountRl = rateLimit(`chat-account:${session.user.email}`, 50, 60 * 60_000)
+      if (!accountRl.ok) {
+        return new Response(JSON.stringify({ error: 'Hai raggiunto il limite orario. Riprova tra ' + accountRl.retryAfter + ' secondi.' }), {
+          status: 429, headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
       const { prisma } = await import('@/lib/prisma')
       const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
       const plan = dbUser?.email === process.env.ADMIN_EMAIL ? 'admin' : (dbUser?.plan ?? 'none')

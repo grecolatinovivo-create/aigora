@@ -919,6 +919,22 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     enabled: !!activeRoom,
   })
 
+  // Registra la sessione e controlla anomalie
+  useEffect(() => {
+    // Registra sessione al primo accesso
+    fetch('/api/session', { method: 'POST' }).catch(() => {})
+    // Controlla periodicamente se la sessione è ancora valida
+    const check = setInterval(() => {
+      fetch('/api/session').then(r => r.json()).then(d => {
+        if (!d.valid) {
+          // Sessione invalidata (scalzata da altro dispositivo) → redirect login
+          window.location.href = '/login?error=session_expired'
+        }
+      }).catch(() => {})
+    }, 5 * 60_000) // ogni 5 minuti
+    return () => clearInterval(check)
+  }, [])
+
   // Risolve il piano reale dal DB (evita sfasamenti JWT)
   useEffect(() => {
     fetch('/api/user/me')
