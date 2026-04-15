@@ -601,7 +601,14 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  const availableForArbiter = AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== teamBAI).map(a => a.id)
+  // Quando l'utente sceglie l'AI per A, auto-assegna B e arbitro tra le rimanenti
+  const handleTeamAAI = (id: string) => {
+    setTeamAAI(id)
+    const rest = AI_OPTIONS.filter(a => a.id !== id)
+    if (rest.find(a => a.id === teamBAI) === undefined) setTeamBAI(rest[0].id)
+    const restB = rest.filter(a => a.id !== (rest.find(a => a.id === teamBAI) ? teamBAI : rest[0].id))
+    if (restB.find(a => a.id === arbiter) === undefined && restB.length > 0) setArbiter(restB[0].id)
+  }
 
   const handleCreate = async () => {
     setCreating(true)
@@ -631,7 +638,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-y-auto py-8"
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-y-auto py-10"
       style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,0.14) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(239,68,68,0.1) 0%, transparent 60%)' }}>
 
       {/* Navbar */}
@@ -643,25 +650,22 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           Indietro
         </button>
         <span className="font-black text-lg"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></span>
-        {/* Step dots */}
         <div className="flex gap-2">
-          {['topic', 'teams', 'share'].map((s, i) => (
+          {['topic', 'teams', 'share'].map((s) => (
             <div key={s} className="w-2 h-2 rounded-full transition-all"
               style={{ background: step === s ? '#3b82f6' : 'rgba(255,255,255,0.2)', transform: step === s ? 'scale(1.3)' : 'scale(1)' }} />
           ))}
         </div>
       </div>
 
-      {/* ── HINT ROTAZIONE (solo mobile portrait, solo step teams) ── */}
+      {/* ── HINT ROTAZIONE ── */}
       {isPortrait && !hintDismissed && step === 'teams' && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center pb-8 pointer-events-none">
           <div className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl scale-in"
             style={{ background: 'rgba(20,20,32,0.95)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }}>
-            {/* Icona telefono che ruota */}
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
               style={{ animation: 'rotate-hint 2.5s ease-in-out infinite', transformOrigin: 'center' }}>
-              <rect x="5" y="2" width="14" height="20" rx="2" />
-              <path d="M12 18h.01" />
+              <rect x="5" y="2" width="14" height="20" rx="2" /><path d="M12 18h.01" />
             </svg>
             <div>
               <div className="text-white text-xs font-bold">Ruota il telefono</div>
@@ -672,22 +676,50 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         </div>
       )}
 
-      {/* ── TABLET ── */}
-      <div className="scale-in relative mt-2" style={{ width: 600, maxWidth: '95vw' }}>
-        {/* Cornice tablet */}
-        <div className="absolute inset-0 rounded-[28px]"
-          style={{ background: '#1c1c1e', boxShadow: '0 0 0 1.5px #3a3a3c, 0 40px 100px rgba(0,0,0,0.85), 0 0 0 0.5px #555 inset' }} />
-        {/* Glare */}
-        <div className="absolute rounded-t-[22px] pointer-events-none"
-          style={{ top: 6, left: 6, right: 6, height: '35%', background: 'linear-gradient(160deg, rgba(255,255,255,0.06) 0%, transparent 60%)', zIndex: 10 }} />
-        {/* Tasto home (tablet, in basso centrato) */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-24 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
-        {/* Camera (tablet, in alto centrato) */}
-        <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full" style={{ background: '#2a2a2e', border: '1px solid #3a3a3c' }} />
+      {/* ── iPad ── */}
+      <div className="scale-in relative" style={{ width: 680, maxWidth: '96vw' }}>
 
-        {/* Screen */}
-        <div className="relative overflow-hidden flex flex-col"
-          style={{ margin: '6px', borderRadius: 22, background: '#0d0d14', minHeight: 520 }}>
+        {/* ── Scocca iPad realistica ── */}
+        {/* Corpo principale */}
+        <div className="absolute inset-0 rounded-[28px]" style={{
+          background: 'linear-gradient(145deg, #2e2e30 0%, #1a1a1c 40%, #242426 100%)',
+          boxShadow: '0 0 0 1px #444, 0 0 0 2px #222, 0 60px 120px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.5)',
+        }} />
+
+        {/* Pulsante power — lato destro in alto */}
+        <div className="absolute rounded-l-sm" style={{ right: -3, top: 80, width: 3, height: 28, background: 'linear-gradient(to bottom, #3a3a3c, #2a2a2c)', boxShadow: '-1px 0 3px rgba(0,0,0,0.5)' }} />
+
+        {/* Volume su — lato sinistro */}
+        <div className="absolute rounded-r-sm" style={{ left: -3, top: 100, width: 3, height: 22, background: 'linear-gradient(to bottom, #3a3a3c, #2a2a2c)', boxShadow: '1px 0 3px rgba(0,0,0,0.5)' }} />
+        {/* Volume giù — lato sinistro */}
+        <div className="absolute rounded-r-sm" style={{ left: -3, top: 130, width: 3, height: 22, background: 'linear-gradient(to bottom, #3a3a3c, #2a2a2c)', boxShadow: '1px 0 3px rgba(0,0,0,0.5)' }} />
+        {/* Mute — lato sinistro */}
+        <div className="absolute rounded-r-sm" style={{ left: -3, top: 70, width: 3, height: 14, background: 'linear-gradient(to bottom, #3a3a3c, #2a2a2c)', boxShadow: '1px 0 3px rgba(0,0,0,0.5)' }} />
+
+        {/* Fotocamera — in alto centrata, con modulo realistico */}
+        <div className="absolute left-1/2 -translate-x-1/2" style={{ top: 10, zIndex: 20 }}>
+          {/* Modulo camera */}
+          <div className="relative flex items-center justify-center" style={{ width: 10, height: 10 }}>
+            {/* Anello esterno */}
+            <div className="absolute inset-0 rounded-full" style={{ background: '#111', border: '1px solid #3a3a3c', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)' }} />
+            {/* Lente */}
+            <div className="absolute rounded-full" style={{ width: 5, height: 5, background: 'radial-gradient(circle at 35% 35%, #1a3a5c, #050a10)', border: '0.5px solid #1a2a3c', boxShadow: 'inset 0 0 3px rgba(0,100,200,0.3)' }} />
+            {/* Riflesso lente */}
+            <div className="absolute rounded-full" style={{ width: 2, height: 2, top: 1.5, left: 1.5, background: 'rgba(255,255,255,0.15)' }} />
+          </div>
+        </div>
+
+        {/* Glare schermo */}
+        <div className="absolute pointer-events-none rounded-t-[22px]" style={{ top: 8, left: 8, right: 8, height: '40%', background: 'linear-gradient(155deg, rgba(255,255,255,0.055) 0%, transparent 55%)', zIndex: 15 }} />
+
+        {/* Home bar in basso */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full" style={{ width: 100, height: 4, background: 'rgba(255,255,255,0.18)', zIndex: 20 }} />
+
+        {/* Connettore USB-C in basso centrato */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-sm" style={{ width: 14, height: 3, background: '#111', border: '1px solid #3a3a3c', borderBottom: 'none' }} />
+
+        {/* ── Screen ── */}
+        <div className="relative overflow-hidden flex flex-col" style={{ margin: '8px', borderRadius: 20, background: '#0d0d14', minHeight: 460 }}>
 
           {/* ── STEP 1: Topic ── */}
           {step === 'topic' && (
@@ -739,8 +771,17 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                   <div>
                     <label className="text-[10px] text-white/35 uppercase tracking-wide block mb-2">AI alleata</label>
                     <div className="flex flex-col gap-1.5">
-                      {AI_OPTIONS.filter(a => a.id !== teamBAI && a.id !== arbiter).map(ai => (
-                        <button key={ai.id} onClick={() => setTeamAAI(ai.id)}
+                      {AI_OPTIONS.map(ai => (
+                        <button key={ai.id} onClick={() => {
+                          setTeamAAI(ai.id)
+                          // Auto-assegna B: prima AI non scelta da A
+                          const restForB = AI_OPTIONS.filter(a => a.id !== ai.id)
+                          const newB = restForB.find(a => a.id !== arbiter)?.id ?? restForB[0].id
+                          setTeamBAI(newB)
+                          // Auto-assegna arbitro: prima AI non scelta da A né B
+                          const newArb = AI_OPTIONS.find(a => a.id !== ai.id && a.id !== newB)?.id ?? restForB[1]?.id ?? arbiter
+                          setArbiter(newArb)
+                        }}
                           className="px-3 py-2 rounded-xl text-xs font-bold transition-all text-left flex items-center gap-2"
                           style={{ backgroundColor: teamAAI === ai.id ? `${ai.color}20` : 'rgba(255,255,255,0.04)', border: teamAAI === ai.id ? `1px solid ${ai.color}45` : '1px solid rgba(255,255,255,0.08)', color: teamAAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
                           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: teamAAI === ai.id ? ai.color : 'rgba(255,255,255,0.2)' }} />
@@ -757,38 +798,40 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                     <div className="text-xs font-black" style={{ color: '#f87171' }}>🔴 SQUADRA B</div>
                     <div className="text-[9px] px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>Via link</div>
                   </div>
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center text-white/20 text-xs">L'avversario entrerà<br/>usando il link che genererai</div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-white/35 uppercase tracking-wide block mb-2">AI alleata per B</label>
-                    <div className="flex flex-col gap-1.5">
-                      {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== arbiter).map(ai => (
-                        <button key={ai.id} onClick={() => setTeamBAI(ai.id)}
-                          className="px-3 py-2 rounded-xl text-xs font-bold transition-all text-left flex items-center gap-2"
-                          style={{ backgroundColor: teamBAI === ai.id ? `${ai.color}20` : 'rgba(255,255,255,0.04)', border: teamBAI === ai.id ? `1px solid ${ai.color}45` : '1px solid rgba(255,255,255,0.08)', color: teamBAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
-                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: teamBAI === ai.id ? ai.color : 'rgba(255,255,255,0.2)' }} />
-                          {ai.name}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="text-[10px] text-white/25 mb-2">Assegnate automaticamente</div>
+                  <div className="flex flex-col gap-1.5">
+                    {/* AI alleata B — auto-assegnata */}
+                    {(() => { const ai = AI_OPTIONS.find(a => a.id === teamBAI); return ai ? (
+                      <div className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2"
+                        style={{ background: `${ai.color}15`, border: `1px solid ${ai.color}35`, color: ai.color }}>
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: ai.color }} />{ai.name}
+                        <span className="ml-auto text-[9px] opacity-50">AI alleata</span>
+                      </div>
+                    ) : null })()}
+                    {/* Arbitro — auto-assegnato */}
+                    {(() => { const ai = AI_OPTIONS.find(a => a.id === arbiter); return ai ? (
+                      <div className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2"
+                        style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.3)', color: '#A78BFA' }}>
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#A78BFA' }} />{ai.name}
+                        <span className="ml-auto text-[9px] opacity-50">⚖️ arbitro</span>
+                      </div>
+                    ) : null })()}
+                    {/* Quarta AI — spettatore */}
+                    {(() => { const ai = AI_OPTIONS.find(a => a.id !== teamAAI && a.id !== teamBAI && a.id !== arbiter); return ai ? (
+                      <div className="px-3 py-2 rounded-xl text-xs flex items-center gap-2"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.2)' }}>
+                        <div className="w-2 h-2 rounded-full flex-shrink-0 bg-white/20" />{ai.name}
+                        <span className="ml-auto text-[9px]">non partecipa</span>
+                      </div>
+                    ) : null })()}
                   </div>
                 </div>
               </div>
 
-              {/* Arbitro — riga sotto le due colonne */}
-              <div className="rounded-2xl px-5 py-3 flex items-center gap-4" style={{ background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.2)' }}>
-                <div className="text-xs font-black flex-shrink-0" style={{ color: '#A78BFA' }}>⚖️ ARBITRO</div>
-                <div className="flex gap-2 flex-wrap flex-1">
-                  {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== teamBAI).map(ai => (
-                    <button key={ai.id} onClick={() => setArbiter(ai.id)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                      style={{ backgroundColor: arbiter === ai.id ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.05)', border: arbiter === ai.id ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(255,255,255,0.08)', color: arbiter === ai.id ? '#A78BFA' : 'rgba(255,255,255,0.35)' }}>
-                      {ai.name}
-                    </button>
-                  ))}
-                </div>
-                <div className="text-[10px] text-white/25 flex-shrink-0">Verdetto finale</div>
+              {/* Info auto-assign */}
+              <div className="rounded-xl px-4 py-2 flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse flex-shrink-0" />
+                <div className="text-[10px] text-white/30">Scegli l'AI per la tua squadra — le altre vengono assegnate automaticamente</div>
               </div>
 
               {/* CTA */}
