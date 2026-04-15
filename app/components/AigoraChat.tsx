@@ -681,7 +681,7 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmai
               })()}
               {userPlan === 'admin' && (
                 <>
-                  <a href={`/${encodeURIComponent(dbUserName || userName.trim() || userEmail || '')}`}
+                  <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
                     className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2">
                     🔗 Il mio profilo pubblico
                   </a>
