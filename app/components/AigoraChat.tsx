@@ -341,6 +341,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
   userImage?: string | null
   onImageChange?: (img: string | null) => void
   dbUserName?: string | null
+  isBeta?: boolean
 }) {
   const [following, setFollowing] = useState<any[]>([])
   const [followers, setFollowers] = useState<any[]>([])
@@ -677,15 +678,23 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmai
                   <div className="px-4 py-3 border-b border-white/8">
                     <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
                     <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
-                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                      style={{ backgroundColor: `${pc}20`, color: pc, border: `1px solid ${pc}40` }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: pc }} />
-                      {(userPlan ?? 'free').toUpperCase()}
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                        style={{ backgroundColor: `${pc}20`, color: pc, border: `1px solid ${pc}40` }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: pc }} />
+                        {(userPlan ?? 'free').toUpperCase()}
+                      </div>
+                      {isBeta && (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                          style={{ backgroundColor: 'rgba(124,58,237,0.2)', color: '#A78BFA', border: '1px solid rgba(124,58,237,0.4)' }}>
+                          ✦ Beta Tester
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
               })()}
-              {userPlan === 'admin' && (
+              {(userPlan === 'admin' || isBeta) && (
                 <>
                   <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
                     className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2">
@@ -704,10 +713,12 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmai
                     style={{ color: 'rgba(255,255,255,0.7)' }}>
                     ＋ Crea dibattito
                   </button>
-                  <button onClick={() => window.location.href = '/admin'}
-                    className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
-                    ⚙️ Pannello Admin
-                  </button>
+                  {userPlan === 'admin' && (
+                    <button onClick={() => window.location.href = '/admin'}
+                      className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
+                      ⚙️ Pannello Admin
+                    </button>
+                  )}
                 </>
               )}
               <button onClick={onSignOut}
@@ -1555,6 +1566,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     onSignOut: () => signOut({ callbackUrl: '/login' }),
     unreadCount,
     dbUserName,
+    isBeta,
   }
 
   if (!nameConfirmed) {
@@ -1780,7 +1792,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
 
             {/* ── TAB FEED ── */}
-            {effectivePlan === 'admin' && socialTab === 'feed' && (
+            {(effectivePlan === 'admin' || isBeta) && socialTab === 'feed' && (
               <div className="flex flex-col gap-3">
                 {/* Notifiche pendenti */}
                 {notifications.filter(n => !n.read).map((n: any) => (
@@ -1857,7 +1869,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             )}
 
             {/* ── TAB CREA ── */}
-            {effectivePlan === 'admin' && socialTab === 'crea' && (
+            {(effectivePlan === 'admin' || isBeta) && socialTab === 'crea' && (
               <div className="glass rounded-3xl p-4 flex flex-col gap-3">
                 <div className="text-xs font-bold text-white/40 uppercase tracking-wide">Tema del dibattito</div>
                 <textarea
@@ -2045,7 +2057,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       {showHistory && <div className="fixed inset-0 z-[39]" onClick={() => setShowHistory(false)} />}
 
       {/* ── PANNELLO SOCIAL ── */}
-      {effectivePlan === 'admin' && (
+      {(effectivePlan === 'admin' || isBeta) && (
         <>
           <div className={`fixed top-0 right-0 h-full z-50 transition-all duration-300 ease-out ${showSocialPanel ? 'w-80' : 'w-0'} overflow-hidden`}>
             <div className="w-80 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderLeft: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
@@ -2291,8 +2303,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </div>
             </div>
 
-            {/* Invita (solo admin) */}
-            {effectivePlan === 'admin' && (
+            {/* Invita (solo admin/beta) */}
+            {(effectivePlan === 'admin' || isBeta) && (
               <button onClick={() => setShowInvitePanel(true)} title="Invita amici"
                 className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-105"
                 style={{ backgroundColor: isDark ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)', color: '#A78BFA' }}>
