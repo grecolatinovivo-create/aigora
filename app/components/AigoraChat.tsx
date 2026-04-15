@@ -888,10 +888,10 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 <div className="ml-auto text-green-400 text-lg">✓</div>
               </div>
 
-              {/* 2 slot roulette */}
+              {/* 2 slot roulette: avversaria + eliminata */}
               {[
-                { label: '🔴 AI alleata avversario', index: 0, color: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', labelColor: '#f87171' },
-                { label: '⚖️ Arbitro', index: 1, color: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', labelColor: '#A78BFA' },
+                { label: '🔴 AI avversaria', index: 0, color: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', labelColor: '#f87171' },
+                { label: '❌ Eliminata', index: 1, color: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.08)', labelColor: 'rgba(255,255,255,0.3)' },
               ].map(({ label, index, color, border, labelColor }) => {
                 const settled = rouletteSettled[index]
                 const aiId = rouletteSlots[index]
@@ -924,6 +924,24 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                   </div>
                 )
               })}
+
+              {/* Arbitro — appare dopo che entrambi i slot sono settled */}
+              {rouletteSettled[1] && (() => {
+                const ai = AI_OPTIONS.find(a => a.id === arbiter)
+                return ai ? (
+                  <div className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl scale-in"
+                    style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-black flex-shrink-0" style={{ fontSize: 10, background: '#A78BFA' }}>
+                      {ai.id === 'gemini' ? 'Ge' : ai.name[0]}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[10px] font-black uppercase" style={{ color: '#A78BFA' }}>⚖️ Arbitro (esclusa dalla roulette)</div>
+                      <div className="text-sm font-bold text-white">{ai.name}</div>
+                    </div>
+                    <div className="text-purple-400 text-lg">✓</div>
+                  </div>
+                ) : null
+              })()}
             </div>
           )}
 
