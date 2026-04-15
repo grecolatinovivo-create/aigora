@@ -2806,53 +2806,99 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       messagesThisTurn: newCount,
     } : prev)
 
-    // AI alleata della squadra corrente risponde
+    // AI alleata di A risponde
     await handle2v2AIResponse(currentTurn, text)
 
-    // Calcola se il turno è esaurito (umano + AI = 2 messaggi per slot, max 3 slot = 6 msg)
-    const slotsDone = newCount >= maxMessagesPerTurn
-    if (slotsDone) {
-      const nextTurn: 'A' | 'B' = currentTurn === 'A' ? 'B' : 'A'
-      const nextRound = currentTurn === 'B' ? round + 1 : round
+    // Dopo ogni risposta umana + AI, passa subito il turno a B
+    // (B gioca sempre dopo ogni coppia umano+AI di A)
+    const nextRound = round // il round aumenta quando B ha finito e si torna ad A
+    const isLastRound = round >= maxRounds
 
-      if (nextRound > maxRounds) {
-        await handle2v2Verdict()
-        return
-      }
+    if (isLastRound && newCount >= maxMessagesPerTurn) {
+      await handle2v2Verdict()
+      return
+    }
 
-      // Passa il turno
+    // Passa a B automaticamente dopo 1s
+    await new Promise(r => setTimeout(r, 1000))
+
+    // Segna che ora tocca a B
+    setTwoVsTwoState(prev => prev ? { ...prev, currentTurn: 'B', messagesThisTurn: 0 } : prev)
+    setTwoVsTwoLoading(true)
+
+    // B risponde: prima aiId1, poi aiId2 — entrambi contro-argomentano
+    const bConfig = twoVsTwoState.config.teamB
+    const bHistory = twoVsTwoState.messages.map(m => ({ name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author, content: m.content }))
+
+    for (const bAiId of [bConfig.aiId1, bConfig.aiId2]) {
       setTwoVsTwoState(prev => prev ? {
         ...prev,
-        currentTurn: nextTurn,
-        round: nextRound,
-        messagesThisTurn: 0,
+        messages: [...prev.messages, { team: 'B' as const, isAI: true, aiId: bAiId, author: AI_NAMES[bAiId], content: '', streaming: true }]
       } : prev)
 
-      // Se il prossimo è B (solo AI, nessun umano reale) → B risponde automaticamente dopo 1s
-      if (nextTurn === 'B') {
-        setTimeout(async () => {
-          const lastHumanMsg = text
-          // Prima il messaggio "umano" di B (AI che simula l'avversario umano)
-          const bHumanName = 'Squadra B'
-          const bAiIdForHuman = twoVsTwoState.config.teamB.aiId1
-          setTwoVsTwoState(prev => prev ? {
-            ...prev,
-            messages: [...prev.messages, { team: 'B' as const, isAI: false, author: bHumanName, content: '…', streaming: false }],
-          } : prev)
-          await new Promise(r => setTimeout(r, 800))
-
-          // Poi l'AI di B risponde
-          await handle2v2AIResponse('B', `Contro-argomenta questa posizione: "${lastHumanMsg}"`)
-
-          // Poi torna ad A
-          setTwoVsTwoState(prev => prev ? {
-            ...prev,
-            currentTurn: 'A',
-            messagesThisTurn: 0,
-          } : prev)
-        }, 1000)
+      // Scarica testo
+      const bRes = await fetch('/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'turn', aiId: bAiId,
+          history: [
+            { name: 'Sistema', content: `${AI_PROFILES[bAiId]?.carattere ?? ''} Sei nella Squadra B di questo dibattito 2v2 sul tema: "${twoVsTwoState.config.topic}". Devi contro-argomentare la posizione della Squadra A con il tuo stile tipico. 2-3 frasi nella lingua del messaggio.` },
+            ...bHistory,
+            { name: 'Sistema', content: `Rispondi a: "${text}"` }
+          ],
+          needsWebSearch: false
+        }),
+      })
+      if (bRes.ok && bRes.body) {
+        const reader = bRes.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = '', fullText = '', done = false
+        while (!done) {
+          const { done: sd, value } = await reader.read(); if (sd) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+            const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
+            try { fullText += JSON.parse(d).text } catch {}
+          }
+        }
+        // Typewrite
+        await new Promise<void>(resolve => {
+          let i = 0
+          const iv = setInterval(() => {
+            if (i >= fullText.length) {
+              clearInterval(iv)
+              setTwoVsTwoState(prev => {
+                if (!prev) return prev
+                const msgs = [...prev.messages]
+                msgs[msgs.length - 1] = { team: 'B' as const, isAI: true, aiId: bAiId, author: AI_NAMES[bAiId], content: fullText, streaming: false }
+                return { ...prev, messages: msgs }
+              })
+              resolve(); return
+            }
+            i++
+            setTwoVsTwoState(prev => {
+              if (!prev) return prev
+              const msgs = [...prev.messages]
+              msgs[msgs.length - 1] = { team: 'B' as const, isAI: true, aiId: bAiId, author: AI_NAMES[bAiId], content: fullText.slice(0, i), streaming: true }
+              return { ...prev, messages: msgs }
+            })
+          }, TYPEWRITER_DELAY)
+        })
       }
+      await new Promise(r => setTimeout(r, 500))
     }
+
+    setTwoVsTwoLoading(false)
+
+    // Dopo che B ha risposto, torna ad A per il round successivo
+    setTwoVsTwoState(prev => {
+      if (!prev) return prev
+      const newRound = prev.round + 1
+      if (newRound > prev.maxRounds) return prev // verrà gestito dal verdetto
+      return { ...prev, currentTurn: 'A', round: newRound, messagesThisTurn: 0 }
+    })
   }
 
   const handle2v2Verdict = async () => {
@@ -3778,8 +3824,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
           {show2v2Label === 'topic' && (
             <div className="scale-in text-center">
-              <div className="font-black uppercase" style={{ fontSize: 20, letterSpacing: '0.25em', color: 'white' }}>2 VS 2</div>
-              <div className="text-sm font-medium mt-1 max-w-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{twoVsTwoState.config.topic}</div>
+              <div className="text-sm font-semibold max-w-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>{twoVsTwoState.config.topic}</div>
             </div>
           )}
         </div>
