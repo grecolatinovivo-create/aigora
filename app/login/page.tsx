@@ -179,7 +179,6 @@ function AuthCard() {
       {/* Form register — step 1: dati */}
       {tab === 'register' && regStep === 'form' && (
         <form onSubmit={handleSendCode} className="space-y-3">
-          <input type="text" placeholder="Il tuo nome (opzionale)" value={name} onChange={e => setName(e.target.value)} className={inputCls} />
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className={inputCls} />
           <PasswordInput placeholder="Password (min. 8 caratteri)" value={password} onChange={setPassword} />
           <PasswordInput placeholder="Conferma password" value={confirm} onChange={setConfirm} />

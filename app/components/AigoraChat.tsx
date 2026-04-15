@@ -395,7 +395,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
         </button>
         <span className="font-bold text-lg" style={{ color: textColor }}>Profilo</span>
         {/* Link profilo pubblico */}
-        <a href={`/${encodeURIComponent(displayName)}`} target="_blank" rel="noopener noreferrer"
+        <a href={`/${encodeURIComponent(dbUserName || (displayName !== 'Tu' ? displayName : (userEmail || ''))  )}`} target="_blank" rel="noopener noreferrer"
           className="ml-auto text-[11px] font-semibold flex items-center gap-1"
           style={{ color: '#A78BFA' }}>
           🔗 Profilo pubblico
@@ -662,18 +662,24 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmai
             <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
             <div className="absolute right-0 top-11 w-56 rounded-2xl overflow-hidden shadow-2xl z-50"
               style={{ backgroundColor: 'rgba(12,12,20,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
-              <div className="px-4 py-3 border-b border-white/8">
-                <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
-                <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
-                <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.25)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
-                  {(userPlan ?? 'free').toUpperCase()}
-                </div>
-              </div>
+              {(() => {
+                const planColors: Record<string,string> = { admin:'#F59E0B', max:'#FF6B2B', pro:'#A78BFA', starter:'#1A73E8', free:'#10A37F', none:'#6B7280' }
+                const pc = planColors[userPlan ?? 'free'] ?? '#6B7280'
+                return (
+                  <div className="px-4 py-3 border-b border-white/8">
+                    <div className="text-white font-semibold text-sm truncate">{displayName || '—'}</div>
+                    <div className="text-white/40 text-[11px] truncate mt-0.5">{userEmail}</div>
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                      style={{ backgroundColor: `${pc}20`, color: pc, border: `1px solid ${pc}40` }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: pc }} />
+                      {(userPlan ?? 'free').toUpperCase()}
+                    </div>
+                  </div>
+                )
+              })()}
               {userPlan === 'admin' && (
                 <>
-                  <a href={`/${encodeURIComponent(displayName)}`}
+                  <a href={`/${encodeURIComponent(dbUserName || userName.trim() || userEmail || '')}`}
                     className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2">
                     🔗 Il mio profilo pubblico
                   </a>
@@ -754,6 +760,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [portfolioSaved, setPortfolioSaved] = useState(false)
   const [userImage, setUserImage] = useState<string | null>(null)
   const [resolvedPlan, setResolvedPlan] = useState<string | null>(null)
+  const [dbUserName, setDbUserName] = useState<string | null>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [waitingForUser, setWaitingForUser] = useState(false)
@@ -941,6 +948,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       .then(d => {
         if (d.plan) setResolvedPlan(d.plan)
         if (d.image) setUserImage(d.image)
+        if (d.name) {
+          setDbUserName(d.name)
+          setUserName(d.name)
+          setNameConfirmed(true)
+        } else {
+          // Nome non presente nel DB — forza la card del nome
+          setNameConfirmed(false)
+        }
       })
       .catch(() => {})
   }, [])
