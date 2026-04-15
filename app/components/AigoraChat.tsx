@@ -159,7 +159,7 @@ function getRandomBubbleTopics(): string[] {
   return shuffled.slice(0, 12)
 }
 
-type ChatPhase = 'start' | 'running' | 'done' | 'history' | 'profile'
+type ChatPhase = 'start' | 'running' | 'done' | 'history' | 'profile' | 'new'
 
 function detectNextAi(text: string, aiOrder: string[]): string | null {
   const lower = text.toLowerCase()
@@ -1131,7 +1131,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // Stop loop quando si va in cronologia/profilo, riprende quando si torna in running
   useEffect(() => {
-    if (phase === 'history' || phase === 'profile') {
+    if (phase === 'history' || phase === 'profile' || phase === 'new') {
       // Salva se stava girando (non in pausa per input utente)
       wasDebatingRef.current = !waitingForUserRef.current && !stopRequestedRef.current
       stopRequestedRef.current = true
@@ -2324,7 +2324,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'white' : '#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
               </button>
               <span className="font-bold text-lg flex-1" style={{ color: isDark ? '#fff' : '#111' }}>Conversazioni</span>
-              <button onClick={() => { handleReset(); setPhase('start') }}
+              <button onClick={() => {
+                handleReset()
+                setPhase('new')
+              }}
                 className="text-[13px] font-semibold" style={{ color: '#A78BFA' }}>
                 + Nuova
               </button>
@@ -2365,8 +2368,76 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           />
         )}
 
+        {/* Schermata 'new' — chat vuota con bubble e input */}
+        {phase === 'new' && (
+          <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: bgPreset.value }}>
+            {/* Header */}
+            <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
+              style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+              <button onClick={() => setPhase('history')}
+                className="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-full active:scale-95"
+                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <div className="flex-1 min-w-0 text-center">
+                <div className="font-bold text-[14px]" style={{ color: isDark ? '#fff' : '#111' }}>
+                  <span style={{ color: isDark ? '#fff' : '#111' }}>Ai</span>
+                  <span style={{ color: '#A78BFA' }}>GORÀ</span>
+                </div>
+                <div className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>Nuova conversazione</div>
+              </div>
+              <div className="w-9" />
+            </div>
+
+            {/* Area centrale */}
+            <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8">
+              {/* Avatar AI */}
+              <div className="flex justify-center gap-5">
+                {AI_ORDER.map(id => (
+                  <div key={id} className="flex flex-col items-center gap-1.5">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                      style={{ backgroundColor: AI_COLOR[id] + '60', border: `2px solid ${AI_COLOR[id]}80` }}>
+                      {id === 'gemini' ? 'Ge' : AI_NAMES[id][0]}
+                    </div>
+                    <span className="text-[10px] font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)' }}>{AI_NAMES[id]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)', maxWidth: '240px', lineHeight: 1.5 }}>
+                Scrivi una domanda per avviare il dibattito
+              </p>
+            </div>
+
+            {/* Input bar — uguale alla chat */}
+            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5" style={{
+              backgroundColor: bgPreset.header,
+              borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+              paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
+            }}>
+              <input
+                autoFocus
+                value={question}
+                onChange={e => setQuestion(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && question.trim()) { handleStart(question) } }}
+                placeholder="Poni una domanda alle AI…"
+                className="flex-1 rounded-full px-3.5 py-2 text-[13px] outline-none"
+                style={{
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                  color: isDark ? '#f0f0f0' : '#111',
+                }}
+              />
+              <button onClick={() => { if (question.trim()) handleStart(question) }} disabled={!question.trim()}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30"
+                style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: question.trim() ? '0 2px 10px rgba(124,58,237,0.4)' : undefined }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Schermata chat mobile */}
-        {phase !== 'history' && phase !== 'profile' && <>
+        {phase !== 'history' && phase !== 'profile' && phase !== 'new' && <>
 
           {/* Header mobile */}
           <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
