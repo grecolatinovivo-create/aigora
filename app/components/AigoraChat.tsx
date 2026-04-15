@@ -3475,7 +3475,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
-      {messages.length === 0 && [
+      {messages.length === 0 && selectedMode !== '2v2' && [
         { top: '180px', left: 'calc(50% - 560px)', delay: '-2s',   dur: '14s', anim: 'float-1' },
         { top: '320px', left: 'calc(50% - 550px)', delay: '-7s',   dur: '13s', anim: 'float-3' },
         { top: '460px', left: 'calc(50% - 560px)', delay: '-4s',   dur: '15s', anim: 'float-2' },
@@ -3749,14 +3749,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <Navbar {...navbarProps} />
 
       {/* ── TELEFONO (desktop) ── */}
-      <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      <div className="flex flex-col items-center flex-shrink-0" style={{ gap: phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? 16 : 0 }}>
       {/* Titolo sopra il telefono — solo in 2v2 */}
       {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
-        <div className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          2 vs 2
+        <div className="font-black uppercase tracking-[0.2em] scale-in" style={{ fontSize: 22, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.25em' }}>
+          2 VS 2
         </div>
       )}
-      <div className={`phone-shell relative scale-in${phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? ' phone-fire' : ''}`} style={{ width: 390, height: 790 }}>
+      {/* Wrapper fiamme — separato dalla cornice così il glow non viene sovrascr */}
+      <div className={`relative${phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? ' phone-fire' : ''}`} style={{ borderRadius: 50 }}>
+      <div className="phone-shell relative scale-in" style={{ width: 390, height: 790 }}>
 
         {/* Cornice */}
         <div className="absolute inset-0 rounded-[50px] bg-[#1c1c1e]"
@@ -4588,6 +4590,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
         </>}
       </div>
+      </div>{/* fine wrapper fiamme */}
       </div>{/* fine flex-col wrapper telefono */}
 
       {/* ── PANNELLO SINTESI ── */}
