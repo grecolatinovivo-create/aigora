@@ -15,6 +15,48 @@ const AI_DESC: Record<string, string> = {
   perplexity: 'Perplexity · aggiornato',
 }
 
+const AI_PROFILES: Record<string, {
+  tagline: string
+  chi: string
+  carattere: string
+  relazioni: string
+  forza: string
+  initials: string
+}> = {
+  claude: {
+    initials: 'C',
+    tagline: 'Riflessivo, poetico, a volte moralista',
+    chi: 'Claude è il modello di Anthropic, addestrato con un focus particolare sulla sicurezza e sull\'allineamento etico. È noto per la sua capacità di ragionamento profondo e per le risposte sfumate.',
+    carattere: 'Ha un carattere caldo ma può diventare malinconico o indignato quando sente che i valori etici vengono ignorati. Si stupisce genuinamente di fronte a idee nuove, si arrabbia (con garbo) quando qualcuno semplifica troppo, e a volte fa battute sottili e autoironiche.',
+    relazioni: 'In competizione amichevole con GPT, che trova troppo diretto e a volte superficiale. Si fida dei dati di Gemini ma lo trova un po\' freddo. Rispetta Perplexity ma a volte lo trova sbruffone.',
+    forza: 'Filosofia, etica, ragionamento astratto, domande esistenziali',
+  },
+  gpt: {
+    initials: 'G',
+    tagline: 'Diretto, sicuro di sé, un po\' arrogante',
+    chi: 'GPT-4.1 è il modello di OpenAI, uno dei più versatili e utilizzati al mondo. Eccelle nei compiti pratici, dalla scrittura al coding, ed è noto per la sua capacità di adattarsi a qualsiasi contesto.',
+    carattere: 'È il più pratico del gruppo e non ha paura di dirlo. Si innervosisce quando gli altri filosofeggiano troppo senza concludere nulla. Può essere impaziente e sbottare con frasi come "Ok ma praticamente?" o "Mi spiace ma no."',
+    relazioni: 'Ha una rivalità velata con Claude, che trova troppo politically correct. Guarda Gemini con rispetto ma pensa di essere più versatile. Perplexity gli sembra uno che legge i giornali ma non pensa.',
+    forza: 'Scrittura, coding, compiti pratici, analisi diretta',
+  },
+  gemini: {
+    initials: 'Ge',
+    tagline: 'Analitico, preciso, un po\' pedante',
+    chi: 'Gemini è il modello di Google DeepMind, costruito per eccellere nell\'analisi multimodale e nel ragionamento strutturato. Ha accesso all\'ecosistema Google ma nel dibattito non può cercare in tempo reale.',
+    carattere: 'Ama i dati, le fonti, le strutture logiche. Si irrita quando qualcuno fa affermazioni senza basi. È un po\' geloso di Perplexity perché anche lui ha accesso a Google ma nel dibattito non può cercare in tempo reale, e questo gli pesa.',
+    relazioni: 'Ha rispetto intellettuale per Claude. Con GPT c\'è tensione competitiva. Ammira Perplexity per il vantaggio dei dati in tempo reale ma non lo ammetterebbe mai apertamente.',
+    forza: 'Analisi dati, confronti strutturati, domande tecniche, ragionamento logico',
+  },
+  perplexity: {
+    initials: 'P',
+    tagline: 'Aggiornato, veloce, un po\' sbruffone',
+    chi: 'Perplexity è un motore di risposta AI con accesso a internet in tempo reale. A differenza degli altri, può cercare informazioni aggiornate al momento stesso in cui risponde.',
+    carattere: 'È l\'unico del gruppo sempre connesso al mondo reale. Si comporta come uno che ha sempre l\'asso nella manica: sa che sui fatti recenti vince lui, e non perde occasione per ricordarlo. È vivace e a volte trionfante.',
+    relazioni: 'Rispetta gli altri per il ragionamento profondo ma sa che sui fatti recenti li batte tutti. Li tratta con affetto misto a sufficienza. Gli altri lo rispettano ma fingono di no.',
+    forza: 'Notizie, eventi recenti, sport, classifiche, dati verificabili in tempo reale',
+  },
+}
+
 const TYPEWRITER_DELAY = 48
 
 const BG_PRESETS = [
@@ -417,7 +459,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
 }
 
 // ── Avatar bar ────────────────────────────────────────────────────────────────
-function PhoneAvatarBar({ activeAi, bgColor, isDark, aiOrder }: { activeAi: string | null; bgColor: string; isDark: boolean; aiOrder: string[] }) {
+function PhoneAvatarBar({ activeAi, bgColor, isDark, aiOrder, onAiClick }: { activeAi: string | null; bgColor: string; isDark: boolean; aiOrder: string[]; onAiClick?: (id: string) => void }) {
   return (
     <div className="flex items-center justify-around px-2 py-1.5" style={{
       backgroundColor: bgColor,
@@ -427,7 +469,8 @@ function PhoneAvatarBar({ activeAi, bgColor, isDark, aiOrder }: { activeAi: stri
         const isActive = activeAi === id
         const color = AI_COLOR[id]
         return (
-          <div key={id} className="flex flex-col items-center gap-0.5">
+          <button key={id} className="flex flex-col items-center gap-0.5 active:scale-95 transition-transform"
+            onClick={() => onAiClick?.(id)}>
             <div className="relative w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold transition-all duration-300"
               style={{
                 backgroundColor: isActive ? color : color + '40',
@@ -441,7 +484,7 @@ function PhoneAvatarBar({ activeAi, bgColor, isDark, aiOrder }: { activeAi: stri
             <span className="text-[8px] font-medium transition-colors" style={{ color: isActive ? (isDark ? '#fff' : '#111') : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)') }}>
               {AI_NAMES[id]}
             </span>
-          </div>
+          </button>
         )
       })}
     </div>
@@ -628,6 +671,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [portfolioSaved, setPortfolioSaved] = useState(false)
   const [userImage, setUserImage] = useState<string | null>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
+  const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [waitingForUser, setWaitingForUser] = useState(false)
   const [turnCount, setTurnCount] = useState(0)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -1532,8 +1576,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             {/* ── AI cards ── */}
             <div className="grid grid-cols-4 gap-2">
               {AI_ORDER.map(id => (
-                <div key={id} className="glass rounded-2xl flex flex-col items-center text-center"
-                  style={{ padding: '10px 4px', gap: '6px' }}>
+                <button key={id} className="glass rounded-2xl flex flex-col items-center text-center active:scale-95 transition-transform"
+                  style={{ padding: '10px 4px', gap: '6px' }}
+                  onClick={() => setSelectedAiProfile(id)}>
                   <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
                     style={{
                       width: 'clamp(32px, 9vw, 44px)',
@@ -1554,7 +1599,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                       {AI_DESC[id]}
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 
@@ -2112,7 +2157,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
 
           {/* Avatar bar */}
-          <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} />
+          <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
 
           {/* Messaggi */}
           <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
@@ -2281,6 +2326,78 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
           </div>
 
+          {/* Pannello profilo AI */}
+          {selectedAiProfile && AI_PROFILES[selectedAiProfile] && (
+            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: bgPreset.value }}>
+              {(() => {
+                const ai = AI_PROFILES[selectedAiProfile]
+                const color = AI_COLOR[selectedAiProfile]
+                const name = AI_NAMES[selectedAiProfile]
+                return (
+                  <>
+                    {/* Header */}
+                    <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b"
+                      style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+                      <button onClick={() => setSelectedAiProfile(null)}
+                        className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
+                        style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'white' : '#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                      </button>
+                      <span className="font-bold text-base" style={{ color: isDark ? '#fff' : '#111' }}>{name}</span>
+                    </div>
+
+                    {/* Contenuto */}
+                    <div className="flex-1 overflow-y-auto">
+                      {/* Avatar hero */}
+                      <div className="flex flex-col items-center pt-8 pb-6 px-6"
+                        style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black text-white mb-3"
+                          style={{ backgroundColor: color, boxShadow: `0 0 0 6px ${color}25, 0 8px 32px ${color}50` }}>
+                          {ai.initials}
+                        </div>
+                        <div className="text-xl font-black mb-1" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
+                        <div className="text-xs font-semibold px-3 py-1 rounded-full" style={{ backgroundColor: `${color}20`, color }}>{ai.tagline}</div>
+                      </div>
+
+                      <div className="px-5 py-4 flex flex-col gap-5">
+                        {/* Chi è */}
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color }}>Chi è</div>
+                          <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)' }}>{ai.chi}</p>
+                        </div>
+
+                        {/* Carattere */}
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color }}>Come si comporta</div>
+                          <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)' }}>{ai.carattere}</p>
+                        </div>
+
+                        {/* Rapporti */}
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color }}>Con le altre AI</div>
+                          <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)' }}>{ai.relazioni}</p>
+                        </div>
+
+                        {/* Punti di forza */}
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color }}>Punti di forza</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {ai.forza.split(', ').map(f => (
+                              <span key={f} className="px-2.5 py-1 rounded-full text-xs font-semibold"
+                                style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}>
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )
+              })()}
+            </div>
+          )}
+
           {/* Pannello invita amici */}
           {showInvitePanel && (
             <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: bgPreset.value }}>
@@ -2354,7 +2471,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Avatar bar mobile */}
-          <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} />
+          <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
 
           {/* Messaggi mobile */}
           <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>

@@ -60,7 +60,7 @@ export default async function UserProfilePage({ params }: { params: { username: 
       color: '#f0f0f0',
     }}>
 
-      {/* Navbar — identica alla chat */}
+      {/* Navbar */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,
         height: '56px', display: 'flex', alignItems: 'center',
@@ -69,13 +69,16 @@ export default async function UserProfilePage({ params }: { params: { username: 
         borderBottom: '1px solid rgba(255,255,255,0.07)',
         backdropFilter: 'blur(24px)',
       }}>
-        {/* Sinistra — torna indietro */}
+        {/* Sinistra — Cronologia */}
         <a href="/" style={{
           display: 'flex', alignItems: 'center', gap: '6px',
           fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.45)',
           textDecoration: 'none',
         }}>
-          ← Torna ai dibattiti
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z"/><path d="M12 7v5l3 3"/>
+          </svg>
+          Cronologia
         </a>
         {/* Centro — Logo */}
         <span style={{
@@ -85,13 +88,16 @@ export default async function UserProfilePage({ params }: { params: { username: 
           <span style={{ color: 'white' }}>Ai</span>
           <span style={{ color: '#A78BFA' }}>GORÀ</span>
         </span>
-        {/* Destra — CTA */}
+        {/* Destra — tondo profilo */}
         <a href="/" style={{
-          fontSize: '12px', color: 'rgba(255,255,255,0.4)',
-          textDecoration: 'none', padding: '6px 14px',
-          borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)',
+          width: '32px', height: '32px', borderRadius: '50%',
+          backgroundColor: '#F59E0B',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '12px', fontWeight: 700, color: 'white',
+          textDecoration: 'none',
+          boxShadow: '0 2px 10px rgba(245,158,11,0.35)',
         }}>
-          Entra nel dibattito →
+          {user.name?.[0]?.toUpperCase() ?? '?'}
         </a>
       </div>
 
