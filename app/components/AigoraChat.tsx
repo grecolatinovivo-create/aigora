@@ -307,103 +307,223 @@ const MODE_INFO = {
 }
 
 function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void; onClose: () => void }) {
-  const [hovered, setHovered] = useState<GameMode | null>(null)
   const [selected, setSelected] = useState<GameMode>('2v2')
-
   const info = MODE_INFO[selected]
 
   return (
-    <div className="fixed inset-0 z-[80] flex flex-col items-center justify-center"
-      style={{ backgroundColor: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(16,163,127,0.12) 0%, transparent 60%)' }}>
+    <div className="fixed inset-0 z-[9999] flex flex-col overflow-y-auto"
+      style={{ backgroundColor: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(16,163,127,0.12) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 60% 20%, rgba(26,115,232,0.10) 0%, transparent 50%)' }}>
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 flex items-center justify-between px-6 h-14 z-50"
+      {/* Navbar */}
+      <div className="fixed top-0 left-0 right-0 h-[52px] flex items-center justify-between px-6 z-50"
         style={{ backgroundColor: 'rgba(7,7,15,0.4)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
-        <button onClick={onClose} className="flex items-center gap-2 text-sm font-medium text-white/45 hover:text-white transition-colors">
+        <button onClick={onClose} className="flex items-center gap-2 text-sm font-medium transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           Indietro
         </button>
-        <span className="absolute left-1/2 -translate-x-1/2 font-black text-lg">
-          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
-        </span>
+        <span className="font-black text-lg"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></span>
         <div style={{ width: 80 }} />
       </div>
 
-      <div className="flex flex-col items-center pt-14 px-6 w-full max-w-5xl">
-        <div className="text-center mb-10 mt-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-medium text-purple-300 border border-purple-500/30"
-            style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>
-            <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+      {/* Contenuto */}
+      <div className="flex flex-col items-center w-full px-6 pt-[80px] pb-12">
+
+        {/* Hero */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-semibold border"
+            style={{ backgroundColor: 'rgba(124,58,237,0.12)', borderColor: 'rgba(124,58,237,0.3)', color: '#c4b5fd' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse inline-block" />
             Scegli il formato del dibattito
           </div>
-          <h1 className="text-3xl font-black text-white mb-2">Scegli il formato Multiplayer</h1>
-          <p className="text-white/40 text-sm">Due formati speciali per dibattiti competitivi.</p>
+          <h1 className="text-4xl font-black text-white mb-2">Come vuoi dibattere?</h1>
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Tre formati diversi, un'unica arena. Clicca quello che fa per te.</p>
         </div>
 
-        {/* Tre cellulari */}
-        <div className="flex items-end justify-center gap-8 flex-wrap">
-          {(['2v2', 'devil'] as GameMode[]).map(mode => {
-            const isSelected = selected === mode
-            const m = MODE_INFO[mode]
+        {/* Tre telefoni */}
+        <div className="flex items-end justify-center gap-8 flex-wrap mb-10">
+
+          {/* ── CLASSICO ── */}
+          {(() => {
+            const isSelected = selected === 'classico'
             return (
-              <div key={mode}
-                onClick={() => setSelected(mode)}
-                className="flex flex-col items-center gap-3 cursor-pointer transition-all duration-300"
-                style={{ transform: isSelected ? 'scale(1.06) translateY(-6px)' : 'scale(0.95)' }}>
-                {/* Mini phone */}
-                <div className="relative" style={{ width: isSelected ? 200 : 170, height: isSelected ? 380 : 320, transition: 'all 0.3s' }}>
-                  <div className="absolute inset-0 rounded-[36px]"
-                    style={{
-                      background: '#1c1c1e',
-                      boxShadow: isSelected
-                        ? `0 0 0 2px ${m.color}, 0 0 40px ${m.color}50, 0 30px 80px rgba(0,0,0,0.8)`
-                        : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)',
-                      transition: 'all 0.3s',
-                    }} />
-                  <div className="absolute inset-0 rounded-[36px] overflow-hidden flex flex-col"
-                    style={{ top: 5, left: 5, right: 5, bottom: 5 }}>
-                    {/* Screen content mini */}
-                    <div className="flex-1 flex flex-col items-center justify-center p-4 gap-3"
-                      style={{ backgroundColor: mode === 'classico' ? '#f5f0e8' : '#0d0d14' }}>
-                      <div className="text-3xl">{mode === 'classico' ? '💬' : mode === '2v2' ? '⚔️' : '😈'}</div>
-                      <div className="font-black text-sm" style={{ color: mode === 'classico' ? '#111' : '#fff' }}>{m.label}</div>
-                      {/* Squadre mini per 2v2 */}
-                      {mode === '2v2' && (
-                        <div className="flex items-center gap-2">
-                          <div className="px-2 py-1 rounded-lg text-[9px] font-bold" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}>A</div>
-                          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>vs</span>
-                          <div className="px-2 py-1 rounded-lg text-[9px] font-bold" style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>B</div>
-                        </div>
-                      )}
-                      {/* Score mini per devil */}
-                      {mode === 'devil' && (
-                        <div className="flex items-center gap-1">
-                          <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 900 }}>7.2</span>
-                          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9 }}>/10</span>
-                        </div>
-                      )}
+              <div onClick={() => setSelected('classico')} className="flex flex-col items-center gap-4 cursor-pointer"
+                style={{ transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
+                <div className="relative" style={{ width: 160, height: 336 }}>
+                  <div className="absolute inset-0 rounded-[38px]"
+                    style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #10A37F, 0 0 40px rgba(16,163,127,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
+                  {/* Glare */}
+                  <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top: 6, left: 6, right: 6, height: '45%', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, transparent 60%)', zIndex: 10 }} />
+                  {/* Notch */}
+                  <div className="absolute" style={{ width: 50, height: 12, background: '#1c1c1e', borderRadius: '0 0 8px 8px', left: '50%', transform: 'translateX(-50%)', top: 6, zIndex: 20 }} />
+                  {/* Screen */}
+                  <div className="absolute overflow-hidden flex flex-col" style={{ top: 6, left: 6, right: 6, bottom: 6, borderRadius: 32, background: '#f5f0e8' }}>
+                    {/* Header */}
+                    <div className="flex items-center gap-1.5 px-2 py-2 flex-shrink-0" style={{ background: '#ede8dc', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                      <div className="flex">
+                        {[['C','#7C3AED'],['Ge','#1A73E8'],['P','#FF6B2B'],['G','#10A37F']].map(([l,c],i) => (
+                          <div key={i} className="flex items-center justify-center text-white font-bold" style={{ width:18,height:18,borderRadius:'50%',fontSize:6,background:c,marginLeft:i===0?0:-4,border:'1.5px solid #ede8dc' }}>{l}</div>
+                        ))}
+                      </div>
+                      <div><div style={{ fontSize:9,fontWeight:700,color:'#111' }}>AiGORÀ</div><div style={{ fontSize:7,color:'rgba(0,0,0,0.4)' }}>4 AI · dibattito libero</div></div>
+                    </div>
+                    {/* Messages */}
+                    <div className="flex-1 overflow-hidden flex flex-col gap-1.5 p-2">
+                      <div className="self-end text-white text-[7px] px-2 py-1 rounded-[8px] rounded-br-sm max-w-[80%]" style={{ background:'#005c4b', lineHeight:1.3 }}>L'IA sostituirà i lavori creativi?</div>
+                      <div className="flex gap-1 max-w-[85%]">
+                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#7C3AED',marginTop:1 }}>C</div>
+                        <div className="text-[7px] px-2 py-1 rounded-[8px] leading-[1.3]" style={{ background:'#e8e0f8',color:'#1a1a2e' }}>Dipende da cosa intendi per "sostituire". Il ruolo umano cambierà profondamente.</div>
+                      </div>
+                      <div className="flex gap-1 max-w-[85%]">
+                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#10A37F',marginTop:1 }}>G</div>
+                        <div className="text-[7px] px-2 py-1 rounded-[8px] leading-[1.3]" style={{ background:'#d4f5e9',color:'#1a1a2e' }}>Già oggi illustratori perdono lavoro. I dati parlano chiaro.</div>
+                      </div>
+                      <div className="flex gap-1 max-w-[85%]">
+                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#FF6B2B',marginTop:1 }}>P</div>
+                        <div className="text-[7px] px-2 py-1 rounded-[8px] leading-[1.3]" style={{ background:'#ffe8d6',color:'#1a1a2e' }}>-34% commissioni freelance negli ultimi 18 mesi.</div>
+                      </div>
+                    </div>
+                    {/* Input */}
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0" style={{ background:'#ede8dc',borderTop:'1px solid rgba(0,0,0,0.06)' }}>
+                      <div className="flex-1 rounded-xl px-2 py-1 text-[7px]" style={{ background:'rgba(0,0,0,0.06)',color:'rgba(0,0,0,0.4)' }}>Scrivi un messaggio…</div>
+                      <div className="flex items-center justify-center flex-shrink-0" style={{ width:18,height:18,borderRadius:'50%',background:'#10A37F' }}>
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="text-[11px] font-bold uppercase tracking-widest transition-colors"
-                  style={{ color: isSelected ? m.color : 'rgba(255,255,255,0.25)' }}>
-                  {m.label}
-                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest transition-colors" style={{ color: isSelected ? '#10A37F' : 'rgba(255,255,255,0.25)' }}>Classico</div>
               </div>
             )
-          })}
+          })()}
+
+          {/* ── 2 vs 2 (centrale, più grande) ── */}
+          {(() => {
+            const isSelected = selected === '2v2'
+            return (
+              <div onClick={() => setSelected('2v2')} className="flex flex-col items-center gap-4 cursor-pointer"
+                style={{ transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05) translateY(-8px)' : 'scale(1)' }}>
+                <div className="relative" style={{ width: 190, height: 400 }}>
+                  <div className="absolute inset-0 rounded-[38px]"
+                    style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #A78BFA, 0 0 40px rgba(167,139,250,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
+                  <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top:6,left:6,right:6,height:'45%',background:'linear-gradient(160deg,rgba(255,255,255,0.07) 0%,transparent 60%)',zIndex:10 }} />
+                  <div className="absolute" style={{ width:55,height:13,background:'#1c1c1e',borderRadius:'0 0 8px 8px',left:'50%',transform:'translateX(-50%)',top:6,zIndex:20 }} />
+                  <div className="absolute overflow-hidden flex flex-col" style={{ top:6,left:6,right:6,bottom:6,borderRadius:32,background:'#0d0d14' }}>
+                    {/* Header score */}
+                    <div className="flex items-center justify-between px-2 py-1.5 flex-shrink-0" style={{ background:'rgba(0,0,0,0.3)',borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="text-[7px] font-black px-1.5 py-0.5 rounded" style={{ color:'#60a5fa',background:'rgba(59,130,246,0.15)',border:'1px solid rgba(59,130,246,0.3)' }}>SQUADRA A</div>
+                      <div className="text-base font-black text-white">2 — 1</div>
+                      <div className="text-[7px] font-black px-1.5 py-0.5 rounded" style={{ color:'#f87171',background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)' }}>SQUADRA B</div>
+                    </div>
+                    {/* Teams */}
+                    <div className="flex flex-shrink-0" style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="flex-1 flex flex-col gap-1 px-2 py-1.5" style={{ borderRight:'1px solid rgba(255,255,255,0.06)',background:'rgba(59,130,246,0.05)' }}>
+                        {[['G','#F59E0B','Giampiero','#60a5fa'],['C','#7C3AED','Claude','#60a5fa']].map(([l,c,n,tc])=>(
+                          <div key={n} className="flex items-center gap-1">
+                            <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:13,height:13,borderRadius:'50%',fontSize:5,background:c }}>{l}</div>
+                            <div className="text-[7px] font-semibold" style={{ color:tc }}>{n}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex-1 flex flex-col gap-1 px-2 py-1.5" style={{ background:'rgba(239,68,68,0.05)' }}>
+                        {[['M','#10A37F','Marco','#f87171'],['G','#10A37F','GPT','#f87171']].map(([l,c,n,tc])=>(
+                          <div key={n} className="flex items-center gap-1">
+                            <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:13,height:13,borderRadius:'50%',fontSize:5,background:c }}>{l}</div>
+                            <div className="text-[7px] font-semibold" style={{ color:tc }}>{n}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Messages */}
+                    <div className="flex-1 overflow-hidden flex flex-col gap-1 p-1.5">
+                      <div className="text-[7px] px-2 py-1 rounded-[6px] max-w-[85%]" style={{ background:'rgba(59,130,246,0.15)',color:'#93c5fd',borderRadius:'3px 6px 6px 6px' }}>L'IA amplifica la creatività umana, non la sostituisce.</div>
+                      <div className="self-end text-[7px] px-2 py-1 max-w-[85%]" style={{ background:'rgba(239,68,68,0.15)',color:'#fca5a5',borderRadius:'6px 3px 6px 6px' }}>Romantico. Nel mondo reale i budget spariscono.</div>
+                      <div className="text-[7px] px-2 py-1 max-w-[85%]" style={{ background:'rgba(59,130,246,0.15)',color:'#93c5fd',borderRadius:'3px 6px 6px 6px',opacity:0.7,fontStyle:'italic' }}>Claude: Anche la fotografia "uccise" la pittura — eppure…</div>
+                      <div className="self-end text-[7px] px-2 py-1 max-w-[85%]" style={{ background:'rgba(239,68,68,0.15)',color:'#fca5a5',borderRadius:'6px 3px 6px 6px',opacity:0.7,fontStyle:'italic' }}>GPT: La fotografia non generava contenuti autonomamente.</div>
+                    </div>
+                    {/* Arbitro */}
+                    <div className="mx-1.5 mb-1.5 flex-shrink-0 rounded-lg p-1.5" style={{ background:'rgba(167,139,250,0.1)',border:'1px solid rgba(167,139,250,0.2)' }}>
+                      <div className="text-[6px] font-black uppercase tracking-wide mb-0.5" style={{ color:'#A78BFA' }}>⚖️ Gemini — Arbitro</div>
+                      <div className="text-[7px] leading-[1.3]" style={{ color:'rgba(255,255,255,0.6)' }}>Squadra A più solida sul piano storico. Squadra B più concreta sui dati.</div>
+                    </div>
+                    {/* Input */}
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0" style={{ background:'rgba(0,0,0,0.3)',borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="flex-1 rounded-xl px-2 py-1 text-[7px]" style={{ background:'rgba(255,255,255,0.07)',color:'rgba(255,255,255,0.3)' }}>Il tuo argomento…</div>
+                      <div className="flex items-center justify-center flex-shrink-0" style={{ width:18,height:18,borderRadius:'50%',background:'rgba(59,130,246,0.3)',border:'1px solid rgba(59,130,246,0.5)' }}>
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="#60a5fa"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest transition-colors" style={{ color: isSelected ? '#A78BFA' : 'rgba(255,255,255,0.25)' }}>2 vs 2</div>
+              </div>
+            )
+          })()}
+
+          {/* ── DEVIL'S ADVOCATE ── */}
+          {(() => {
+            const isSelected = selected === 'devil'
+            return (
+              <div onClick={() => setSelected('devil')} className="flex flex-col items-center gap-4 cursor-pointer"
+                style={{ transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
+                <div className="relative" style={{ width: 160, height: 336 }}>
+                  <div className="absolute inset-0 rounded-[38px]"
+                    style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #ef4444, 0 0 40px rgba(239,68,68,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
+                  <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top:6,left:6,right:6,height:'45%',background:'linear-gradient(160deg,rgba(255,255,255,0.07) 0%,transparent 60%)',zIndex:10 }} />
+                  <div className="absolute" style={{ width:50,height:12,background:'#1c1c1e',borderRadius:'0 0 8px 8px',left:'50%',transform:'translateX(-50%)',top:6,zIndex:20 }} />
+                  <div className="absolute overflow-hidden flex flex-col" style={{ top:6,left:6,right:6,bottom:6,borderRadius:32,background:'#0d0d14' }}>
+                    {/* Header posizione */}
+                    <div className="flex-shrink-0 px-2 py-2" style={{ background:'linear-gradient(135deg,rgba(239,68,68,0.15),rgba(245,158,11,0.1))',borderBottom:'1px solid rgba(239,68,68,0.2)' }}>
+                      <div className="text-[6px] font-black uppercase tracking-wide mb-0.5" style={{ color:'#f87171' }}>😈 Devil's Advocate</div>
+                      <div className="text-[8px] font-bold text-white leading-[1.3]">"I social media fanno bene alla democrazia"</div>
+                      <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded" style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'#f87171',fontSize:6,fontWeight:700 }}>🔴 La tua posizione: DIFENDI</div>
+                    </div>
+                    {/* Messages */}
+                    <div className="flex-1 overflow-hidden flex flex-col gap-1.5 p-2">
+                      <div className="flex gap-1 max-w-[90%]">
+                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#7C3AED',marginTop:1 }}>C</div>
+                        <div className="text-[7px] px-2 py-1 rounded-[8px] leading-[1.3]" style={{ background:'rgba(124,58,237,0.15)',color:'#e2d9ff',borderRadius:'3px 8px 8px 8px' }}>Come giustifichi la diffusione di disinformazione di massa?</div>
+                      </div>
+                      <div className="self-end text-[7px] px-2 py-1 max-w-[80%]" style={{ background:'rgba(239,68,68,0.2)',color:'#fca5a5',borderRadius:'8px 3px 8px 8px',lineHeight:1.3 }}>Le piattaforme hanno amplificato movimenti che altrimenti sarebbero stati silenziati.</div>
+                      <div className="flex gap-1 max-w-[90%]">
+                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#10A37F',marginTop:1 }}>G</div>
+                        <div className="text-[7px] px-2 py-1 leading-[1.3]" style={{ background:'rgba(16,163,127,0.15)',color:'#d4f5e9',borderRadius:'3px 8px 8px 8px' }}>Ok, ma il caso Myanmar? Cambridge Analytica?</div>
+                      </div>
+                    </div>
+                    {/* Score */}
+                    <div className="mx-2 mb-1.5 flex-shrink-0 rounded-xl p-2" style={{ background:'rgba(245,158,11,0.1)',border:'1px solid rgba(245,158,11,0.25)' }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="text-[7px]" style={{ color:'rgba(255,255,255,0.4)' }}>Solidità argomenti</div>
+                        <div className="text-sm font-black" style={{ color:'#fbbf24' }}>7.2</div>
+                      </div>
+                      <div className="h-1 rounded-full overflow-hidden" style={{ background:'rgba(255,255,255,0.1)' }}>
+                        <div className="h-full rounded-full" style={{ width:'72%',background:'linear-gradient(90deg,#ef4444,#f59e0b)' }} />
+                      </div>
+                    </div>
+                    {/* Input */}
+                    <div className="flex items-center gap-1 px-2 py-1.5 flex-shrink-0" style={{ background:'rgba(0,0,0,0.3)',borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+                      <div className="flex-1 rounded-xl px-2 py-1 text-[7px]" style={{ background:'rgba(255,255,255,0.07)',color:'rgba(255,255,255,0.3)' }}>Rispondi all'attacco…</div>
+                      <div className="flex-shrink-0 px-1.5 py-1 rounded-lg text-[6px] font-bold whitespace-nowrap" style={{ background:'rgba(239,68,68,0.2)',border:'1px solid rgba(239,68,68,0.4)',color:'#f87171' }}>Fine turno →</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest transition-colors" style={{ color: isSelected ? '#ef4444' : 'rgba(255,255,255,0.25)' }}>Devil's Advocate</div>
+              </div>
+            )
+          })()}
+
         </div>
 
-        {/* Info formato selezionato */}
-        <div className="mt-10 text-center max-w-md">
-          <p className="text-white/50 text-sm mb-6">{info.desc}</p>
-          <button
-            onClick={() => onSelect(selected)}
-            className="px-8 py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-            style={{ background: `linear-gradient(135deg, ${info.color}, ${info.color}cc)`, boxShadow: `0 4px 24px ${info.color}50` }}>
+        {/* Info + CTA */}
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-black text-white mb-2">{info.label}</h2>
+          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.45)' }}>{info.desc}</p>
+          <button onClick={() => onSelect(selected)}
+            className="px-10 py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.03] active:scale-[0.97]"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 24px rgba(124,58,237,0.45)' }}>
             {info.btn}
           </button>
         </div>
+
       </div>
     </div>
   )
