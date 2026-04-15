@@ -699,35 +699,31 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter, onCo
         />
       </div>
 
-      {/* Arbitro — appare solo dopo entrambi i slot */}
-      {rouletteSettled[1] && arbAI && (
-        <div className="w-full scale-in">
-          <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#A78BFA' }}>
-            ARBITRO
-          </div>
-          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-            style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)' }}>
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs flex-shrink-0"
-              style={{ background: '#A78BFA', boxShadow: '0 0 16px rgba(167,139,250,0.5)' }}>
-              {arbAI.id === 'gemini' ? 'Ge' : arbAI.name[0]}
-            </div>
-            <div>
-              <div className="text-xs font-black text-white">{arbAI.name}</div>
-              <div className="text-[9px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Giudice del dibattito</div>
-            </div>
-            <div className="ml-auto text-purple-400 font-black text-lg">arb</div>
-          </div>
+      {/* Arbitro — spazio SEMPRE riservato, visibile solo dopo entrambi i settled */}
+      <div className="w-full" style={{ visibility: allSettled && arbAI ? 'visible' : 'hidden', transition: 'opacity 0.4s', opacity: allSettled && arbAI ? 1 : 0 }}>
+        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#A78BFA' }}>
+          ARBITRO
         </div>
-      )}
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+          style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)' }}>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs flex-shrink-0"
+            style={{ background: '#A78BFA', boxShadow: allSettled ? '0 0 16px rgba(167,139,250,0.5)' : 'none' }}>
+            {arbAI ? (arbAI.id === 'gemini' ? 'Ge' : arbAI.name[0]) : ''}
+          </div>
+          <div>
+            <div className="text-xs font-black text-white">{arbAI?.name}</div>
+            <div className="text-[9px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Giudice del dibattito</div>
+          </div>
+          <div className="ml-auto text-purple-400 font-black text-lg">arb</div>
+        </div>
+      </div>
 
-      {/* Pulsante Continua — appare solo quando tutto è pronto */}
-      {allSettled && (
-        <button onClick={onContinue} disabled={!ready}
-          className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all scale-in"
-          style={{ background: ready ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : 'rgba(255,255,255,0.08)', boxShadow: ready ? '0 4px 20px rgba(124,58,237,0.4)' : 'none', opacity: ready ? 1 : 0.5 }}>
-          {ready ? 'Continua →' : 'Preparazione…'}
-        </button>
-      )}
+      {/* Pulsante Continua — spazio SEMPRE riservato, visibile solo quando settled */}
+      <button onClick={onContinue} disabled={!ready || !allSettled}
+        className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all"
+        style={{ visibility: allSettled ? 'visible' : 'hidden', background: ready ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : 'rgba(255,255,255,0.08)', boxShadow: ready ? '0 4px 20px rgba(124,58,237,0.4)' : 'none', opacity: allSettled ? (ready ? 1 : 0.5) : 0 }}>
+        {ready ? 'Continua →' : 'Preparazione…'}
+      </button>
     </div>
   )
 }
