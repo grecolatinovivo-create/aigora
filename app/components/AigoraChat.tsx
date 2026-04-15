@@ -1,6 +1,7 @@
 'use client'
 // v3
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
 import { useAbly, type RoomEvent } from '@/lib/useAbly'
@@ -3822,11 +3823,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       )}
 
       {/* ── SELEZIONE FORMATO MULTIPLAYER ── */}
-      {showModeSelect && (
+      {showModeSelect && typeof window !== 'undefined' && createPortal(
         <ModeSelect
           onSelect={handleSelectMode}
           onClose={() => setShowModeSelect(false)}
-        />
+        />,
+        document.body
       )}
 
     </div>
