@@ -188,15 +188,16 @@ function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[
 }
 
 // ── Swipeable chat row (swipe left per cancellare) ───────────────────────────
-function SwipeableChatRow({ chat, onOpen, onDelete }: {
+function SwipeableChatRow({ chat, onOpen, onDelete, bgColor = 'rgba(10,10,18,0.97)' }: {
   chat: { id: string; title: string; date: string; messages: any[]; history: any[] }
   onOpen: () => void
   onDelete: (e: React.MouseEvent) => void
+  bgColor?: string
 }) {
   const [offset, setOffset] = useState(0)
   const [swiping, setSwiping] = useState(false)
   const startXRef = useRef(0)
-  const DELETE_THRESHOLD = 80
+  const DELETE_THRESHOLD = 72
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startXRef.current = e.touches[0].clientX
@@ -206,27 +207,29 @@ function SwipeableChatRow({ chat, onOpen, onDelete }: {
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!swiping) return
     const dx = e.touches[0].clientX - startXRef.current
-    if (dx < 0) setOffset(Math.max(dx, -120))
+    if (dx < 0) setOffset(Math.max(dx, -80))
   }
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     setSwiping(false)
     if (offset < -DELETE_THRESHOLD) {
-      // Snap al rosso e cancella
-      setOffset(-80)
+      // supera soglia → cancella
+      const fakeEvent = { stopPropagation: () => {} } as React.MouseEvent
+      onDelete(fakeEvent)
+      setOffset(0)
     } else {
       setOffset(0)
     }
   }
 
+  const TRASH = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+
   return (
     <div className="relative overflow-hidden border-b border-white/5" style={{ touchAction: 'pan-y' }}>
-      {/* Sfondo rosso che appare sotto */}
-      <div className="absolute inset-y-0 right-0 flex items-center justify-end pr-5"
-        style={{ backgroundColor: '#ef4444', width: '80px', borderRadius: '0' }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
-        </svg>
+      {/* Sfondo rosso fisso a destra — visibile solo durante swipe */}
+      <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center"
+        style={{ backgroundColor: '#ef4444' }}>
+        {TRASH}
       </div>
 
       {/* Contenuto traslabile */}
@@ -239,29 +242,23 @@ function SwipeableChatRow({ chat, onOpen, onDelete }: {
         style={{
           transform: `translateX(${offset}px)`,
           transition: swiping ? 'none' : 'transform 0.25s ease',
-          backgroundColor: 'rgba(10,10,18,0.97)',
+          backgroundColor: bgColor,
           cursor: 'pointer',
         }}>
         <div className="flex-1 px-5 py-3 min-w-0">
           <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
           <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
         </div>
-        {/* Cestino visibile al hover su desktop */}
+        {/* Cestino desktop — solo hover, solo lg */}
         <button onClick={onDelete}
           className="flex-shrink-0 mr-3 w-6 h-6 rounded items-center justify-center hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity"
           style={{ backgroundColor: '#ef4444' }}>
-          <svg width="10" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
-          </svg>
+          {TRASH}
         </button>
-        {/* Indicatore swipe su mobile */}
-        {offset < -50 && (
+        {/* placeholder per non avere nulla */}
+        {false && (
           <div className="absolute right-0 inset-y-0 w-20 flex items-center justify-center"
-            style={{ backgroundColor: '#ef4444' }}
-            onClick={onDelete}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
-            </svg>
+            style={{ backgroundColor: '#ef4444' }}>
           </div>
         )}
       </div>
@@ -754,6 +751,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [isPublic, setIsPublic] = useState(false)
   const [portfolioSaved, setPortfolioSaved] = useState(false)
   const [userImage, setUserImage] = useState<string | null>(null)
+  const [resolvedPlan, setResolvedPlan] = useState<string | null>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [waitingForUser, setWaitingForUser] = useState(false)
@@ -919,9 +917,23 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     enabled: !!activeRoom,
   })
 
+  // Risolve il piano reale dal DB (evita sfasamenti JWT)
+  useEffect(() => {
+    fetch('/api/user/me')
+      .then(r => r.json())
+      .then(d => {
+        if (d.plan) setResolvedPlan(d.plan)
+        if (d.image) setUserImage(d.image)
+      })
+      .catch(() => {})
+  }, [])
+
+  // Piano effettivo — usa quello dal DB se disponibile
+  const effectivePlan = resolvedPlan ?? userPlan ?? 'free'
+
   // Carica rooms e notifiche (solo admin)
   useEffect(() => {
-    if (userPlan !== 'admin') return
+    if (effectivePlan !== 'admin') return
     fetch('/api/rooms').then(r => r.json()).then(d => { if (d.rooms) setRooms(d.rooms) }).catch(() => {})
     fetch('/api/notifications').then(r => r.json()).then(d => {
       if (d.notifications) {
@@ -1486,7 +1498,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     onCrea: () => { setSocialTab('crea'); setShowSocialPanel(true) },
     displayName,
     userEmail,
-    userPlan,
+    userPlan: effectivePlan,
     showProfileMenu,
     setShowProfileMenu,
     onSignOut: () => signOut({ callbackUrl: '/login' }),
@@ -1567,6 +1579,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     chat={chat}
                     onOpen={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running'); setShowHistory(false) }}
                     onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
+                    bgColor="rgba(10,10,18,0.97)"
                   />
                 ))
               )}
@@ -2326,6 +2339,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   chat={chat}
                   onOpen={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running') }}
                   onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
+                  bgColor={bgPreset.value}
                 />
               ))}
             </div>
@@ -2337,7 +2351,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <ProfileScreen
             displayName={displayName}
             userEmail={userEmail}
-            userPlan={userPlan}
+            userPlan={effectivePlan}
             savedChats={savedChats}
             bgPreset={bgPreset}
             isDark={isDark}

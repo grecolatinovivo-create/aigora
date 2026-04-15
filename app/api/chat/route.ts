@@ -288,8 +288,9 @@ export async function POST(req: NextRequest) {
         admin:   ['claude', 'gemini', 'perplexity', 'gpt'],
         none:    [],
       }
-      const allowed = PLAN_AIS[plan] ?? []
-      if (!allowed.includes(aiId)) {
+      // 'none' e 'free' hanno accesso a tutte le AI (piano free è il default)
+      const allowed = PLAN_AIS[plan] ?? PLAN_AIS['free']
+      if (allowed.length > 0 && !allowed.includes(aiId)) {
         return new Response(JSON.stringify({ error: 'AI non inclusa nel tuo piano.' }), {
           status: 403, headers: { 'Content-Type': 'application/json' }
         })
