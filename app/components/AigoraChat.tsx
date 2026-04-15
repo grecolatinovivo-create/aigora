@@ -1657,11 +1657,13 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displa
                   </div>
                 )
               })()}
-              <button onClick={() => { onMultiplayer?.(); setShowProfileMenu(false) }}
-                className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2"
-                style={{ color: 'rgba(255,255,255,0.7)' }}>
-                ⚔️ Multiplayer
-              </button>
+              {userPlan === 'admin' && (
+                <button onClick={() => { onMultiplayer?.(); setShowProfileMenu(false) }}
+                  className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2"
+                  style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  ⚔️ Multiplayer
+                </button>
+              )}
               {(userPlan === 'admin' || isBeta) && (
                 <>
                   <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
