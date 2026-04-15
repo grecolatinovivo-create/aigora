@@ -676,15 +676,46 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         </div>
       )}
 
+      {/* ── Bubble fluttuanti intorno all'iPad ── */}
+      {[
+        { top: '12%',  left: '2%',   delay: '-2s',   dur: '14s', anim: 'float-1' },
+        { top: '35%',  left: '1%',   delay: '-7s',   dur: '13s', anim: 'float-3' },
+        { top: '58%',  left: '2%',   delay: '-4s',   dur: '15s', anim: 'float-2' },
+        { top: '78%',  left: '1%',   delay: '-9s',   dur: '12s', anim: 'float-4' },
+        { top: '12%',  right: '2%',  delay: '-3s',   dur: '13s', anim: 'float-2' },
+        { top: '35%',  right: '1%',  delay: '-8s',   dur: '15s', anim: 'float-4' },
+        { top: '58%',  right: '2%',  delay: '-6s',   dur: '12s', anim: 'float-1' },
+        { top: '78%',  right: '1%',  delay: '-1s',   dur: '14s', anim: 'float-3' },
+      ].map(({ top, left, right, delay, dur, anim }: any, i) => (
+        <div key={i} className="absolute hidden lg:block px-3 py-1.5 rounded-full text-[10px] cursor-default"
+          style={{
+            top, left, right,
+            color: 'rgba(255,255,255,0.4)',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(6px)',
+            maxWidth: '130px',
+            textAlign: 'center',
+            lineHeight: 1.4,
+            animation: `${anim} ${dur} ease-in-out infinite`,
+            animationDelay: delay,
+            pointerEvents: 'none',
+            whiteSpace: 'normal',
+          }}>
+          {TOPIC_SUGGESTIONS[i * 7 % TOPIC_SUGGESTIONS.length]}
+        </div>
+      ))}
+
       {/* ── iPad Pro landscape ── */}
-      {/* padding laterale per i tasti fisici */}
       <div className="scale-in relative" style={{ width: 720, maxWidth: '97vw', padding: '0 4px' }}>
         <div className="relative" style={{ borderRadius: 22 }}>
 
-          {/* Corpo scocca */}
+          {/* Corpo scocca — vetro nero trasparente */}
           <div className="absolute inset-0 rounded-[22px]" style={{
-            background: 'linear-gradient(160deg, #323234 0%, #1c1c1e 45%, #28282a 100%)',
-            boxShadow: '0 0 0 1px #505052, 0 0 0 1.5px #111, 0 50px 100px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.6)',
+            background: 'rgba(8, 8, 12, 0.72)',
+            backdropFilter: 'blur(32px) saturate(1.2)',
+            WebkitBackdropFilter: 'blur(32px) saturate(1.2)',
+            boxShadow: '0 0 0 1px rgba(255,255,255,0.10), 0 0 0 2px rgba(0,0,0,0.6), 0 50px 100px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.07)',
           }} />
 
           {/* ── Pulsanti lato SINISTRO (lato corto) ── */}
@@ -719,14 +750,14 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           {/* Home bar — lato sinistro, centrata */}
           <div className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full" style={{ width: 4, height: 52, background: 'rgba(255,255,255,0.12)', zIndex: 20 }} />
 
-          {/* ── Screen con cornicina visibile ── */}
-          {/* Cornicina nera attorno */}
-          <div className="absolute rounded-[16px]" style={{ top: 10, left: 18, right: 18, bottom: 10, background: '#050508', zIndex: 5 }} />
-          {/* Glare vetro */}
-          <div className="absolute pointer-events-none rounded-[16px]" style={{ top: 10, left: 18, right: 18, bottom: 10, background: 'linear-gradient(155deg, rgba(255,255,255,0.05) 0%, transparent 50%)', zIndex: 16 }} />
+          {/* ── Screen con cornicina uniforme ── */}
+          {/* Cornicina nera — stessa distanza su tutti i lati */}
+          <div className="absolute rounded-[14px]" style={{ top: 14, left: 14, right: 14, bottom: 14, background: '#050508', zIndex: 5 }} />
+          {/* Glare */}
+          <div className="absolute pointer-events-none rounded-[14px]" style={{ top: 14, left: 14, right: 14, bottom: 14, background: 'linear-gradient(155deg, rgba(255,255,255,0.05) 0%, transparent 50%)', zIndex: 16 }} />
 
           {/* Screen vero */}
-          <div className="relative overflow-hidden flex flex-col" style={{ margin: '10px 18px', borderRadius: 14, background: '#0d0d14', minHeight: 440, zIndex: 10 }}>
+          <div className="relative overflow-hidden flex flex-col" style={{ margin: '14px', borderRadius: 10, background: '#0d0d14', minHeight: 440, zIndex: 10 }}>
 
           {/* ── STEP 1: Topic ── */}
           {step === 'topic' && (
@@ -736,15 +767,9 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 <div className="text-sm text-white/40">L'argomento sarà assegnato a entrambe le squadre.</div>
               </div>
               <textarea value={topic} onChange={e => setTopic(e.target.value)}
-                placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030" rows={3}
+                placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030" rows={4}
                 className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-5 py-4 text-sm outline-none focus:border-blue-500/40 placeholder:text-white/20 resize-none"
                 autoFocus />
-              <div className="flex flex-wrap gap-2 justify-center">
-                {['Il nucleare è necessario per il clima', 'I social media fanno bene alla democrazia', 'Il lavoro da remoto è più produttivo', "L'IA è una minaccia per l'umanità"].map(t => (
-                  <button key={t} onClick={() => setTopic(t)}
-                    className="text-[11px] px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all">{t}</button>
-                ))}
-              </div>
               <button onClick={() => topic.trim() && setStep('teams')} disabled={!topic.trim()}
                 className="px-10 py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-30 transition-all hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.4)' }}>
@@ -3177,6 +3202,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
           currentUserName={displayName !== 'Tu' ? displayName : ''}
         />,
+        document.body
+      )}
+
+      {/* ── SCHERMATA 2v2 (dalla start, dopo che handle2v2Start setta phase=running) ── */}
+      {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999]" style={{ background: '#0d0d14' }}>
+          <TwoVsTwoScreen
+            state={twoVsTwoState}
+            onHumanMessage={handle2v2HumanMessage}
+            onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
+            loading={twoVsTwoLoading}
+            myTeam="A"
+            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
+          />
+        </div>,
         document.body
       )}
       </>
