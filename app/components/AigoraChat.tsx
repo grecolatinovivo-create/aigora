@@ -675,6 +675,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [inviteSearch, setInviteSearch] = useState('')
   const [inviteResults, setInviteResults] = useState<any[]>([])
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+  const [undoChat, setUndoChat] = useState<{ id: string; title: string } | null>(null)
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Real-time Ably ────────────────────────────────────────────────────────
   const handleRoomEvent = useCallback((event: RoomEvent) => {
@@ -786,6 +788,34 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       }
     } catch {}
     setCreatingRoom(false)
+  }
+
+  const handleDeleteChat = (chatId: string, chatTitle: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    // Rimuovi subito dall'UI
+    setSavedChats(prev => prev.filter(c => c.id !== chatId))
+    // Mostra undo per 3 secondi
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    setUndoChat({ id: chatId, title: chatTitle })
+    undoTimerRef.current = setTimeout(async () => {
+      setUndoChat(null)
+      // Soft delete sul server dopo 3 secondi
+      await fetch(`/api/chats/${chatId}`, { method: 'DELETE' }).catch(() => {})
+    }, 3000)
+  }
+
+  const handleUndoDelete = () => {
+    if (!undoChat) return
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    // Ricarica le chat dal server per ripristinare
+    fetch('/api/chats').then(r => r.json()).then(data => {
+      if (data.chats) setSavedChats(data.chats.map((c: any) => ({
+        id: c.id, title: c.title,
+        date: new Date(c.updatedAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+        messages: c.messages, history: c.history,
+      })))
+    }).catch(() => {})
+    setUndoChat(null)
   }
 
   const handleOpenRoom = async (roomId: string) => {
@@ -1332,21 +1362,30 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               <span className="text-white font-bold text-sm">Cronologia</span>
               <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
             </div>
+            {/* Undo banner */}
+            {undoChat && (
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/8" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
+                <span className="text-white/60 text-xs truncate mr-2">"{undoChat.title}" eliminata</span>
+                <button onClick={handleUndoDelete} className="text-red-400 text-xs font-bold flex-shrink-0 hover:text-red-300 transition-colors">Annulla</button>
+              </div>
+            )}
             <div className="flex-1 overflow-y-auto py-2">
               {savedChats.length === 0 ? (
                 <p className="text-white/25 text-xs text-center mt-8 px-4">Nessuna chat salvata.</p>
               ) : (
                 savedChats.map(chat => (
-                  <button key={chat.id} onClick={() => {
-                    setMessages(chat.messages)
-                    chatHistoryRef.current = chat.history
-                    setPhase('running')
-                    setShowHistory(false)
-                  }}
-                    className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors border-b border-white/5">
-                    <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
-                    <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
-                  </button>
+                  <div key={chat.id} className="flex items-center group border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <button onClick={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running'); setShowHistory(false) }}
+                      className="flex-1 text-left px-5 py-3 min-w-0">
+                      <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
+                      <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
+                    </button>
+                    <button onClick={(e) => handleDeleteChat(chat.id, chat.title, e)}
+                      className="flex-shrink-0 mr-3 w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ backgroundColor: '#ef4444' }}>
+                      <svg width="10" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                    </button>
+                  </div>
                 ))
               )}
             </div>
@@ -1676,21 +1715,30 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             <span className="text-white font-bold text-sm">Cronologia</span>
             <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
           </div>
+          {/* Undo banner */}
+          {undoChat && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/8" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
+              <span className="text-white/60 text-xs truncate mr-2">"{undoChat.title}" eliminata</span>
+              <button onClick={handleUndoDelete} className="text-red-400 text-xs font-bold flex-shrink-0 hover:text-red-300 transition-colors">Annulla</button>
+            </div>
+          )}
           <div className="flex-1 overflow-y-auto py-2">
             {savedChats.length === 0 ? (
               <p className="text-white/25 text-xs text-center mt-8 px-4">Nessuna chat salvata.<br />Le chat vengono salvate dopo la sintesi.</p>
             ) : (
               savedChats.map(chat => (
-                <button key={chat.id} onClick={() => {
-                  setMessages(chat.messages)
-                  chatHistoryRef.current = chat.history
-                  setPhase('running')
-                  setShowHistory(false)
-                }}
-                  className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors border-b border-white/5">
-                  <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
-                  <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
-                </button>
+                <div key={chat.id} className="flex items-center group border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <button onClick={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running'); setShowHistory(false) }}
+                    className="flex-1 text-left px-5 py-3 min-w-0">
+                    <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
+                    <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
+                  </button>
+                  <button onClick={(e) => handleDeleteChat(chat.id, chat.title, e)}
+                    className="flex-shrink-0 mr-3 w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ backgroundColor: '#ef4444' }}>
+                    <svg width="10" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                  </button>
+                </div>
               ))
             )}
           </div>

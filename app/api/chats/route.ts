@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
-// GET — carica tutte le chat dell'utente
+// GET — carica le chat dell'utente (escluse le eliminate)
 export async function GET() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
@@ -13,8 +13,15 @@ export async function GET() {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
+  // Pulizia silenziosa: elimina definitivamente le chat cancellate da più di 30 giorni
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  await prisma.chat.deleteMany({
+    where: { userId: user.id, deletedAt: { lte: thirtyDaysAgo } },
+  }).catch(() => {})
+
+  // Ritorna solo le chat non eliminate
   const chats = await prisma.chat.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, deletedAt: null },
     orderBy: { updatedAt: 'desc' },
     take: 50,
   })
