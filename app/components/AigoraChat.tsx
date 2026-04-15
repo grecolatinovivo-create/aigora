@@ -1745,16 +1745,17 @@ function PhoneAvatarBar({ activeAi, bgColor, isDark, aiOrder, onAiClick }: { act
 }
 
 // ── Tre puntini ───────────────────────────────────────────────────────────────
-function ThinkingBubble({ aiId, isDark }: { aiId: string; isDark: boolean }) {
+function ThinkingBubble({ aiId, isDark, align = 'left' }: { aiId: string; isDark: boolean; align?: 'left' | 'right' }) {
   const color = AI_COLOR[aiId] || '#6B7280'
   const dotColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'
   const bubbleBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
+  const isRight = align === 'right'
   return (
-    <div className="flex items-end gap-2 px-3 mb-2 message-enter">
+    <div className={`flex items-end gap-2 px-3 mb-2 message-enter${isRight ? ' flex-row-reverse self-end' : ''}`}>
       <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mb-0.5" style={{ backgroundColor: color }}>
         {AI_NAMES[aiId]?.[0]}
       </div>
-      <div className="rounded-2xl rounded-bl-sm px-4 py-3" style={{ backgroundColor: bubbleBg }}>
+      <div className={`rounded-2xl px-4 py-3${isRight ? ' rounded-br-sm' : ' rounded-bl-sm'}`} style={{ backgroundColor: bubbleBg }}>
         <div className="flex gap-1.5 items-center h-3">
           {[0, 180, 360].map(d => (
             <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce"
@@ -3812,11 +3813,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <Navbar {...navbarProps} />
 
       {/* ── TELEFONO (desktop) ── */}
-      <div className="flex flex-col items-center flex-shrink-0" style={{ gap: show2v2Label ? 20 : 0 }}>
+      <div className="flex flex-col items-center flex-shrink-0 relative">
 
-      {/* Titolo 2v2 sopra il telefono con animazione */}
-      {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
-        <div className="text-center" style={{ minHeight: 48 }}>
+      {/* Titolo 2v2 — absolute sopra il telefono, non occupa spazio nel flusso */}
+      {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && show2v2Label && (
+        <div className="absolute text-center pointer-events-none" style={{ bottom: '100%', marginBottom: 20, left: 0, right: 0 }}>
           {show2v2Label === 'title' && (
             <div className="font-black uppercase scale-in" style={{ fontSize: 34, letterSpacing: '0.3em', color: 'white' }}>
               2 VS 2
@@ -3824,7 +3825,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
           {show2v2Label === 'topic' && (
             <div className="scale-in text-center">
-              <div className="text-sm font-semibold max-w-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>{twoVsTwoState.config.topic}</div>
+              <div className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>{twoVsTwoState.config.topic}</div>
             </div>
           )}
         </div>
@@ -4026,7 +4027,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     </div>
                   )
                 })}
-                {twoVsTwoLoading && <ThinkingBubble aiId={twoVsTwoState.currentTurn === 'A' ? twoVsTwoState.config.teamA.aiId : twoVsTwoState.config.teamB.aiId1} isDark={true} />}
+                {twoVsTwoLoading && <ThinkingBubble
+                  aiId={twoVsTwoState.currentTurn === 'A' ? twoVsTwoState.config.teamA.aiId : twoVsTwoState.config.teamB.aiId1}
+                  isDark={true}
+                  align={twoVsTwoState.currentTurn === 'B' ? 'right' : 'left'}
+                />}
                 <div ref={messagesEndRef} />
               </>
             ) : (
