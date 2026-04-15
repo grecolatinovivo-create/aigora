@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         const room = await prisma.room.findUnique({ where: { id: roomId } })
         if (!room || room.status === 'ended') continue
 
-        const aiIds: string[] = Array.isArray(room.aiIds) ? room.aiIds : ['claude', 'gemini', 'perplexity', 'gpt']
+        const aiIds: string[] = Array.isArray(room.aiIds) ? (room.aiIds as string[]) : ['claude', 'gemini', 'perplexity', 'gpt']
 
         // Carica la history della room (ultimi 20 messaggi dalle chat dei partecipanti)
         // Per ora usiamo un history semplice basato sul content dell'evento

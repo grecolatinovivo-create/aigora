@@ -420,6 +420,341 @@ const DEVIL_POSITIONS = [
   { position: "La privacy è sopravvalutata nella società moderna", side: 'defend' as const },
 ]
 
+// ── 2 vs 2: configurazione squadre ────────────────────────────────────────────
+const AI_OPTIONS = [
+  { id: 'claude', name: 'Claude', color: '#7C3AED' },
+  { id: 'gpt', name: 'GPT', color: '#10A37F' },
+  { id: 'gemini', name: 'Gemini', color: '#1A73E8' },
+  { id: 'perplexity', name: 'Perplexity', color: '#FF6B2B' },
+]
+const ARBITER_OPTIONS = ['claude', 'gpt', 'gemini', 'perplexity']
+
+interface TwoVsTwoConfig {
+  topic: string
+  teamA: { humanName: string; aiId: string }
+  teamB: { humanName: string; aiId: string }
+  arbiterAiId: string
+}
+
+interface TwoVsTwoState {
+  config: TwoVsTwoConfig
+  messages: { team: 'A' | 'B' | 'arbiter'; isAI: boolean; aiId?: string; author: string; content: string; streaming?: boolean }[]
+  currentTurn: 'A' | 'B'
+  round: number
+  maxRounds: number
+  ended: boolean
+  verdict: string | null
+}
+
+function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
+  onStart: (config: TwoVsTwoConfig) => void
+  onBack: () => void
+  currentUserName: string
+}) {
+  const [topic, setTopic] = useState('')
+  const [teamAHuman, setTeamAHuman] = useState(currentUserName || 'Tu')
+  const [teamAAI, setTeamAAI] = useState('claude')
+  const [teamBHuman, setTeamBHuman] = useState('')
+  const [teamBAI, setTeamBAI] = useState('gpt')
+  const [arbiter, setArbiter] = useState('gemini')
+  const [step, setStep] = useState<'topic' | 'teams'>('topic')
+
+  const usedAIs = [teamAAI, teamBAI, arbiter]
+  const availableForArbiter = ARBITER_OPTIONS.filter(id => id !== teamAAI && id !== teamBAI)
+
+  return (
+    <div className="fixed inset-0 z-[80] flex flex-col"
+      style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(239,68,68,0.12) 0%, transparent 60%)' }}>
+
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-5 border-b border-white/8"
+        style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', paddingBottom: '14px', backgroundColor: 'rgba(7,7,15,0.6)', backdropFilter: 'blur(20px)' }}>
+        <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div>
+          <div className="font-bold text-white text-sm">⚔️ 2 vs 2</div>
+          <div className="text-[10px] text-white/40">{step === 'topic' ? 'Scegli l\'argomento' : 'Configura le squadre'}</div>
+        </div>
+        {/* Step indicator */}
+        <div className="ml-auto flex gap-2">
+          {['topic', 'teams'].map((s, i) => (
+            <div key={s} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
+              style={{ backgroundColor: step === s ? '#3b82f6' : 'rgba(255,255,255,0.1)', color: step === s ? 'white' : 'rgba(255,255,255,0.4)' }}>
+              {i + 1}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5 py-6">
+
+        {step === 'topic' && (
+          <div className="flex flex-col gap-5 max-w-lg mx-auto">
+            <div>
+              <div className="text-white font-black text-xl mb-2">Su cosa volete dibattere?</div>
+              <div className="text-white/40 text-sm">L'argomento sarà assegnato a entrambe le squadre. Ognuna dovrà difendere la propria posizione.</div>
+            </div>
+            <textarea
+              value={topic}
+              onChange={e => setTopic(e.target.value)}
+              placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030"
+              rows={3}
+              className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-4 py-3 text-sm outline-none focus:border-blue-500/50 placeholder:text-white/20 resize-none"
+              autoFocus
+            />
+            {/* Suggerimenti */}
+            <div className="flex flex-wrap gap-2">
+              {['Il nucleare è necessario per il clima', 'I social media fanno bene alla democrazia', 'Il lavoro da remoto è più produttivo', 'L\'IA è una minaccia per l\'umanità'].map(t => (
+                <button key={t} onClick={() => setTopic(t)}
+                  className="text-[10px] px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all">
+                  {t}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => topic.trim() && setStep('teams')} disabled={!topic.trim()}
+              className="w-full py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-30 transition-all"
+              style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.4)' }}>
+              Continua →
+            </button>
+          </div>
+        )}
+
+        {step === 'teams' && (
+          <div className="flex flex-col gap-6 max-w-lg mx-auto">
+            <div className="text-white font-black text-xl">Configura le squadre</div>
+
+            {/* Squadra A */}
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)' }}>
+              <div className="text-sm font-black mb-3" style={{ color: '#60a5fa' }}>🔵 SQUADRA A</div>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-1">Umano</label>
+                  <input value={teamAHuman} onChange={e => setTeamAHuman(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500/50"
+                    placeholder="Il tuo nome" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-2">AI alleata</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {AI_OPTIONS.filter(a => a.id !== teamBAI && a.id !== arbiter).map(ai => (
+                      <button key={ai.id} onClick={() => setTeamAAI(ai.id)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                        style={{ backgroundColor: teamAAI === ai.id ? `${ai.color}25` : 'rgba(255,255,255,0.05)', border: teamAAI === ai.id ? `1px solid ${ai.color}50` : '1px solid rgba(255,255,255,0.1)', color: teamAAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
+                        {ai.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Squadra B */}
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+              <div className="text-sm font-black mb-3" style={{ color: '#f87171' }}>🔴 SQUADRA B</div>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-1">Umano (opzionale)</label>
+                  <input value={teamBHuman} onChange={e => setTeamBHuman(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2 text-sm outline-none focus:border-red-500/50 placeholder:text-white/20"
+                    placeholder="Solo AI (lascia vuoto)" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-2">AI alleata</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== arbiter).map(ai => (
+                      <button key={ai.id} onClick={() => setTeamBAI(ai.id)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                        style={{ backgroundColor: teamBAI === ai.id ? `${ai.color}25` : 'rgba(255,255,255,0.05)', border: teamBAI === ai.id ? `1px solid ${ai.color}50` : '1px solid rgba(255,255,255,0.1)', color: teamBAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
+                        {ai.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Arbitro */}
+            <div className="rounded-2xl p-4" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)' }}>
+              <div className="text-sm font-black mb-3" style={{ color: '#A78BFA' }}>⚖️ ARBITRO</div>
+              <div className="flex gap-2 flex-wrap">
+                {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== teamBAI).map(ai => (
+                  <button key={ai.id} onClick={() => setArbiter(ai.id)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                    style={{ backgroundColor: arbiter === ai.id ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.05)', border: arbiter === ai.id ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(255,255,255,0.1)', color: arbiter === ai.id ? '#A78BFA' : 'rgba(255,255,255,0.4)' }}>
+                    {ai.name}
+                  </button>
+                ))}
+              </div>
+              <div className="text-[10px] text-white/30 mt-2">L'arbitro osserva il dibattito e pronuncia il verdetto finale</div>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setStep('topic')} className="flex-1 py-3 rounded-2xl font-bold text-white/50 text-sm" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                ← Indietro
+              </button>
+              <button onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { humanName: teamBHuman || 'Solo AI', aiId: teamBAI }, arbiterAiId: arbiter })}
+                className="flex-2 flex-grow py-3 rounded-2xl font-bold text-white text-sm transition-all"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #ef4444)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}>
+                ⚔️ Inizia il duello →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── 2 vs 2: schermata di gioco ────────────────────────────────────────────────
+function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, isDark, bgPreset, onBack }: {
+  state: TwoVsTwoState
+  onHumanMessage: (text: string) => void
+  onRequestAI: (team: 'A' | 'B') => void
+  loading: boolean
+  isDark: boolean
+  bgPreset: { value: string; header: string; text: 'black' | 'white' }
+  onBack: () => void
+}) {
+  const [input, setInput] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { config } = state
+  const textColor = isDark ? '#fff' : '#111'
+  const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [state.messages])
+
+  const teamColors = { A: '#3b82f6', B: '#ef4444' }
+  const isMyTurn = state.currentTurn === 'A' && !loading && !state.ended
+
+  return (
+    <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
+      {/* Header con score */}
+      <div className="flex-shrink-0 border-b" style={{ backgroundColor: bgPreset.header, borderColor, paddingTop: 'max(10px, env(safe-area-inset-top))' }}>
+        <div className="flex items-center gap-2 px-3 pb-2">
+          <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
+            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={textColor} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          {/* Squadra A */}
+          <div className="flex-1 text-center">
+            <div className="text-[9px] font-black uppercase" style={{ color: '#60a5fa' }}>A</div>
+            <div className="text-[10px] text-white/60 truncate">{config.teamA.humanName}</div>
+          </div>
+          {/* Score */}
+          <div className="flex flex-col items-center flex-shrink-0 px-2">
+            <div className="text-[10px] text-white/30">Round {state.round}/{state.maxRounds}</div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: teamColors[state.currentTurn] }} />
+              <span className="text-[10px] font-bold" style={{ color: teamColors[state.currentTurn] }}>
+                Turno {state.currentTurn}
+              </span>
+            </div>
+          </div>
+          {/* Squadra B */}
+          <div className="flex-1 text-center">
+            <div className="text-[9px] font-black uppercase" style={{ color: '#f87171' }}>B</div>
+            <div className="text-[10px] text-white/60 truncate">{config.teamB.humanName}</div>
+          </div>
+          <div style={{ width: 32 }} />
+        </div>
+        {/* Topic */}
+        <div className="px-3 pb-2">
+          <div className="text-[10px] text-center text-white/40 truncate">"{config.topic}"</div>
+        </div>
+      </div>
+
+      {/* Messaggi */}
+      <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-3">
+        {state.messages.map((msg, i) => {
+          const isA = msg.team === 'A'
+          const isArbiter = msg.team === 'arbiter'
+          const color = isArbiter ? '#A78BFA' : isA ? '#3b82f6' : '#ef4444'
+
+          if (isArbiter) return (
+            <div key={i} className="rounded-2xl p-3 mx-2" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
+              <div className="text-[9px] font-black uppercase mb-1" style={{ color: '#A78BFA' }}>⚖️ {AI_NAMES[config.arbiterAiId]} — Arbitro</div>
+              <div className="text-xs text-white/75 leading-relaxed">{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</div>
+            </div>
+          )
+
+          return (
+            <div key={i} className={`flex gap-2 ${isA ? '' : 'flex-row-reverse'} max-w-[88%] ${isA ? '' : 'self-end'}`}>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0 mt-1"
+                style={{ backgroundColor: msg.isAI ? (AI_COLOR[msg.aiId ?? ''] ?? color) : color }}>
+                {msg.isAI ? (msg.aiId === 'gemini' ? 'Ge' : (AI_NAMES[msg.aiId ?? ''] ?? '?')[0]) : msg.author[0]?.toUpperCase()}
+              </div>
+              <div>
+                <div className="text-[9px] font-semibold mb-0.5 px-1" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', textAlign: isA ? 'left' : 'right' }}>
+                  {msg.author}
+                </div>
+                <div className="px-3 py-2 rounded-2xl text-xs leading-relaxed"
+                  style={{
+                    backgroundColor: isA ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)',
+                    color: isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)',
+                    borderRadius: isA ? '3px 14px 14px 14px' : '14px 3px 14px 14px',
+                  }}>
+                  {msg.content}{msg.streaming && <span className="typewriter-cursor" />}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+        {loading && (
+          <div className="flex items-center gap-2 px-2">
+            <div className="flex gap-1">{[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}</div>
+            <span className="text-[10px] text-white/30">L'AI sta pensando…</span>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input area */}
+      {!state.ended && (
+        <div className="flex-shrink-0 border-t" style={{ backgroundColor: bgPreset.header, borderColor, paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
+          {/* Turno corrente */}
+          <div className="px-3 pt-2 pb-1">
+            <div className="text-[10px] text-center font-bold" style={{ color: teamColors[state.currentTurn] }}>
+              Turno Squadra {state.currentTurn} — {state.currentTurn === 'A' ? config.teamA.humanName : config.teamB.humanName}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 pb-2">
+            <input value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && input.trim() && isMyTurn) { onHumanMessage(input.trim()); setInput('') } }}
+              disabled={!isMyTurn || loading}
+              placeholder={isMyTurn ? "Il tuo argomento…" : "Attendi il tuo turno…"}
+              className="flex-1 rounded-full px-3 py-2 text-xs outline-none"
+              style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', border: `1px solid ${isMyTurn ? 'rgba(59,130,246,0.3)' : borderColor}`, color: isDark ? '#f0f0f0' : '#111', opacity: isMyTurn ? 1 : 0.5 }}
+            />
+            {isMyTurn && (
+              <button onClick={() => { if (input.trim()) { onHumanMessage(input.trim()); setInput('') } }} disabled={!input.trim()}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white disabled:opacity-30 flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+              </button>
+            )}
+          </div>
+          {/* Bottone AI alleata */}
+          {isMyTurn && (
+            <div className="px-3 pb-2">
+              <button onClick={() => onRequestAI('A')} disabled={loading}
+                className="w-full py-1.5 rounded-xl text-[10px] font-bold disabled:opacity-40"
+                style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)' }}>
+                Chiedi supporto a {AI_NAMES[config.teamA.aiId]} →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {state.ended && (
+        <div className="flex-shrink-0 px-4 py-3 border-t text-center" style={{ borderColor }}>
+          <div className="text-xs text-white/40">Dibattito concluso</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function DevilsAdvocateScreen({ session, onMessage, onEndTurn, loading, isDark, bgPreset, onBack }: {
   session: DevilSession
   onMessage: (text: string) => void
@@ -1060,11 +1395,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [showModeSelect, setShowModeSelect] = useState(false)
 
   // ── 2 vs 2 ────────────────────────────────────────────────────────────────
-  const [teamA, setTeamA] = useState<Team>({ name: 'Squadra A', color: '#3b82f6', members: [] })
-  const [teamB, setTeamB] = useState<Team>({ name: 'Squadra B', color: '#ef4444', members: [] })
-  const [currentTeam, setCurrentTeam] = useState<'A' | 'B'>('A')
-  const [arbiterMsg, setArbiterMsg] = useState<string | null>(null)
-  const [roundCount2v2, setRoundCount2v2] = useState(0)
+  const [show2v2Setup, setShow2v2Setup] = useState(false)
+  const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
+  const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
 
   // ── Devil's Advocate ──────────────────────────────────────────────────────
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
@@ -1785,16 +2118,188 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setSelectedMode(mode)
     setShowModeSelect(false)
     if (mode === 'devil') {
-      // Avvia Devil's Advocate
       const pick = DEVIL_POSITIONS[Math.floor(Math.random() * DEVIL_POSITIONS.length)]
       setDevilSession({ position: pick.position, side: pick.side, round: 1, score: 5.0, messages: [] })
       setPhase('running')
     } else if (mode === '2v2') {
-      setPhase('running')
+      setShow2v2Setup(true)
     } else {
-      // Classico — torna alla start
       setSelectedMode(null)
     }
+  }
+
+  const handle2v2Start = (config: TwoVsTwoConfig) => {
+    setShow2v2Setup(false)
+    setTwoVsTwoState({
+      config,
+      messages: [],
+      currentTurn: 'A',
+      round: 1,
+      maxRounds: 4,
+      ended: false,
+      verdict: null,
+    })
+    setPhase('running')
+  }
+
+  const handle2v2HumanMessage = async (text: string) => {
+    if (!twoVsTwoState || twoVsTwoLoading) return
+    const { config, currentTurn } = twoVsTwoState
+    const author = currentTurn === 'A' ? config.teamA.humanName : config.teamB.humanName
+
+    setTwoVsTwoState(prev => prev ? {
+      ...prev,
+      messages: [...prev.messages, { team: currentTurn, isAI: false, author, content: text }],
+    } : prev)
+
+    // Dopo il messaggio umano, l'AI alleata risponde automaticamente
+    await handle2v2AIResponse(currentTurn, text)
+  }
+
+  const handle2v2AIResponse = async (team: 'A' | 'B', trigger: string) => {
+    if (!twoVsTwoState) return
+    setTwoVsTwoLoading(true)
+    const { config } = twoVsTwoState
+    const aiId = team === 'A' ? config.teamA.aiId : config.teamB.aiId
+    const aiName = AI_NAMES[aiId]
+    const sideDesc = team === 'A' ? 'PRO' : 'CONTRO'
+
+    // Costruisci history
+    const history = twoVsTwoState.messages.map(m => ({
+      name: m.isAI ? AI_NAMES[m.aiId ?? ''] : m.author,
+      content: m.content,
+    }))
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'turn',
+          aiId,
+          history: [
+            { name: 'Sistema', content: `Sei ${aiName}, membro della Squadra ${team} (posizione ${sideDesc}) nel dibattito su: "${config.topic}". Supporta e rafforza gli argomenti della tua squadra. Sii diretto e incisivo, 2-3 frasi.` },
+            ...history,
+            { name: 'Sistema', content: `Il tuo alleato ha detto: "${trigger}". Rafforza questo punto o aggiungine uno nuovo.` }
+          ],
+          needsWebSearch: false,
+        }),
+      })
+      if (!res.ok || !res.body) throw new Error()
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = '', aiText = '', done = false
+      const msgIdx = twoVsTwoState.messages.length + 1
+
+      setTwoVsTwoState(prev => prev ? {
+        ...prev,
+        messages: [...prev.messages, { team, isAI: true, aiId, author: aiName, content: '', streaming: true }],
+      } : prev)
+
+      while (!done) {
+        const { done: sd, value } = await reader.read()
+        if (sd) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d === '[DONE]') { done = true; break }
+          try { aiText += JSON.parse(d).text } catch {}
+          setTwoVsTwoState(prev => {
+            if (!prev) return prev
+            const msgs = [...prev.messages]
+            msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: aiText, streaming: true }
+            return { ...prev, messages: msgs }
+          })
+        }
+      }
+
+      // Finalizza messaggio AI e passa il turno
+      const nextTeam: 'A' | 'B' = team === 'A' ? 'B' : 'A'
+      setTwoVsTwoState(prev => {
+        if (!prev) return prev
+        const msgs = [...prev.messages]
+        msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: aiText, streaming: false }
+        const newRound = team === 'B' ? prev.round + 1 : prev.round
+        const ended = newRound > prev.maxRounds
+        return { ...prev, messages: msgs, currentTurn: ended ? team : nextTeam, round: newRound, ended }
+      })
+
+      // Se finito, chiedi verdetto arbitro
+      if (twoVsTwoState.round >= twoVsTwoState.maxRounds && team === 'B') {
+        await handle2v2Verdict()
+      }
+
+    } catch {}
+    setTwoVsTwoLoading(false)
+  }
+
+  const handle2v2Verdict = async () => {
+    if (!twoVsTwoState) return
+    setTwoVsTwoLoading(true)
+    const { config } = twoVsTwoState
+    const arbId = config.arbiterAiId
+    const arbName = AI_NAMES[arbId]
+
+    const history = twoVsTwoState.messages.map(m => ({
+      name: m.isAI ? AI_NAMES[m.aiId ?? ''] : m.author,
+      content: m.content,
+    }))
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'turn',
+          aiId: arbId,
+          history: [
+            { name: 'Sistema', content: `Sei ${arbName}, arbitro imparziale del dibattito su: "${config.topic}". Squadra A (${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}) vs Squadra B (${config.teamB.humanName} + ${AI_NAMES[config.teamB.aiId]}). Analizza il dibattito e pronuncia il tuo verdetto con: 1) Chi ha vinto e perché 2) L'argomento più forte di ciascuna squadra. Sii diretto e imparziale.` },
+            ...history,
+          ],
+          needsWebSearch: false,
+        }),
+      })
+      if (!res.ok || !res.body) throw new Error()
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = '', verdict = '', done = false
+
+      setTwoVsTwoState(prev => prev ? {
+        ...prev,
+        messages: [...prev.messages, { team: 'arbiter', isAI: true, aiId: arbId, author: arbName, content: '', streaming: true }],
+        ended: true,
+      } : prev)
+
+      while (!done) {
+        const { done: sd, value } = await reader.read()
+        if (sd) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d === '[DONE]') { done = true; break }
+          try { verdict += JSON.parse(d).text } catch {}
+          setTwoVsTwoState(prev => {
+            if (!prev) return prev
+            const msgs = [...prev.messages]
+            msgs[msgs.length - 1] = { team: 'arbiter', isAI: true, aiId: arbId, author: arbName, content: verdict, streaming: true }
+            return { ...prev, messages: msgs, verdict }
+          })
+        }
+      }
+      setTwoVsTwoState(prev => {
+        if (!prev) return prev
+        const msgs = [...prev.messages]
+        msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], streaming: false }
+        return { ...prev, messages: msgs }
+      })
+    } catch {}
+    setTwoVsTwoLoading(false)
   }
 
   const handleDevilMessage = async (text: string) => {
@@ -2939,6 +3444,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
         )}
 
+        {/* Schermata 2 vs 2 mobile */}
+        {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
+          <TwoVsTwoScreen
+            state={twoVsTwoState}
+            onHumanMessage={handle2v2HumanMessage}
+            onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
+            loading={twoVsTwoLoading}
+            isDark={isDark}
+            bgPreset={bgPreset}
+            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
+          />
+        )}
+
         {/* Schermata Devil's Advocate mobile */}
         {phase === 'running' && selectedMode === 'devil' && devilSession && (
           <DevilsAdvocateScreen
@@ -3429,6 +3947,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
         </div>
       </div>
+
+      {/* ── SETUP 2 vs 2 ── */}
+      {show2v2Setup && (
+        <TwoVsTwoSetup
+          onStart={handle2v2Start}
+          onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
+          currentUserName={displayName !== 'Tu' ? displayName : ''}
+        />
+      )}
 
       {/* ── SELEZIONE FORMATO MULTIPLAYER ── */}
       {showModeSelect && (
