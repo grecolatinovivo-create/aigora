@@ -670,6 +670,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [creatingRoom, setCreatingRoom] = useState(false)
   const [activeRoom, setActiveRoom] = useState<any>(null)
   const [myRoomRole, setMyRoomRole] = useState<'host' | 'participant' | 'spectator'>('spectator')
+  const [showInvitePanel, setShowInvitePanel] = useState(false)
+  const [inviteSearch, setInviteSearch] = useState('')
+  const [inviteResults, setInviteResults] = useState<any[]>([])
 
   // Carica rooms e notifiche (solo admin)
   useEffect(() => {
@@ -683,7 +686,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }).catch(() => {})
   }, [userPlan])
 
-  // Ricerca utenti con debounce
+  // Ricerca utenti con debounce (per crea room)
   useEffect(() => {
     if (userSearch.length < 2) { setUserResults([]); return }
     const t = setTimeout(() => {
@@ -692,6 +695,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }, 300)
     return () => clearTimeout(t)
   }, [userSearch])
+
+  // Ricerca utenti per invito in chat
+  useEffect(() => {
+    if (inviteSearch.length < 2) { setInviteResults([]); return }
+    const t = setTimeout(() => {
+      fetch(`/api/users/search?q=${encodeURIComponent(inviteSearch)}`)
+        .then(r => r.json()).then(d => setInviteResults(d.users ?? [])).catch(() => {})
+    }, 300)
+    return () => clearTimeout(t)
+  }, [inviteSearch])
 
   const handleCreateRoom = async () => {
     if (!createTopic.trim()) return
@@ -1409,7 +1422,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
                 {/* Lista room */}
                 {rooms.length === 0 ? (
-                  <div className="text-center py-8 text-white/25 text-sm">Nessun dibattito ancora.<br/>Creane uno!</div>
+                  <div className="text-center py-8 text-white/25 text-sm">Nessun dibattito ancora.</div>
                 ) : rooms.map((room: any) => {
                   const aiColors: Record<string,string> = { claude:'#7C3AED', gpt:'#10A37F', gemini:'#1A73E8', perplexity:'#FF6B2B' }
                   const aiNames: Record<string,string> = { claude:'Claude', gpt:'GPT', gemini:'Gemini', perplexity:'Perplexity' }
@@ -1654,7 +1667,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                       </div>
                     ))}
                     {rooms.length === 0 ? (
-                      <div className="text-center py-8 text-white/25 text-sm">Nessun dibattito ancora.<br/>Creane uno!</div>
+                      <div className="text-center py-8 text-white/25 text-sm">Nessun dibattito ancora.</div>
                     ) : rooms.map((room: any) => {
                       const aiColors: Record<string,string> = { claude:'#7C3AED', gpt:'#10A37F', gemini:'#1A73E8', perplexity:'#FF6B2B' }
                       const aiNames: Record<string,string> = { claude:'Claude', gpt:'GPT', gemini:'Gemini', perplexity:'Perplexity' }
@@ -1837,6 +1850,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 {activeAi ? `${AI_NAMES[activeAi]} sta scrivendo…` : `Turno ${turnCount + 1} · 4 AI`}
               </div>
             </div>
+
+            {/* Invita (solo admin) */}
+            {userPlan === 'admin' && (
+              <button onClick={() => setShowInvitePanel(true)} title="Invita amici"
+                className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-105"
+                style={{ backgroundColor: isDark ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.1)', color: '#A78BFA' }}>
+                👥
+              </button>
+            )}
 
             {/* Picker colori */}
             <div className="flex gap-1 flex-shrink-0">
@@ -2022,6 +2044,70 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </button>
             </div>
           </div>
+
+          {/* Pannello invita amici */}
+          {showInvitePanel && (
+            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: bgPreset.value }}>
+              <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b"
+                style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+                <button onClick={() => { setShowInvitePanel(false); setInviteSearch(''); setInviteResults([]) }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
+                  style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'white' : '#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <span className="font-bold text-base" style={{ color: isDark ? '#fff' : '#111' }}>Invita al dibattito</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                <p className="text-xs mb-4" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
+                  L'amico riceverà una notifica e potrà unirsi al dibattito in corso.
+                </p>
+                <input
+                  value={inviteSearch}
+                  onChange={e => setInviteSearch(e.target.value)}
+                  placeholder="Cerca per nome…"
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none mb-3"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                    color: isDark ? '#f0f0f0' : '#111',
+                  }}
+                />
+                {inviteResults.map((u: any) => (
+                  <button key={u.id}
+                    onClick={async () => {
+                      // Crea una room con questo utente se non esiste, oppure manda notifica
+                      await fetch('/api/rooms', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          topic: question || messages.find((m: any) => m.isUser)?.content || 'Dibattito',
+                          visibility: 'private',
+                          aiIds: AI_ORDER,
+                          invitedUserIds: [u.id],
+                        }),
+                      })
+                      setShowInvitePanel(false)
+                      setInviteSearch('')
+                      setInviteResults([])
+                    }}
+                    className="w-full flex items-center gap-3 p-3 rounded-2xl mb-2 transition-colors text-left"
+                    style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}` }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                      style={{ backgroundColor: '#7C3AED' }}>
+                      {(u.name || u.email || '?')[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm truncate" style={{ color: isDark ? '#fff' : '#111' }}>{u.name || u.email}</div>
+                    </div>
+                    <span className="text-xs font-semibold" style={{ color: '#A78BFA' }}>Invita →</span>
+                  </button>
+                ))}
+                {inviteSearch.length >= 2 && inviteResults.length === 0 && (
+                  <div className="text-center py-6 text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)' }}>Nessun utente trovato</div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Banner spettatore */}
           {activeRoom && myRoomRole === 'spectator' && (
