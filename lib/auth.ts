@@ -28,6 +28,7 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user || !user.password) return null
+        if (user.blocked) return null  // utente bloccato
 
         const valid = await bcrypt.compare(credentials.password, user.password)
         if (!valid) return null

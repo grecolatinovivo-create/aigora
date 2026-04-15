@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import UserActions from './UserActions'
 
 const PLAN_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   admin:      { color: '#F59E0B', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.35)'  },
@@ -161,6 +162,10 @@ export default async function AdminPage() {
                         {user.chats.length} chat · {userMsgCount} domande · {aiMsgCount} risposte AI
                       </span>
                     </div>
+                    {/* Azioni admin — non mostrare su se stessi */}
+                    {user.email !== adminEmail && (
+                      <UserActions userId={user.id} blocked={user.blocked ?? false} />
+                    )}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
                   </div>
                 </summary>
