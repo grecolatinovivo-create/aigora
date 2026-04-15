@@ -646,6 +646,16 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter, onCo
   const myAI = AI_OPTIONS.find(a => a.id === teamAAI)
   const allSettled = rouletteSettled[0] && rouletteSettled[1]
   const arbAI = AI_OPTIONS.find(a => a.id === arbiter)
+  const [showArbiter, setShowArbiter] = useState(false)
+
+  useEffect(() => {
+    if (allSettled) {
+      const t = setTimeout(() => setShowArbiter(true), 1000)
+      return () => clearTimeout(t)
+    } else {
+      setShowArbiter(false)
+    }
+  }, [allSettled])
 
   return (
     <div className="flex flex-col items-center justify-center flex-1 px-8 py-6 gap-5">
@@ -699,8 +709,8 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter, onCo
         />
       </div>
 
-      {/* Arbitro — spazio SEMPRE riservato, visibile solo dopo entrambi i settled */}
-      <div className="w-full" style={{ visibility: allSettled && arbAI ? 'visible' : 'hidden', transition: 'opacity 0.4s', opacity: allSettled && arbAI ? 1 : 0 }}>
+      {/* Arbitro — spazio SEMPRE riservato, visibile 1s dopo entrambi i settled */}
+      <div className="w-full" style={{ visibility: showArbiter && arbAI ? 'visible' : 'hidden', transition: 'opacity 0.5s', opacity: showArbiter && arbAI ? 1 : 0 }}>
         <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#A78BFA' }}>
           ARBITRO
         </div>
@@ -719,9 +729,9 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter, onCo
       </div>
 
       {/* Pulsante Continua — spazio SEMPRE riservato, visibile solo quando settled */}
-      <button onClick={onContinue} disabled={!ready || !allSettled}
+      <button onClick={onContinue} disabled={!ready || !showArbiter}
         className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all"
-        style={{ visibility: allSettled ? 'visible' : 'hidden', background: ready ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : 'rgba(255,255,255,0.08)', boxShadow: ready ? '0 4px 20px rgba(124,58,237,0.4)' : 'none', opacity: allSettled ? (ready ? 1 : 0.5) : 0 }}>
+        style={{ visibility: showArbiter ? 'visible' : 'hidden', background: ready ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : 'rgba(255,255,255,0.08)', boxShadow: ready ? '0 4px 20px rgba(124,58,237,0.4)' : 'none', opacity: showArbiter ? (ready ? 1 : 0.5) : 0 }}>
         {ready ? 'Continua →' : 'Preparazione…'}
       </button>
     </div>
@@ -1772,7 +1782,7 @@ function UserTurnPrompt({ name, isDark }: { name: string; isDark: boolean }) {
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
-function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta }: {
+function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta, show2v2Label, twoVsTwoTopic }: {
   onCronologia: () => void
   onFeed?: () => void
   onCrea?: () => void
@@ -1787,6 +1797,8 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displa
   setShowProfileMenu: (v: boolean | ((p: boolean) => boolean)) => void
   onSignOut: () => void
   unreadCount?: number
+  show2v2Label?: 'title' | 'topic' | null
+  twoVsTwoTopic?: string
 }) {
   return (
     <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 h-14"
@@ -1802,7 +1814,7 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displa
         Cronologia
       </button>
 
-      {/* Centro — Logo cliccabile → nuova chat */}
+      {/* Centro — Logo sempre */}
       <button onClick={onNewChat}
         className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight hover:opacity-80 active:scale-95 transition-all">
         <span className="text-white">Ai</span>
@@ -1952,6 +1964,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [isBeta, setIsBeta] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showModeSelect, setShowModeSelect] = useState(false)
+  const [show2v2Label, setShow2v2Label] = useState<'title' | 'topic' | null>(null)
   const [show2v2Setup, setShow2v2Setup] = useState(false)
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
@@ -2687,6 +2700,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
     setShow2v2Setup(false)
+    // Animazione navbar: prima "2 VS 2", poi dopo 2.5s il tema
+    setShow2v2Label('title')
+    setTimeout(() => setShow2v2Label('topic'), 2500)
     setTwoVsTwoState({
       config,
       messages: [],
@@ -2733,10 +2749,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         }),
       })
       if (!res.ok || !res.body) throw new Error()
+      // ── Scarica tutto il testo prima (come streamAiResponse) ──
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
-      let buffer = '', aiText = '', done = false
-      let lastUpdate = 0
+      let buffer = '', fullText = '', done = false
       while (!done) {
         const { done: sd, value } = await reader.read(); if (sd) break
         buffer += decoder.decode(value, { stream: true })
@@ -2744,26 +2760,31 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
-          try { aiText += JSON.parse(d).text } catch {}
-          // Aggiorna UI max ogni 30ms — uguale alla chat normale
-          const now = Date.now()
-          if (now - lastUpdate > 30) {
-            lastUpdate = now
+          try { fullText += JSON.parse(d).text } catch {}
+        }
+      }
+      // ── Poi typewrite lettera per lettera (identico a typewriteText) ──
+      await new Promise<void>(resolve => {
+        let i = 0
+        const iv = setInterval(() => {
+          if (i >= fullText.length) {
+            clearInterval(iv)
             setTwoVsTwoState(prev => {
               if (!prev) return prev
               const msgs = [...prev.messages]
-              msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: aiText, streaming: true }
+              msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: fullText, streaming: false }
               return { ...prev, messages: msgs }
             })
+            resolve(); return
           }
-        }
-      }
-      // Finalizza messaggio
-      setTwoVsTwoState(prev => {
-        if (!prev) return prev
-        const msgs = [...prev.messages]
-        msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: aiText, streaming: false }
-        return { ...prev, messages: msgs }
+          i++
+          setTwoVsTwoState(prev => {
+            if (!prev) return prev
+            const msgs = [...prev.messages]
+            msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: fullText.slice(0, i), streaming: true }
+            return { ...prev, messages: msgs }
+          })
+        }, TYPEWRITER_DELAY)
       })
     } catch {
       // Rimuovi placeholder in caso di errore
@@ -3022,6 +3043,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     unreadCount,
     dbUserName,
     isBeta,
+    show2v2Label,
+    twoVsTwoTopic: twoVsTwoState?.config.topic ?? '',
   }
 
   if (!nameConfirmed) {
@@ -3455,7 +3478,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
             loading={twoVsTwoLoading}
             myTeam="A"
-            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
+            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
           />
         </div>,
         document.body
@@ -3466,7 +3489,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
-    <div className={`desktop-bg min-h-screen flex items-center justify-center p-6 gap-6 chat-layout relative${phase === 'running' && selectedMode === '2v2' ? '' : ' pt-14'}`}>
+    <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
       {messages.length === 0 && selectedMode !== '2v2' && [
@@ -3743,19 +3766,26 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <Navbar {...navbarProps} />
 
       {/* ── TELEFONO (desktop) ── */}
-      <div className="flex flex-col items-center flex-shrink-0" style={{ gap: phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? 24 : 0 }}>
-      {/* Titolo + tema sopra il telefono — solo in 2v2 */}
+      <div className="flex flex-col items-center flex-shrink-0" style={{ gap: show2v2Label ? 20 : 0 }}>
+
+      {/* Titolo 2v2 sopra il telefono con animazione */}
       {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
-        <div className="text-center scale-in">
-          <div className="font-black uppercase" style={{ fontSize: 32, letterSpacing: '0.3em', color: 'white' }}>
-            2 VS 2
-          </div>
-          <div className="text-sm mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            {twoVsTwoState.config.topic}
-          </div>
+        <div className="text-center" style={{ minHeight: 48 }}>
+          {show2v2Label === 'title' && (
+            <div className="font-black uppercase scale-in" style={{ fontSize: 34, letterSpacing: '0.3em', color: 'white' }}>
+              2 VS 2
+            </div>
+          )}
+          {show2v2Label === 'topic' && (
+            <div className="scale-in text-center">
+              <div className="font-black uppercase" style={{ fontSize: 20, letterSpacing: '0.25em', color: 'white' }}>2 VS 2</div>
+              <div className="text-sm font-medium mt-1 max-w-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{twoVsTwoState.config.topic}</div>
+            </div>
+          )}
         </div>
       )}
-      {/* Wrapper fiamme — separato dalla cornice così il glow non viene sovrascr */}
+
+      {/* Wrapper fiamme */}
       <div className={`relative${phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? ' phone-fire' : ''}`} style={{ borderRadius: 50 }}>
       <div className="phone-shell relative scale-in" style={{ width: 390, height: 790 }}>
 
@@ -3792,7 +3822,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             <div className="flex-shrink-0" style={{ background: '#0d0d14' }}>
               {/* Riga 1: back + badge A — score — badge B */}
               <div className="flex items-center justify-between px-2 py-1.5" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
+                <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
                   className="w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
@@ -4149,7 +4179,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
             loading={twoVsTwoLoading}
             myTeam="A"
-            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
+            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
           />
         )}
 
