@@ -4000,29 +4000,56 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 {twoVsTwoState.messages.map((msg, i) => {
                   const isArbiter = msg.team === 'arbiter'
                   const isA = msg.team === 'A'
-                  const teamColor = isA ? '#3b82f6' : '#ef4444'
-                  const aiColor = AI_COLOR[msg.aiId ?? ''] ?? teamColor
+                  const alignRight = !isA
+
+                  // Arbitro — box centrato
                   if (isArbiter) return (
                     <div key={i} className="mx-3 my-2 rounded-2xl p-3" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
                       <div className="text-[8px] font-black uppercase mb-1" style={{ color: '#A78BFA' }}>{AI_NAMES[twoVsTwoState.config.arbiterAiId]} — Verdetto</div>
-                      <div className="text-xs text-white/80 leading-relaxed">{msg.content}</div>
+                      <div className="text-xs text-white/80 leading-relaxed">{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</div>
                     </div>
                   )
-                  const alignRight = !isA
-                  const msgBg = isA ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)'
-                  const msgColor = isA ? '#93c5fd' : '#fca5a5'
-                  const borderR = isA ? '3px 8px 8px 8px' : '8px 3px 8px 8px'
-                  return (
-                    <div key={i} className={`flex flex-col px-2 py-0.5 max-w-[85%] ${alignRight ? 'items-end self-end' : 'items-start'}`}>
-                      <div className="text-[7px] font-semibold mb-0.5 px-1" style={{ color: msg.isAI ? aiColor : teamColor }}>
-                        {msg.author}{msg.isAI && <span className="ml-1 opacity-50">AI</span>}
+
+                  // Messaggi umani (squadra A — utente reale)
+                  if (!msg.isAI && isA) return (
+                    <div key={i} className="flex justify-end px-3 mb-1 message-enter">
+                      <div className="max-w-[78%]">
+                        <div className="rounded-2xl rounded-br-sm px-3 py-2 leading-relaxed text-white text-xs"
+                          style={{ backgroundColor: '#1a3a5c' }}>
+                          {msg.content}
+                        </div>
                       </div>
-                      <div className="px-3 py-2 text-xs leading-relaxed"
-                        style={{ background: msg.isAI ? `${aiColor}20` : msgBg, color: msgColor, borderRadius: borderR }}>
-                        {msg.streaming && !msg.content
-                          ? <span className="flex gap-1 items-center py-0.5">{[0,150,300].map(d=><span key={d} className="w-1 h-1 rounded-full bg-white/40 animate-bounce" style={{animationDelay:`${d}ms`}}/>)}</span>
-                          : <>{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</>
-                        }
+                    </div>
+                  )
+
+                  // Messaggi AI — stessa struttura di MessageBubble dark
+                  const aiId = msg.aiId ?? ''
+                  const avatarColor = AI_COLOR[aiId] || '#6B7280'
+                  const bubbleDark: Record<string, { bg: string; nameColor: string; textColor: string }> = {
+                    claude:     { bg: '#2D1B69', nameColor: '#c4b5fd', textColor: '#ede8ff' },
+                    gpt:        { bg: '#0a2e22', nameColor: '#6ee7b7', textColor: '#d4f5e9' },
+                    gemini:     { bg: '#0a1f4a', nameColor: '#93c5fd', textColor: '#dbeafe' },
+                    perplexity: { bg: '#2e1406', nameColor: '#fdba74', textColor: '#ffe8d6' },
+                  }
+                  const bubble = bubbleDark[aiId] ?? { bg: 'rgba(255,255,255,0.07)', nameColor: 'rgba(255,255,255,0.5)', textColor: 'rgba(255,255,255,0.85)' }
+
+                  return (
+                    <div key={i} className={`flex items-end gap-2 px-3 mb-1 message-enter${alignRight ? ' flex-row-reverse' : ''}`}>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mb-0.5"
+                        style={{ backgroundColor: avatarColor }}>
+                        {aiId === 'gemini' ? 'Ge' : AI_NAMES[aiId]?.[0]}
+                      </div>
+                      <div className="max-w-[78%]">
+                        <div className={`text-[11px] font-semibold mb-0.5 ml-1${alignRight ? ' text-right mr-1 ml-0' : ''}`} style={{ color: bubble.nameColor }}>
+                          {msg.author}
+                        </div>
+                        <div className={`rounded-2xl px-3 py-2 leading-relaxed text-xs${alignRight ? ' rounded-br-sm' : ' rounded-bl-sm'}`}
+                          style={{ backgroundColor: bubble.bg, color: bubble.textColor }}>
+                          {msg.streaming && !msg.content
+                            ? <span className="flex gap-1 items-center py-0.5">{[0,180,360].map(d=><span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{backgroundColor:'rgba(255,255,255,0.4)',animationDelay:`${d}ms`,animationDuration:'1s'}}/>)}</span>
+                            : <>{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</>
+                          }
+                        </div>
                       </div>
                     </div>
                   )
