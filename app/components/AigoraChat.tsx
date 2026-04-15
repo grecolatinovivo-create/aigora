@@ -350,7 +350,9 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const planColors: Record<string, string> = { max:'#FF6B2B', pro:'#7C3AED', starter:'#1A73E8', free:'#10A37F', admin:'#F59E0B', none:'#6B7280' }
-  const planColor = planColors[userPlan ?? 'none'] ?? '#6B7280'
+  // Il piano 'admin' viene impostato dal session callback — usiamo direttamente userPlan
+  const effectivePlan = userPlan ?? 'none'
+  const planColor = planColors[effectivePlan] ?? '#6B7280'
   const publicChats = savedChats.filter((c: any) => c.isPublic)
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -430,7 +432,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
             <div className="text-xs truncate" style={{ color: subColor }}>{userEmail}</div>
             <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
               style={{ backgroundColor: `${planColor}20`, color: planColor, border: `1px solid ${planColor}40` }}>
-              {(userPlan ?? 'free').toUpperCase()}
+              {effectivePlan.toUpperCase()}
             </div>
           </div>
         </div>
