@@ -23,7 +23,7 @@ export function rateLimit(key: string, maxRequests: number, windowMs: number): {
 // Pulizia periodica per evitare memory leak
 setInterval(() => {
   const now = Date.now()
-  for (const [key, entry] of store.entries()) {
+  Array.from(store.entries()).forEach(([key, entry]) => {
     if (now > entry.resetAt) store.delete(key)
-  }
+  })
 }, 60_000)

@@ -2421,9 +2421,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                   }}>
                   <button onClick={() => setSelectedAiProfile(null)}
-                    className="flex items-center gap-1 active:opacity-60 transition-opacity"
+                    className="flex items-center gap-1 active:opacity-60 transition-opacity text-xl leading-none font-light"
                     style={{ color }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    ×
                   </button>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
                     style={{ backgroundColor: color }}>
