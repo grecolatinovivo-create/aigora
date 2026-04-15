@@ -329,7 +329,7 @@ async function compressImage(file: File, maxW: number, maxH: number): Promise<Fi
 }
 
 // ── Schermata Profilo ─────────────────────────────────────────────────────────
-function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset, isDark, onBack, onSignOut, userImage, onImageChange }: {
+function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset, isDark, onBack, onSignOut, userImage, onImageChange, dbUserName }: {
   displayName: string
   userEmail?: string
   userPlan?: string
@@ -340,6 +340,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
   onSignOut: () => void
   userImage?: string | null
   onImageChange?: (img: string | null) => void
+  dbUserName?: string | null
 }) {
   const [following, setFollowing] = useState<any[]>([])
   const [followers, setFollowers] = useState<any[]>([])
@@ -2486,6 +2487,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             onSignOut={() => signOut({ callbackUrl: '/login' })}
             userImage={userImage}
             onImageChange={setUserImage}
+            dbUserName={dbUserName}
           />
         )}
 
