@@ -553,7 +553,7 @@ const ARBITER_OPTIONS = ['claude', 'gpt', 'gemini', 'perplexity']
 interface TwoVsTwoConfig {
   topic: string
   teamA: { humanName: string; aiId: string }
-  teamB: { humanName: string; aiId: string }
+  teamB: { aiId1: string; aiId2: string }  // squadra B: 2 AI
   arbiterAiId: string
   roomCode?: string
   roomId?: string
@@ -643,22 +643,22 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
   teamAAI: string; rouletteSlots: string[]; rouletteSettled: boolean[]; arbiter: string
 }) {
   const myAI = AI_OPTIONS.find(a => a.id === teamAAI)
-  const bothSettled = rouletteSettled[0] && rouletteSettled[1]
+  const allSettled = rouletteSettled[0] && rouletteSettled[1]
   const arbAI = AI_OPTIONS.find(a => a.id === arbiter)
 
   return (
     <div className="flex flex-col items-center justify-center flex-1 px-8 py-6 gap-5">
-      {/* Titolo con suspense */}
+      {/* Titolo */}
       <div className="text-center">
         <div className="text-2xl font-black text-white mb-1" style={{ letterSpacing: '-0.5px' }}>
-          {bothSettled ? 'Il dado è tratto.' : 'Il destino decide…'}
+          {allSettled ? 'Il dado è tratto.' : 'Il destino decide…'}
         </div>
         <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          {bothSettled ? 'Buona fortuna.' : 'Le AI vengono assegnate casualmente'}
+          {allSettled ? 'Buona fortuna.' : 'Chi compone la squadra B?'}
         </div>
       </div>
 
-      {/* La tua AI — fissa, già scelta */}
+      {/* La tua AI — fissa */}
       <div className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl"
         style={{ background: `${myAI?.color}15`, border: `1px solid ${myAI?.color}40` }}>
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-xs flex-shrink-0"
@@ -672,10 +672,10 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
         <div className="ml-auto text-green-400 font-black">✓</div>
       </div>
 
-      {/* Slot 1 — AI avversaria */}
+      {/* Slot 1 — prima AI della squadra B */}
       <div className="w-full">
         <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#f87171' }}>
-          🔴 AI avversaria
+          🔴 Prima AI — squadra B
         </div>
         <SlotReel
           finalId={rouletteSlots[0]}
@@ -685,21 +685,21 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
         />
       </div>
 
-      {/* Slot 2 — Eliminata */}
-      <div className="w-full" style={{ opacity: rouletteSettled[0] ? 1 : 0.4, transition: 'opacity 0.5s' }}>
-        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          ❌ Eliminata
+      {/* Slot 2 — seconda AI della squadra B, si sblocca dopo il primo */}
+      <div className="w-full" style={{ opacity: rouletteSettled[0] ? 1 : 0.3, transition: 'opacity 0.4s' }}>
+        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#f87171' }}>
+          🔴 Seconda AI — squadra B
         </div>
         <SlotReel
-          finalId={rouletteSlots[1]}
+          finalId={rouletteSlots[1] ?? ''}
           rolling={rouletteSettled[0] && !rouletteSettled[1]}
           settled={rouletteSettled[1]}
-          delay={400}
+          delay={300}
         />
       </div>
 
-      {/* Arbitro — appare solo dopo entrambi settled */}
-      {bothSettled && arbAI && (
+      {/* Arbitro — appare solo dopo entrambi i slot */}
+      {rouletteSettled[1] && arbAI && (
         <div className="w-full scale-in">
           <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#A78BFA' }}>
             ⚖️ Arbitro
@@ -712,7 +712,7 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
             </div>
             <div>
               <div className="text-xs font-black text-white">{arbAI.name}</div>
-              <div className="text-[9px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Rimasta fuori — fa l'arbitro</div>
+              <div className="text-[9px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Giudicherà il dibattito</div>
             </div>
             <div className="ml-auto text-purple-400 font-black text-lg">⚖️</div>
           </div>
@@ -765,29 +765,29 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const handleCreate = async () => {
     // Le 3 AI rimaste dopo la scelta dell'utente, mescolate casualmente
     const rest = [...AI_OPTIONS.filter(a => a.id !== teamAAI)].sort(() => Math.random() - 0.5)
-    // La roulette ne estrae 1 per la squadra B — la terza che rimane fa l'arbitro
-    const randomB = rest[0].id      // estratta dalla roulette → avversaria
-    const randomArbiter = rest[2].id // l'esclusa → arbitro (non appare nella roulette)
-    setTeamBAI(randomB)
+    // Roulette estrae 2 AI per squadra B — la terza è l'arbitro
+    const randomB1 = rest[0].id
+    const randomB2 = rest[1].id
+    const randomArbiter = rest[2].id
+    setTeamBAI(randomB1)
     setArbiter(randomArbiter)
 
-    // Avvia la roulette — mostra solo i 2 estratti (AI avversaria + quella che "non passa")
+    // Avvia la roulette — 2 slot: AI 1 di B, poi AI 2 di B
     setRouletteSlots(['', ''])
     setRouletteSettled([false, false])
     setStep('roulette')
 
-    // La roulette mostra: chi è stato scelto per B e chi è stato eliminato
-    const reveals = [randomB, rest[1].id]  // [vincitrice roulette, eliminata]
+    const reveals = [randomB1, randomB2]
 
-    // Chiama l'API in parallelo mentre gira la roulette
+    // Chiama l'API in parallelo
     const apiPromise = fetch('/api/2v2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId: randomB, arbiterAiId: randomArbiter, teamAName: teamAHuman }),
+      body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId1: randomB1, teamBAiId2: randomB2, arbiterAiId: randomArbiter, teamAName: teamAHuman }),
     }).then(r => r.json())
 
-    // Anima i 2 slot uno per uno
-    const delays = [1400, 2600]
+    // Anima i 2 slot in sequenza: primo a 1.4s, secondo a 2.8s
+    const delays = [1400, 2800]
     delays.forEach((delay, i) => {
       setTimeout(() => {
         setRouletteSlots(prev => { const n = [...prev]; n[i] = reveals[i]; return n })
@@ -805,7 +805,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         }
       } catch {}
       setTimeout(() => setStep('share'), 600)
-    }, 3200)
+    }, 3800)
   }
 
   const shareLink = typeof window !== 'undefined' ? `${window.location.origin}/2v2/${roomCode}` : ''
@@ -1025,26 +1025,6 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               arbiter={arbiter}
             />
           )}
-          {step === 'roulette' && false && (
-            <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-8">
-              {rouletteSettled[1] && (() => {
-                const ai = AI_OPTIONS.find(a => a.id === arbiter)
-                return ai ? (
-                  <div className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl scale-in"
-                    style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.25)' }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-black flex-shrink-0" style={{ fontSize: 10, background: '#A78BFA' }}>
-                      {ai.id === 'gemini' ? 'Ge' : ai.name[0]}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-[10px] font-black uppercase" style={{ color: '#A78BFA' }}>⚖️ Arbitro (esclusa dalla roulette)</div>
-                      <div className="text-sm font-bold text-white">{ai.name}</div>
-                    </div>
-                    <div className="text-purple-400 text-lg">✓</div>
-                  </div>
-                ) : null
-              })()}
-            </div>
-          )}
 
           {/* ── STEP 4: Condividi ── */}
           {step === 'share' && (
@@ -1082,7 +1062,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               </div>
 
               <button
-                onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { humanName: 'Avversario', aiId: teamBAI }, arbiterAiId: arbiter, roomCode, roomId })}
+                onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: arbiter }, arbiterAiId: arbiter, roomCode, roomId })}
                 className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
                 Entra nella sala d'attesa →
@@ -1115,9 +1095,9 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
   const isMyTurn = state.currentTurn === myTeam && !loading && !state.ended
   const myColor = myTeam === 'A' ? '#3b82f6' : '#ef4444'
   const theirColor = myTeam === 'A' ? '#ef4444' : '#3b82f6'
-  const myAiId = myTeam === 'A' ? config.teamA.aiId : config.teamB.aiId
-  const myName = myTeam === 'A' ? config.teamA.humanName : config.teamB.humanName
-  const theirName = myTeam === 'A' ? config.teamB.humanName : config.teamA.humanName
+  const myAiId = myTeam === 'A' ? config.teamA.aiId : config.teamB.aiId1
+  const myName = myTeam === 'A' ? config.teamA.humanName : "Squadra B"
+  const theirName = myTeam === 'A' ? "Squadra B" : config.teamA.humanName
 
   // Schermata verdetto finale
   if (state.ended && state.verdict) {
@@ -1144,7 +1124,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
             </div>
             <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}>
               <div className="text-[9px] font-black uppercase text-red-400 mb-1">🔴 Squadra B</div>
-              <div className="text-xs text-white/70">{config.teamB.humanName}</div>
+              <div className="text-xs text-white/70">{"Squadra B"}</div>
             </div>
           </div>
           <button onClick={onBack} className="w-full py-3 rounded-2xl font-bold text-white/60 text-sm" style={{ background: 'rgba(255,255,255,0.06)' }}>
@@ -1209,8 +1189,8 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
           {/* Squadra B */}
           <div className="flex-1 flex flex-col items-end gap-0.5">
             <div className="text-[8px] font-black uppercase tracking-wide" style={{ color: '#f87171' }}>🔴 B</div>
-            <div className="text-[10px] font-bold text-white truncate max-w-[70px]">{config.teamB.humanName}</div>
-            <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{AI_NAMES[config.teamB.aiId]} +</div>
+            <div className="text-[10px] font-bold text-white truncate max-w-[70px]">{"Squadra B"}</div>
+            <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{AI_NAMES[config.teamB.aiId1]} +</div>
           </div>
         </div>
 
@@ -1279,7 +1259,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
               </div>
             ) : (
               <div className="text-[10px] text-center text-white/30">
-                Turno Squadra {state.currentTurn} — {state.currentTurn === 'A' ? config.teamA.humanName : config.teamB.humanName} sta rispondendo…
+                Turno Squadra {state.currentTurn} — {state.currentTurn === 'A' ? config.teamA.humanName : "Squadra B"} sta rispondendo…
               </div>
             )}
           </div>
@@ -2706,7 +2686,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTwoVsTwoLoading(true)
     const state = twoVsTwoState
     const { config } = state
-    const aiId = team === 'A' ? config.teamA.aiId : config.teamB.aiId
+    const aiId = team === 'A' ? config.teamA.aiId : config.teamB.aiId1
     const aiName = AI_NAMES[aiId]
     const history = state.messages.map(m => ({ name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author, content: m.content }))
 
@@ -2766,7 +2746,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const handle2v2HumanMessage = async (text: string) => {
     if (!twoVsTwoState || twoVsTwoLoading) return
     const { config, currentTurn, messagesThisTurn, maxMessagesPerTurn, round, maxRounds } = twoVsTwoState
-    const author = currentTurn === 'A' ? config.teamA.humanName : config.teamB.humanName
+    const author = currentTurn === 'A' ? config.teamA.humanName : "Squadra B"
 
     // Aggiungi messaggio umano
     const newCount = messagesThisTurn + 1
@@ -2803,8 +2783,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         setTimeout(async () => {
           const lastHumanMsg = text
           // Prima il messaggio "umano" di B (AI che simula l'avversario umano)
-          const bHumanName = twoVsTwoState.config.teamB.humanName
-          const bAiIdForHuman = twoVsTwoState.config.teamB.aiId
+          const bHumanName = 'Squadra B'
+          const bAiIdForHuman = twoVsTwoState.config.teamB.aiId1
           setTwoVsTwoState(prev => prev ? {
             ...prev,
             messages: [...prev.messages, { team: 'B' as const, isAI: false, author: bHumanName, content: '…', streaming: false }],
@@ -2834,7 +2814,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     try {
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'turn', aiId: arbId, history: [{ name: 'Sistema', content: `Sei ${arbName}, arbitro del dibattito su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: ${config.teamB.humanName} + ${AI_NAMES[config.teamB.aiId]}. Pronuncia il verdetto finale. Alla fine scrivi SEMPRE su una riga separata il punteggio nel formato esatto: PUNTEGGIO: A=X B=Y (dove X e Y sono numeri interi da 0 a 10). Poi spiega chi ha vinto e perché in 2-3 frasi.` }, ...history], needsWebSearch: false }),
+        body: JSON.stringify({ action: 'turn', aiId: arbId, history: [{ name: 'Sistema', content: `Sei ${arbName}, arbitro del dibattito su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: ${"Squadra B"} + ${AI_NAMES[config.teamB.aiId1]}. Pronuncia il verdetto finale. Alla fine scrivi SEMPRE su una riga separata il punteggio nel formato esatto: PUNTEGGIO: A=X B=Y (dove X e Y sono numeri interi da 0 a 10). Poi spiega chi ha vinto e perché in 2-3 frasi.` }, ...history], needsWebSearch: false }),
       })
       if (!res.ok || !res.body) throw new Error()
       const reader = res.body.getReader(); const decoder = new TextDecoder()
@@ -3807,7 +3787,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 {/* Squadra B — solo AI */}
                 <div className="flex-1 flex flex-col justify-center gap-1 px-2 py-1.5" style={{ background: 'rgba(239,68,68,0.05)' }}>
                   {[
-                    { name: AI_NAMES[twoVsTwoState.config.teamB.aiId], color: AI_COLOR[twoVsTwoState.config.teamB.aiId] },
+                    { name: AI_NAMES[twoVsTwoState.config.teamB.aiId1], color: AI_COLOR[twoVsTwoState.config.teamB.aiId1] },
                     { name: AI_NAMES[twoVsTwoState.config.arbiterAiId], color: '#A78BFA' },
                   ].map((m, i) => (
                     <div key={i} className="flex items-center gap-1">
