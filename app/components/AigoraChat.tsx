@@ -1563,7 +1563,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <div className="w-72 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
               <span className="text-white font-bold text-sm">Cronologia</span>
-              <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
+              <div className="flex items-center gap-3">
+                <button onClick={() => { handleReset(); setPhase('new'); setShowHistory(false) }}
+                  className="text-purple-400 hover:text-purple-300 text-xs font-semibold transition-colors">
+                  + Nuova
+                </button>
+                <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
+              </div>
             </div>
             {/* Undo banner */}
             {undoChat && (
