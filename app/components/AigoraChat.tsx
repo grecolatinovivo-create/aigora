@@ -1576,9 +1576,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             {/* ── AI cards ── */}
             <div className="grid grid-cols-4 gap-2">
               {AI_ORDER.map(id => (
-                <button key={id} className="glass rounded-2xl flex flex-col items-center text-center active:scale-95 transition-transform"
-                  style={{ padding: '10px 4px', gap: '6px' }}
-                  onClick={() => setSelectedAiProfile(id)}>
+                <div key={id} className="glass rounded-2xl flex flex-col items-center text-center"
+                  style={{ padding: '10px 4px', gap: '6px' }}>
                   <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
                     style={{
                       width: 'clamp(32px, 9vw, 44px)',
@@ -1599,7 +1598,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                       {AI_DESC[id]}
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
 
@@ -1805,6 +1804,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           </div>
         </div>
+
       </div>
     )
   }
@@ -2328,7 +2328,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Pannello profilo AI */}
           {selectedAiProfile && AI_PROFILES[selectedAiProfile] && (
-            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: bgPreset.value }}>
+            <div className="fixed inset-0 z-[60] flex flex-col" style={{ backgroundColor: bgPreset.value }}>
               {(() => {
                 const ai = AI_PROFILES[selectedAiProfile]
                 const color = AI_COLOR[selectedAiProfile]
