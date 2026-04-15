@@ -20,14 +20,25 @@ export async function POST(req: NextRequest) {
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
 
-  // Converti in base64 jpeg — il browser ha già fatto la compressione
-  // Limitiamo a 500KB massimo
+  // Limita a 500KB
   if (buffer.length > 500 * 1024) {
     return NextResponse.json({ error: 'Immagine troppo grande (max 500KB)' }, { status: 400 })
   }
 
-  const mimeType = file.type.startsWith('image/') ? file.type : 'image/jpeg'
-  const base64 = `data:${mimeType};base64,${buffer.toString('base64')}`
+  // Verifica magic bytes server-side (non fidarsi del file.type dichiarato dal client)
+  const MAGIC: Record<string, string> = {
+    'ffd8ff': 'image/jpeg',           // JPEG
+    '89504e47': 'image/png',          // PNG
+    '47494638': 'image/gif',          // GIF
+    '52494646': 'image/webp',         // WEBP (RIFF header)
+  }
+  const hex = buffer.slice(0, 4).toString('hex')
+  const detectedMime = MAGIC[hex.slice(0, 6)] ?? MAGIC[hex] ?? null
+  if (!detectedMime) {
+    return NextResponse.json({ error: 'Formato file non supportato. Usa JPEG, PNG, GIF o WebP.' }, { status: 400 })
+  }
+
+  const base64 = `data:${detectedMime};base64,${buffer.toString('base64')}`
 
   await prisma.user.update({
     where: { id: user.id },

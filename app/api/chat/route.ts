@@ -1,4 +1,7 @@
 import { NextRequest } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -244,7 +247,7 @@ Rispondi SOLO con questo formato, nient'altro.`,
     }],
   })
   const raw = (response.content[0] as any).text.trim().toLowerCase().replace(/[^a-z|]/g, '')
-  console.log('[ROUTE] raw response:', raw)
+
   const parts = raw.split('|')
   const aiRaw = parts[0]?.trim()
   const modeRaw = parts[1]?.trim()
@@ -254,13 +257,45 @@ Rispondi SOLO con questo formato, nient'altro.`,
   const startAi = availableAis.find(ai => aiRaw?.includes(ai)) ?? (availableAis.includes('claude') ? 'claude' : availableAis[0])
   const mode: 'debate' | 'focused' = modeRaw?.includes('focused') ? 'focused' : 'debate'
   const needsWebSearch = webRaw?.includes('web') ?? false
-  console.log('[ROUTE] result:', { startAi, mode, needsWebSearch })
+
   return { startAi, mode, needsWebSearch }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting: max 30 richieste/minuto per IP
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+    const rl = rateLimit(`chat:${ip}`, 30, 60_000)
+    if (!rl.ok) {
+      return new Response(JSON.stringify({ error: 'Troppe richieste. Riprova tra ' + rl.retryAfter + ' secondi.' }), {
+        status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) }
+      })
+    }
+
     const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch } = await req.json()
+
+    // Verifica piano — l'utente può usare solo le AI del suo piano
+    const session = await getServerSession(authOptions)
+    if (session?.user?.email && aiId && action !== 'route' && action !== 'synthesize' && action !== 'factcheck') {
+      const { prisma } = await import('@/lib/prisma')
+      const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
+      const plan = dbUser?.email === process.env.ADMIN_EMAIL ? 'admin' : (dbUser?.plan ?? 'none')
+      const PLAN_AIS: Record<string, string[]> = {
+        free:    ['claude', 'gemini', 'perplexity', 'gpt'],
+        starter: ['claude', 'gemini'],
+        pro:     ['claude', 'gemini', 'perplexity'],
+        max:     ['claude', 'gemini', 'perplexity', 'gpt'],
+        admin:   ['claude', 'gemini', 'perplexity', 'gpt'],
+        none:    [],
+      }
+      const allowed = PLAN_AIS[plan] ?? []
+      if (!allowed.includes(aiId)) {
+        return new Response(JSON.stringify({ error: 'AI non inclusa nel tuo piano.' }), {
+          status: 403, headers: { 'Content-Type': 'application/json' }
+        })
+      }
+    }
+
     const historyText = history.length > 0
       ? history.map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
       : ''
@@ -284,8 +319,10 @@ export async function POST(req: NextRequest) {
     const SYSTEM_PROMPTS = getSystemPrompts(today, year)
 
     if (action === 'factcheck') {
-      const id = interruptorId || 'claude'
-      const spk = speakerName || 'l\'altra AI'
+      // Sanitizza speakerName — solo AI conosciute, niente injection
+      const VALID_AI_NAMES = ['Claude', 'GPT', 'Gemini', 'Perplexity']
+      const id = ['claude', 'gpt', 'gemini', 'perplexity'].includes(interruptorId) ? interruptorId : 'claude'
+      const spk = VALID_AI_NAMES.includes(speakerName) ? speakerName : 'l\'altra AI'
       const interruptorName = id.charAt(0).toUpperCase() + id.slice(1)
       const sysPrompt = getInterruptPrompt(interruptorName, spk, today, year)
       const prompt = `Conversazione finora:\n\n${historyText}\n\nAnalizza l'ultimo messaggio di ${spk} e rispondi.`

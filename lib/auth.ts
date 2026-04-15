@@ -36,7 +36,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  session: { strategy: 'jwt' },
+  session: { strategy: 'jwt', maxAge: 24 * 60 * 60 }, // token scade ogni 24h
   pages: { signIn: '/login', error: '/login' },
   callbacks: {
     async jwt({ token, user }) {
@@ -58,7 +58,7 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  secret: process.env.NEXTAUTH_SECRET ?? 'fallback-secret',
+  secret: process.env.NEXTAUTH_SECRET,
 }
 
 export const auth = () => getServerSession(authOptions)

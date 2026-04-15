@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting: max 5 registrazioni ogni 10 minuti per IP
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+    const rl = rateLimit(`register:${ip}`, 5, 10 * 60_000)
+    if (!rl.ok) {
+      return NextResponse.json({ error: 'Troppe richieste. Riprova tra ' + rl.retryAfter + ' secondi.' }, { status: 429 })
+    }
+
     const { email, password, name } = await req.json()
 
     if (!email || !password) {
@@ -33,7 +41,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error('Register error:', err)
     return NextResponse.json({ error: 'Errore interno del server.' }, { status: 500 })
   }
 }

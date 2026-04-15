@@ -1469,7 +1469,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             {/* Undo banner */}
             {undoChat && (
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/8" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
-                <span className="text-white/60 text-xs truncate mr-2">"{undoChat.title}" eliminata</span>
+                <span className="text-white/60 text-xs truncate mr-2">"{undoChat.title}" eliminata · rimossa entro 30gg</span>
                 <button onClick={handleUndoDelete} className="text-red-400 text-xs font-bold flex-shrink-0 hover:text-red-300 transition-colors">Annulla</button>
               </div>
             )}
