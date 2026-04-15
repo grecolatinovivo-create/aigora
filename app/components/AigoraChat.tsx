@@ -3169,6 +3169,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         />,
         document.body
       )}
+
+      {/* ── SETUP 2 vs 2 (dalla start) ── */}
+      {show2v2Setup && typeof window !== 'undefined' && createPortal(
+        <TwoVsTwoSetup
+          onStart={handle2v2Start}
+          onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
+          currentUserName={displayName !== 'Tu' ? displayName : ''}
+        />,
+        document.body
+      )}
       </>
     )
   }
@@ -4223,12 +4233,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       </div>
 
       {/* ── SETUP 2 vs 2 ── */}
-      {show2v2Setup && (
+      {show2v2Setup && typeof window !== 'undefined' && createPortal(
         <TwoVsTwoSetup
           onStart={handle2v2Start}
           onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
           currentUserName={displayName !== 'Tu' ? displayName : ''}
-        />
+        />,
+        document.body
       )}
 
       {/* ── SELEZIONE FORMATO MULTIPLAYER ── */}
