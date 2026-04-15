@@ -140,6 +140,7 @@ html, body {
   to   { transform: translateX(100%); }
 }
 .slide-from-right { animation: slide-from-right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.slide-to-right   { animation: slide-to-right   0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
 
 @keyframes animate-in-fade {
   from { opacity: 0; }

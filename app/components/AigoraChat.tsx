@@ -765,6 +765,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [dbUserName, setDbUserName] = useState<string | null>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
+  const [closingAiProfile, setClosingAiProfile] = useState(false)
+
+  const closeAiProfile = () => {
+    setClosingAiProfile(true)
+    setTimeout(() => {
+      setSelectedAiProfile(null)
+      setClosingAiProfile(false)
+    }, 280)
+  }
   const [waitingForUser, setWaitingForUser] = useState(false)
   const [turnCount, setTurnCount] = useState(0)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -2380,11 +2389,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             const color = AI_COLOR[selectedAiProfile]
             const name = AI_NAMES[selectedAiProfile]
             return (
-              <div className="absolute inset-0 z-50 flex flex-col slide-from-right rounded-[44px] overflow-hidden"
+              <div className={`absolute inset-0 z-50 flex flex-col ${closingAiProfile ? 'slide-to-right' : 'slide-from-right'} rounded-[44px] overflow-hidden`}
                 style={{ backgroundColor: bgPreset.value }}>
                 <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
                   style={{ paddingTop: '16px', paddingBottom: '12px', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-                  <button onClick={() => setSelectedAiProfile(null)} className="flex items-center active:opacity-60 transition-opacity" style={{ color }}>
+                  <button onClick={() => closeAiProfile()} className="flex items-center active:opacity-60 transition-opacity" style={{ color }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                   </button>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0" style={{ backgroundColor: color }}>{ai.initials}</div>
@@ -2628,7 +2637,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             const color = AI_COLOR[selectedAiProfile]
             const name = AI_NAMES[selectedAiProfile]
             return (
-              <div className="fixed inset-0 z-[60] flex flex-col slide-from-right"
+              <div className={`fixed inset-0 z-[60] flex flex-col ${closingAiProfile ? 'slide-to-right' : 'slide-from-right'}`}
                 style={{ backgroundColor: bgPreset.value }}>
                 {/* Header stile WhatsApp */}
                 <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
@@ -2638,7 +2647,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     backgroundColor: bgPreset.header,
                     borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                   }}>
-                  <button onClick={() => setSelectedAiProfile(null)}
+                  <button onClick={() => closeAiProfile()}
                     className="flex items-center active:opacity-60 transition-opacity"
                     style={{ color }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
