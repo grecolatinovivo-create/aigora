@@ -1227,8 +1227,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const runFactCheck = useCallback(async (speakerAiId: string): Promise<void> => {
     if (stopRequestedRef.current) return
-    // Scegli un interruptore casuale diverso dal parlante
-    const others = AI_ORDER.filter(id => id !== speakerAiId)
+    // Scegli un interruptore diverso dal parlante E dalla prossima AI in lista
+    const nextAiInLine = getDefaultNextAi(speakerAiId, usedAisRef.current, AI_ORDER)
+    const others = AI_ORDER.filter(id => id !== speakerAiId && id !== nextAiInLine)
+    // Se non ci sono candidati validi (solo 2 AI disponibili), salta il factcheck
+    if (others.length === 0) return
     const interruptorId = others[Math.floor(Math.random() * others.length)]
     const interruptorName = AI_NAMES[interruptorId]
     const speakerName = AI_NAMES[speakerAiId]
@@ -1317,8 +1320,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       aiTurnCountRef.current += 1
       setTurnCount(aiTurnCountRef.current)
 
-      // Fact-check ogni 2 turni
-      if (aiTurnCountRef.current % 2 === 0 && !stopRequestedRef.current) {
+      // Fact-check ogni 3 turni (ridotto da 2 per meno interruzioni)
+      if (aiTurnCountRef.current % 3 === 0 && !stopRequestedRef.current) {
         await runFactCheck(currentAi)
       }
 
@@ -2443,9 +2446,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                   }}>
                   <button onClick={() => setSelectedAiProfile(null)}
-                    className="flex items-center gap-1 active:opacity-60 transition-opacity text-xl leading-none font-light"
+                    className="flex items-center active:opacity-60 transition-opacity"
                     style={{ color }}>
-                    ×
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                   </button>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
                     style={{ backgroundColor: color }}>
