@@ -2326,80 +2326,82 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
           </div>
 
-          {/* Pannello profilo AI — slide da destra, fullscreen */}
+          {/* Pannello profilo AI — slide da destra, fullscreen, box colorati */}
           {selectedAiProfile && AI_PROFILES[selectedAiProfile] && (() => {
             const ai = AI_PROFILES[selectedAiProfile]
             const color = AI_COLOR[selectedAiProfile]
             const name = AI_NAMES[selectedAiProfile]
             return (
               <div className="fixed inset-0 z-[60] flex flex-col slide-from-right"
-                style={{ backgroundColor: bgPreset.value }}>
-                {/* Header stile WhatsApp */}
-                <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
-                  style={{
-                    paddingTop: 'max(14px, env(safe-area-inset-top))',
-                    paddingBottom: '12px',
-                    backgroundColor: bgPreset.header,
-                    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-                  }}>
+                style={{ backgroundColor: '#07070f' }}>
+
+                {/* Header */}
+                <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b border-white/8"
+                  style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: '#0d0d18' }}>
                   <button onClick={() => setSelectedAiProfile(null)}
-                    className="flex items-center gap-1 active:opacity-60 transition-opacity"
+                    className="active:opacity-50 transition-opacity flex-shrink-0"
                     style={{ color }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
-                  {/* Mini avatar nell'header */}
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
                     style={{ backgroundColor: color }}>
                     {ai.initials}
                   </div>
-                  <div>
-                    <div className="font-bold text-sm" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
-                    <div className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>{ai.tagline}</div>
-                  </div>
+                  <span className="font-bold text-base text-white">{name}</span>
                 </div>
 
-                {/* Contenuto scrollabile */}
-                <div className="flex-1 overflow-y-auto">
-                  {/* Hero avatar */}
-                  <div className="flex flex-col items-center pt-8 pb-6 px-6"
-                    style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                    <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black text-white mb-4"
-                      style={{ backgroundColor: color, boxShadow: `0 0 0 6px ${color}25, 0 12px 40px ${color}55` }}>
+                {/* Contenuto — box colorati, no scroll */}
+                <div className="flex-1 flex flex-col px-4 py-4 gap-3 overflow-hidden"
+                  style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+
+                  {/* Hero — avatar + tagline */}
+                  <div className="flex items-center gap-4 rounded-2xl p-4"
+                    style={{ backgroundColor: `${color}18`, border: `1px solid ${color}35` }}>
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-white flex-shrink-0"
+                      style={{ backgroundColor: color, boxShadow: `0 0 0 4px ${color}30, 0 8px 24px ${color}50` }}>
                       {ai.initials}
                     </div>
-                    <div className="text-2xl font-black mb-1" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
-                    <div className="text-xs font-semibold px-3 py-1.5 rounded-full mt-1"
-                      style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}30` }}>
-                      {ai.tagline}
+                    <div>
+                      <div className="text-xl font-black text-white">{name}</div>
+                      <div className="text-sm mt-0.5 font-medium" style={{ color: `${color}` }}>{ai.tagline}</div>
                     </div>
                   </div>
 
-                  <div className="px-5 py-5 flex flex-col gap-6"
-                    style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>Chi sono</div>
-                      <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>{ai.chi}</p>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>Come mi comporto</div>
-                      <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>{ai.carattere}</p>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>Con le altre AI</div>
-                      <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>{ai.relazioni}</p>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>Cosa so fare meglio</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {ai.forza.split(', ').map(f => (
-                          <span key={f} className="px-3 py-1.5 rounded-full text-xs font-semibold"
-                            style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}>
-                            {f}
-                          </span>
-                        ))}
-                      </div>
+                  {/* Chi sono */}
+                  <div className="rounded-2xl p-4 flex-1"
+                    style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
+                    <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color }}>Chi sono</div>
+                    <p className="text-[13px] leading-relaxed text-white/85">{ai.chi}</p>
+                  </div>
+
+                  {/* Come mi comporto */}
+                  <div className="rounded-2xl p-4 flex-1"
+                    style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
+                    <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color }}>Come mi comporto</div>
+                    <p className="text-[13px] leading-relaxed text-white/85">{ai.carattere}</p>
+                  </div>
+
+                  {/* Con le altre AI */}
+                  <div className="rounded-2xl p-4 flex-1"
+                    style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
+                    <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color }}>Con le altre AI</div>
+                    <p className="text-[13px] leading-relaxed text-white/85">{ai.relazioni}</p>
+                  </div>
+
+                  {/* Punti di forza */}
+                  <div className="rounded-2xl p-4"
+                    style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
+                    <div className="text-[9px] font-black uppercase tracking-widest mb-2.5" style={{ color }}>Cosa so fare meglio</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {ai.forza.split(', ').map(f => (
+                        <span key={f} className="px-3 py-1 rounded-full text-xs font-bold"
+                          style={{ backgroundColor: `${color}20`, color, border: `1px solid ${color}40` }}>
+                          {f}
+                        </span>
+                      ))}
                     </div>
                   </div>
+
                 </div>
               </div>
             )
