@@ -54,21 +54,32 @@ export default async function UserProfilePage({ params }: { params: { username: 
       color: '#f0f0f0',
     }}>
 
-      {/* Navbar */}
+      {/* Navbar — identica alla chat */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 40,
-        height: '52px', display: 'flex', alignItems: 'center',
+        height: '56px', display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', padding: '0 24px',
-        backgroundColor: 'rgba(7,7,15,0.8)',
+        backgroundColor: 'rgba(7,7,15,0.4)',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
-        backdropFilter: 'blur(20px)',
+        backdropFilter: 'blur(24px)',
       }}>
-        <a href="/" style={{ textDecoration: 'none' }}>
-          <span style={{ fontSize: '18px', fontWeight: 900 }}>
-            <span style={{ color: 'white' }}>Ai</span>
-            <span style={{ color: '#A78BFA' }}>GORÀ</span>
-          </span>
+        {/* Sinistra — torna indietro */}
+        <a href="/" style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.45)',
+          textDecoration: 'none',
+        }}>
+          ← Torna ai dibattiti
         </a>
+        {/* Centro — Logo */}
+        <span style={{
+          position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+          fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px',
+        }}>
+          <span style={{ color: 'white' }}>Ai</span>
+          <span style={{ color: '#A78BFA' }}>GORÀ</span>
+        </span>
+        {/* Destra — CTA */}
         <a href="/" style={{
           fontSize: '12px', color: 'rgba(255,255,255,0.4)',
           textDecoration: 'none', padding: '6px 14px',

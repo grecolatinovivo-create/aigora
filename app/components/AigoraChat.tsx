@@ -488,6 +488,10 @@ function Navbar({ onCronologia, onFeed, onCrea, displayName, userEmail, userPlan
               </div>
               {userPlan === 'admin' && (
                 <>
+                  <a href={`/${encodeURIComponent(displayName)}`}
+                    className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2">
+                    🔗 Il mio profilo pubblico
+                  </a>
                   <button onClick={() => { onFeed?.(); setShowProfileMenu(false) }}
                     className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                     style={{ color: 'rgba(255,255,255,0.7)' }}>
@@ -501,10 +505,6 @@ function Navbar({ onCronologia, onFeed, onCrea, displayName, userEmail, userPlan
                     style={{ color: 'rgba(255,255,255,0.7)' }}>
                     ＋ Crea dibattito
                   </button>
-                  <a href={`/${encodeURIComponent(displayName)}`}
-                    className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2">
-                    🔗 Il mio profilo pubblico
-                  </a>
                   <button onClick={() => window.location.href = '/admin'}
                     className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                     ⚙️ Pannello Admin
@@ -1196,7 +1196,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
   const navbarProps = {
-    onCronologia: () => phase === 'start' ? setPhase('history') : setShowHistory(true),
+    onCronologia: () => setShowHistory(true),
     onFeed: () => { setSocialTab('feed'); setShowSocialPanel(true) },
     onCrea: () => { setSocialTab('crea'); setShowSocialPanel(true) },
     displayName,
@@ -1257,6 +1257,35 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     return (
       <div className="desktop-bg relative overflow-hidden"
         style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* ── Pannello cronologia (disponibile anche dalla start) ── */}
+        <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
+          <div className="w-72 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+              <span className="text-white font-bold text-sm">Cronologia</span>
+              <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
+            </div>
+            <div className="flex-1 overflow-y-auto py-2">
+              {savedChats.length === 0 ? (
+                <p className="text-white/25 text-xs text-center mt-8 px-4">Nessuna chat salvata.</p>
+              ) : (
+                savedChats.map(chat => (
+                  <button key={chat.id} onClick={() => {
+                    setMessages(chat.messages)
+                    chatHistoryRef.current = chat.history
+                    setPhase('running')
+                    setShowHistory(false)
+                  }}
+                    className="w-full text-left px-5 py-3 hover:bg-white/5 transition-colors border-b border-white/5">
+                    <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
+                    <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+        {showHistory && <div className="fixed inset-0 z-[39]" onClick={() => setShowHistory(false)} />}
 
         {/* ── Navbar desktop ── */}
         <div className="hidden lg:block flex-shrink-0">
