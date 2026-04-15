@@ -2737,7 +2737,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({
           action: 'turn', aiId,
           history: [
-            { name: 'Sistema', content: `Sei ${aiName}, membro della Squadra ${team} nel dibattito su: "${config.topic}". Supporta la tua squadra con argomenti forti e diretti. 2-3 frasi.` },
+            { name: 'Sistema', content: `${AI_PROFILES[aiId]?.carattere ?? ''} Stai partecipando a un dibattito 2v2 sul tema: "${config.topic}". Sei nella Squadra ${team} — difendi la posizione della tua squadra con argomenti forti, usando il tuo carattere e stile tipici. Rispondi in 2-3 frasi nella lingua del messaggio.` },
             ...history,
             { name: 'Sistema', content: `Rispondi a: "${trigger}"` }
           ],
@@ -2849,7 +2849,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     try {
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'turn', aiId: arbId, history: [{ name: 'Sistema', content: `Sei ${arbName}, arbitro del dibattito su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: ${"Squadra B"} + ${AI_NAMES[config.teamB.aiId1]}. Pronuncia il verdetto finale. Alla fine scrivi SEMPRE su una riga separata il punteggio nel formato esatto: PUNTEGGIO: A=X B=Y (dove X e Y sono numeri interi da 0 a 10). Poi spiega chi ha vinto e perché in 2-3 frasi.` }, ...history], needsWebSearch: false }),
+        body: JSON.stringify({ action: 'turn', aiId: arbId, history: [{ name: 'Sistema', content: `${AI_PROFILES[arbId]?.carattere ?? ''} Sei l'arbitro di questo dibattito 2v2 sul tema: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: 2 AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Cerca di essere neutro, ma il tuo carattere e le tue opinioni personali potrebbero inconsapevolmente influenzare il giudizio — è umano, succede. ${Math.random() < 0.2 ? `Oggi ti sembra che la Squadra ${Math.random() < 0.5 ? 'A' : 'B'} abbia argomentato in modo più convincente, anche se non sai bene spiegare perché — forse è solo istinto.` : ''} Pronuncia il verdetto. Alla fine scrivi SEMPRE su una riga separata: PUNTEGGIO: A=X B=Y (interi 0-10). Poi 2-3 frasi di spiegazione.` }, ...history], needsWebSearch: false }),
       })
       if (!res.ok || !res.body) throw new Error()
       const reader = res.body.getReader(); const decoder = new TextDecoder()
@@ -3957,12 +3957,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     </div>
                   )
                 })}
-                {twoVsTwoLoading && (
-                  <div className="flex items-center gap-2 px-4 py-2">
-                    <div className="flex gap-1">{[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}</div>
-                    <span className="text-[10px] text-white/30">L'AI sta pensando…</span>
-                  </div>
-                )}
+                {twoVsTwoLoading && <ThinkingBubble aiId={twoVsTwoState.currentTurn === 'A' ? twoVsTwoState.config.teamA.aiId : twoVsTwoState.config.teamB.aiId1} isDark={true} />}
                 <div ref={messagesEndRef} />
               </>
             ) : (
