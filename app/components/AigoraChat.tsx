@@ -3628,33 +3628,56 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Chat header — 2v2 o normale */}
           {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
-            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 border-b" style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-              {/* Back */}
-              <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
-                className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isDark?'white':'#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-              </button>
-              {/* Team A */}
-              <div className="flex-1 text-center">
-                <div className="text-[8px] font-black uppercase" style={{ color: '#60a5fa' }}>🔵 {twoVsTwoState.config.teamA.humanName}</div>
-                <div className="text-[9px] text-white/40">+ {AI_NAMES[twoVsTwoState.config.teamA.aiId]}</div>
+            <div className="flex-shrink-0" style={{ background: '#0d0d14' }}>
+              {/* Titolo */}
+              <div className="text-center py-1" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>⚔️ 2 vs 2</span>
               </div>
-              {/* Turno */}
-              <div className="flex flex-col items-center flex-shrink-0">
-                <div className="text-[9px] text-white/30">R{twoVsTwoState.round}/{twoVsTwoState.maxRounds}</div>
+              {/* Riga 1: back + badge A — score — badge B */}
+              <div className="flex items-center justify-between px-2 py-1.5" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
+                  className="w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <div className="flex items-center gap-2">
+                  <div className="text-[8px] font-black px-2 py-0.5 rounded" style={{ color: '#3b82f6', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>SQUADRA A</div>
+                  <div className="text-base font-black text-white">{twoVsTwoState.round} — {twoVsTwoState.maxRounds - twoVsTwoState.round}</div>
+                  <div className="text-[8px] font-black px-2 py-0.5 rounded" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>SQUADRA B</div>
+                </div>
                 <div className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: twoVsTwoState.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }} />
-                  <span className="text-[9px] font-black" style={{ color: twoVsTwoState.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }}>
-                    {twoVsTwoState.currentTurn}
-                  </span>
+                  <span className="text-[8px] font-black" style={{ color: twoVsTwoState.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }}>R{twoVsTwoState.round}/{twoVsTwoState.maxRounds}</span>
                 </div>
               </div>
-              {/* Team B */}
-              <div className="flex-1 text-center">
-                <div className="text-[8px] font-black uppercase" style={{ color: '#f87171' }}>🔴 {twoVsTwoState.config.teamB.humanName}</div>
-                <div className="text-[9px] text-white/40">{AI_NAMES[twoVsTwoState.config.teamB.aiId]} +</div>
+              {/* Riga 2: barra membri squadre */}
+              <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                {/* Squadra A */}
+                <div className="flex-1 flex flex-col gap-1 px-2 py-1.5" style={{ background: 'rgba(59,130,246,0.05)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                  {[
+                    { name: twoVsTwoState.config.teamA.humanName, color: '#F59E0B', isAI: false },
+                    { name: AI_NAMES[twoVsTwoState.config.teamA.aiId], color: AI_COLOR[twoVsTwoState.config.teamA.aiId], isAI: true },
+                  ].map((m, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ fontSize: 5, background: m.color }}>{m.name[0]}</div>
+                      <div className="text-[8px] font-semibold" style={{ color: '#60a5fa' }}>{m.name}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Squadra B — solo AI */}
+                <div className="flex-1 flex flex-col justify-center gap-1 px-2 py-1.5" style={{ background: 'rgba(239,68,68,0.05)' }}>
+                  {[
+                    { name: AI_NAMES[twoVsTwoState.config.teamB.aiId], color: AI_COLOR[twoVsTwoState.config.teamB.aiId] },
+                    { name: AI_NAMES[twoVsTwoState.config.arbiterAiId], color: '#A78BFA' },
+                  ].map((m, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ fontSize: 5, background: m.color }}>{m.name[0]}</div>
+                      <div className="text-[8px] font-semibold" style={{ color: i === 0 ? '#f87171' : '#A78BFA' }}>
+                        {m.name}{i === 1 && <span className="ml-1 opacity-50">⚖️</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div style={{ width: 28 }} />
             </div>
           ) : (
           <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
@@ -3738,7 +3761,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
+          <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-1" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value }}>
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
               <>
                 {twoVsTwoState.messages.map((msg, i) => {
@@ -3753,21 +3776,20 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     </div>
                   )
                   const alignRight = !isA
+                  const msgBg = isA ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)'
+                  const msgColor = isA ? '#93c5fd' : '#fca5a5'
+                  const borderR = isA ? '3px 8px 8px 8px' : '8px 3px 8px 8px'
                   return (
-                    <div key={i} className={`flex gap-2 px-3 py-1 max-w-[88%] ${alignRight ? 'flex-row-reverse ml-auto' : ''}`}>
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 mt-0.5"
-                        style={{ fontSize: 7, background: msg.isAI ? aiColor : teamColor }}>
-                        {msg.isAI ? (msg.aiId === 'gemini' ? 'Ge' : (AI_NAMES[msg.aiId ?? ''] ?? '?')[0]) : msg.author[0]?.toUpperCase()}
+                    <div key={i} className={`flex flex-col px-2 py-0.5 max-w-[85%] ${alignRight ? 'items-end self-end' : 'items-start'}`}>
+                      <div className="text-[7px] font-semibold mb-0.5 px-1" style={{ color: msg.isAI ? aiColor : teamColor }}>
+                        {msg.author}{msg.isAI && <span className="ml-1 opacity-50">AI</span>}
                       </div>
-                      <div>
-                        <div className="text-[8px] mb-0.5 px-1" style={{ color: msg.isAI ? aiColor : teamColor, textAlign: alignRight ? 'right' : 'left' }}>{msg.author}</div>
-                        <div className="px-3 py-2 text-xs leading-relaxed rounded-2xl"
-                          style={{ background: msg.isAI ? `${aiColor}18` : `${teamColor}18`, color: isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)', borderRadius: alignRight ? '12px 3px 12px 12px' : '3px 12px 12px 12px' }}>
-                          {msg.streaming && !msg.content
-                            ? <span className="flex gap-1 items-center py-0.5">{[0,150,300].map(d=><span key={d} className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce" style={{animationDelay:`${d}ms`}}/>)}</span>
-                            : <>{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</>
-                          }
-                        </div>
+                      <div className="px-2 py-1.5 text-[9px] leading-[1.4]"
+                        style={{ background: msg.isAI ? `${aiColor}20` : msgBg, color: msgColor, borderRadius: borderR }}>
+                        {msg.streaming && !msg.content
+                          ? <span className="flex gap-1 items-center py-0.5">{[0,150,300].map(d=><span key={d} className="w-1 h-1 rounded-full bg-white/40 animate-bounce" style={{animationDelay:`${d}ms`}}/>)}</span>
+                          : <>{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</>
+                        }
                       </div>
                     </div>
                   )
@@ -3795,10 +3817,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             const myColor = '#3b82f6'
             const myAiId = twoVsTwoState.config.teamA.aiId
             return (
-              <div className="flex-shrink-0" style={{ backgroundColor: bgPreset.header, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                <div className="px-3 pt-2 pb-1">
-                  <div className="text-[9px] text-center font-bold" style={{ color: isMyTurn ? myColor : 'rgba(255,255,255,0.3)' }}>
-                    {isMyTurn ? `Turno tuo · ${twoVsTwoState.messagesThisTurn}/${twoVsTwoState.maxMessagesPerTurn} messaggi` : `Turno Squadra ${twoVsTwoState.currentTurn}…`}
+              <div className="flex-shrink-0" style={{ background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="px-3 pt-1.5 pb-1">
+                  <div className="text-[8px] text-center font-bold" style={{ color: isMyTurn ? myColor : 'rgba(255,255,255,0.3)' }}>
+                    {isMyTurn ? `Il tuo turno · ${twoVsTwoState.messagesThisTurn}/${twoVsTwoState.maxMessagesPerTurn}` : `Turno Squadra ${twoVsTwoState.currentTurn}…`}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 px-3 pb-2">
