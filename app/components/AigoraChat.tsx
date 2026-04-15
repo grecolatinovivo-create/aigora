@@ -567,9 +567,159 @@ interface TwoVsTwoState {
   maxRounds: number
   messagesThisTurn: number
   maxMessagesPerTurn: number
+  scoreA: number
+  scoreB: number
   ended: boolean
   verdict: string | null
   waitingForOpponent?: boolean
+}
+
+// ── Roulette slot machine ─────────────────────────────────────────────────────
+function SlotReel({ finalId, rolling, settled, delay }: { finalId: string; rolling: boolean; settled: boolean; delay: number }) {
+  const [displayIdx, setDisplayIdx] = useState(0)
+  const [speed, setSpeed] = useState(60)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const names = AI_OPTIONS.map(a => a.name)
+
+  useEffect(() => {
+    if (!rolling) return
+    // Parte veloce
+    setSpeed(60)
+    intervalRef.current = setInterval(() => {
+      setDisplayIdx(i => (i + 1) % names.length)
+    }, 60)
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [rolling])
+
+  useEffect(() => {
+    if (!settled) return
+    // Rallenta progressivamente poi si ferma sul risultato
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    const speeds = [80, 120, 180, 260, 360, 500]
+    let si = 0
+    const slowDown = () => {
+      if (si >= speeds.length) {
+        // Fermati sul risultato finale
+        setDisplayIdx(AI_OPTIONS.findIndex(a => a.id === finalId))
+        return
+      }
+      setDisplayIdx(i => (i + 1) % names.length)
+      si++
+      setTimeout(slowDown, speeds[si - 1])
+    }
+    setTimeout(slowDown, delay)
+  }, [settled, finalId, delay])
+
+  const currentAI = AI_OPTIONS[displayIdx % AI_OPTIONS.length]
+  const isFinal = settled && currentAI?.id === finalId
+
+  return (
+    <div className="relative overflow-hidden flex items-center justify-center rounded-2xl"
+      style={{ height: 72, background: isFinal ? `${currentAI.color}20` : 'rgba(255,255,255,0.05)', border: `2px solid ${isFinal ? currentAI.color : 'rgba(255,255,255,0.1)'}`, transition: 'all 0.4s' }}>
+      {/* Righe sopra e sotto per effetto slot */}
+      <div className="absolute top-0 left-0 right-0 h-5 pointer-events-none z-10"
+        style={{ background: 'linear-gradient(to bottom, rgba(13,13,20,0.95), transparent)' }} />
+      <div className="absolute bottom-0 left-0 right-0 h-5 pointer-events-none z-10"
+        style={{ background: 'linear-gradient(to top, rgba(13,13,20,0.95), transparent)' }} />
+      {/* Linea centrale */}
+      <div className="absolute left-4 right-4 h-px z-5" style={{ background: isFinal ? `${currentAI.color}60` : 'rgba(255,255,255,0.1)' }} />
+
+      <div className="flex items-center gap-3 px-4 z-20">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black flex-shrink-0 transition-all duration-100"
+          style={{ background: currentAI?.color, fontSize: 11, boxShadow: isFinal ? `0 0 20px ${currentAI.color}80` : 'none' }}>
+          {currentAI?.id === 'gemini' ? 'Ge' : currentAI?.name[0]}
+        </div>
+        <div className="font-black text-lg transition-all duration-100"
+          style={{ color: isFinal ? 'white' : 'rgba(255,255,255,0.7)', textShadow: isFinal ? `0 0 20px ${currentAI?.color}` : 'none' }}>
+          {currentAI?.name}
+        </div>
+        {isFinal && <div className="text-green-400 text-2xl scale-in ml-auto">✓</div>}
+      </div>
+    </div>
+  )
+}
+
+function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
+  teamAAI: string; rouletteSlots: string[]; rouletteSettled: boolean[]; arbiter: string
+}) {
+  const myAI = AI_OPTIONS.find(a => a.id === teamAAI)
+  const bothSettled = rouletteSettled[0] && rouletteSettled[1]
+  const arbAI = AI_OPTIONS.find(a => a.id === arbiter)
+
+  return (
+    <div className="flex flex-col items-center justify-center flex-1 px-8 py-6 gap-5">
+      {/* Titolo con suspense */}
+      <div className="text-center">
+        <div className="text-2xl font-black text-white mb-1" style={{ letterSpacing: '-0.5px' }}>
+          {bothSettled ? 'Il dado è tratto.' : 'Il destino decide…'}
+        </div>
+        <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          {bothSettled ? 'Buona fortuna.' : 'Le AI vengono assegnate casualmente'}
+        </div>
+      </div>
+
+      {/* La tua AI — fissa, già scelta */}
+      <div className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl"
+        style={{ background: `${myAI?.color}15`, border: `1px solid ${myAI?.color}40` }}>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-xs flex-shrink-0"
+          style={{ background: myAI?.color }}>
+          {teamAAI === 'gemini' ? 'Ge' : myAI?.name[0]}
+        </div>
+        <div>
+          <div className="text-[9px] font-black uppercase tracking-wide" style={{ color: '#60a5fa' }}>🔵 Il tuo alleato</div>
+          <div className="text-sm font-black text-white">{myAI?.name}</div>
+        </div>
+        <div className="ml-auto text-green-400 font-black">✓</div>
+      </div>
+
+      {/* Slot 1 — AI avversaria */}
+      <div className="w-full">
+        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#f87171' }}>
+          🔴 AI avversaria
+        </div>
+        <SlotReel
+          finalId={rouletteSlots[0]}
+          rolling={!rouletteSettled[0]}
+          settled={rouletteSettled[0]}
+          delay={0}
+        />
+      </div>
+
+      {/* Slot 2 — Eliminata */}
+      <div className="w-full" style={{ opacity: rouletteSettled[0] ? 1 : 0.4, transition: 'opacity 0.5s' }}>
+        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          ❌ Eliminata
+        </div>
+        <SlotReel
+          finalId={rouletteSlots[1]}
+          rolling={rouletteSettled[0] && !rouletteSettled[1]}
+          settled={rouletteSettled[1]}
+          delay={400}
+        />
+      </div>
+
+      {/* Arbitro — appare solo dopo entrambi settled */}
+      {bothSettled && arbAI && (
+        <div className="w-full scale-in">
+          <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#A78BFA' }}>
+            ⚖️ Arbitro
+          </div>
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+            style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)' }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs flex-shrink-0"
+              style={{ background: '#A78BFA', boxShadow: '0 0 16px rgba(167,139,250,0.5)' }}>
+              {arbAI.id === 'gemini' ? 'Ge' : arbAI.name[0]}
+            </div>
+            <div>
+              <div className="text-xs font-black text-white">{arbAI.name}</div>
+              <div className="text-[9px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Rimasta fuori — fa l'arbitro</div>
+            </div>
+            <div className="ml-auto text-purple-400 font-black text-lg">⚖️</div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
@@ -868,64 +1018,15 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 
           {/* ── STEP 3: Roulette ── */}
           {step === 'roulette' && (
+            <RouletteScreen
+              teamAAI={teamAAI}
+              rouletteSlots={rouletteSlots}
+              rouletteSettled={rouletteSettled}
+              arbiter={arbiter}
+            />
+          )}
+          {step === 'roulette' && false && (
             <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-8">
-              <div className="text-center">
-                <div className="text-xl font-black text-white mb-1">Il destino decide…</div>
-                <div className="text-sm text-white/40">Le altre AI vengono assegnate per te</div>
-              </div>
-
-              {/* Squadra A — già scelta, mostrata fissa */}
-              <div className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl"
-                style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)' }}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                  style={{ background: AI_OPTIONS.find(a => a.id === teamAAI)?.color ?? '#7C3AED' }}>
-                  {teamAAI === 'gemini' ? 'Ge' : AI_NAMES[teamAAI]?.[0]}
-                </div>
-                <div>
-                  <div className="text-[10px] font-black uppercase text-blue-400">🔵 La tua AI alleata</div>
-                  <div className="text-sm font-bold text-white">{AI_NAMES[teamAAI]}</div>
-                </div>
-                <div className="ml-auto text-green-400 text-lg">✓</div>
-              </div>
-
-              {/* 2 slot roulette: avversaria + eliminata */}
-              {[
-                { label: '🔴 AI avversaria', index: 0, color: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', labelColor: '#f87171' },
-                { label: '❌ Eliminata', index: 1, color: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.08)', labelColor: 'rgba(255,255,255,0.3)' },
-              ].map(({ label, index, color, border, labelColor }) => {
-                const settled = rouletteSettled[index]
-                const aiId = rouletteSlots[index]
-                const ai = AI_OPTIONS.find(a => a.id === aiId)
-                return (
-                  <div key={index} className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-500"
-                    style={{ background: color, border: `1px solid ${border}`, opacity: settled ? 1 : 0.5 }}>
-                    {/* Slot animato */}
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
-                      style={{ background: settled && ai ? ai.color : 'rgba(255,255,255,0.1)' }}>
-                      {settled && ai ? (
-                        <span className="text-xs font-black text-white">{ai.id === 'gemini' ? 'Ge' : AI_NAMES[ai.id]?.[0]}</span>
-                      ) : (
-                        /* Spinning dots */
-                        <div className="flex gap-0.5">
-                          {[0,1,2].map(d => (
-                            <span key={d} className="w-1 h-1 rounded-full bg-white/40 animate-bounce"
-                              style={{ animationDelay: `${d * 100}ms` }} />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-[10px] font-black uppercase" style={{ color: labelColor }}>{label}</div>
-                      <div className="text-sm font-bold transition-all duration-300" style={{ color: settled ? 'white' : 'rgba(255,255,255,0.3)' }}>
-                        {settled && ai ? ai.name : '···'}
-                      </div>
-                    </div>
-                    {settled && <div className="text-green-400 text-lg scale-in">✓</div>}
-                  </div>
-                )
-              })}
-
-              {/* Arbitro — appare dopo che entrambi i slot sono settled */}
               {rouletteSettled[1] && (() => {
                 const ai = AI_OPTIONS.find(a => a.id === arbiter)
                 return ai ? (
@@ -2591,6 +2692,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       maxRounds: 4,
       messagesThisTurn: 0,
       maxMessagesPerTurn: 3,
+      scoreA: 0,
+      scoreB: 0,
       ended: false,
       verdict: null,
       waitingForOpponent: !!config.roomCode,
@@ -2731,7 +2834,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     try {
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'turn', aiId: arbId, history: [{ name: 'Sistema', content: `Sei ${arbName}, arbitro del dibattito su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: ${config.teamB.humanName} + ${AI_NAMES[config.teamB.aiId]}. Pronuncia il verdetto: chi ha vinto e perché, punto più forte di ciascuna squadra. Sii diretto.` }, ...history], needsWebSearch: false }),
+        body: JSON.stringify({ action: 'turn', aiId: arbId, history: [{ name: 'Sistema', content: `Sei ${arbName}, arbitro del dibattito su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: ${config.teamB.humanName} + ${AI_NAMES[config.teamB.aiId]}. Pronuncia il verdetto finale. Alla fine scrivi SEMPRE su una riga separata il punteggio nel formato esatto: PUNTEGGIO: A=X B=Y (dove X e Y sono numeri interi da 0 a 10). Poi spiega chi ha vinto e perché in 2-3 frasi.` }, ...history], needsWebSearch: false }),
       })
       if (!res.ok || !res.body) throw new Error()
       const reader = res.body.getReader(); const decoder = new TextDecoder()
@@ -2748,7 +2851,18 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           setTwoVsTwoState(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: verdict, streaming: true }; return { ...prev, messages: msgs, verdict } })
         }
       }
-      setTwoVsTwoState(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { ...msgs[msgs.length-1], streaming: false }; return { ...prev, messages: msgs } })
+      // Estrai punteggio dal verdetto
+      const scoreMatch = verdict.match(/PUNTEGGIO:\s*A=(\d+)\s*B=(\d+)/i)
+      const sA = scoreMatch ? parseInt(scoreMatch[1]) : 0
+      const sB = scoreMatch ? parseInt(scoreMatch[2]) : 0
+      // Rimuovi la riga del punteggio dal testo mostrato
+      const cleanVerdict = verdict.replace(/PUNTEGGIO:\s*A=\d+\s*B=\d+/i, '').trim()
+      setTwoVsTwoState(prev => {
+        if (!prev) return prev
+        const msgs = [...prev.messages]
+        msgs[msgs.length-1] = { ...msgs[msgs.length-1], content: cleanVerdict, streaming: false }
+        return { ...prev, messages: msgs, scoreA: sA, scoreB: sB }
+      })
     } catch {}
     setTwoVsTwoLoading(false)
   }
@@ -3620,7 +3734,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <Navbar {...navbarProps} />
 
       {/* ── TELEFONO (desktop) ── */}
-      <div className="phone-shell relative flex-shrink-0 scale-in" style={{ width: 390, height: 790 }}>
+      <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      {/* Titolo sopra il telefono — solo in 2v2 */}
+      {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
+        <div className="text-xs font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          2 vs 2
+        </div>
+      )}
+      <div className="phone-shell relative scale-in" style={{ width: 390, height: 790 }}>
 
         {/* Cornice */}
         <div className="absolute inset-0 rounded-[50px] bg-[#1c1c1e]"
@@ -3653,10 +3774,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           {/* Chat header — 2v2 o normale */}
           {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
             <div className="flex-shrink-0" style={{ background: '#0d0d14' }}>
-              {/* Titolo */}
-              <div className="text-center py-1" style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>⚔️ 2 vs 2</span>
-              </div>
               {/* Riga 1: back + badge A — score — badge B */}
               <div className="flex items-center justify-between px-2 py-1.5" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
@@ -3665,7 +3782,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 </button>
                 <div className="flex items-center gap-2">
                   <div className="text-[8px] font-black px-2 py-0.5 rounded" style={{ color: '#3b82f6', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>SQUADRA A</div>
-                  <div className="text-base font-black text-white">{twoVsTwoState.round} — {twoVsTwoState.maxRounds - twoVsTwoState.round}</div>
+                  <div className="text-base font-black text-white">{twoVsTwoState.scoreA} — {twoVsTwoState.scoreB}</div>
                   <div className="text-[8px] font-black px-2 py-0.5 rounded" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>SQUADRA B</div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -4456,6 +4573,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
         </>}
       </div>
+      </div>{/* fine flex-col wrapper telefono */}
 
       {/* ── PANNELLO SINTESI ── */}
       <div className={`flex-shrink-0 transition-all duration-500 ease-out${showSynthesis ? ' synthesis-panel-mobile' : ''}`}
