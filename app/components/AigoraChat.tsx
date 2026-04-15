@@ -1452,17 +1452,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       aiTurnCountRef.current = 0
       stopRequestedRef.current = false
 
-      // Se l'utente menziona un'AI, quella risponde in modalità focused (1-a-1)
+      // Se l'utente menziona un'AI, quella risponde per prima ma poi il dibattito
+      // riprende normalmente con tutte le AI (non rimane in botta e risposta)
       const mentioned = detectUserMention(text, AI_ORDER)
-      if (mentioned) {
-        setTimeout(() => runDebate(mentioned, 'focused'), 150)
-        return
-      }
-
-      // Altrimenti riprende la modalità corrente
-      const lastAi = usedAisRef.current[usedAisRef.current.length - 1] || 'claude'
-      const nextAi = getDefaultNextAi(lastAi, [], AI_ORDER)
-      setTimeout(() => runDebate(nextAi, debateModeRef.current), 150)
+      const startAi = mentioned || (() => {
+        const lastAi = usedAisRef.current[usedAisRef.current.length - 1] || 'claude'
+        return getDefaultNextAi(lastAi, [], AI_ORDER)
+      })()
+      setTimeout(() => runDebate(startAi, 'debate'), 150)
     }
   }
 
