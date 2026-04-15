@@ -555,6 +555,7 @@ interface TwoVsTwoConfig {
   teamA: { humanName: string; aiId: string }
   teamB: { aiId1: string; aiId2: string }  // squadra B: 2 AI
   arbiterAiId: string
+  maxRounds?: number
   roomCode?: string
   roomId?: string
 }
@@ -639,8 +640,8 @@ function SlotReel({ finalId, rolling, settled, delay }: { finalId: string; rolli
   )
 }
 
-function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
-  teamAAI: string; rouletteSlots: string[]; rouletteSettled: boolean[]; arbiter: string
+function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter, onContinue, ready }: {
+  teamAAI: string; rouletteSlots: string[]; rouletteSettled: boolean[]; arbiter: string; onContinue: () => void; ready: boolean
 }) {
   const myAI = AI_OPTIONS.find(a => a.id === teamAAI)
   const allSettled = rouletteSettled[0] && rouletteSettled[1]
@@ -718,6 +719,15 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
           </div>
         </div>
       )}
+
+      {/* Pulsante Continua — appare solo quando tutto è pronto */}
+      {allSettled && (
+        <button onClick={onContinue} disabled={!ready}
+          className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all scale-in"
+          style={{ background: ready ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : 'rgba(255,255,255,0.08)', boxShadow: ready ? '0 4px 20px rgba(124,58,237,0.4)' : 'none', opacity: ready ? 1 : 0.5 }}>
+          {ready ? 'Continua →' : 'Preparazione…'}
+        </button>
+      )}
     </div>
   )
 }
@@ -732,10 +742,12 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [teamAAI, setTeamAAI] = useState('claude')
   const [teamBAI, setTeamBAI] = useState('gpt')
   const [arbiter, setArbiter] = useState('gemini')
+  const [maxRoundsChoice, setMaxRoundsChoice] = useState(5)
   const [step, setStep] = useState<'topic' | 'teams' | 'roulette' | 'share'>('topic')
   const [creating, setCreating] = useState(false)
   const [rouletteSlots, setRouletteSlots] = useState<string[]>(['', '', ''])
   const [rouletteSettled, setRouletteSettled] = useState<boolean[]>([false, false, false])
+  const [rouletteReady, setRouletteReady] = useState(false)
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
   const [copied, setCopied] = useState(false)
@@ -775,6 +787,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     // Avvia la roulette — 2 slot: AI 1 di B, poi AI 2 di B
     setRouletteSlots(['', ''])
     setRouletteSettled([false, false])
+    setRouletteReady(false)
     setStep('roulette')
 
     const reveals = [randomB1, randomB2]
@@ -783,7 +796,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     const apiPromise = fetch('/api/2v2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId1: randomB1, teamBAiId2: randomB2, arbiterAiId: randomArbiter, teamAName: teamAHuman }),
+      body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId1: randomB1, teamBAiId2: randomB2, arbiterAiId: randomArbiter, teamAName: teamAHuman, maxRounds: maxRoundsChoice }),
     }).then(r => r.json())
 
     // Anima i 2 slot in sequenza: primo a 1.4s, secondo a 2.8s
@@ -804,7 +817,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           setRoomId(data.room.id)
         }
       } catch {}
-      setTimeout(() => setStep('share'), 600)
+      setRouletteReady(true)
     }, 3800)
   }
 
@@ -1007,6 +1020,25 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 
               <div className="text-[10px] text-white/25 text-center">Le AI avversaria e arbitro verranno assegnate dalla roulette</div>
 
+              {/* Selettore round */}
+              <div className="w-full max-w-xs">
+                <div className="text-[10px] text-white/30 uppercase tracking-widest text-center mb-3">Numero di round</div>
+                <div className="flex gap-2 justify-center">
+                  {[3, 5, 7, 9, 11].map(r => (
+                    <button key={r} onClick={() => setMaxRoundsChoice(r)}
+                      className="w-10 h-10 rounded-xl font-black text-sm transition-all hover:scale-105"
+                      style={{
+                        background: maxRoundsChoice === r ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)',
+                        border: maxRoundsChoice === r ? '2px solid rgba(99,102,241,0.7)' : '1px solid rgba(255,255,255,0.1)',
+                        color: maxRoundsChoice === r ? 'white' : 'rgba(255,255,255,0.4)',
+                        boxShadow: maxRoundsChoice === r ? '0 0 12px rgba(99,102,241,0.4)' : 'none',
+                      }}>
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* CTA */}
               <button onClick={handleCreate} disabled={creating}
                 className="px-12 py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 transition-all hover:scale-[1.02]"
@@ -1023,49 +1055,52 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               rouletteSlots={rouletteSlots}
               rouletteSettled={rouletteSettled}
               arbiter={arbiter}
+              ready={rouletteReady}
+              onContinue={() => setStep('share')}
             />
           )}
 
           {/* ── STEP 4: Condividi ── */}
           {step === 'share' && (
-            <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-6">
-              <div className="text-5xl">Duello creato!</div>
+            <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-5">
+              {/* Titolo semplice */}
               <div className="text-center">
-                <div className="text-2xl font-black text-white mb-1">Duello creato!</div>
-                <div className="text-white/40 text-sm">Condividi il codice con il tuo avversario.<br/>La partita inizia quando entra.</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">2 vs 2</div>
+                <div className="text-xl font-black text-white">Partita pronta</div>
+                <div className="text-white/40 text-sm mt-1">Condividi il codice con il tuo avversario</div>
               </div>
 
               {/* Codice */}
-              <div className="w-full rounded-3xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Codice di accesso</div>
-                <div className="text-5xl font-black text-white tracking-[0.15em] mb-5">{roomCode}</div>
+              <div className="w-full rounded-3xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Codice di accesso</div>
+                <div className="text-4xl font-black text-white tracking-[0.15em] mb-4">{roomCode}</div>
                 <button onClick={handleCopy}
-                  className="w-full py-3 rounded-2xl text-sm font-bold transition-all"
+                  className="w-full py-2.5 rounded-2xl text-sm font-bold transition-all"
                   style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.07)', border: copied ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)', color: copied ? '#10A37F' : 'rgba(255,255,255,0.65)' }}>
-                  {copied ? '✓ Link copiato!' : '📋 Copia link da condividere'}
+                  {copied ? 'Link copiato!' : 'Copia link'}
                 </button>
               </div>
 
-              {/* Riepilogo squadre */}
+              {/* Riepilogo squadre — con le AI reali estratte dalla roulette */}
               <div className="w-full flex gap-3">
                 <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
                   <div className="text-[9px] font-black uppercase text-blue-400 mb-1">SQUADRA A</div>
                   <div className="text-xs text-white/70">{teamAHuman}</div>
-                  <div className="text-[10px] text-white/30">+ {AI_NAMES[teamAAI]}</div>
+                  <div className="text-[10px] text-white/30">{AI_NAMES[teamAAI]}</div>
                 </div>
                 <div className="flex-shrink-0 flex items-center text-white/20 font-black text-sm">vs</div>
                 <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
                   <div className="text-[9px] font-black uppercase text-red-400 mb-1">SQUADRA B</div>
-                  <div className="text-xs text-white/40 italic">In attesa…</div>
-                  <div className="text-[10px] text-white/30">+ {AI_NAMES[teamBAI]}</div>
+                  <div className="text-[10px] text-white/60">{AI_NAMES[teamBAI]}</div>
+                  <div className="text-[10px] text-white/30">{AI_NAMES[arbiter]}</div>
                 </div>
               </div>
 
               <button
-                onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: arbiter }, arbiterAiId: arbiter, roomCode, roomId })}
+                onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: arbiter }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId })}
                 className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-                Entra nella sala d'attesa →
+                Inizia la partita →
               </button>
             </div>
           )}
@@ -2669,7 +2704,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       messages: [],
       currentTurn: 'A',
       round: 1,
-      maxRounds: 4,
+      maxRounds: config.maxRounds ?? 5,
       messagesThisTurn: 0,
       maxMessagesPerTurn: 3,
       scoreA: 0,
