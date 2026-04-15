@@ -582,8 +582,10 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [teamAAI, setTeamAAI] = useState('claude')
   const [teamBAI, setTeamBAI] = useState('gpt')
   const [arbiter, setArbiter] = useState('gemini')
-  const [step, setStep] = useState<'topic' | 'teams' | 'share'>('topic')
+  const [step, setStep] = useState<'topic' | 'teams' | 'roulette' | 'share'>('topic')
   const [creating, setCreating] = useState(false)
+  const [rouletteSlots, setRouletteSlots] = useState<string[]>(['', '', ''])
+  const [rouletteSettled, setRouletteSettled] = useState<boolean[]>([false, false, false])
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
   const [copied, setCopied] = useState(false)
@@ -611,22 +613,42 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   }
 
   const handleCreate = async () => {
-    setCreating(true)
-    try {
-      const res = await fetch('/api/2v2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId: teamBAI, arbiterAiId: arbiter, teamAName: teamAHuman }),
-      })
-      const data = await res.json()
-      if (data.code) {
-        setRoomCode(data.code)
-        setRoomId(data.room.id)
-        setStep('share')
-      }
-    } finally {
-      setCreating(false)
-    }
+    // Avvia la roulette prima di chiamare l'API
+    setRouletteSlots(['', '', ''])
+    setRouletteSettled([false, false, false])
+    setStep('roulette')
+
+    // Le tre AI da rivelare: AI di B, Arbitro, quarta che non gioca
+    const fourth = AI_OPTIONS.find(a => a.id !== teamAAI && a.id !== teamBAI && a.id !== arbiter)
+    const reveals = [teamBAI, arbiter, fourth?.id ?? '']
+
+    // Chiama l'API in parallelo mentre gira la roulette
+    const apiPromise = fetch('/api/2v2', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId: teamBAI, arbiterAiId: arbiter, teamAName: teamAHuman }),
+    }).then(r => r.json())
+
+    // Anima i 3 slot uno per uno
+    const delays = [1200, 2200, 3000]
+    delays.forEach((delay, i) => {
+      setTimeout(() => {
+        setRouletteSlots(prev => { const n = [...prev]; n[i] = reveals[i]; return n })
+        setRouletteSettled(prev => { const n = [...prev]; n[i] = true; return n })
+      }, delay)
+    })
+
+    // Dopo l'ultima animazione aspetta l'API e vai a share
+    setTimeout(async () => {
+      try {
+        const data = await apiPromise
+        if (data.code) {
+          setRoomCode(data.code)
+          setRoomId(data.room.id)
+        }
+      } catch {}
+      setTimeout(() => setStep('share'), 600)
+    }, 3600)
   }
 
   const shareLink = typeof window !== 'undefined' ? `${window.location.origin}/2v2/${roomCode}` : ''
@@ -651,7 +673,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         </button>
         <span className="font-black text-lg"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></span>
         <div className="flex gap-2">
-          {['topic', 'teams', 'share'].map((s) => (
+          {['topic', 'teams', 'roulette', 'share'].map((s) => (
             <div key={s} className="w-2 h-2 rounded-full transition-all"
               style={{ background: step === s ? '#3b82f6' : 'rgba(255,255,255,0.2)', transform: step === s ? 'scale(1.3)' : 'scale(1)' }} />
           ))}
@@ -875,7 +897,69 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
             </div>
           )}
 
-          {/* ── STEP 3: Condividi ── */}
+          {/* ── STEP 3: Roulette ── */}
+          {step === 'roulette' && (
+            <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-8">
+              <div className="text-center">
+                <div className="text-xl font-black text-white mb-1">Il destino decide…</div>
+                <div className="text-sm text-white/40">Le altre AI vengono assegnate per te</div>
+              </div>
+
+              {/* Squadra A — già scelta, mostrata fissa */}
+              <div className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl"
+                style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)' }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                  style={{ background: AI_OPTIONS.find(a => a.id === teamAAI)?.color ?? '#7C3AED' }}>
+                  {teamAAI === 'gemini' ? 'Ge' : AI_NAMES[teamAAI]?.[0]}
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase text-blue-400">🔵 La tua AI alleata</div>
+                  <div className="text-sm font-bold text-white">{AI_NAMES[teamAAI]}</div>
+                </div>
+                <div className="ml-auto text-green-400 text-lg">✓</div>
+              </div>
+
+              {/* 3 slot roulette */}
+              {[
+                { label: '🔴 AI alleata avversario', index: 0, color: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', labelColor: '#f87171' },
+                { label: '⚖️ Arbitro', index: 1, color: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', labelColor: '#A78BFA' },
+                { label: '💤 Non partecipa', index: 2, color: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.08)', labelColor: 'rgba(255,255,255,0.3)' },
+              ].map(({ label, index, color, border, labelColor }) => {
+                const settled = rouletteSettled[index]
+                const aiId = rouletteSlots[index]
+                const ai = AI_OPTIONS.find(a => a.id === aiId)
+                return (
+                  <div key={index} className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-500"
+                    style={{ background: color, border: `1px solid ${border}`, opacity: settled ? 1 : 0.5 }}>
+                    {/* Slot animato */}
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
+                      style={{ background: settled && ai ? ai.color : 'rgba(255,255,255,0.1)' }}>
+                      {settled && ai ? (
+                        <span className="text-xs font-black text-white">{ai.id === 'gemini' ? 'Ge' : AI_NAMES[ai.id]?.[0]}</span>
+                      ) : (
+                        /* Spinning dots */
+                        <div className="flex gap-0.5">
+                          {[0,1,2].map(d => (
+                            <span key={d} className="w-1 h-1 rounded-full bg-white/40 animate-bounce"
+                              style={{ animationDelay: `${d * 100}ms` }} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[10px] font-black uppercase" style={{ color: labelColor }}>{label}</div>
+                      <div className="text-sm font-bold transition-all duration-300" style={{ color: settled ? 'white' : 'rgba(255,255,255,0.3)' }}>
+                        {settled && ai ? ai.name : '···'}
+                      </div>
+                    </div>
+                    {settled && <div className="text-green-400 text-lg scale-in">✓</div>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* ── STEP 4: Condividi ── */}
           {step === 'share' && (
             <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-6">
               <div className="text-5xl">⚔️</div>
@@ -3205,8 +3289,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         document.body
       )}
 
-      {/* ── SCHERMATA 2v2 (dalla start, dopo che handle2v2Start setta phase=running) ── */}
-      {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && typeof window !== 'undefined' && createPortal(
+      {/* ── SCHERMATA 2v2 (dalla start, via portal) ── */}
+      {selectedMode === '2v2' && twoVsTwoState && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999]" style={{ background: '#0d0d14' }}>
           <TwoVsTwoScreen
             state={twoVsTwoState}
