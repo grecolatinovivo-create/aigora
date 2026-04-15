@@ -1932,6 +1932,41 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   return (
     <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
+      {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
+      {messages.length === 0 && [
+        { top: '180px', left: 'calc(50% - 560px)', delay: '-2s',   dur: '14s', anim: 'float-1' },
+        { top: '320px', left: 'calc(50% - 550px)', delay: '-7s',   dur: '13s', anim: 'float-3' },
+        { top: '460px', left: 'calc(50% - 560px)', delay: '-4s',   dur: '15s', anim: 'float-2' },
+        { top: '600px', left: 'calc(50% - 545px)', delay: '-9s',   dur: '12s', anim: 'float-4' },
+        { top: '720px', left: 'calc(50% - 555px)', delay: '-5s',   dur: '14s', anim: 'float-1' },
+        { top: '180px', right: 'calc(50% - 560px)', delay: '-3s',  dur: '13s', anim: 'float-2' },
+        { top: '320px', right: 'calc(50% - 550px)', delay: '-8s',  dur: '15s', anim: 'float-4' },
+        { top: '460px', right: 'calc(50% - 560px)', delay: '-6s',  dur: '12s', anim: 'float-1' },
+        { top: '600px', right: 'calc(50% - 545px)', delay: '-1s',  dur: '14s', anim: 'float-3' },
+        { top: '720px', right: 'calc(50% - 555px)', delay: '-10s', dur: '13s', anim: 'float-2' },
+      ].map(({ top, left, right, delay, dur, anim }: any, i) => (
+        <button key={i}
+          className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] cursor-pointer transition-all hover:scale-105 hover:brightness-125"
+          onAnimationIteration={() => rotateBubble(i)}
+          onClick={() => handleStart(bubbleTopics[i] ?? bubbleTopics[0])}
+          style={{
+            top, left, right,
+            color: 'rgba(255,255,255,0.5)',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(6px)',
+            maxWidth: '160px',
+            textAlign: 'center',
+            lineHeight: 1.4,
+            animation: `${anim} ${dur} ease-in-out infinite`,
+            animationDelay: delay,
+            zIndex: 5,
+            pointerEvents: 'auto',
+          }}>
+          {bubbleTopics[i] ?? bubbleTopics[0]}
+        </button>
+      ))}
+
       {/* Pannello cronologia */}
       <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
         <div className="w-72 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
