@@ -676,50 +676,57 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         </div>
       )}
 
-      {/* ── iPad ── */}
-      <div className="scale-in relative" style={{ width: 680, maxWidth: '96vw' }}>
+      {/* ── iPad Pro landscape ── */}
+      {/* padding laterale per i tasti fisici */}
+      <div className="scale-in relative" style={{ width: 720, maxWidth: '97vw', padding: '0 4px' }}>
+        <div className="relative" style={{ borderRadius: 22 }}>
 
-        {/* ── Scocca iPad realistica ── */}
-        {/* Corpo principale */}
-        <div className="absolute inset-0 rounded-[28px]" style={{
-          background: 'linear-gradient(145deg, #2e2e30 0%, #1a1a1c 40%, #242426 100%)',
-          boxShadow: '0 0 0 1px #444, 0 0 0 2px #222, 0 60px 120px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.5)',
-        }} />
+          {/* Corpo scocca */}
+          <div className="absolute inset-0 rounded-[22px]" style={{
+            background: 'linear-gradient(160deg, #323234 0%, #1c1c1e 45%, #28282a 100%)',
+            boxShadow: '0 0 0 1px #505052, 0 0 0 1.5px #111, 0 50px 100px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.09), inset 0 -1px 0 rgba(0,0,0,0.6)',
+          }} />
 
-        {/* Pulsante power — lato destro in alto */}
-        <div className="absolute rounded-l-sm" style={{ right: -3, top: 80, width: 3, height: 28, background: 'linear-gradient(to bottom, #3a3a3c, #2a2a2c)', boxShadow: '-1px 0 3px rgba(0,0,0,0.5)' }} />
+          {/* ── Pulsanti lato SINISTRO (lato corto) ── */}
+          {/* Power/lock */}
+          <div className="absolute rounded-r-[2px]" style={{ left: -4, top: '38%', width: 4, height: 32, background: 'linear-gradient(to right, #2a2a2c, #3a3a3c)', boxShadow: '2px 0 4px rgba(0,0,0,0.6), inset -1px 0 0 rgba(255,255,255,0.05)' }} />
 
-        {/* Volume su — lato sinistro */}
-        <div className="absolute rounded-r-sm" style={{ left: -3, top: 100, width: 3, height: 22, background: 'linear-gradient(to bottom, #3a3a3c, #2a2a2c)', boxShadow: '1px 0 3px rgba(0,0,0,0.5)' }} />
-        {/* Volume giù — lato sinistro */}
-        <div className="absolute rounded-r-sm" style={{ left: -3, top: 130, width: 3, height: 22, background: 'linear-gradient(to bottom, #3a3a3c, #2a2a2c)', boxShadow: '1px 0 3px rgba(0,0,0,0.5)' }} />
-        {/* Mute — lato sinistro */}
-        <div className="absolute rounded-r-sm" style={{ left: -3, top: 70, width: 3, height: 14, background: 'linear-gradient(to bottom, #3a3a3c, #2a2a2c)', boxShadow: '1px 0 3px rgba(0,0,0,0.5)' }} />
+          {/* ── Pulsanti lato SUPERIORE ── */}
+          {/* Volume su */}
+          <div className="absolute rounded-b-[2px]" style={{ top: -4, left: '30%', width: 28, height: 4, background: 'linear-gradient(to bottom, #2a2a2c, #3a3a3c)', boxShadow: '0 2px 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.05)' }} />
+          {/* Volume giù */}
+          <div className="absolute rounded-b-[2px]" style={{ top: -4, left: 'calc(30% + 36px)', width: 28, height: 4, background: 'linear-gradient(to bottom, #2a2a2c, #3a3a3c)', boxShadow: '0 2px 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.05)' }} />
+          {/* Mute switch */}
+          <div className="absolute rounded-b-[2px]" style={{ top: -4, left: 'calc(30% - 20px)', width: 16, height: 4, background: 'linear-gradient(to bottom, #2a2a2c, #3a3a3c)', boxShadow: '0 2px 4px rgba(0,0,0,0.6)' }} />
 
-        {/* Fotocamera — in alto centrata, con modulo realistico */}
-        <div className="absolute left-1/2 -translate-x-1/2" style={{ top: 10, zIndex: 20 }}>
-          {/* Modulo camera */}
-          <div className="relative flex items-center justify-center" style={{ width: 10, height: 10 }}>
-            {/* Anello esterno */}
-            <div className="absolute inset-0 rounded-full" style={{ background: '#111', border: '1px solid #3a3a3c', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.8)' }} />
-            {/* Lente */}
-            <div className="absolute rounded-full" style={{ width: 5, height: 5, background: 'radial-gradient(circle at 35% 35%, #1a3a5c, #050a10)', border: '0.5px solid #1a2a3c', boxShadow: 'inset 0 0 3px rgba(0,100,200,0.3)' }} />
-            {/* Riflesso lente */}
-            <div className="absolute rounded-full" style={{ width: 2, height: 2, top: 1.5, left: 1.5, background: 'rgba(255,255,255,0.15)' }} />
+          {/* ── Fotocamera — lato DESTRO, centrata verticalmente ── */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center" style={{ width: 14, zIndex: 20, gap: 4 }}>
+            {/* Modulo camera */}
+            <div className="relative flex items-center justify-center" style={{ width: 11, height: 11 }}>
+              <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle, #1a1a1c, #0d0d0f)', border: '1px solid #3a3a3c', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.9)' }} />
+              <div className="absolute rounded-full" style={{ width: 6, height: 6, background: 'radial-gradient(circle at 33% 33%, #162840, #04080f)', border: '0.5px solid #0a1828', boxShadow: 'inset 0 0 4px rgba(0,80,180,0.4), 0 0 2px rgba(0,0,0,0.8)' }} />
+              <div className="absolute rounded-full" style={{ width: 2.5, height: 2.5, top: 2, left: 2, background: 'rgba(255,255,255,0.18)' }} />
+            </div>
+            {/* LED */}
+            <div className="rounded-full" style={{ width: 3, height: 3, background: '#1a2a1a', border: '0.5px solid #2a3a2a' }} />
           </div>
-        </div>
 
-        {/* Glare schermo */}
-        <div className="absolute pointer-events-none rounded-t-[22px]" style={{ top: 8, left: 8, right: 8, height: '40%', background: 'linear-gradient(155deg, rgba(255,255,255,0.055) 0%, transparent 55%)', zIndex: 15 }} />
+          {/* Connettore USB-C — lato destro, sotto la camera */}
+          <div className="absolute right-0 top-1/2 translate-y-6 -translate-x-0" style={{ zIndex: 20 }}>
+            <div className="rounded-l-sm" style={{ width: 3, height: 12, background: '#111', border: '0.5px solid #3a3a3c' }} />
+          </div>
 
-        {/* Home bar in basso */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full" style={{ width: 100, height: 4, background: 'rgba(255,255,255,0.18)', zIndex: 20 }} />
+          {/* Home bar — lato sinistro, centrata */}
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full" style={{ width: 4, height: 52, background: 'rgba(255,255,255,0.12)', zIndex: 20 }} />
 
-        {/* Connettore USB-C in basso centrato */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-sm" style={{ width: 14, height: 3, background: '#111', border: '1px solid #3a3a3c', borderBottom: 'none' }} />
+          {/* ── Screen con cornicina visibile ── */}
+          {/* Cornicina nera attorno */}
+          <div className="absolute rounded-[16px]" style={{ top: 10, left: 18, right: 18, bottom: 10, background: '#050508', zIndex: 5 }} />
+          {/* Glare vetro */}
+          <div className="absolute pointer-events-none rounded-[16px]" style={{ top: 10, left: 18, right: 18, bottom: 10, background: 'linear-gradient(155deg, rgba(255,255,255,0.05) 0%, transparent 50%)', zIndex: 16 }} />
 
-        {/* ── Screen ── */}
-        <div className="relative overflow-hidden flex flex-col" style={{ margin: '8px', borderRadius: 20, background: '#0d0d14', minHeight: 460 }}>
+          {/* Screen vero */}
+          <div className="relative overflow-hidden flex flex-col" style={{ margin: '10px 18px', borderRadius: 14, background: '#0d0d14', minHeight: 440, zIndex: 10 }}>
 
           {/* ── STEP 1: Topic ── */}
           {step === 'topic' && (
@@ -887,6 +894,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
             </div>
           )}
 
+          </div>
         </div>
       </div>
     </div>
