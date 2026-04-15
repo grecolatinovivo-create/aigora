@@ -769,6 +769,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [userImage, setUserImage] = useState<string | null>(null)
   const [resolvedPlan, setResolvedPlan] = useState<string | null>(null)
   const [dbUserName, setDbUserName] = useState<string | null>(null)
+  const [isBeta, setIsBeta] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [closingAiProfile, setClosingAiProfile] = useState(false)
@@ -970,9 +971,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           setUserName(d.name)
           setNameConfirmed(true)
         } else {
-          // Nome non presente nel DB — forza la card del nome
           setNameConfirmed(false)
         }
+        if (d.beta) setIsBeta(true)
       })
       .catch(() => {})
   }, [])

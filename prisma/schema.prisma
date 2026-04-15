@@ -21,6 +21,7 @@ model User {
   stripeSubId      String?
   subStatus        String  @default("inactive")
   blocked          Boolean @default(false)
+  beta             Boolean @default(false)
 
   accounts Account[]
   sessions Session[]

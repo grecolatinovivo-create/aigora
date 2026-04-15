@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!admin) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 })
 
   const { action } = await req.json() // 'block' | 'unblock'
-  if (!['block', 'unblock'].includes(action)) {
+  if (!['block', 'unblock', 'beta', 'unbeta'].includes(action)) {
     return NextResponse.json({ error: 'Azione non valida' }, { status: 400 })
   }
 
@@ -28,17 +28,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: 'Non puoi bloccare te stesso' }, { status: 400 })
   }
 
-  const updated = await prisma.user.update({
-    where: { id: params.id },
-    data: { blocked: action === 'block' },
-  })
+  const data: any = {}
+  if (action === 'block' || action === 'unblock') data.blocked = action === 'block'
+  if (action === 'beta' || action === 'unbeta') data.beta = action === 'beta'
+
+  const updated = await prisma.user.update({ where: { id: params.id }, data })
 
   // Se bloccato, invalida tutte le sessioni attive
   if (action === 'block') {
     await prisma.activeSession.deleteMany({ where: { userId: params.id } }).catch(() => {})
   }
 
-  return NextResponse.json({ ok: true, blocked: updated.blocked })
+  return NextResponse.json({ ok: true, blocked: updated.blocked, beta: updated.beta })
 }
 
 // DELETE — elimina utente e tutti i suoi dati

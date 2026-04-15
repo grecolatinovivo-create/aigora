@@ -14,5 +14,5 @@ export async function GET() {
 
   const plan = user.email === process.env.ADMIN_EMAIL ? 'admin' : (user.plan ?? 'free')
 
-  return NextResponse.json({ plan, name: user.name, image: user.image })
+  return NextResponse.json({ plan, name: user.name, image: user.image, beta: user.beta ?? false })
 }

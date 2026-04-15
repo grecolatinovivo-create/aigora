@@ -164,7 +164,7 @@ export default async function AdminPage() {
                     </div>
                     {/* Azioni admin — non mostrare su se stessi */}
                     {user.email !== adminEmail && (
-                      <UserActions userId={user.id} blocked={user.blocked ?? false} />
+                      <UserActions userId={user.id} blocked={user.blocked ?? false} beta={user.beta ?? false} />
                     )}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
                   </div>
