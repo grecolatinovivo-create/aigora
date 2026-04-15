@@ -989,14 +989,6 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 <div className="text-sm font-semibold text-white/80 truncate">"{topic}"</div>
               </div>
 
-              {/* Nome */}
-              <div className="w-full max-w-xs">
-                <label className="text-[10px] text-white/35 uppercase tracking-wide block mb-2">Il tuo nome</label>
-                <input value={teamAHuman} onChange={e => setTeamAHuman(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-4 py-3 text-sm outline-none focus:border-blue-500/40"
-                  placeholder="Il tuo nome" />
-              </div>
-
               {/* Scelta AI — 4 grandi pulsanti */}
               <div className="w-full">
                 <div className="text-[10px] text-white/30 uppercase tracking-widest text-center mb-4">Scegli il tuo compagno AI</div>
