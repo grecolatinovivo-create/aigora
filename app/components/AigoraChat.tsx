@@ -919,17 +919,20 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     enabled: !!activeRoom,
   })
 
-  // Registra la sessione — disabilitato temporaneamente per debug
-  // TODO: riabilitare dopo verifica stabilità
-  // useEffect(() => {
-  //   fetch('/api/session', { method: 'POST' }).catch(() => {})
-  //   const check = setInterval(() => {
-  //     fetch('/api/session').then(r => r.json()).then(d => {
-  //       if (!d.valid) window.location.href = '/login?error=session_expired'
-  //     }).catch(() => {})
-  //   }, 5 * 60_000)
-  //   return () => clearInterval(check)
-  // }, [])
+  // Registra la sessione al mount
+  useEffect(() => {
+    fetch('/api/session', { method: 'POST' }).catch(() => {})
+    // Controlla validità ogni 5 minuti — ma solo se esiste già il cookie
+    const check = setInterval(() => {
+      fetch('/api/session').then(r => r.json()).then(d => {
+        // Invalida solo se esplicitamente invalid E il cookie esiste (evita falsi positivi al primo caricamento)
+        if (d.valid === false && d.hasToken) {
+          window.location.href = '/login?error=session_expired'
+        }
+      }).catch(() => {})
+    }, 5 * 60_000)
+    return () => clearInterval(check)
+  }, [])
 
   // Risolve il piano reale dal DB (evita sfasamenti JWT)
   useEffect(() => {

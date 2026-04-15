@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
 // GET — valida la sessione corrente
 export async function GET(req: NextRequest) {
   const token = req.cookies.get('_as_token')?.value
-  if (!token) return NextResponse.json({ valid: false })
+  if (!token) return NextResponse.json({ valid: false, hasToken: false })
 
   const { valid, suspicious } = await validateSession(token)
-  return NextResponse.json({ valid, suspicious })
+  return NextResponse.json({ valid, suspicious, hasToken: true })
 }
 
 // DELETE — logout, invalida la sessione
