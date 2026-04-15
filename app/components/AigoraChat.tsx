@@ -612,12 +612,13 @@ function UserTurnPrompt({ name, isDark }: { name: string; isDark: boolean }) {
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
-function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName }: {
+function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta }: {
   onCronologia: () => void
   onFeed?: () => void
   onCrea?: () => void
   onNewChat?: () => void
   dbUserName?: string | null
+  isBeta?: boolean
   displayName: string
   userEmail?: string
   userPlan?: string
