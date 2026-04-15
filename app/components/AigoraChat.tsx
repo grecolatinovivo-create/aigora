@@ -2792,6 +2792,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // ── SCHERMATA INIZIALE ────────────────────────────────────────────────────────
   if (phase === 'start') {
     return (
+      <>
       <div className="desktop-bg relative overflow-hidden"
         style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
@@ -3146,6 +3147,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         </div>
 
       </div>
+
+      {/* ── SELEZIONE FORMATO MULTIPLAYER (dalla start) ── */}
+      {showModeSelect && typeof window !== 'undefined' && createPortal(
+        <ModeSelect
+          onSelect={handleSelectMode}
+          onClose={() => setShowModeSelect(false)}
+        />,
+        document.body
+      )}
+      </>
     )
   }
 
