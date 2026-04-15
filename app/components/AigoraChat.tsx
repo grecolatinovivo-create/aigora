@@ -613,19 +613,27 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   }
 
   const handleCreate = async () => {
-    // Avvia la roulette prima di chiamare l'API
-    setRouletteSlots(['', '', ''])
-    setRouletteSettled([false, false, false])
+    // Le 3 AI rimaste dopo la scelta dell'utente, mescolate casualmente
+    const rest = [...AI_OPTIONS.filter(a => a.id !== teamAAI)].sort(() => Math.random() - 0.5)
+    // La roulette ne estrae 1 per la squadra B — la terza che rimane fa l'arbitro
+    const randomB = rest[0].id      // estratta dalla roulette → avversaria
+    const randomArbiter = rest[2].id // l'esclusa → arbitro (non appare nella roulette)
+    setTeamBAI(randomB)
+    setArbiter(randomArbiter)
+
+    // Avvia la roulette — mostra solo i 2 estratti (AI avversaria + quella che "non passa")
+    setRouletteSlots(['', ''])
+    setRouletteSettled([false, false])
     setStep('roulette')
 
-    // Le 2 AI da rivelare: AI di B e Arbitro
-    const reveals = [teamBAI, arbiter]
+    // La roulette mostra: chi è stato scelto per B e chi è stato eliminato
+    const reveals = [randomB, rest[1].id]  // [vincitrice roulette, eliminata]
 
     // Chiama l'API in parallelo mentre gira la roulette
     const apiPromise = fetch('/api/2v2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId: teamBAI, arbiterAiId: arbiter, teamAName: teamAHuman }),
+      body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId: randomB, arbiterAiId: randomArbiter, teamAName: teamAHuman }),
     }).then(r => r.json())
 
     // Anima i 2 slot uno per uno
@@ -833,9 +841,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                   {AI_OPTIONS.map(ai => (
                     <button key={ai.id} onClick={() => {
                       setTeamAAI(ai.id)
-                      const rest = AI_OPTIONS.filter(a => a.id !== ai.id)
-                      setTeamBAI(rest[0].id)
-                      setArbiter(rest[1].id)
+                      // B e arbitro vengono assegnati casualmente dalla roulette in handleCreate
                     }}
                       className="flex flex-col items-center gap-2 py-4 px-3 rounded-2xl transition-all hover:scale-[1.03]"
                       style={{ background: teamAAI === ai.id ? `${ai.color}20` : 'rgba(255,255,255,0.04)', border: teamAAI === ai.id ? `2px solid ${ai.color}60` : '1px solid rgba(255,255,255,0.08)' }}>
