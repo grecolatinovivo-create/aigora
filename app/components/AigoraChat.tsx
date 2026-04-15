@@ -3621,7 +3621,37 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
           </div>
 
-          {/* Chat header */}
+          {/* Chat header — 2v2 o normale */}
+          {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
+            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 border-b" style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+              {/* Back */}
+              <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
+                className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isDark?'white':'#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              {/* Team A */}
+              <div className="flex-1 text-center">
+                <div className="text-[8px] font-black uppercase" style={{ color: '#60a5fa' }}>🔵 {twoVsTwoState.config.teamA.humanName}</div>
+                <div className="text-[9px] text-white/40">+ {AI_NAMES[twoVsTwoState.config.teamA.aiId]}</div>
+              </div>
+              {/* Turno */}
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div className="text-[9px] text-white/30">R{twoVsTwoState.round}/{twoVsTwoState.maxRounds}</div>
+                <div className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: twoVsTwoState.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }} />
+                  <span className="text-[9px] font-black" style={{ color: twoVsTwoState.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }}>
+                    {twoVsTwoState.currentTurn}
+                  </span>
+                </div>
+              </div>
+              {/* Team B */}
+              <div className="flex-1 text-center">
+                <div className="text-[8px] font-black uppercase" style={{ color: '#f87171' }}>🔴 {twoVsTwoState.config.teamB.humanName}</div>
+                <div className="text-[9px] text-white/40">{AI_NAMES[twoVsTwoState.config.teamB.aiId]} +</div>
+              </div>
+              <div style={{ width: 28 }} />
+            </div>
+          ) : (
           <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
             {/* Avatar sovrapposti */}
             <div className="flex -space-x-2 flex-shrink-0">
@@ -3695,18 +3725,101 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               📋
             </button>
           </div>
+          )}{/* fine else header normale */}
 
-          {/* Avatar bar */}
-          <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
+          {/* Avatar bar — solo chat normale */}
+          {!(phase === 'running' && selectedMode === '2v2') && (
+            <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
+          )}
 
-          {/* Messaggi */}
+          {/* Messaggi — 2v2 o normale */}
           <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
-            {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
-            {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
-            <div ref={messagesEndRef} />
+            {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
+              <>
+                {twoVsTwoState.messages.map((msg, i) => {
+                  const isArbiter = msg.team === 'arbiter'
+                  const isA = msg.team === 'A'
+                  const teamColor = isA ? '#3b82f6' : '#ef4444'
+                  const aiColor = AI_COLOR[msg.aiId ?? ''] ?? teamColor
+                  if (isArbiter) return (
+                    <div key={i} className="mx-3 my-2 rounded-2xl p-3" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                      <div className="text-[8px] font-black uppercase mb-1" style={{ color: '#A78BFA' }}>⚖️ {AI_NAMES[twoVsTwoState.config.arbiterAiId]} — Verdetto</div>
+                      <div className="text-xs text-white/80 leading-relaxed">{msg.content}</div>
+                    </div>
+                  )
+                  const alignRight = !isA
+                  return (
+                    <div key={i} className={`flex gap-2 px-3 py-1 max-w-[88%] ${alignRight ? 'flex-row-reverse ml-auto' : ''}`}>
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 mt-0.5"
+                        style={{ fontSize: 7, background: msg.isAI ? aiColor : teamColor }}>
+                        {msg.isAI ? (msg.aiId === 'gemini' ? 'Ge' : (AI_NAMES[msg.aiId ?? ''] ?? '?')[0]) : msg.author[0]?.toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="text-[8px] mb-0.5 px-1" style={{ color: msg.isAI ? aiColor : teamColor, textAlign: alignRight ? 'right' : 'left' }}>{msg.author}</div>
+                        <div className="px-3 py-2 text-xs leading-relaxed rounded-2xl"
+                          style={{ background: msg.isAI ? `${aiColor}18` : `${teamColor}18`, color: isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)', borderRadius: alignRight ? '12px 3px 12px 12px' : '3px 12px 12px 12px' }}>
+                          {msg.content}{msg.streaming && <span className="typewriter-cursor" />}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+                {twoVsTwoLoading && (
+                  <div className="flex items-center gap-2 px-4 py-2">
+                    <div className="flex gap-1">{[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}</div>
+                    <span className="text-[10px] text-white/30">L'AI sta pensando…</span>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </>
+            ) : (
+              <>
+                {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
+                {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
+                <div ref={messagesEndRef} />
+              </>
+            )}
           </div>
 
-          {/* Input bar */}
+          {/* Input bar — 2v2 o normale */}
+          {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (() => {
+            const isMyTurn = twoVsTwoState.currentTurn === 'A' && !twoVsTwoLoading && !twoVsTwoState.ended
+            const myColor = '#3b82f6'
+            const myAiId = twoVsTwoState.config.teamA.aiId
+            return (
+              <div className="flex-shrink-0" style={{ backgroundColor: bgPreset.header, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                <div className="px-3 pt-2 pb-1">
+                  <div className="text-[9px] text-center font-bold" style={{ color: isMyTurn ? myColor : 'rgba(255,255,255,0.3)' }}>
+                    {isMyTurn ? `Turno tuo · ${twoVsTwoState.messagesThisTurn}/${twoVsTwoState.maxMessagesPerTurn} messaggi` : `Turno Squadra ${twoVsTwoState.currentTurn}…`}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-3 pb-2">
+                  <input value={inputText} onChange={e => setInputText(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && inputText.trim() && isMyTurn) { handle2v2HumanMessage(inputText.trim()); setInputText('') } }}
+                    disabled={!isMyTurn || twoVsTwoLoading}
+                    placeholder={isMyTurn ? 'Il tuo argomento…' : 'Attendi il tuo turno…'}
+                    className="flex-1 rounded-full px-3.5 py-2 text-[12px] outline-none"
+                    style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', border: `1px solid ${isMyTurn ? `${myColor}50` : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)')}`, color: isDark ? '#f0f0f0' : '#111', opacity: isMyTurn ? 1 : 0.4 }}
+                  />
+                  <button onClick={() => { if (inputText.trim() && isMyTurn) { handle2v2HumanMessage(inputText.trim()); setInputText('') } }}
+                    disabled={!inputText.trim() || !isMyTurn || twoVsTwoLoading}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white disabled:opacity-30"
+                    style={{ background: `linear-gradient(135deg, ${myColor}, #1d4ed8)` }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+                  </button>
+                </div>
+                {isMyTurn && (
+                  <div className="px-3 pb-2">
+                    <button onClick={() => handle2v2AIResponse('A', 'Supporta con un argomento forte.')} disabled={twoVsTwoLoading}
+                      className="w-full py-1.5 rounded-xl text-[10px] font-bold disabled:opacity-40"
+                      style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)' }}>
+                      Chiedi supporto a {AI_NAMES[myAiId]} →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })() : (
           <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5" style={{
             backgroundColor: bgPreset.header,
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
@@ -3740,6 +3853,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
             </button>
           </div>
+          )}
 
           {/* Home indicator */}
           <div className="flex-shrink-0 flex justify-center py-2" style={{ backgroundColor: bgPreset.header }}>
