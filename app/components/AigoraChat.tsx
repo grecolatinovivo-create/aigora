@@ -555,6 +555,8 @@ interface TwoVsTwoConfig {
   teamA: { humanName: string; aiId: string }
   teamB: { humanName: string; aiId: string }
   arbiterAiId: string
+  roomCode?: string
+  roomId?: string
 }
 
 interface TwoVsTwoState {
@@ -563,43 +565,77 @@ interface TwoVsTwoState {
   currentTurn: 'A' | 'B'
   round: number
   maxRounds: number
+  messagesThisTurn: number
+  maxMessagesPerTurn: number
   ended: boolean
   verdict: string | null
+  waitingForOpponent?: boolean
 }
 
 function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
-  onStart: (config: TwoVsTwoConfig) => void
+  onStart: (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => void
   onBack: () => void
   currentUserName: string
 }) {
   const [topic, setTopic] = useState('')
   const [teamAHuman, setTeamAHuman] = useState(currentUserName || 'Tu')
   const [teamAAI, setTeamAAI] = useState('claude')
-  const [teamBHuman, setTeamBHuman] = useState('')
   const [teamBAI, setTeamBAI] = useState('gpt')
   const [arbiter, setArbiter] = useState('gemini')
-  const [step, setStep] = useState<'topic' | 'teams'>('topic')
+  const [step, setStep] = useState<'topic' | 'teams' | 'share'>('topic')
+  const [creating, setCreating] = useState(false)
+  const [roomCode, setRoomCode] = useState('')
+  const [roomId, setRoomId] = useState('')
+  const [copied, setCopied] = useState(false)
 
-  const usedAIs = [teamAAI, teamBAI, arbiter]
-  const availableForArbiter = ARBITER_OPTIONS.filter(id => id !== teamAAI && id !== teamBAI)
+  const availableForArbiter = AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== teamBAI).map(a => a.id)
+
+  const handleCreate = async () => {
+    setCreating(true)
+    try {
+      const res = await fetch('/api/2v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: topic.trim(), teamAAiId: teamAAI, teamBAiId: teamBAI, arbiterAiId: arbiter, teamAName: teamAHuman }),
+      })
+      const data = await res.json()
+      if (data.code) {
+        setRoomCode(data.code)
+        setRoomId(data.room.id)
+        setStep('share')
+      }
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const shareLink = typeof window !== 'undefined' ? `${window.location.origin}/2v2/${roomCode}` : ''
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareLink)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
-    <div className="fixed inset-0 z-[80] flex flex-col"
+    <div className="fixed inset-0 z-[9999] flex flex-col"
       style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(239,68,68,0.12) 0%, transparent 60%)' }}>
 
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-5 border-b border-white/8"
         style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', paddingBottom: '14px', backgroundColor: 'rgba(7,7,15,0.6)', backdropFilter: 'blur(20px)' }}>
-        <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+        <button onClick={step === 'share' ? () => setStep('teams') : step === 'teams' ? () => setStep('topic') : onBack}
+          className="w-8 h-8 flex items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <div>
           <div className="font-bold text-white text-sm">⚔️ 2 vs 2</div>
-          <div className="text-[10px] text-white/40">{step === 'topic' ? 'Scegli l\'argomento' : 'Configura le squadre'}</div>
+          <div className="text-[10px] text-white/40">
+            {step === 'topic' ? "Scegli l'argomento" : step === 'teams' ? 'Configura le squadre' : 'Condividi il link'}
+          </div>
         </div>
-        {/* Step indicator */}
         <div className="ml-auto flex gap-2">
-          {['topic', 'teams'].map((s, i) => (
+          {['topic', 'teams', 'share'].map((s, i) => (
             <div key={s} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all"
               style={{ backgroundColor: step === s ? '#3b82f6' : 'rgba(255,255,255,0.1)', color: step === s ? 'white' : 'rgba(255,255,255,0.4)' }}>
               {i + 1}
@@ -610,47 +646,41 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 
       <div className="flex-1 overflow-y-auto px-5 py-6">
 
+        {/* STEP 1 — Topic */}
         {step === 'topic' && (
           <div className="flex flex-col gap-5 max-w-lg mx-auto">
             <div>
               <div className="text-white font-black text-xl mb-2">Su cosa volete dibattere?</div>
-              <div className="text-white/40 text-sm">L'argomento sarà assegnato a entrambe le squadre. Ognuna dovrà difendere la propria posizione.</div>
+              <div className="text-white/40 text-sm">L'argomento sarà assegnato a entrambe le squadre.</div>
             </div>
-            <textarea
-              value={topic}
-              onChange={e => setTopic(e.target.value)}
-              placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030"
-              rows={3}
-              className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-4 py-3 text-sm outline-none focus:border-blue-500/50 placeholder:text-white/20 resize-none"
-              autoFocus
-            />
-            {/* Suggerimenti */}
+            <textarea value={topic} onChange={e => setTopic(e.target.value)}
+              placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030" rows={3}
+              className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-4 py-3 text-sm outline-none focus:border-blue-500/50 placeholder:text-white/20 resize-none" autoFocus />
             <div className="flex flex-wrap gap-2">
-              {['Il nucleare è necessario per il clima', 'I social media fanno bene alla democrazia', 'Il lavoro da remoto è più produttivo', 'L\'IA è una minaccia per l\'umanità'].map(t => (
+              {['Il nucleare è necessario per il clima', 'I social media fanno bene alla democrazia', 'Il lavoro da remoto è più produttivo', "L'IA è una minaccia per l'umanità"].map(t => (
                 <button key={t} onClick={() => setTopic(t)}
-                  className="text-[10px] px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all">
-                  {t}
-                </button>
+                  className="text-[10px] px-3 py-1.5 rounded-full border border-white/10 text-white/45 hover:text-white/75 hover:border-white/25 transition-all">{t}</button>
               ))}
             </div>
             <button onClick={() => topic.trim() && setStep('teams')} disabled={!topic.trim()}
-              className="w-full py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-30 transition-all"
+              className="w-full py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-30"
               style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.4)' }}>
               Continua →
             </button>
           </div>
         )}
 
+        {/* STEP 2 — Squadre */}
         {step === 'teams' && (
           <div className="flex flex-col gap-6 max-w-lg mx-auto">
             <div className="text-white font-black text-xl">Configura le squadre</div>
 
-            {/* Squadra A */}
+            {/* Squadra A — tu */}
             <div className="rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)' }}>
-              <div className="text-sm font-black mb-3" style={{ color: '#60a5fa' }}>🔵 SQUADRA A</div>
+              <div className="text-sm font-black mb-3" style={{ color: '#60a5fa' }}>🔵 SQUADRA A — tu</div>
               <div className="flex flex-col gap-3">
                 <div>
-                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-1">Umano</label>
+                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-1">Il tuo nome</label>
                   <input value={teamAHuman} onChange={e => setTeamAHuman(e.target.value)}
                     className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500/50"
                     placeholder="Il tuo nome" />
@@ -670,27 +700,22 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               </div>
             </div>
 
-            {/* Squadra B */}
+            {/* Squadra B — avversario */}
             <div className="rounded-2xl p-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
-              <div className="text-sm font-black mb-3" style={{ color: '#f87171' }}>🔴 SQUADRA B</div>
-              <div className="flex flex-col gap-3">
-                <div>
-                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-1">Umano (opzionale)</label>
-                  <input value={teamBHuman} onChange={e => setTeamBHuman(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2 text-sm outline-none focus:border-red-500/50 placeholder:text-white/20"
-                    placeholder="Solo AI (lascia vuoto)" />
-                </div>
-                <div>
-                  <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-2">AI alleata</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== arbiter).map(ai => (
-                      <button key={ai.id} onClick={() => setTeamBAI(ai.id)}
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                        style={{ backgroundColor: teamBAI === ai.id ? `${ai.color}25` : 'rgba(255,255,255,0.05)', border: teamBAI === ai.id ? `1px solid ${ai.color}50` : '1px solid rgba(255,255,255,0.1)', color: teamBAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
-                        {ai.name}
-                      </button>
-                    ))}
-                  </div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm font-black" style={{ color: '#f87171' }}>🔴 SQUADRA B — avversario</div>
+                <div className="text-[9px] px-2 py-1 rounded-full font-bold" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>Entra via link</div>
+              </div>
+              <div>
+                <label className="text-[10px] text-white/40 uppercase tracking-wide block mb-2">AI alleata per B</label>
+                <div className="flex gap-2 flex-wrap">
+                  {AI_OPTIONS.filter(a => a.id !== teamAAI && a.id !== arbiter).map(ai => (
+                    <button key={ai.id} onClick={() => setTeamBAI(ai.id)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                      style={{ backgroundColor: teamBAI === ai.id ? `${ai.color}25` : 'rgba(255,255,255,0.05)', border: teamBAI === ai.id ? `1px solid ${ai.color}50` : '1px solid rgba(255,255,255,0.1)', color: teamBAI === ai.id ? ai.color : 'rgba(255,255,255,0.4)' }}>
+                      {ai.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -707,120 +732,223 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                   </button>
                 ))}
               </div>
-              <div className="text-[10px] text-white/30 mt-2">L'arbitro osserva il dibattito e pronuncia il verdetto finale</div>
+              <div className="text-[10px] text-white/30 mt-2">Osserva il dibattito e pronuncia il verdetto finale</div>
             </div>
 
-            <div className="flex gap-3">
-              <button onClick={() => setStep('topic')} className="flex-1 py-3 rounded-2xl font-bold text-white/50 text-sm" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                ← Indietro
-              </button>
-              <button onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { humanName: teamBHuman || 'Solo AI', aiId: teamBAI }, arbiterAiId: arbiter })}
-                className="flex-2 flex-grow py-3 rounded-2xl font-bold text-white text-sm transition-all"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #ef4444)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}>
-                ⚔️ Inizia il duello →
-              </button>
-            </div>
+            <button onClick={handleCreate} disabled={creating}
+              className="w-full py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 transition-all"
+              style={{ background: 'linear-gradient(135deg, #3b82f6, #ef4444)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}>
+              {creating ? 'Creo il duello…' : '⚔️ Crea il duello →'}
+            </button>
           </div>
         )}
+
+        {/* STEP 3 — Condividi */}
+        {step === 'share' && (
+          <div className="flex flex-col items-center gap-6 max-w-sm mx-auto pt-4">
+            <div className="text-5xl">⚔️</div>
+            <div className="text-center">
+              <div className="text-white font-black text-2xl mb-2">Duello creato!</div>
+              <div className="text-white/40 text-sm">Condividi il link o il codice con il tuo avversario. La partita inizia quando entra.</div>
+            </div>
+
+            {/* Codice grande */}
+            <div className="w-full rounded-3xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Codice di accesso</div>
+              <div className="text-4xl font-black text-white tracking-widest mb-4" style={{ fontVariantNumeric: 'tabular-nums' }}>{roomCode}</div>
+              <button onClick={handleCopy}
+                className="w-full py-3 rounded-2xl text-sm font-bold transition-all"
+                style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.08)', border: copied ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)', color: copied ? '#10A37F' : 'rgba(255,255,255,0.7)' }}>
+                {copied ? '✓ Link copiato!' : '📋 Copia link'}
+              </button>
+            </div>
+
+            {/* Riepilogo */}
+            <div className="w-full rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3">Riepilogo</div>
+              <div className="text-xs text-white/60 mb-2 truncate">📌 {topic}</div>
+              <div className="flex gap-3">
+                <div className="flex-1 text-[10px]" style={{ color: '#60a5fa' }}>🔵 {teamAHuman} + {AI_NAMES[teamAAI]}</div>
+                <div className="flex-1 text-[10px] text-right" style={{ color: '#f87171' }}>🔴 Avversario + {AI_NAMES[teamBAI]}</div>
+              </div>
+              <div className="text-[10px] text-white/30 mt-2 text-center">⚖️ Arbitro: {AI_NAMES[arbiter]}</div>
+            </div>
+
+            <button
+              onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { humanName: 'Avversario', aiId: teamBAI }, arbiterAiId: arbiter, roomCode, roomId })}
+              className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
+              Entra nella sala d'attesa →
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   )
 }
 
 // ── 2 vs 2: schermata di gioco ────────────────────────────────────────────────
-function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, isDark, bgPreset, onBack }: {
+function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, onBack }: {
   state: TwoVsTwoState
   onHumanMessage: (text: string) => void
   onRequestAI: (team: 'A' | 'B') => void
   loading: boolean
-  isDark: boolean
-  bgPreset: { value: string; header: string; text: 'black' | 'white' }
+  myTeam: 'A' | 'B'
   onBack: () => void
 }) {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { config } = state
-  const textColor = isDark ? '#fff' : '#111'
-  const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [state.messages])
 
-  const teamColors = { A: '#3b82f6', B: '#ef4444' }
-  const isMyTurn = state.currentTurn === 'A' && !loading && !state.ended
+  const isMyTurn = state.currentTurn === myTeam && !loading && !state.ended
+  const myColor = myTeam === 'A' ? '#3b82f6' : '#ef4444'
+  const theirColor = myTeam === 'A' ? '#ef4444' : '#3b82f6'
+  const myAiId = myTeam === 'A' ? config.teamA.aiId : config.teamB.aiId
+  const myName = myTeam === 'A' ? config.teamA.humanName : config.teamB.humanName
+  const theirName = myTeam === 'A' ? config.teamB.humanName : config.teamA.humanName
+
+  // Schermata verdetto finale
+  if (state.ended && state.verdict) {
+    return (
+      <div className="flex flex-col h-full" style={{ background: '#07070f' }}>
+        <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-white/8"
+          style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.8)', backdropFilter: 'blur(20px)' }}>
+          <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div className="font-black text-white text-sm">⚖️ Verdetto finale</div>
+        </div>
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-5 py-8 gap-6">
+          <div className="text-5xl">🏆</div>
+          <div className="text-white font-black text-xl text-center">Il duello è finito</div>
+          <div className="w-full rounded-3xl p-5" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)' }}>
+            <div className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-3">⚖️ {AI_NAMES[config.arbiterAiId]} — Verdetto</div>
+            <div className="text-sm text-white/80 leading-relaxed">{state.verdict}</div>
+          </div>
+          <div className="flex gap-3 w-full">
+            <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)' }}>
+              <div className="text-[9px] font-black uppercase text-blue-400 mb-1">🔵 Squadra A</div>
+              <div className="text-xs text-white/70">{config.teamA.humanName}</div>
+            </div>
+            <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}>
+              <div className="text-[9px] font-black uppercase text-red-400 mb-1">🔴 Squadra B</div>
+              <div className="text-xs text-white/70">{config.teamB.humanName}</div>
+            </div>
+          </div>
+          <button onClick={onBack} className="w-full py-3 rounded-2xl font-bold text-white/60 text-sm" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            Torna alla home
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Schermata di attesa (B non ancora entrato)
+  if (state.waitingForOpponent) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center gap-6 px-6" style={{ background: '#07070f' }}>
+        <div className="text-4xl">⏳</div>
+        <div className="text-white font-black text-xl text-center">Aspettando l'avversario…</div>
+        <div className="text-white/40 text-sm text-center">Condividi il codice con la squadra B. La partita inizia appena entra.</div>
+        <div className="px-6 py-4 rounded-2xl text-center" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="text-[10px] text-white/30 uppercase tracking-widest mb-2">Codice</div>
+          <div className="text-3xl font-black text-white tracking-widest">{config.roomCode ?? '—'}</div>
+        </div>
+        <div className="flex gap-1">{[0,150,300].map(d => <span key={d} className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}</div>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
-      {/* Header con score */}
-      <div className="flex-shrink-0 border-b" style={{ backgroundColor: bgPreset.header, borderColor, paddingTop: 'max(10px, env(safe-area-inset-top))' }}>
-        <div className="flex items-center gap-2 px-3 pb-2">
-          <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
-            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={textColor} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <div className="flex flex-col h-full" style={{ background: '#0d0d14' }}>
+
+      {/* ── HEADER: A vs B con round ── */}
+      <div className="flex-shrink-0" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.9)', borderBottom: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)' }}>
+        {/* Barra A vs B */}
+        <div className="flex items-center px-3 pb-2 pt-1 gap-2">
+          <button onClick={onBack} className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
+
           {/* Squadra A */}
-          <div className="flex-1 text-center">
-            <div className="text-[9px] font-black uppercase" style={{ color: '#60a5fa' }}>A</div>
-            <div className="text-[10px] text-white/60 truncate">{config.teamA.humanName}</div>
+          <div className="flex-1 flex flex-col items-start gap-0.5">
+            <div className="text-[8px] font-black uppercase tracking-wide" style={{ color: '#60a5fa' }}>🔵 A</div>
+            <div className="text-[10px] font-bold text-white truncate max-w-[70px]">{config.teamA.humanName}</div>
+            <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>+ {AI_NAMES[config.teamA.aiId]}</div>
           </div>
-          {/* Score */}
+
+          {/* Centro — round e turno */}
           <div className="flex flex-col items-center flex-shrink-0 px-2">
-            <div className="text-[10px] text-white/30">Round {state.round}/{state.maxRounds}</div>
+            <div className="text-[9px] text-white/30 mb-0.5">Round {state.round}/{state.maxRounds}</div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: teamColors[state.currentTurn] }} />
-              <span className="text-[10px] font-bold" style={{ color: teamColors[state.currentTurn] }}>
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: state.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }} />
+              <span className="text-[10px] font-black" style={{ color: state.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }}>
                 Turno {state.currentTurn}
               </span>
             </div>
+            {/* Slot messaggi turno corrente */}
+            <div className="flex gap-0.5 mt-1">
+              {Array.from({ length: state.maxMessagesPerTurn ?? 3 }).map((_, i) => (
+                <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: i < (state.messagesThisTurn ?? 0) ? (state.currentTurn === 'A' ? '#3b82f6' : '#ef4444') : 'rgba(255,255,255,0.15)' }} />
+              ))}
+            </div>
           </div>
+
           {/* Squadra B */}
-          <div className="flex-1 text-center">
-            <div className="text-[9px] font-black uppercase" style={{ color: '#f87171' }}>B</div>
-            <div className="text-[10px] text-white/60 truncate">{config.teamB.humanName}</div>
+          <div className="flex-1 flex flex-col items-end gap-0.5">
+            <div className="text-[8px] font-black uppercase tracking-wide" style={{ color: '#f87171' }}>🔴 B</div>
+            <div className="text-[10px] font-bold text-white truncate max-w-[70px]">{config.teamB.humanName}</div>
+            <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{AI_NAMES[config.teamB.aiId]} +</div>
           </div>
-          <div style={{ width: 32 }} />
         </div>
+
         {/* Topic */}
-        <div className="px-3 pb-2">
-          <div className="text-[10px] text-center text-white/40 truncate">"{config.topic}"</div>
+        <div className="px-4 pb-2">
+          <div className="text-[9px] text-center text-white/30 truncate">"{config.topic}"</div>
         </div>
       </div>
 
-      {/* Messaggi */}
-      <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-3">
+      {/* ── MESSAGGI ── */}
+      <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-2">
         {state.messages.map((msg, i) => {
           const isA = msg.team === 'A'
           const isArbiter = msg.team === 'arbiter'
-          const color = isArbiter ? '#A78BFA' : isA ? '#3b82f6' : '#ef4444'
+          const isAI = msg.isAI
+          const teamColor = isA ? '#3b82f6' : '#ef4444'
+          const teamBg = isA ? 'rgba(59,130,246,0.12)' : 'rgba(239,68,68,0.12)'
+          const aiColor = AI_COLOR[msg.aiId ?? ''] ?? teamColor
 
           if (isArbiter) return (
-            <div key={i} className="rounded-2xl p-3 mx-2" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
-              <div className="text-[9px] font-black uppercase mb-1" style={{ color: '#A78BFA' }}>⚖️ {AI_NAMES[config.arbiterAiId]} — Arbitro</div>
-              <div className="text-xs text-white/75 leading-relaxed">{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</div>
+            <div key={i} className="rounded-2xl p-3 mx-1" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
+              <div className="text-[8px] font-black uppercase tracking-wide mb-1" style={{ color: '#A78BFA' }}>⚖️ {AI_NAMES[config.arbiterAiId]} — Verdetto</div>
+              <div className="text-xs text-white/80 leading-relaxed">{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</div>
             </div>
           )
 
+          const isRight = !isA
           return (
-            <div key={i} className={`flex gap-2 ${isA ? '' : 'flex-row-reverse'} max-w-[88%] ${isA ? '' : 'self-end'}`}>
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0 mt-1"
-                style={{ backgroundColor: msg.isAI ? (AI_COLOR[msg.aiId ?? ''] ?? color) : color }}>
-                {msg.isAI ? (msg.aiId === 'gemini' ? 'Ge' : (AI_NAMES[msg.aiId ?? ''] ?? '?')[0]) : msg.author[0]?.toUpperCase()}
+            <div key={i} className={`flex gap-2 max-w-[86%] ${isRight ? 'flex-row-reverse self-end' : ''}`}>
+              {/* Avatar */}
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 mt-0.5"
+                style={{ fontSize: 8, background: isAI ? aiColor : teamColor }}>
+                {isAI ? (msg.aiId === 'gemini' ? 'Ge' : (AI_NAMES[msg.aiId ?? ''] ?? '?')[0]) : msg.author[0]?.toUpperCase()}
               </div>
-              <div>
-                <div className="text-[9px] font-semibold mb-0.5 px-1" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', textAlign: isA ? 'left' : 'right' }}>
-                  {msg.author}
+              <div className="flex flex-col gap-0.5">
+                <div className="text-[8px] font-semibold px-1" style={{ color: isAI ? aiColor : teamColor, textAlign: isRight ? 'right' : 'left' }}>
+                  {msg.author}{isAI && <span className="ml-1 text-white/20 font-normal">AI</span>}
                 </div>
-                <div className="px-3 py-2 rounded-2xl text-xs leading-relaxed"
-                  style={{
-                    backgroundColor: isA ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)',
-                    color: isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)',
-                    borderRadius: isA ? '3px 14px 14px 14px' : '14px 3px 14px 14px',
-                  }}>
+                <div className="px-3 py-2 text-xs leading-relaxed"
+                  style={{ background: isAI ? `${aiColor}18` : teamBg, color: 'rgba(255,255,255,0.85)', borderRadius: isRight ? '12px 3px 12px 12px' : '3px 12px 12px 12px' }}>
                   {msg.content}{msg.streaming && <span className="typewriter-cursor" />}
                 </div>
               </div>
             </div>
           )
         })}
+
         {loading && (
           <div className="flex items-center gap-2 px-2">
             <div className="flex gap-1">{[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}</div>
@@ -830,51 +958,55 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, isDark, b
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
+      {/* ── INPUT ── */}
       {!state.ended && (
-        <div className="flex-shrink-0 border-t" style={{ backgroundColor: bgPreset.header, borderColor, paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}>
-          {/* Turno corrente */}
-          <div className="px-3 pt-2 pb-1">
-            <div className="text-[10px] text-center font-bold" style={{ color: teamColors[state.currentTurn] }}>
-              Turno Squadra {state.currentTurn} — {state.currentTurn === 'A' ? config.teamA.humanName : config.teamB.humanName}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-3 pb-2">
-            <input value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && input.trim() && isMyTurn) { onHumanMessage(input.trim()); setInput('') } }}
-              disabled={!isMyTurn || loading}
-              placeholder={isMyTurn ? "Il tuo argomento…" : "Attendi il tuo turno…"}
-              className="flex-1 rounded-full px-3 py-2 text-xs outline-none"
-              style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', border: `1px solid ${isMyTurn ? 'rgba(59,130,246,0.3)' : borderColor}`, color: isDark ? '#f0f0f0' : '#111', opacity: isMyTurn ? 1 : 0.5 }}
-            />
-            {isMyTurn && (
-              <button onClick={() => { if (input.trim()) { onHumanMessage(input.trim()); setInput('') } }} disabled={!input.trim()}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white disabled:opacity-30 flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-              </button>
+        <div className="flex-shrink-0" style={{ background: 'rgba(7,7,15,0.9)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+
+          {/* Banner turno */}
+          <div className="px-4 pt-2 pb-1.5">
+            {isMyTurn ? (
+              <div className="text-[10px] text-center font-bold" style={{ color: myColor }}>
+                Il tuo turno — {state.messagesThisTurn ?? 0}/{state.maxMessagesPerTurn ?? 3} messaggi usati
+              </div>
+            ) : (
+              <div className="text-[10px] text-center text-white/30">
+                Turno Squadra {state.currentTurn} — {state.currentTurn === 'A' ? config.teamA.humanName : config.teamB.humanName} sta rispondendo…
+              </div>
             )}
           </div>
-          {/* Bottone AI alleata */}
+
+          <div className="flex items-center gap-2 px-3 pb-2">
+            <input value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && input.trim() && isMyTurn && !loading) { onHumanMessage(input.trim()); setInput('') } }}
+              disabled={!isMyTurn || loading}
+              placeholder={isMyTurn ? "Il tuo argomento…" : "Attendi il tuo turno…"}
+              className="flex-1 rounded-full px-4 py-2.5 text-xs outline-none transition-all"
+              style={{ background: isMyTurn ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isMyTurn ? `${myColor}50` : 'rgba(255,255,255,0.06)'}`, color: isMyTurn ? '#f0f0f0' : 'rgba(255,255,255,0.25)', cursor: isMyTurn ? 'text' : 'not-allowed' }}
+            />
+            <button onClick={() => { if (input.trim() && isMyTurn && !loading) { onHumanMessage(input.trim()); setInput('') } }}
+              disabled={!input.trim() || !isMyTurn || loading}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white disabled:opacity-20 flex-shrink-0 transition-all"
+              style={{ background: isMyTurn ? `linear-gradient(135deg, ${myColor}, ${myColor}bb)` : 'rgba(255,255,255,0.05)' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+            </button>
+          </div>
+
+          {/* Bottone AI alleata — solo se è il mio turno */}
           {isMyTurn && (
-            <div className="px-3 pb-2">
-              <button onClick={() => onRequestAI('A')} disabled={loading}
-                className="w-full py-1.5 rounded-xl text-[10px] font-bold disabled:opacity-40"
-                style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)' }}>
-                Chiedi supporto a {AI_NAMES[config.teamA.aiId]} →
+            <div className="px-3 pb-1">
+              <button onClick={() => onRequestAI(myTeam)} disabled={loading}
+                className="w-full py-2 rounded-xl text-[10px] font-bold disabled:opacity-40 transition-all"
+                style={{ background: `${myColor}15`, color: myTeam === 'A' ? '#60a5fa' : '#f87171', border: `1px solid ${myColor}30` }}>
+                Chiedi supporto a {AI_NAMES[myAiId]} →
               </button>
             </div>
           )}
         </div>
       )}
-      {state.ended && (
-        <div className="flex-shrink-0 px-4 py-3 border-t text-center" style={{ borderColor }}>
-          <div className="text-xs text-white/40">Dibattito concluso</div>
-        </div>
-      )}
     </div>
   )
 }
+
 
 function DevilsAdvocateScreen({ session, onMessage, onEndTurn, loading, isDark, bgPreset, onBack }: {
   session: DevilSession
@@ -2236,9 +2368,20 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     // classico: non fa niente di speciale
   }
 
-  const handle2v2Start = (config: TwoVsTwoConfig) => {
+  const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
     setShow2v2Setup(false)
-    setTwoVsTwoState({ config, messages: [], currentTurn: 'A', round: 1, maxRounds: 4, ended: false, verdict: null })
+    setTwoVsTwoState({
+      config,
+      messages: [],
+      currentTurn: 'A',
+      round: 1,
+      maxRounds: 4,
+      messagesThisTurn: 0,
+      maxMessagesPerTurn: 3,
+      ended: false,
+      verdict: null,
+      waitingForOpponent: !!config.roomCode,
+    })
     setPhase('running')
   }
 
@@ -2284,10 +2427,38 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handle2v2HumanMessage = async (text: string) => {
     if (!twoVsTwoState || twoVsTwoLoading) return
-    const { config, currentTurn } = twoVsTwoState
+    const { config, currentTurn, messagesThisTurn, maxMessagesPerTurn, round, maxRounds } = twoVsTwoState
     const author = currentTurn === 'A' ? config.teamA.humanName : config.teamB.humanName
-    setTwoVsTwoState(prev => prev ? { ...prev, messages: [...prev.messages, { team: currentTurn, isAI: false, author, content: text }] } : prev)
+
+    // Aggiungi messaggio umano e incrementa contatore
+    const newMessagesThisTurn = messagesThisTurn + 1
+    setTwoVsTwoState(prev => prev ? {
+      ...prev,
+      messages: [...prev.messages, { team: currentTurn, isAI: false, author, content: text }],
+      messagesThisTurn: newMessagesThisTurn,
+    } : prev)
+
+    // Chiedi risposta AI alleata
     await handle2v2AIResponse(currentTurn, text)
+
+    // Dopo la risposta AI, verifica se passare il turno
+    const totalAfter = newMessagesThisTurn + 1 // +1 per la risposta AI
+    if (totalAfter >= maxMessagesPerTurn) {
+      const nextTurn = currentTurn === 'A' ? 'B' : 'A'
+      const nextRound = currentTurn === 'B' ? round + 1 : round
+
+      if (nextRound > maxRounds) {
+        // Fine partita → verdetto
+        await handle2v2Verdict()
+      } else {
+        setTwoVsTwoState(prev => prev ? {
+          ...prev,
+          currentTurn: nextTurn,
+          round: nextRound,
+          messagesThisTurn: 0,
+        } : prev)
+      }
+    }
   }
 
   const handle2v2Verdict = async () => {
@@ -3406,15 +3577,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
         )}
 
-        {/* Schermata 2 vs 2 mobile */}
+        {/* Schermata 2 vs 2 */}
         {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
           <TwoVsTwoScreen
             state={twoVsTwoState}
             onHumanMessage={handle2v2HumanMessage}
             onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
             loading={twoVsTwoLoading}
-            isDark={isDark}
-            bgPreset={bgPreset}
+            myTeam="A"
             onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
           />
         )}
@@ -3429,19 +3599,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             isDark={isDark}
             bgPreset={bgPreset}
             onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
-          />
-        )}
-
-        {/* Schermata 2 vs 2 mobile */}
-        {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
-          <TwoVsTwoScreen
-            state={twoVsTwoState}
-            onHumanMessage={handle2v2HumanMessage}
-            onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
-            loading={twoVsTwoLoading}
-            isDark={isDark}
-            bgPreset={bgPreset}
-            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start') }}
           />
         )}
 

@@ -69,6 +69,9 @@ model Room {
   visibility String   @default("private") // "public" | "private"
   status     String   @default("live")    // "live" | "ended"
   aiIds      Json                          // array di AI selezionate
+  type       String   @default("classic") // "classic" | "2v2" | "devil"
+  code       String?  @unique             // codice join per 2v2, es. "AIG-X7K2"
+  gameState  Json?                        // stato partita 2v2 serializzato
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
