@@ -442,7 +442,7 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
                     </div>
                     {/* Arbitro */}
                     <div className="mx-1.5 mb-1.5 flex-shrink-0 rounded-lg p-1.5" style={{ background:'rgba(167,139,250,0.1)',border:'1px solid rgba(167,139,250,0.2)' }}>
-                      <div className="text-[6px] font-black uppercase tracking-wide mb-0.5" style={{ color:'#A78BFA' }}>⚖️ Gemini — Arbitro</div>
+                      <div className="text-[6px] font-black uppercase tracking-wide mb-0.5" style={{ color:'#A78BFA' }}>Gemini — Arbitro</div>
                       <div className="text-[7px] leading-[1.3]" style={{ color:'rgba(255,255,255,0.6)' }}>Squadra A più solida sul piano storico. Squadra B più concreta sui dati.</div>
                     </div>
                     {/* Input */}
@@ -475,7 +475,7 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
                     <div className="flex-shrink-0 px-2 py-2" style={{ background:'linear-gradient(135deg,rgba(239,68,68,0.15),rgba(245,158,11,0.1))',borderBottom:'1px solid rgba(239,68,68,0.2)' }}>
                       <div className="text-[6px] font-black uppercase tracking-wide mb-0.5" style={{ color:'#f87171' }}>😈 Devil's Advocate</div>
                       <div className="text-[8px] font-bold text-white leading-[1.3]">"I social media fanno bene alla democrazia"</div>
-                      <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded" style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'#f87171',fontSize:6,fontWeight:700 }}>🔴 La tua posizione: DIFENDI</div>
+                      <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded" style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'#f87171',fontSize:6,fontWeight:700 }}>La tua posizione: DIFENDI</div>
                     </div>
                     {/* Messages */}
                     <div className="flex-1 overflow-hidden flex flex-col gap-1.5 p-2">
@@ -666,7 +666,7 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
           {teamAAI === 'gemini' ? 'Ge' : myAI?.name[0]}
         </div>
         <div>
-          <div className="text-[9px] font-black uppercase tracking-wide" style={{ color: '#60a5fa' }}>🔵 Il tuo alleato</div>
+          <div className="text-[9px] font-black uppercase tracking-wide" style={{ color: '#60a5fa' }}>TUO ALLEATO</div>
           <div className="text-sm font-black text-white">{myAI?.name}</div>
         </div>
         <div className="ml-auto text-green-400 font-black">✓</div>
@@ -675,7 +675,7 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
       {/* Slot 1 — prima AI della squadra B */}
       <div className="w-full">
         <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#f87171' }}>
-          🔴 Prima AI — squadra B
+          SQUADRA B — AI 1
         </div>
         <SlotReel
           finalId={rouletteSlots[0]}
@@ -688,7 +688,7 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
       {/* Slot 2 — seconda AI della squadra B, si sblocca dopo il primo */}
       <div className="w-full" style={{ opacity: rouletteSettled[0] ? 1 : 0.3, transition: 'opacity 0.4s' }}>
         <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#f87171' }}>
-          🔴 Seconda AI — squadra B
+          SQUADRA B — AI 2
         </div>
         <SlotReel
           finalId={rouletteSlots[1] ?? ''}
@@ -702,7 +702,7 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
       {rouletteSettled[1] && arbAI && (
         <div className="w-full scale-in">
           <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: '#A78BFA' }}>
-            ⚖️ Arbitro
+            ARBITRO
           </div>
           <div className="flex items-center gap-3 px-4 py-3 rounded-2xl"
             style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)' }}>
@@ -712,9 +712,9 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter }: {
             </div>
             <div>
               <div className="text-xs font-black text-white">{arbAI.name}</div>
-              <div className="text-[9px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Giudicherà il dibattito</div>
+              <div className="text-[9px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Giudice del dibattito</div>
             </div>
-            <div className="ml-auto text-purple-400 font-black text-lg">⚖️</div>
+            <div className="ml-auto text-purple-400 font-black text-lg">arb</div>
           </div>
         </div>
       )}
@@ -1011,7 +1011,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               <button onClick={handleCreate} disabled={creating}
                 className="px-12 py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 transition-all hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #3b82f6, #7C3AED)', boxShadow: '0 4px 24px rgba(99,102,241,0.4)' }}>
-                {creating ? 'Preparo la roulette…' : '⚔️ Avvia la roulette →'}
+                {creating ? 'Preparo la roulette…' : 'Avvia la roulette →'}
               </button>
             </div>
           )}
@@ -1029,7 +1029,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           {/* ── STEP 4: Condividi ── */}
           {step === 'share' && (
             <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-6">
-              <div className="text-5xl">⚔️</div>
+              <div className="text-5xl">Duello creato!</div>
               <div className="text-center">
                 <div className="text-2xl font-black text-white mb-1">Duello creato!</div>
                 <div className="text-white/40 text-sm">Condividi il codice con il tuo avversario.<br/>La partita inizia quando entra.</div>
@@ -1049,13 +1049,13 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               {/* Riepilogo squadre */}
               <div className="w-full flex gap-3">
                 <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                  <div className="text-[9px] font-black uppercase text-blue-400 mb-1">🔵 Squadra A</div>
+                  <div className="text-[9px] font-black uppercase text-blue-400 mb-1">SQUADRA A</div>
                   <div className="text-xs text-white/70">{teamAHuman}</div>
                   <div className="text-[10px] text-white/30">+ {AI_NAMES[teamAAI]}</div>
                 </div>
                 <div className="flex-shrink-0 flex items-center text-white/20 font-black text-sm">vs</div>
                 <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  <div className="text-[9px] font-black uppercase text-red-400 mb-1">🔴 Squadra B</div>
+                  <div className="text-[9px] font-black uppercase text-red-400 mb-1">SQUADRA B</div>
                   <div className="text-xs text-white/40 italic">In attesa…</div>
                   <div className="text-[10px] text-white/30">+ {AI_NAMES[teamBAI]}</div>
                 </div>
@@ -1108,22 +1108,22 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
           <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
-          <div className="font-black text-white text-sm">⚖️ Verdetto finale</div>
+          <div className="font-black text-white text-sm">Verdetto finale</div>
         </div>
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-5 py-8 gap-6">
           <div className="text-5xl">🏆</div>
           <div className="text-white font-black text-xl text-center">Il duello è finito</div>
           <div className="w-full rounded-3xl p-5" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)' }}>
-            <div className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-3">⚖️ {AI_NAMES[config.arbiterAiId]} — Verdetto</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-3">{AI_NAMES[config.arbiterAiId]} — Verdetto</div>
             <div className="text-sm text-white/80 leading-relaxed">{state.verdict}</div>
           </div>
           <div className="flex gap-3 w-full">
             <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)' }}>
-              <div className="text-[9px] font-black uppercase text-blue-400 mb-1">🔵 Squadra A</div>
+              <div className="text-[9px] font-black uppercase text-blue-400 mb-1">SQUADRA A</div>
               <div className="text-xs text-white/70">{config.teamA.humanName}</div>
             </div>
             <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}>
-              <div className="text-[9px] font-black uppercase text-red-400 mb-1">🔴 Squadra B</div>
+              <div className="text-[9px] font-black uppercase text-red-400 mb-1">SQUADRA B</div>
               <div className="text-xs text-white/70">{"Squadra B"}</div>
             </div>
           </div>
@@ -1164,7 +1164,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
 
           {/* Squadra A */}
           <div className="flex-1 flex flex-col items-start gap-0.5">
-            <div className="text-[8px] font-black uppercase tracking-wide" style={{ color: '#60a5fa' }}>🔵 A</div>
+            <div className="text-[8px] font-black uppercase tracking-wide" style={{ color: '#60a5fa' }}>A</div>
             <div className="text-[10px] font-bold text-white truncate max-w-[70px]">{config.teamA.humanName}</div>
             <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>+ {AI_NAMES[config.teamA.aiId]}</div>
           </div>
@@ -1188,7 +1188,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
 
           {/* Squadra B */}
           <div className="flex-1 flex flex-col items-end gap-0.5">
-            <div className="text-[8px] font-black uppercase tracking-wide" style={{ color: '#f87171' }}>🔴 B</div>
+            <div className="text-[8px] font-black uppercase tracking-wide" style={{ color: '#f87171' }}>B</div>
             <div className="text-[10px] font-bold text-white truncate max-w-[70px]">{"Squadra B"}</div>
             <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{AI_NAMES[config.teamB.aiId1]} +</div>
           </div>
@@ -1212,7 +1212,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
 
           if (isArbiter) return (
             <div key={i} className="rounded-2xl p-3 mx-1" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
-              <div className="text-[8px] font-black uppercase tracking-wide mb-1" style={{ color: '#A78BFA' }}>⚖️ {AI_NAMES[config.arbiterAiId]} — Verdetto</div>
+              <div className="text-[8px] font-black uppercase tracking-wide mb-1" style={{ color: '#A78BFA' }}>{AI_NAMES[config.arbiterAiId]} — Verdetto</div>
               <div className="text-xs text-white/80 leading-relaxed">{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</div>
             </div>
           )
@@ -3721,7 +3721,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           2 vs 2
         </div>
       )}
-      <div className="phone-shell relative scale-in" style={{ width: 390, height: 790 }}>
+      <div className={`phone-shell relative scale-in${phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? ' phone-fire' : ''}`} style={{ width: 390, height: 790 }}>
 
         {/* Cornice */}
         <div className="absolute inset-0 rounded-[50px] bg-[#1c1c1e]"
@@ -3793,7 +3793,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     <div key={i} className="flex items-center gap-1">
                       <div className="w-3 h-3 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ fontSize: 5, background: m.color }}>{m.name[0]}</div>
                       <div className="text-[8px] font-semibold" style={{ color: i === 0 ? '#f87171' : '#A78BFA' }}>
-                        {m.name}{i === 1 && <span className="ml-1 opacity-50">⚖️</span>}
+                        {m.name}{i === 1 && <span className="ml-1 opacity-50">arb</span>}
                       </div>
                     </div>
                   ))}
@@ -3892,7 +3892,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   const aiColor = AI_COLOR[msg.aiId ?? ''] ?? teamColor
                   if (isArbiter) return (
                     <div key={i} className="mx-3 my-2 rounded-2xl p-3" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
-                      <div className="text-[8px] font-black uppercase mb-1" style={{ color: '#A78BFA' }}>⚖️ {AI_NAMES[twoVsTwoState.config.arbiterAiId]} — Verdetto</div>
+                      <div className="text-[8px] font-black uppercase mb-1" style={{ color: '#A78BFA' }}>{AI_NAMES[twoVsTwoState.config.arbiterAiId]} — Verdetto</div>
                       <div className="text-xs text-white/80 leading-relaxed">{msg.content}</div>
                     </div>
                   )
