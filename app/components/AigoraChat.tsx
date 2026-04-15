@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
+import { useAbly, type RoomEvent } from '@/lib/useAbly'
 
 const AI_ORDER_DEFAULT = ['claude', 'gemini', 'perplexity', 'gpt']
 const AI_NAMES: Record<string, string> = { claude: 'Claude', gpt: 'GPT', gemini: 'Gemini', perplexity: 'Perplexity' }
@@ -673,6 +674,60 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [showInvitePanel, setShowInvitePanel] = useState(false)
   const [inviteSearch, setInviteSearch] = useState('')
   const [inviteResults, setInviteResults] = useState<any[]>([])
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+
+  // ── Real-time Ably ────────────────────────────────────────────────────────
+  const handleRoomEvent = useCallback((event: RoomEvent) => {
+    if (event.type === 'user_message') {
+      // Messaggio di un altro utente nella room
+      const msg: Message = {
+        id: event.messageId,
+        aiId: 'user',
+        name: event.userName,
+        content: event.content,
+        isUser: true,
+      }
+      setMessages(prev => {
+        // Evita duplicati
+        if (prev.find(m => m.id === event.messageId)) return prev
+        return [...prev, msg]
+      })
+    } else if (event.type === 'ai_chunk') {
+      // Chunk streaming di una AI dalla room
+      setMessages(prev => {
+        const existing = prev.find(m => m.id === event.messageId)
+        if (existing) {
+          return prev.map(m => m.id === event.messageId
+            ? { ...m, content: m.content + event.chunk, isStreaming: true }
+            : m
+          )
+        }
+        return [...prev, {
+          id: event.messageId,
+          aiId: event.aiId,
+          name: event.aiName,
+          content: event.chunk,
+          isStreaming: true,
+        }]
+      })
+    } else if (event.type === 'ai_done') {
+      setMessages(prev => prev.map(m => m.id === event.messageId
+        ? { ...m, content: event.fullText, isStreaming: false }
+        : m
+      ))
+    } else if (event.type === 'presence') {
+      setOnlineUsers(prev => {
+        if (event.action === 'enter') return [...new Set([...prev, event.userName])]
+        return prev.filter(u => u !== event.userName)
+      })
+    }
+  }, [])
+
+  const { publish } = useAbly({
+    roomId: activeRoom?.id ?? null,
+    onEvent: handleRoomEvent,
+    enabled: !!activeRoom,
+  })
 
   // Carica rooms e notifiche (solo admin)
   useEffect(() => {
@@ -1108,9 +1163,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (!inputText.trim()) return
     const text = inputText.trim()
     setInputText('')
-    const userMsg: Message = { id: `user-${Date.now()}`, aiId: 'user', name: displayName, content: text, isUser: true }
+    const messageId = `user-${Date.now()}`
+    const userMsg: Message = { id: messageId, aiId: 'user', name: displayName, content: text, isUser: true }
     chatHistoryRef.current.push({ name: historyName, content: text })
     setMessages(prev => [...prev, userMsg])
+
+    // Pubblica su Ably se siamo in una room multiplayer
+    if (activeRoom) {
+      publish({
+        type: 'user_message',
+        userId: userEmail ?? '',
+        userName: displayName,
+        content: text,
+        messageId,
+      })
+    }
 
     if (waitingForUserRef.current || stopRequestedRef.current) {
       waitingForUserRef.current = false
@@ -1874,9 +1941,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-[13px] leading-none" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>AiGORÀ</div>
+              <div className="font-semibold text-[13px] leading-none" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>
+                {activeRoom ? activeRoom.topic : 'AiGORÀ'}
+              </div>
               <div className="text-[10px] mt-0.5 truncate" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
-                {activeAi ? `${AI_NAMES[activeAi]} sta scrivendo…` : `Turno ${turnCount + 1} · 4 AI`}
+                {activeAi
+                  ? `${AI_NAMES[activeAi]} sta scrivendo…`
+                  : activeRoom
+                    ? `${onlineUsers.length + 1} online · ${myRoomRole === 'spectator' ? 'Spettatore' : 'Partecipante'}`
+                    : `Turno ${turnCount + 1} · 4 AI`
+                }
               </div>
             </div>
 
