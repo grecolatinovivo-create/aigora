@@ -160,6 +160,23 @@ function getRandomBubbleTopics(): string[] {
 }
 
 type ChatPhase = 'start' | 'running' | 'done' | 'history' | 'profile' | 'new'
+type GameMode = 'classico' | '2v2' | 'devil'
+
+// Struttura per 2 vs 2
+interface Team {
+  name: string
+  color: string
+  members: { id: string; name: string; isAI: boolean; aiId?: string }[]
+}
+
+// Struttura per Devil's Advocate
+interface DevilSession {
+  position: string  // la posizione assegnata
+  side: 'defend' | 'attack'
+  round: number
+  score: number
+  messages: { role: 'user' | 'ai'; aiId?: string; content: string }[]
+}
 
 function detectNextAi(text: string, aiOrder: string[]): string | null {
   const lower = text.toLowerCase()
@@ -261,6 +278,254 @@ function SwipeableChatRow({ chat, onOpen, onDelete, bgColor = 'rgba(10,10,18,0.9
             style={{ backgroundColor: '#ef4444' }}>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ── Selezione Formato ─────────────────────────────────────────────────────────
+const MODE_INFO = {
+  classico: {
+    label: 'Classico',
+    desc: 'Dibattito libero con le AI. Fino a 5 umani, nessun turno forzato.',
+    btn: 'Avvia il dibattito →',
+    color: '#10A37F',
+  },
+  '2v2': {
+    label: '2 vs 2',
+    desc: 'Due squadre si sfidano. Ogni squadra ha un umano e un\'AI alleata. Un\'AI arbitro pronuncia il verdetto finale.',
+    btn: 'Scegli le squadre →',
+    color: '#3b82f6',
+  },
+  devil: {
+    label: "Devil's Advocate",
+    desc: "L'app ti assegna una posizione — anche scomoda — e devi difenderla contro le AI. Punteggio finale sulla solidità degli argomenti.",
+    btn: 'Accetta la sfida →',
+    color: '#ef4444',
+  },
+}
+
+function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void; onClose: () => void }) {
+  const [hovered, setHovered] = useState<GameMode | null>(null)
+  const [selected, setSelected] = useState<GameMode>('2v2')
+
+  const info = MODE_INFO[selected]
+
+  return (
+    <div className="fixed inset-0 z-[80] flex flex-col items-center justify-center"
+      style={{ backgroundColor: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(16,163,127,0.12) 0%, transparent 60%)' }}>
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 flex items-center justify-between px-6 h-14 z-50"
+        style={{ backgroundColor: 'rgba(7,7,15,0.4)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
+        <button onClick={onClose} className="flex items-center gap-2 text-sm font-medium text-white/45 hover:text-white transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Indietro
+        </button>
+        <span className="absolute left-1/2 -translate-x-1/2 font-black text-lg">
+          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
+        </span>
+        <div style={{ width: 80 }} />
+      </div>
+
+      <div className="flex flex-col items-center pt-14 px-6 w-full max-w-5xl">
+        <div className="text-center mb-10 mt-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-medium text-purple-300 border border-purple-500/30"
+            style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>
+            <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+            Scegli il formato del dibattito
+          </div>
+          <h1 className="text-3xl font-black text-white mb-2">Come vuoi dibattere?</h1>
+          <p className="text-white/40 text-sm">Tre formati diversi, un'unica arena.</p>
+        </div>
+
+        {/* Tre cellulari */}
+        <div className="flex items-end justify-center gap-8 flex-wrap">
+          {(['classico', '2v2', 'devil'] as GameMode[]).map(mode => {
+            const isSelected = selected === mode
+            const m = MODE_INFO[mode]
+            return (
+              <div key={mode}
+                onClick={() => setSelected(mode)}
+                className="flex flex-col items-center gap-3 cursor-pointer transition-all duration-300"
+                style={{ transform: isSelected ? 'scale(1.06) translateY(-6px)' : 'scale(0.95)' }}>
+                {/* Mini phone */}
+                <div className="relative" style={{ width: isSelected ? 200 : 170, height: isSelected ? 380 : 320, transition: 'all 0.3s' }}>
+                  <div className="absolute inset-0 rounded-[36px]"
+                    style={{
+                      background: '#1c1c1e',
+                      boxShadow: isSelected
+                        ? `0 0 0 2px ${m.color}, 0 0 40px ${m.color}50, 0 30px 80px rgba(0,0,0,0.8)`
+                        : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)',
+                      transition: 'all 0.3s',
+                    }} />
+                  <div className="absolute inset-0 rounded-[36px] overflow-hidden flex flex-col"
+                    style={{ top: 5, left: 5, right: 5, bottom: 5 }}>
+                    {/* Screen content mini */}
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 gap-3"
+                      style={{ backgroundColor: mode === 'classico' ? '#f5f0e8' : '#0d0d14' }}>
+                      <div className="text-3xl">{mode === 'classico' ? '💬' : mode === '2v2' ? '⚔️' : '😈'}</div>
+                      <div className="font-black text-sm" style={{ color: mode === 'classico' ? '#111' : '#fff' }}>{m.label}</div>
+                      {/* Squadre mini per 2v2 */}
+                      {mode === '2v2' && (
+                        <div className="flex items-center gap-2">
+                          <div className="px-2 py-1 rounded-lg text-[9px] font-bold" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}>A</div>
+                          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>vs</span>
+                          <div className="px-2 py-1 rounded-lg text-[9px] font-bold" style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>B</div>
+                        </div>
+                      )}
+                      {/* Score mini per devil */}
+                      {mode === 'devil' && (
+                        <div className="flex items-center gap-1">
+                          <span style={{ color: '#fbbf24', fontSize: 18, fontWeight: 900 }}>7.2</span>
+                          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9 }}>/10</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-[11px] font-bold uppercase tracking-widest transition-colors"
+                  style={{ color: isSelected ? m.color : 'rgba(255,255,255,0.25)' }}>
+                  {m.label}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Info formato selezionato */}
+        <div className="mt-10 text-center max-w-md">
+          <p className="text-white/50 text-sm mb-6">{info.desc}</p>
+          <button
+            onClick={() => onSelect(selected)}
+            className="px-8 py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{ background: `linear-gradient(135deg, ${info.color}, ${info.color}cc)`, boxShadow: `0 4px 24px ${info.color}50` }}>
+            {info.btn}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Devil's Advocate ───────────────────────────────────────────────────────────
+const DEVIL_POSITIONS = [
+  { position: "I social media fanno bene alla democrazia", side: 'defend' as const },
+  { position: "Il lavoro da remoto rende le persone meno produttive", side: 'defend' as const },
+  { position: "L'IA nella creatività è sempre un passo indietro rispetto all'umano", side: 'defend' as const },
+  { position: "Le criptovalute sono solo una bolla speculativa senza valore reale", side: 'defend' as const },
+  { position: "I videogiochi violenti non causano violenza reale", side: 'defend' as const },
+  { position: "La globalizzazione ha fatto più danni che benefici", side: 'defend' as const },
+  { position: "Il nucleare è la soluzione più sicura per il clima", side: 'defend' as const },
+  { position: "La privacy è sopravvalutata nella società moderna", side: 'defend' as const },
+]
+
+function DevilsAdvocateScreen({ session, onMessage, onEndTurn, loading, isDark, bgPreset, onBack }: {
+  session: DevilSession
+  onMessage: (text: string) => void
+  onEndTurn: () => void
+  loading: boolean
+  isDark: boolean
+  bgPreset: { value: string; header: string; text: 'black' | 'white' }
+  onBack: () => void
+}) {
+  const [input, setInput] = useState('')
+  const textColor = isDark ? '#fff' : '#111'
+  const subColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'
+  const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+
+  const scoreColor = session.score >= 7 ? '#10A37F' : session.score >= 5 ? '#F59E0B' : '#ef4444'
+
+  return (
+    <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
+        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', paddingBottom: '10px', backgroundColor: bgPreset.header, borderColor }}>
+        <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
+          style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={textColor} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-base">😈</span>
+            <span className="font-bold text-sm truncate" style={{ color: textColor }}>Devil's Advocate</span>
+          </div>
+          <div className="text-[10px] truncate" style={{ color: '#ef4444' }}>Turno {session.round} · Difendi la tua posizione</div>
+        </div>
+        {/* Score */}
+        <div className="flex flex-col items-end flex-shrink-0">
+          <div className="text-xl font-black" style={{ color: scoreColor }}>{session.score.toFixed(1)}</div>
+          <div className="text-[9px]" style={{ color: subColor }}>/ 10</div>
+        </div>
+      </div>
+
+      {/* Posizione assegnata */}
+      <div className="flex-shrink-0 px-4 py-3 border-b"
+        style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.2)' }}>
+        <div className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>La tua posizione — devi difenderla</div>
+        <div className="text-sm font-bold" style={{ color: textColor }}>"{session.position}"</div>
+      </div>
+
+      {/* Messaggi */}
+      <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-3">
+        {session.messages.map((msg, i) => (
+          <div key={i}>
+            {msg.role === 'user' ? (
+              <div className="flex justify-end">
+                <div className="max-w-[80%] px-3 py-2 rounded-2xl rounded-br-sm text-sm"
+                  style={{ backgroundColor: 'rgba(239,68,68,0.2)', color: isDark ? '#fca5a5' : '#b91c1c' }}>
+                  {msg.content}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-end gap-2 max-w-[85%]">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0"
+                  style={{ backgroundColor: AI_COLOR[msg.aiId ?? 'claude'] }}>
+                  {msg.aiId === 'gemini' ? 'Ge' : (AI_NAMES[msg.aiId ?? 'claude'] ?? 'C')[0]}
+                </div>
+                <div className="px-3 py-2 rounded-2xl rounded-bl-sm text-sm"
+                  style={{ backgroundColor: isDark ? `${AI_COLOR[msg.aiId ?? 'claude']}18` : `${AI_COLOR[msg.aiId ?? 'claude']}15`, color: isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.8)' }}>
+                  {msg.content}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {loading && (
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-[9px] font-bold">C</div>
+            <div className="flex gap-1">
+              {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input + Fine turno */}
+      <div className="flex-shrink-0 border-t" style={{ backgroundColor: bgPreset.header, borderColor, paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        <div className="flex items-center gap-2 px-3 pt-2 pb-1">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && input.trim() && !loading) { onMessage(input.trim()); setInput('') } }}
+            placeholder="Difendi la tua posizione…"
+            disabled={loading}
+            className="flex-1 rounded-full px-3 py-2 text-[12px] outline-none"
+            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, color: isDark ? '#f0f0f0' : '#111' }}
+          />
+          <button onClick={() => { if (input.trim()) { onMessage(input.trim()); setInput('') } }} disabled={!input.trim() || loading}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white disabled:opacity-30"
+            style={{ background: 'rgba(239,68,68,0.6)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+          </button>
+        </div>
+        <div className="px-3 pb-1">
+          <button onClick={onEndTurn} disabled={loading || session.round >= 4}
+            className="w-full py-2 rounded-xl text-xs font-bold disabled:opacity-40 transition-all"
+            style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+            {session.round >= 4 ? 'Attendi verdetto finale…' : `Fine turno → (${4 - session.round} rimasti)`}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -612,11 +877,12 @@ function UserTurnPrompt({ name, isDark }: { name: string; isDark: boolean }) {
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
-function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta }: {
+function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta }: {
   onCronologia: () => void
   onFeed?: () => void
   onCrea?: () => void
   onNewChat?: () => void
+  onMultiplayer?: () => void
   dbUserName?: string | null
   isBeta?: boolean
   displayName: string
@@ -695,6 +961,11 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmai
                   </div>
                 )
               })()}
+              <button onClick={() => { onMultiplayer?.(); setShowProfileMenu(false) }}
+                className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2"
+                style={{ color: 'rgba(255,255,255,0.7)' }}>
+                ⚔️ Multiplayer
+              </button>
               {(userPlan === 'admin' || isBeta) && (
                 <>
                   <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
@@ -783,6 +1054,22 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [dbUserName, setDbUserName] = useState<string | null>(null)
   const [isBeta, setIsBeta] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
+
+  // ── Selezione formato ─────────────────────────────────────────────────────
+  const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
+  const [showModeSelect, setShowModeSelect] = useState(false)
+
+  // ── 2 vs 2 ────────────────────────────────────────────────────────────────
+  const [teamA, setTeamA] = useState<Team>({ name: 'Squadra A', color: '#3b82f6', members: [] })
+  const [teamB, setTeamB] = useState<Team>({ name: 'Squadra B', color: '#ef4444', members: [] })
+  const [currentTeam, setCurrentTeam] = useState<'A' | 'B'>('A')
+  const [arbiterMsg, setArbiterMsg] = useState<string | null>(null)
+  const [roundCount2v2, setRoundCount2v2] = useState(0)
+
+  // ── Devil's Advocate ──────────────────────────────────────────────────────
+  const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
+  const [devilInput, setDevilInput] = useState('')
+  const [devilLoading, setDevilLoading] = useState(false)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [closingAiProfile, setClosingAiProfile] = useState(false)
 
@@ -1493,6 +1780,148 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }
 
+  // ── Logica formato multiplayer ────────────────────────────────────────────
+  const handleSelectMode = (mode: GameMode) => {
+    setSelectedMode(mode)
+    setShowModeSelect(false)
+    if (mode === 'devil') {
+      // Avvia Devil's Advocate
+      const pick = DEVIL_POSITIONS[Math.floor(Math.random() * DEVIL_POSITIONS.length)]
+      setDevilSession({ position: pick.position, side: pick.side, round: 1, score: 5.0, messages: [] })
+      setPhase('running')
+    } else if (mode === '2v2') {
+      setPhase('running')
+    } else {
+      // Classico — torna alla start
+      setSelectedMode(null)
+    }
+  }
+
+  const handleDevilMessage = async (text: string) => {
+    if (!devilSession) return
+    setDevilLoading(true)
+
+    const updatedMsgs = [...devilSession.messages, { role: 'user' as const, content: text }]
+    setDevilSession(prev => prev ? { ...prev, messages: updatedMsgs } : prev)
+
+    try {
+      // Scegli un'AI attaccante casuale
+      const attackerIds = ['claude', 'gpt', 'gemini']
+      const attackerId = attackerIds[devilSession.round % attackerIds.length]
+      const attackerName = AI_NAMES[attackerId]
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'turn',
+          aiId: attackerId,
+          history: [
+            { name: 'Sistema', content: `Sei ${attackerName} in un gioco Devil's Advocate. L'utente deve difendere la posizione: "${devilSession.position}". Il tuo compito è attaccarla con argomenti forti e concreti, cercando di smontare la tesi. Sii diretto e pungente. 2-3 frasi max.` },
+            ...updatedMsgs.map(m => ({ name: m.role === 'user' ? 'Utente' : m.aiId ?? 'AI', content: m.content }))
+          ],
+          needsWebSearch: false,
+        }),
+      })
+
+      if (!res.ok || !res.body) throw new Error('Stream error')
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = '', aiText = '', done = false
+      const aiMsgId = `devil-${Date.now()}`
+
+      // Aggiungi messaggio AI vuoto
+      setDevilSession(prev => prev ? {
+        ...prev,
+        messages: [...updatedMsgs, { role: 'ai', aiId: attackerId, content: '' }]
+      } : prev)
+
+      while (!done) {
+        const { done: sd, value } = await reader.read()
+        if (sd) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d === '[DONE]') { done = true; break }
+          try { aiText += JSON.parse(d).text } catch {}
+          setDevilSession(prev => {
+            if (!prev) return prev
+            const msgs = [...prev.messages]
+            msgs[msgs.length - 1] = { role: 'ai', aiId: attackerId, content: aiText }
+            return { ...prev, messages: msgs }
+          })
+        }
+      }
+
+      // Calcola nuovo punteggio (semplice euristica basata sulla lunghezza e parole chiave)
+      const argStrength = Math.min(text.length / 20, 3) + (text.includes('perché') || text.includes('quindi') || text.includes('infatti') ? 1 : 0)
+      const newScore = Math.min(10, Math.max(0, devilSession.score + (argStrength > 2 ? 0.3 : -0.2)))
+
+      setDevilSession(prev => prev ? { ...prev, score: newScore } : prev)
+
+    } catch (e) {
+      console.error('Devil error:', e)
+    }
+    setDevilLoading(false)
+  }
+
+  const handleDevilEndTurn = async () => {
+    if (!devilSession) return
+    const newRound = devilSession.round + 1
+
+    if (newRound > 4) {
+      // Verdetto finale da Claude
+      setDevilLoading(true)
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'turn',
+            aiId: 'claude',
+            history: [
+              { name: 'Sistema', content: `Sei un giudice imparziale. L'utente ha difeso la posizione: "${devilSession.position}". Analizza gli argomenti usati e dai un verdetto finale con: 1) Punteggio da 0 a 10 sulla solidità degli argomenti 2) Il punto più forte usato 3) Il punto più debole. Sii conciso e diretto.` },
+              ...devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
+            ],
+            needsWebSearch: false,
+          }),
+        })
+        if (res.ok && res.body) {
+          const reader = res.body.getReader()
+          const decoder = new TextDecoder()
+          let buffer = '', verdict = '', done = false
+          setDevilSession(prev => prev ? { ...prev, messages: [...prev.messages, { role: 'ai', aiId: 'claude', content: '⚖️ Verdetto finale:\n' }], round: newRound } : prev)
+          while (!done) {
+            const { done: sd, value } = await reader.read()
+            if (sd) break
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            buffer = lines.pop() ?? ''
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue
+              const d = line.slice(6).trim()
+              if (d === '[DONE]') { done = true; break }
+              try { verdict += JSON.parse(d).text } catch {}
+              setDevilSession(prev => {
+                if (!prev) return prev
+                const msgs = [...prev.messages]
+                msgs[msgs.length - 1] = { role: 'ai', aiId: 'claude', content: '⚖️ Verdetto finale:\n' + verdict }
+                return { ...prev, messages: msgs }
+              })
+            }
+          }
+        }
+      } catch {}
+      setDevilLoading(false)
+    } else {
+      setDevilSession(prev => prev ? { ...prev, round: newRound } : prev)
+    }
+  }
+
   const handleTogglePortfolio = async () => {
     const newValue = !isPublic
     setIsPublic(newValue)
@@ -1561,6 +1990,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     onFeed: () => { setSocialTab('feed'); setShowSocialPanel(true) },
     onCrea: () => { setSocialTab('crea'); setShowSocialPanel(true) },
     onNewChat: () => { handleReset(); setPhase('new') },
+    onMultiplayer: () => setShowModeSelect(true),
     displayName,
     userEmail,
     userPlan: effectivePlan,
@@ -2509,6 +2939,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
         )}
 
+        {/* Schermata Devil's Advocate mobile */}
+        {phase === 'running' && selectedMode === 'devil' && devilSession && (
+          <DevilsAdvocateScreen
+            session={devilSession}
+            onMessage={handleDevilMessage}
+            onEndTurn={handleDevilEndTurn}
+            loading={devilLoading}
+            isDark={isDark}
+            bgPreset={bgPreset}
+            onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
+          />
+        )}
+
         {/* Schermata profilo mobile */}
         {phase === 'profile' && (
           <ProfileScreen
@@ -2987,6 +3430,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         </div>
       </div>
 
+      {/* ── SELEZIONE FORMATO MULTIPLAYER ── */}
+      {showModeSelect && (
+        <ModeSelect
+          onSelect={handleSelectMode}
+          onClose={() => setShowModeSelect(false)}
+        />
+      )}
 
     </div>
   )
