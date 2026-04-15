@@ -3,6 +3,39 @@ import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 
+function EyeIcon({ show }: { show: boolean }) {
+  return show ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  )
+}
+
+function PasswordInput({ placeholder, value, onChange }: { placeholder: string; value: string; onChange: (v: string) => void }) {
+  const [show, setShow] = useState(false)
+  return (
+    <div className="relative">
+      <input
+        type={show ? 'text' : 'password'}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        required
+        className="w-full px-4 py-3 pr-11 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-purple-400 text-sm"
+      />
+      <button type="button" onClick={() => setShow(s => !s)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors">
+        <EyeIcon show={show} />
+      </button>
+    </div>
+  )
+}
+
 function AuthCard() {
   const [tab, setTab] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
@@ -75,8 +108,7 @@ function AuthCard() {
         <form onSubmit={handleLogin} className="space-y-3">
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
             className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-purple-400 text-sm" />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required
-            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-purple-400 text-sm" />
+          <PasswordInput placeholder="Password" value={password} onChange={setPassword} />
           {(error || urlError) && <p className="text-red-400 text-xs text-center">{error || 'Errore di accesso. Riprova.'}</p>}
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
@@ -93,10 +125,8 @@ function AuthCard() {
             className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-purple-400 text-sm" />
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
             className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-purple-400 text-sm" />
-          <input type="password" placeholder="Password (min. 8 caratteri)" value={password} onChange={e => setPassword(e.target.value)} required
-            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-purple-400 text-sm" />
-          <input type="password" placeholder="Conferma password" value={confirm} onChange={e => setConfirm(e.target.value)} required
-            className="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-purple-400 text-sm" />
+          <PasswordInput placeholder="Password (min. 8 caratteri)" value={password} onChange={setPassword} />
+          <PasswordInput placeholder="Conferma password" value={confirm} onChange={setConfirm} />
           {error && <p className="text-red-400 text-xs text-center">{error}</p>}
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
