@@ -134,41 +134,39 @@ export default async function AdminPage() {
 
             return (
               <details key={user.id} className="glass rounded-2xl overflow-hidden">
-                <summary className="flex flex-col px-5 py-4 cursor-pointer list-none hover:bg-white/5 transition-colors gap-2">
-                  {/* Riga 1: avatar + info utente + chevron */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                      style={{ backgroundColor: PLAN_STYLE[effectivePlan]?.color || '#6B7280' }}>
-                      {(user.name || user.email || '?')[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-medium text-sm truncate">{user.email}</div>
-                      <div className="text-white/40 text-xs mt-0.5">
-                        {user.name && <span className="mr-2">{user.name}</span>}
-                        Iscritto {new Date(user.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </div>
-                    </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
+                <summary className="flex items-center gap-4 px-5 py-4 cursor-pointer list-none hover:bg-white/5 transition-colors">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                    style={{ backgroundColor: PLAN_STYLE[effectivePlan]?.color || '#6B7280' }}>
+                    {(user.name || user.email || '?')[0].toUpperCase()}
                   </div>
-                  {/* Riga 2: badge piano + stats + pulsanti tutti sulla stessa linea */}
-                  <div className="flex items-center gap-3 flex-wrap ml-12">
-                    {(() => {
-                      const s = PLAN_STYLE[effectivePlan] || PLAN_STYLE['none']
-                      return (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
-                          {effectivePlan.toUpperCase()}
-                        </span>
-                      )
-                    })()}
-                    <span className="text-white/30 text-[10px]">
-                      {user.chats.length} chat · {userMsgCount} domande · {aiMsgCount} risposte AI
-                    </span>
-                    <div className="ml-auto">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white font-medium text-sm truncate">{user.email}</div>
+                    <div className="text-white/40 text-xs mt-0.5">
+                      {user.name && <span className="mr-2">{user.name}</span>}
+                      Iscritto {new Date(user.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    {/* Riga etichette */}
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const s = PLAN_STYLE[effectivePlan] || PLAN_STYLE['none']
+                        return (
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
+                            {effectivePlan.toUpperCase()}
+                          </span>
+                        )
+                      })()}
                       {user.email !== adminEmail && (
                         <UserActions userId={user.id} blocked={user.blocked ?? false} beta={user.beta ?? false} />
                       )}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
                     </div>
+                    {/* Riga dati */}
+                    <span className="text-white/30 text-[10px]">
+                      {user.chats.length} chat · {userMsgCount} domande · {aiMsgCount} risposte AI
+                    </span>
                   </div>
                 </summary>
 
