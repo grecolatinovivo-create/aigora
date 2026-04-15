@@ -2358,6 +2358,53 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <div className="flex-shrink-0 flex justify-center py-2" style={{ backgroundColor: bgPreset.header }}>
             <div className="w-28 h-1 rounded-full" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.18)' }} />
           </div>
+
+          {/* Pannello profilo AI — dentro la cornice iPhone desktop */}
+          {selectedAiProfile && AI_PROFILES[selectedAiProfile] && (() => {
+            const ai = AI_PROFILES[selectedAiProfile]
+            const color = AI_COLOR[selectedAiProfile]
+            const name = AI_NAMES[selectedAiProfile]
+            return (
+              <div className="absolute inset-0 z-50 flex flex-col slide-from-right rounded-[44px] overflow-hidden"
+                style={{ backgroundColor: bgPreset.value }}>
+                <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
+                  style={{ paddingTop: '16px', paddingBottom: '12px', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                  <button onClick={() => setSelectedAiProfile(null)} className="flex items-center active:opacity-60 transition-opacity" style={{ color }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0" style={{ backgroundColor: color }}>{ai.initials}</div>
+                  <div>
+                    <div className="font-bold text-sm" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
+                    <div className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>{ai.tagline}</div>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <div className="flex flex-col items-center pt-6 pb-5 px-5" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black text-white mb-3" style={{ backgroundColor: color, boxShadow: `0 0 0 5px ${color}25, 0 8px 30px ${color}55` }}>{ai.initials}</div>
+                    <div className="text-xl font-black mb-1" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
+                    <div className="text-[10px] font-semibold px-3 py-1 rounded-full mt-1" style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}30` }}>{ai.tagline}</div>
+                  </div>
+                  <div className="px-4 py-4 flex flex-col gap-4" style={{ paddingBottom: '16px' }}>
+                    {[{ label: 'Chi sono', text: ai.chi }, { label: 'Come mi comporto', text: ai.carattere }, { label: 'Con le altre AI', text: ai.relazioni }].map(({ label, text }) => (
+                      <div key={label} className="rounded-2xl p-3" style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
+                        <div className="text-[9px] font-black uppercase tracking-widest mb-1.5" style={{ color }}>{label}</div>
+                        <p className="text-[13px] leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.88)' : 'rgba(0,0,0,0.85)' }}>{text}</p>
+                      </div>
+                    ))}
+                    <div className="rounded-2xl p-3" style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
+                      <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color }}>Cosa so fare meglio</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {ai.forza.split(', ').map(f => (
+                          <span key={f} className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: `${color}20`, color, border: `1px solid ${color}40` }}>{f}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
         </div>
 
         {/* Tasti fisici */}
@@ -2882,51 +2929,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         </div>
       </div>
 
-      {/* ── PANNELLO PROFILO AI — globale, funziona su desktop e mobile ── */}
-      {selectedAiProfile && AI_PROFILES[selectedAiProfile] && (() => {
-        const ai = AI_PROFILES[selectedAiProfile]
-        const color = AI_COLOR[selectedAiProfile]
-        const name = AI_NAMES[selectedAiProfile]
-        return (
-          <div className="fixed inset-0 z-[100] flex flex-col slide-from-right"
-            style={{ backgroundColor: bgPreset.value }}>
-            <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
-              style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-              <button onClick={() => setSelectedAiProfile(null)} className="flex items-center active:opacity-60 transition-opacity" style={{ color }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
-              </button>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0" style={{ backgroundColor: color }}>{ai.initials}</div>
-              <div>
-                <div className="font-bold text-sm" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
-                <div className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>{ai.tagline}</div>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <div className="flex flex-col items-center pt-8 pb-6 px-6" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black text-white mb-4" style={{ backgroundColor: color, boxShadow: `0 0 0 6px ${color}25, 0 12px 40px ${color}55` }}>{ai.initials}</div>
-                <div className="text-2xl font-black mb-1" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
-                <div className="text-xs font-semibold px-3 py-1.5 rounded-full mt-1" style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}30` }}>{ai.tagline}</div>
-              </div>
-              <div className="px-5 py-5 flex flex-col gap-6" style={{ paddingBottom: 'max(32px, env(safe-area-inset-bottom))' }}>
-                {[{ label: 'Chi sono', text: ai.chi }, { label: 'Come mi comporto', text: ai.carattere }, { label: 'Con le altre AI', text: ai.relazioni }].map(({ label, text }) => (
-                  <div key={label} className="rounded-2xl p-4" style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
-                    <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color }}>{label}</div>
-                    <p className="text-[15px] leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.88)' : 'rgba(0,0,0,0.85)' }}>{text}</p>
-                  </div>
-                ))}
-                <div className="rounded-2xl p-4" style={{ backgroundColor: `${color}10`, border: `1px solid ${color}25` }}>
-                  <div className="text-[9px] font-black uppercase tracking-widest mb-3" style={{ color }}>Cosa so fare meglio</div>
-                  <div className="flex flex-wrap gap-2">
-                    {ai.forza.split(', ').map(f => (
-                      <span key={f} className="px-3 py-1.5 rounded-full text-sm font-semibold" style={{ backgroundColor: `${color}20`, color, border: `1px solid ${color}40` }}>{f}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
 
     </div>
   )
