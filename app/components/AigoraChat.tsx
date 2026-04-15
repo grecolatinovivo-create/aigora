@@ -611,11 +611,12 @@ function UserTurnPrompt({ name, isDark }: { name: string; isDark: boolean }) {
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
-function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount }: {
+function Navbar({ onCronologia, onFeed, onCrea, onNewChat, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName }: {
   onCronologia: () => void
   onFeed?: () => void
   onCrea?: () => void
   onNewChat?: () => void
+  dbUserName?: string | null
   displayName: string
   userEmail?: string
   userPlan?: string
@@ -1540,6 +1541,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setShowProfileMenu,
     onSignOut: () => signOut({ callbackUrl: '/login' }),
     unreadCount,
+    dbUserName,
   }
 
   if (!nameConfirmed) {
