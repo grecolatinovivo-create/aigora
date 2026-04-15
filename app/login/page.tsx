@@ -48,6 +48,7 @@ function AuthCard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resendCooldown, setResendCooldown] = useState(0)
+  const [devCode, setDevCode] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const urlError = searchParams?.get('error')
 
@@ -81,6 +82,7 @@ function AuthCard() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Errore nell\'invio del codice.'); setLoading(false); return }
+      if (data.code) setDevCode(data.code) // fallback temporaneo finché il dominio non è verificato
       setRegStep('verify')
       setResendCooldown(60)
       const t = setInterval(() => setResendCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
@@ -197,6 +199,11 @@ function AuthCard() {
             <div className="text-2xl mb-2">📬</div>
             <p className="text-white/70 text-sm">Abbiamo inviato un codice a</p>
             <p className="text-white font-semibold text-sm truncate">{email}</p>
+            {devCode && (
+              <div className="mt-3 px-3 py-2 rounded-xl text-xs" style={{ backgroundColor: 'rgba(124,58,237,0.15)', color: '#A78BFA' }}>
+                Il tuo codice (temporaneo): <strong className="text-white tracking-widest">{devCode}</strong>
+              </div>
+            )}
           </div>
           <div>
             <input
