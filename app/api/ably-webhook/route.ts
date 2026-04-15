@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function streamAiToRoom(
-  channel: Ably.Rest.Channel,
+  channel: ReturnType<Ably.Rest['channels']['get']>,
   aiId: string,
   topic: string,
   userMessage: string,
