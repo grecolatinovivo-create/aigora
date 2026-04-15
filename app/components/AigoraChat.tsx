@@ -698,34 +698,39 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         </div>
       )}
 
-      {/* ── Bubble fluttuanti intorno all'iPad ── */}
+      {/* ── Bubble fluttuanti — stesse della start, distanza aumentata ── */}
       {[
-        { top: '12%',  left: '2%',   delay: '-2s',   dur: '14s', anim: 'float-1' },
-        { top: '35%',  left: '1%',   delay: '-7s',   dur: '13s', anim: 'float-3' },
-        { top: '58%',  left: '2%',   delay: '-4s',   dur: '15s', anim: 'float-2' },
-        { top: '78%',  left: '1%',   delay: '-9s',   dur: '12s', anim: 'float-4' },
-        { top: '12%',  right: '2%',  delay: '-3s',   dur: '13s', anim: 'float-2' },
-        { top: '35%',  right: '1%',  delay: '-8s',   dur: '15s', anim: 'float-4' },
-        { top: '58%',  right: '2%',  delay: '-6s',   dur: '12s', anim: 'float-1' },
-        { top: '78%',  right: '1%',  delay: '-1s',   dur: '14s', anim: 'float-3' },
+        { top: '180px', left: 'calc(50% - 620px)', delay: '-2s',   dur: '14s', anim: 'float-1' },
+        { top: '320px', left: 'calc(50% - 610px)', delay: '-7s',   dur: '13s', anim: 'float-3' },
+        { top: '460px', left: 'calc(50% - 620px)', delay: '-4s',   dur: '15s', anim: 'float-2' },
+        { top: '600px', left: 'calc(50% - 605px)', delay: '-9s',   dur: '12s', anim: 'float-4' },
+        { top: '720px', left: 'calc(50% - 615px)', delay: '-5s',   dur: '14s', anim: 'float-1' },
+        { top: '840px', left: 'calc(50% - 605px)', delay: '-11s',  dur: '13s', anim: 'float-3' },
+        { top: '180px', right: 'calc(50% - 620px)', delay: '-3s',  dur: '13s', anim: 'float-2' },
+        { top: '320px', right: 'calc(50% - 610px)', delay: '-8s',  dur: '15s', anim: 'float-4' },
+        { top: '460px', right: 'calc(50% - 620px)', delay: '-6s',  dur: '12s', anim: 'float-1' },
+        { top: '600px', right: 'calc(50% - 605px)', delay: '-1s',  dur: '14s', anim: 'float-3' },
+        { top: '720px', right: 'calc(50% - 615px)', delay: '-10s', dur: '13s', anim: 'float-2' },
+        { top: '840px', right: 'calc(50% - 605px)', delay: '-4.5s',dur: '15s', anim: 'float-4' },
       ].map(({ top, left, right, delay, dur, anim }: any, i) => (
-        <div key={i} className="absolute hidden lg:block px-3 py-1.5 rounded-full text-[10px] cursor-default"
+        <button key={i}
+          className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] cursor-pointer transition-all hover:scale-105 hover:brightness-125"
           style={{
             top, left, right,
-            color: 'rgba(255,255,255,0.4)',
+            color: 'rgba(255,255,255,0.5)',
             backgroundColor: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.12)',
             backdropFilter: 'blur(6px)',
-            maxWidth: '130px',
+            maxWidth: '160px',
             textAlign: 'center',
             lineHeight: 1.4,
             animation: `${anim} ${dur} ease-in-out infinite`,
             animationDelay: delay,
-            pointerEvents: 'none',
-            whiteSpace: 'normal',
+            zIndex: 20,
+            pointerEvents: 'auto',
           }}>
           {TOPIC_SUGGESTIONS[i * 7 % TOPIC_SUGGESTIONS.length]}
-        </div>
+        </button>
       ))}
 
       {/* ── iPad Pro landscape ── */}
