@@ -1,0 +1,70 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rateLimit'
+
+export async function POST(req: NextRequest) {
+  // Rate limit: max 3 codici ogni 10 minuti per IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const rl = rateLimit(`send-code:${ip}`, 3, 10 * 60_000)
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Troppe richieste. Riprova tra qualche minuto.' }, { status: 429 })
+  }
+
+  const { email } = await req.json()
+  if (!email || !email.includes('@')) {
+    return NextResponse.json({ error: 'Email non valida.' }, { status: 400 })
+  }
+
+  // Verifica che l'email non sia già registrata
+  const existing = await prisma.user.findUnique({ where: { email } })
+  if (existing) {
+    return NextResponse.json({ error: 'Email già registrata.' }, { status: 409 })
+  }
+
+  // Genera codice a 6 cifre
+  const code = String(Math.floor(100000 + Math.random() * 900000))
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minuti
+
+  // Elimina eventuali codici precedenti per questa email
+  await prisma.emailVerification.deleteMany({ where: { email } })
+
+  // Salva il nuovo codice
+  await prisma.emailVerification.create({
+    data: { email, code, expiresAt },
+  })
+
+  // Invia via Resend
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
+
+  const { error } = await resend.emails.send({
+    from: 'AiGORÀ <noreply@aigora.app>',
+    to: email,
+    subject: `${code} — il tuo codice di verifica AiGORÀ`,
+    html: `
+      <div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:40px 24px;background:#07070f;color:#f0f0f0;border-radius:16px;">
+        <h1 style="font-size:28px;font-weight:900;margin:0 0 8px;">
+          <span style="color:white">Ai</span><span style="color:#A78BFA">GORÀ</span>
+        </h1>
+        <p style="color:rgba(255,255,255,0.5);margin:0 0 32px;font-size:14px;">Il dibattito delle intelligenze artificiali</p>
+        <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0 0 24px;">
+          Usa questo codice per completare la registrazione:
+        </p>
+        <div style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.4);border-radius:12px;padding:24px;text-align:center;margin:0 0 24px;">
+          <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#A78BFA">${code}</span>
+        </div>
+        <p style="color:rgba(255,255,255,0.35);font-size:13px;margin:0;">
+          Il codice scade tra <strong>10 minuti</strong>.<br/>
+          Se non hai richiesto questo codice, ignora questa email.
+        </p>
+      </div>
+    `,
+  })
+
+  if (error) {
+    console.error('Resend error:', error)
+    return NextResponse.json({ error: 'Errore nell\'invio dell\'email. Riprova.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}
