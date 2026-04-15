@@ -1573,7 +1573,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const { publish } = useAbly({
     roomId: activeRoom?.id ?? null,
     userId: userEmail ?? '',
-    userName: displayName,
+    userName: userName.trim() || propUserName || userEmail?.split('@')[0] || '',
     onEvent: handleRoomEvent,
     enabled: !!activeRoom,
   })
