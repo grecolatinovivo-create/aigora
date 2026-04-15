@@ -1196,7 +1196,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
   const navbarProps = {
-    onCronologia: () => setShowHistory(true),
+    onCronologia: () => phase === 'start' ? setPhase('history') : setShowHistory(true),
     onFeed: () => { setSocialTab('feed'); setShowSocialPanel(true) },
     onCrea: () => { setSocialTab('crea'); setShowSocialPanel(true) },
     displayName,
