@@ -183,6 +183,180 @@ function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
   )
 }
 
+// ── Schermata Profilo ─────────────────────────────────────────────────────────
+function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset, isDark, onBack, onSignOut }: {
+  displayName: string
+  userEmail?: string
+  userPlan?: string
+  savedChats: any[]
+  bgPreset: { value: string; header: string; text: 'black' | 'white' }
+  isDark: boolean
+  onBack: () => void
+  onSignOut: () => void
+}) {
+  const [following, setFollowing] = useState<any[]>([])
+  const [followers, setFollowers] = useState<any[]>([])
+  const [profileTab, setProfileTab] = useState<'chat' | 'following' | 'followers'>('chat')
+  const planColors: Record<string, string> = { max:'#FF6B2B', pro:'#7C3AED', starter:'#1A73E8', free:'#10A37F', admin:'#F59E0B', none:'#6B7280' }
+  const planColor = planColors[userPlan ?? 'none'] ?? '#6B7280'
+  const publicChats = savedChats.filter((c: any) => c.isPublic)
+
+  useEffect(() => {
+    fetch('/api/follow').then(r => r.json()).then(d => {
+      setFollowing(d.following ?? [])
+      setFollowers(d.followers ?? [])
+    }).catch(() => {})
+  }, [])
+
+  const handleUnfollow = async (targetId: string) => {
+    await fetch('/api/follow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetUserId: targetId }) })
+    setFollowing(prev => prev.filter(u => u.id !== targetId))
+  }
+
+  const textColor = isDark ? '#fff' : '#111'
+  const subColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'
+  const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+
+  return (
+    <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
+        style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor }}>
+        <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-full"
+          style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textColor} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span className="font-bold text-lg" style={{ color: textColor }}>Profilo</span>
+        {/* Link profilo pubblico */}
+        <a href={`/${encodeURIComponent(displayName)}`} target="_blank" rel="noopener noreferrer"
+          className="ml-auto text-[11px] font-semibold flex items-center gap-1"
+          style={{ color: '#A78BFA' }}>
+          🔗 Profilo pubblico
+        </a>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {/* Avatar + info */}
+        <div className="flex items-center gap-4 px-5 pt-6 pb-5" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${borderColor}` }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black text-white flex-shrink-0"
+            style={{ backgroundColor: planColor, boxShadow: `0 0 0 3px ${planColor}30` }}>
+            {(displayName || '?')[0].toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-lg truncate" style={{ color: textColor }}>{displayName}</div>
+            <div className="text-xs truncate" style={{ color: subColor }}>{userEmail}</div>
+            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
+              style={{ backgroundColor: `${planColor}20`, color: planColor, border: `1px solid ${planColor}40` }}>
+              {(userPlan ?? 'free').toUpperCase()}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="flex border-b" style={{ borderColor, backgroundColor: bgPreset.header }}>
+          {[
+            ['Dibattiti', savedChats.length],
+            ['Seguiti', following.length],
+            ['Seguaci', followers.length],
+          ].map(([label, count]) => (
+            <div key={label as string} className="flex-1 text-center py-3">
+              <div className="text-xl font-black" style={{ color: textColor }}>{count}</div>
+              <div className="text-[10px]" style={{ color: subColor }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tab */}
+        <div className="flex border-b" style={{ borderColor }}>
+          {([['chat', '💬 Chat'], ['following', '👥 Seguiti'], ['followers', '👤 Seguaci']] as const).map(([tab, label]) => (
+            <button key={tab} onClick={() => setProfileTab(tab)}
+              className="flex-1 py-3 text-xs font-bold transition-colors"
+              style={{
+                color: profileTab === tab ? '#A78BFA' : subColor,
+                borderBottom: profileTab === tab ? '2px solid #A78BFA' : '2px solid transparent',
+              }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Contenuto tab */}
+        <div className="px-4 py-3 flex flex-col gap-2">
+          {/* Chat recenti */}
+          {profileTab === 'chat' && (
+            savedChats.length === 0 ? (
+              <div className="text-center py-8 text-xs" style={{ color: subColor }}>Nessuna chat ancora</div>
+            ) : savedChats.slice(0, 10).map((chat: any) => (
+              <div key={chat.id} className="flex items-center gap-3 p-3 rounded-2xl"
+                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${borderColor}` }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base flex-shrink-0"
+                  style={{ backgroundColor: isDark ? 'rgba(124,58,237,0.15)' : 'rgba(124,58,237,0.1)' }}>
+                  💬
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold truncate" style={{ color: textColor }}>{chat.title}</div>
+                  <div className="text-[10px]" style={{ color: subColor }}>{chat.date}</div>
+                </div>
+                {chat.isPublic && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(124,58,237,0.15)', color: '#A78BFA' }}>PUB</span>
+                )}
+              </div>
+            ))
+          )}
+
+          {/* Following */}
+          {profileTab === 'following' && (
+            following.length === 0 ? (
+              <div className="text-center py-8 text-xs" style={{ color: subColor }}>Non segui ancora nessuno</div>
+            ) : following.map((u: any) => (
+              <div key={u.id} className="flex items-center gap-3 py-2 border-b" style={{ borderColor }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                  style={{ backgroundColor: '#7C3AED' }}>
+                  {(u.name || u.email || '?')[0].toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold truncate" style={{ color: textColor }}>{u.name || u.email}</div>
+                </div>
+                <button onClick={() => handleUnfollow(u.id)}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold"
+                  style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', color: subColor }}>
+                  Smetti
+                </button>
+              </div>
+            ))
+          )}
+
+          {/* Followers */}
+          {profileTab === 'followers' && (
+            followers.length === 0 ? (
+              <div className="text-center py-8 text-xs" style={{ color: subColor }}>Nessun seguace ancora</div>
+            ) : followers.map((u: any) => (
+              <div key={u.id} className="flex items-center gap-3 py-2 border-b" style={{ borderColor }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                  style={{ backgroundColor: '#10A37F' }}>
+                  {(u.name || u.email || '?')[0].toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold truncate" style={{ color: textColor }}>{u.name || u.email}</div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Esci */}
+        <div className="mx-4 mb-6 mt-2">
+          <button onClick={onSignOut}
+            className="w-full py-3 rounded-2xl text-sm font-semibold text-red-500"
+            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${borderColor}` }}>
+            Esci dall'account
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Avatar bar ────────────────────────────────────────────────────────────────
 function PhoneAvatarBar({ activeAi, bgColor, isDark, aiOrder }: { activeAi: string | null; bgColor: string; isDark: boolean; aiOrder: string[] }) {
   return (
@@ -478,6 +652,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [userSearch, setUserSearch] = useState('')
   const [userResults, setUserResults] = useState<any[]>([])
   const [creatingRoom, setCreatingRoom] = useState(false)
+  const [activeRoom, setActiveRoom] = useState<any>(null)
+  const [myRoomRole, setMyRoomRole] = useState<'host' | 'participant' | 'spectator'>('spectator')
 
   // Carica rooms e notifiche (solo admin)
   useEffect(() => {
@@ -521,9 +697,25 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         setCreateTopic('')
         setCreateInvited([])
         setSocialTab('feed')
+        // Apri subito la room appena creata
+        handleOpenRoom(data.room.id)
       }
     } catch {}
     setCreatingRoom(false)
+  }
+
+  const handleOpenRoom = async (roomId: string) => {
+    try {
+      const res = await fetch(`/api/rooms/${roomId}`)
+      const data = await res.json()
+      if (data.room) {
+        setActiveRoom(data.room)
+        setMyRoomRole(data.myRole ?? 'spectator')
+        // Avvia il dibattito con le AI della room usando il topic come domanda
+        const aiIds: string[] = Array.isArray(data.room.aiIds) ? data.room.aiIds : ['claude', 'gemini', 'perplexity', 'gpt']
+        handleStart(data.room.topic)
+      }
+    } catch {}
   }
 
   // Carica cronologia dal server
@@ -967,6 +1159,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setPhase('start'); setActiveAi(null); setThinkingAi(null)
     setSynthesis(null); setShowSynthesis(false); setWaitingForUser(false)
     setIsPublic(false); setPortfolioSaved(false)
+    setActiveRoom(null); setMyRoomRole('spectator')
     setTurnCount(0)
     chatHistoryRef.current = []; usedAisRef.current = []
     aiTurnCountRef.current = 0
@@ -1225,7 +1418,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   const aiNames: Record<string,string> = { claude:'Claude', gpt:'GPT', gemini:'Gemini', perplexity:'Perplexity' }
                   const ais: string[] = Array.isArray(room.aiIds) ? room.aiIds : []
                   return (
-                    <div key={room.id} className="glass rounded-2xl p-4" style={{ cursor: 'pointer' }}>
+                    <div key={room.id} className="glass rounded-2xl p-4 active:scale-[0.99] transition-transform" style={{ cursor: 'pointer' }} onClick={() => handleOpenRoom(room.id)}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           {room.status === 'live' ? (
@@ -1588,60 +1781,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
         {/* Schermata profilo mobile */}
         {phase === 'profile' && (
-          <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
-            {/* Header */}
-            <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
-              style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-              <button onClick={() => setPhase('running')}
-                className="w-9 h-9 flex items-center justify-center rounded-full"
-                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'white' : '#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-              </button>
-              <span className="font-bold text-lg" style={{ color: isDark ? '#fff' : '#111' }}>Profilo</span>
-            </div>
-
-            {/* Corpo profilo */}
-            <div className="flex-1 overflow-y-auto">
-              {/* Avatar grande */}
-              <div className="flex flex-col items-center pt-10 pb-8 px-6" style={{ backgroundColor: bgPreset.header }}>
-                <div className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-white mb-4"
-                  style={{ backgroundColor: '#F59E0B', boxShadow: '0 4px 20px rgba(245,158,11,0.4)' }}>
-                  {(userName.trim() || userEmail || '?')[0].toUpperCase()}
-                </div>
-                <div className="text-xl font-bold mb-1" style={{ color: isDark ? '#fff' : '#111' }}>
-                  {displayName || 'Utente'}
-                </div>
-                <div className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
-                  {userEmail}
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="mt-3 mx-4 rounded-2xl overflow-hidden" style={{ backgroundColor: bgPreset.header, border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                <div className="px-4 py-3.5 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-                  <div className="text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>Piano</div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="font-semibold text-sm" style={{ color: '#F59E0B' }}>{(userPlan ?? 'free').toUpperCase()}</span>
-                  </div>
-                </div>
-                <div className="px-4 py-3.5">
-                  <div className="text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>Email</div>
-                  <div className="text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>{userEmail}</div>
-                </div>
-              </div>
-
-              {/* Esci */}
-              <div className="mt-3 mx-4 rounded-2xl overflow-hidden" style={{ backgroundColor: bgPreset.header, border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                <button onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="w-full px-4 py-4 text-left text-sm font-semibold text-red-500">
-                  Esci dall'account
-                </button>
-              </div>
-
-              <div className="h-8" />
-            </div>
-          </div>
+          <ProfileScreen
+            displayName={displayName}
+            userEmail={userEmail}
+            userPlan={userPlan}
+            savedChats={savedChats}
+            bgPreset={bgPreset}
+            isDark={isDark}
+            onBack={() => setPhase(messages.length > 0 ? 'running' : 'start')}
+            onSignOut={() => signOut({ callbackUrl: '/login' })}
+          />
         )}
 
         {/* Schermata chat mobile */}
@@ -1688,6 +1837,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </button>
             </div>
           </div>
+
+          {/* Banner spettatore */}
+          {activeRoom && myRoomRole === 'spectator' && (
+            <div className="flex-shrink-0 flex items-center justify-center gap-2 py-1.5 text-[11px] font-semibold"
+              style={{ backgroundColor: 'rgba(124,58,237,0.15)', color: '#A78BFA', borderBottom: '1px solid rgba(124,58,237,0.2)' }}>
+              👁 Stai guardando come spettatore
+            </div>
+          )}
 
           {/* Avatar bar mobile */}
           <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} />
@@ -1746,7 +1903,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
           )}
 
-          {/* Input bar mobile */}
+          {/* Input bar mobile — nascosta per gli spettatori */}
+          {activeRoom && myRoomRole === 'spectator' ? (
+            <div className="flex-shrink-0 flex items-center justify-center py-3 text-xs"
+              style={{ backgroundColor: bgPreset.header, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+              Solo i partecipanti possono scrivere
+            </div>
+          ) : (
           <div className="flex-shrink-0 flex items-center gap-2 px-3 py-3" style={{
             backgroundColor: bgPreset.header,
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
@@ -1780,6 +1943,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
             </button>
           </div>
+          )}
         </>}
       </div>
 
