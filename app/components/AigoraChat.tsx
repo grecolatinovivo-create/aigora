@@ -187,6 +187,88 @@ function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
+// ── Swipeable chat row (swipe left per cancellare) ───────────────────────────
+function SwipeableChatRow({ chat, onOpen, onDelete }: {
+  chat: { id: string; title: string; date: string; messages: any[]; history: any[] }
+  onOpen: () => void
+  onDelete: (e: React.MouseEvent) => void
+}) {
+  const [offset, setOffset] = useState(0)
+  const [swiping, setSwiping] = useState(false)
+  const startXRef = useRef(0)
+  const DELETE_THRESHOLD = 80
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startXRef.current = e.touches[0].clientX
+    setSwiping(true)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!swiping) return
+    const dx = e.touches[0].clientX - startXRef.current
+    if (dx < 0) setOffset(Math.max(dx, -120))
+  }
+
+  const handleTouchEnd = () => {
+    setSwiping(false)
+    if (offset < -DELETE_THRESHOLD) {
+      // Snap al rosso e cancella
+      setOffset(-80)
+    } else {
+      setOffset(0)
+    }
+  }
+
+  return (
+    <div className="relative overflow-hidden border-b border-white/5" style={{ touchAction: 'pan-y' }}>
+      {/* Sfondo rosso che appare sotto */}
+      <div className="absolute inset-y-0 right-0 flex items-center justify-end pr-5"
+        style={{ backgroundColor: '#ef4444', width: '80px', borderRadius: '0' }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+        </svg>
+      </div>
+
+      {/* Contenuto traslabile */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={() => { if (offset < -10) { setOffset(0); return } onOpen() }}
+        className="flex items-center group hover:bg-white/5 transition-colors"
+        style={{
+          transform: `translateX(${offset}px)`,
+          transition: swiping ? 'none' : 'transform 0.25s ease',
+          backgroundColor: 'rgba(10,10,18,0.97)',
+          cursor: 'pointer',
+        }}>
+        <div className="flex-1 px-5 py-3 min-w-0">
+          <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
+          <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
+        </div>
+        {/* Cestino visibile al hover su desktop */}
+        <button onClick={onDelete}
+          className="flex-shrink-0 mr-3 w-6 h-6 rounded items-center justify-center hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ backgroundColor: '#ef4444' }}>
+          <svg width="10" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+          </svg>
+        </button>
+        {/* Indicatore swipe su mobile */}
+        {offset < -50 && (
+          <div className="absolute right-0 inset-y-0 w-20 flex items-center justify-center"
+            style={{ backgroundColor: '#ef4444' }}
+            onClick={onDelete}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+            </svg>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Topic suggeriti rotanti (3 righe × 2 colonne, cambiano tutti insieme) ─────
 function RotatingTopics({ onSelect }: { onSelect: (t: string) => void }) {
   const SLOTS = 6
@@ -1478,18 +1560,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 <p className="text-white/25 text-xs text-center mt-8 px-4">Nessuna chat salvata.</p>
               ) : (
                 savedChats.map(chat => (
-                  <div key={chat.id} className="flex items-center group border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <button onClick={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running'); setShowHistory(false) }}
-                      className="flex-1 text-left px-5 py-3 min-w-0">
-                      <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
-                      <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
-                    </button>
-                    <button onClick={(e) => handleDeleteChat(chat.id, chat.title, e)}
-                      className="flex-shrink-0 mr-3 w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ backgroundColor: '#ef4444' }}>
-                      <svg width="10" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
-                    </button>
-                  </div>
+                  <SwipeableChatRow
+                    key={chat.id}
+                    chat={chat}
+                    onOpen={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running'); setShowHistory(false) }}
+                    onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
+                  />
                 ))
               )}
             </div>
