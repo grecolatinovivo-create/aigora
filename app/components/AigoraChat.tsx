@@ -2326,6 +2326,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTurnCount(0)
     chatHistoryRef.current = []; usedAisRef.current = []
     aiTurnCountRef.current = 0
+    setShowModeSelect(false); setSelectedMode(null)
+    setShow2v2Setup(false); setTwoVsTwoState(null)
+    setDevilSession(null)
   }
 
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
