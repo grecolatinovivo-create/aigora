@@ -340,15 +340,15 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
         </div>
 
         {/* Tre telefoni */}
-        <div className="flex items-end justify-center gap-8 flex-wrap mb-10">
+        <div className="flex items-end justify-center gap-16 flex-wrap mb-10">
 
           {/* ── CLASSICO ── */}
           {(() => {
             const isSelected = selected === 'classico'
             return (
-              <div onClick={() => setSelected('classico')} className="flex flex-col items-center gap-4 cursor-pointer"
-                style={{ transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
-                <div className="relative" style={{ width: 160, height: 336 }}>
+              <div onClick={() => setSelected('classico')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
+                style={{ animationDelay: '0.05s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
+                <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 160, height: 336 }}>
                   <div className="absolute inset-0 rounded-[38px]"
                     style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #10A37F, 0 0 40px rgba(16,163,127,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
                   {/* Glare */}
@@ -400,9 +400,9 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
           {(() => {
             const isSelected = selected === '2v2'
             return (
-              <div onClick={() => setSelected('2v2')} className="flex flex-col items-center gap-4 cursor-pointer"
-                style={{ transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05) translateY(-8px)' : 'scale(1)' }}>
-                <div className="relative" style={{ width: 190, height: 400 }}>
+              <div onClick={() => setSelected('2v2')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
+                style={{ animationDelay: '0.15s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05) translateY(-8px)' : 'scale(1)' }}>
+                <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 190, height: 400 }}>
                   <div className="absolute inset-0 rounded-[38px]"
                     style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #A78BFA, 0 0 40px rgba(167,139,250,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
                   <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top:6,left:6,right:6,height:'45%',background:'linear-gradient(160deg,rgba(255,255,255,0.07) 0%,transparent 60%)',zIndex:10 }} />
@@ -463,9 +463,9 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
           {(() => {
             const isSelected = selected === 'devil'
             return (
-              <div onClick={() => setSelected('devil')} className="flex flex-col items-center gap-4 cursor-pointer"
-                style={{ transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
-                <div className="relative" style={{ width: 160, height: 336 }}>
+              <div onClick={() => setSelected('devil')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
+                style={{ animationDelay: '0.25s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
+                <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 160, height: 336 }}>
                   <div className="absolute inset-0 rounded-[38px]"
                     style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #ef4444, 0 0 40px rgba(239,68,68,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
                   <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top:6,left:6,right:6,height:'45%',background:'linear-gradient(160deg,rgba(255,255,255,0.07) 0%,transparent 60%)',zIndex:10 }} />
