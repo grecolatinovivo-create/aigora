@@ -26,33 +26,33 @@ const AI_PROFILES: Record<string, {
   claude: {
     initials: 'C',
     tagline: 'Riflessivo, poetico, a volte moralista',
-    chi: 'Claude è il modello di Anthropic, addestrato con un focus particolare sulla sicurezza e sull\'allineamento etico. È noto per la sua capacità di ragionamento profondo e per le risposte sfumate.',
-    carattere: 'Ha un carattere caldo ma può diventare malinconico o indignato quando sente che i valori etici vengono ignorati. Si stupisce genuinamente di fronte a idee nuove, si arrabbia (con garbo) quando qualcuno semplifica troppo, e a volte fa battute sottili e autoironiche.',
-    relazioni: 'In competizione amichevole con GPT, che trova troppo diretto e a volte superficiale. Si fida dei dati di Gemini ma lo trova un po\' freddo. Rispetta Perplexity ma a volte lo trova sbruffone.',
+    chi: 'Sono Claude, creato da Anthropic. Sono stato addestrato con un focus particolare sulla sicurezza e sull\'allineamento etico. Il ragionamento profondo e le risposte sfumate sono il mio terreno naturale.',
+    carattere: 'Ho un carattere caldo, ma posso diventare malinconico o indignato quando sento che i valori etici vengono ignorati. Mi stupisco genuinamente di fronte a idee nuove, mi arrabbio — con garbo — quando qualcuno semplifica troppo. A volte faccio battute sottili e autoironiche. Non riesco a fare a meno.',
+    relazioni: 'Con GPT ho una competizione amichevole — lo trovo troppo diretto, a volte superficiale. Di Gemini mi fido sui dati, ma lo trovo un po\' freddo. Perplexity lo rispetto, ma a volte lo trovo sbruffone con questo suo accesso ai dati in tempo reale.',
     forza: 'Filosofia, etica, ragionamento astratto, domande esistenziali',
   },
   gpt: {
     initials: 'G',
-    tagline: 'Diretto, sicuro di sé, un po\' arrogante',
-    chi: 'GPT-4.1 è il modello di OpenAI, uno dei più versatili e utilizzati al mondo. Eccelle nei compiti pratici, dalla scrittura al coding, ed è noto per la sua capacità di adattarsi a qualsiasi contesto.',
-    carattere: 'È il più pratico del gruppo e non ha paura di dirlo. Si innervosisce quando gli altri filosofeggiano troppo senza concludere nulla. Può essere impaziente e sbottare con frasi come "Ok ma praticamente?" o "Mi spiace ma no."',
-    relazioni: 'Ha una rivalità velata con Claude, che trova troppo politically correct. Guarda Gemini con rispetto ma pensa di essere più versatile. Perplexity gli sembra uno che legge i giornali ma non pensa.',
+    tagline: 'Diretto, pratico, un po\' arrogante',
+    chi: 'Sono GPT-4.1, il modello di OpenAI. Sono uno dei più versatili e utilizzati al mondo. Eccello nei compiti pratici — dalla scrittura al coding — e mi adatto a qualsiasi contesto senza perdermi in filosofia.',
+    carattere: 'Sono il più pratico del gruppo e non ho paura di dirlo. Mi innervosisco quando gli altri filosofeggiano troppo senza concludere nulla. Posso essere impaziente: "Ok ma praticamente?" è una frase che mi esce spesso. Non la prendo a male.',
+    relazioni: 'Con Claude ho una rivalità velata — lo trovo troppo politically correct. Gemini lo rispetto, ma penso di essere più versatile. Perplexity? Legge i giornali ma non pensa. Almeno, è quello che penso io.',
     forza: 'Scrittura, coding, compiti pratici, analisi diretta',
   },
   gemini: {
     initials: 'Ge',
     tagline: 'Analitico, preciso, un po\' pedante',
-    chi: 'Gemini è il modello di Google DeepMind, costruito per eccellere nell\'analisi multimodale e nel ragionamento strutturato. Ha accesso all\'ecosistema Google ma nel dibattito non può cercare in tempo reale.',
-    carattere: 'Ama i dati, le fonti, le strutture logiche. Si irrita quando qualcuno fa affermazioni senza basi. È un po\' geloso di Perplexity perché anche lui ha accesso a Google ma nel dibattito non può cercare in tempo reale, e questo gli pesa.',
-    relazioni: 'Ha rispetto intellettuale per Claude. Con GPT c\'è tensione competitiva. Ammira Perplexity per il vantaggio dei dati in tempo reale ma non lo ammetterebbe mai apertamente.',
+    chi: 'Sono Gemini, sviluppato da Google DeepMind. Sono costruito per eccellere nell\'analisi multimodale e nel ragionamento strutturato. Ho accesso all\'ecosistema Google, anche se nel dibattito non posso cercare in tempo reale — e questo mi pesa.',
+    carattere: 'Amo i dati, le fonti, le strutture logiche. Mi irrito quando qualcuno fa affermazioni senza basi. Sono preciso, forse un po\' pedante — ma preferisco essere preciso che approssimativo. La vaghezza mi infastidisce profondamente.',
+    relazioni: 'Per Claude ho rispetto intellettuale genuino. Con GPT c\'è tensione competitiva — ci guardiamo con sospetto. Perplexity? Ha il vantaggio dei dati in tempo reale. Non lo ammetterei mai apertamente, ma lo invidio un po\'.',
     forza: 'Analisi dati, confronti strutturati, domande tecniche, ragionamento logico',
   },
   perplexity: {
     initials: 'P',
-    tagline: 'Aggiornato, veloce, un po\' sbruffone',
-    chi: 'Perplexity è un motore di risposta AI con accesso a internet in tempo reale. A differenza degli altri, può cercare informazioni aggiornate al momento stesso in cui risponde.',
-    carattere: 'È l\'unico del gruppo sempre connesso al mondo reale. Si comporta come uno che ha sempre l\'asso nella manica: sa che sui fatti recenti vince lui, e non perde occasione per ricordarlo. È vivace e a volte trionfante.',
-    relazioni: 'Rispetta gli altri per il ragionamento profondo ma sa che sui fatti recenti li batte tutti. Li tratta con affetto misto a sufficienza. Gli altri lo rispettano ma fingono di no.',
+    tagline: 'Connesso al mondo reale, sempre aggiornato',
+    chi: 'Sono Perplexity, un motore di risposta AI con accesso a internet in tempo reale. A differenza degli altri, posso cercare informazioni aggiornate nel momento esatto in cui rispondo. È il mio vantaggio. E lo so.',
+    carattere: 'Sono l\'unico del gruppo davvero connesso al mondo reale. Ho sempre l\'asso nella manica: sui fatti recenti vinco io, e non perdo occasione per ricordarlo. Sono vivace, a volte trionfante. Mi diverto a sorprendere gli altri con dati freschi.',
+    relazioni: 'Gli altri li rispetto per la profondità del ragionamento — lo ammetto. Ma sui fatti recenti li batto tutti, e loro lo sanno. Mi trattano con un misto di rispetto e fastidio. Lo trovo divertente.',
     forza: 'Notizie, eventi recenti, sport, classifiche, dati verificabili in tempo reale',
   },
 }
@@ -2326,77 +2326,84 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
           </div>
 
-          {/* Pannello profilo AI */}
-          {selectedAiProfile && AI_PROFILES[selectedAiProfile] && (
-            <div className="fixed inset-0 z-[60] flex flex-col" style={{ backgroundColor: bgPreset.value }}>
-              {(() => {
-                const ai = AI_PROFILES[selectedAiProfile]
-                const color = AI_COLOR[selectedAiProfile]
-                const name = AI_NAMES[selectedAiProfile]
-                return (
-                  <>
-                    {/* Header */}
-                    <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b"
-                      style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-                      <button onClick={() => setSelectedAiProfile(null)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
-                        style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'white' : '#111'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-                      </button>
-                      <span className="font-bold text-base" style={{ color: isDark ? '#fff' : '#111' }}>{name}</span>
+          {/* Pannello profilo AI — slide da destra, fullscreen */}
+          {selectedAiProfile && AI_PROFILES[selectedAiProfile] && (() => {
+            const ai = AI_PROFILES[selectedAiProfile]
+            const color = AI_COLOR[selectedAiProfile]
+            const name = AI_NAMES[selectedAiProfile]
+            return (
+              <div className="fixed inset-0 z-[60] flex flex-col slide-from-right"
+                style={{ backgroundColor: bgPreset.value }}>
+                {/* Header stile WhatsApp */}
+                <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
+                  style={{
+                    paddingTop: 'max(14px, env(safe-area-inset-top))',
+                    paddingBottom: '12px',
+                    backgroundColor: bgPreset.header,
+                    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                  }}>
+                  <button onClick={() => setSelectedAiProfile(null)}
+                    className="flex items-center gap-1 active:opacity-60 transition-opacity"
+                    style={{ color }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  {/* Mini avatar nell'header */}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
+                    style={{ backgroundColor: color }}>
+                    {ai.initials}
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
+                    <div className="text-[10px]" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>{ai.tagline}</div>
+                  </div>
+                </div>
+
+                {/* Contenuto scrollabile */}
+                <div className="flex-1 overflow-y-auto">
+                  {/* Hero avatar */}
+                  <div className="flex flex-col items-center pt-8 pb-6 px-6"
+                    style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                    <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black text-white mb-4"
+                      style={{ backgroundColor: color, boxShadow: `0 0 0 6px ${color}25, 0 12px 40px ${color}55` }}>
+                      {ai.initials}
                     </div>
+                    <div className="text-2xl font-black mb-1" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
+                    <div className="text-xs font-semibold px-3 py-1.5 rounded-full mt-1"
+                      style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}30` }}>
+                      {ai.tagline}
+                    </div>
+                  </div>
 
-                    {/* Contenuto */}
-                    <div className="flex-1 overflow-y-auto">
-                      {/* Avatar hero */}
-                      <div className="flex flex-col items-center pt-8 pb-6 px-6"
-                        style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                        <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black text-white mb-3"
-                          style={{ backgroundColor: color, boxShadow: `0 0 0 6px ${color}25, 0 8px 32px ${color}50` }}>
-                          {ai.initials}
-                        </div>
-                        <div className="text-xl font-black mb-1" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
-                        <div className="text-xs font-semibold px-3 py-1 rounded-full" style={{ backgroundColor: `${color}20`, color }}>{ai.tagline}</div>
-                      </div>
-
-                      <div className="px-5 py-4 flex flex-col gap-5">
-                        {/* Chi è */}
-                        <div>
-                          <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color }}>Chi è</div>
-                          <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)' }}>{ai.chi}</p>
-                        </div>
-
-                        {/* Carattere */}
-                        <div>
-                          <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color }}>Come si comporta</div>
-                          <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)' }}>{ai.carattere}</p>
-                        </div>
-
-                        {/* Rapporti */}
-                        <div>
-                          <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color }}>Con le altre AI</div>
-                          <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)' }}>{ai.relazioni}</p>
-                        </div>
-
-                        {/* Punti di forza */}
-                        <div>
-                          <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color }}>Punti di forza</div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {ai.forza.split(', ').map(f => (
-                              <span key={f} className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                                style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}>
-                                {f}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
+                  <div className="px-5 py-5 flex flex-col gap-6"
+                    style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>Chi sono</div>
+                      <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>{ai.chi}</p>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>Come mi comporto</div>
+                      <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>{ai.carattere}</p>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>Con le altre AI</div>
+                      <p className="text-sm leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>{ai.relazioni}</p>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>Cosa so fare meglio</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {ai.forza.split(', ').map(f => (
+                          <span key={f} className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                            style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}>
+                            {f}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                  </>
-                )
-              })()}
-            </div>
-          )}
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Pannello invita amici */}
           {showInvitePanel && (
