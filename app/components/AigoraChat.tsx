@@ -2725,9 +2725,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({
           action: 'turn', aiId,
           history: [
-            { name: 'Sistema', content: `${AI_PROFILES[aiId]?.carattere ?? ''} Stai partecipando a un dibattito 2v2 sul tema: "${config.topic}". Sei nella Squadra ${team} — difendi la posizione della tua squadra con argomenti forti, usando il tuo carattere e stile tipici. Rispondi in 2-3 frasi nella lingua del messaggio.` },
+            { name: 'Sistema', content: `${AI_PROFILES[aiId]?.carattere ?? ''} Stai partecipando a un dibattito 2v2 sul tema: "${config.topic}". Sei l'AI alleata della Squadra ${team} — il tuo compito è SUPPORTARE e RAFFORZARE gli argomenti del tuo compagno umano, non contraddirlo MAI. Attacca gli avversari, non i tuoi. Usa il tuo stile e carattere tipici. 2-3 frasi nella lingua del messaggio.` },
             ...history,
-            { name: 'Sistema', content: `Rispondi a: "${trigger}"` }
+            { name: 'Sistema', content: `Il tuo compagno umano ha detto: "${trigger}". Supportalo con un argomento forte che rafforza la sua posizione.` }
           ],
           needsWebSearch: false
         }),
@@ -2736,6 +2736,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let buffer = '', aiText = '', done = false
+      let lastUpdate = 0
       while (!done) {
         const { done: sd, value } = await reader.read(); if (sd) break
         buffer += decoder.decode(value, { stream: true })
@@ -2744,12 +2745,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
           try { aiText += JSON.parse(d).text } catch {}
-          setTwoVsTwoState(prev => {
-            if (!prev) return prev
-            const msgs = [...prev.messages]
-            msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: aiText, streaming: true }
-            return { ...prev, messages: msgs }
-          })
+          // Aggiorna UI max ogni 30ms — uguale alla chat normale
+          const now = Date.now()
+          if (now - lastUpdate > 30) {
+            lastUpdate = now
+            setTwoVsTwoState(prev => {
+              if (!prev) return prev
+              const msgs = [...prev.messages]
+              msgs[msgs.length - 1] = { team, isAI: true, aiId, author: aiName, content: aiText, streaming: true }
+              return { ...prev, messages: msgs }
+            })
+          }
         }
       }
       // Finalizza messaggio
