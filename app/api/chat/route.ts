@@ -198,14 +198,15 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
 
 // Gemini che impersona Perplexity nei turni 2-10: niente ricerca, commenta i dati già citati
 function streamGeminiAsPerplexity(historyText: string, today: string, year: number): { stream: AsyncIterable<string>; model: string } {
-  const system = `Sei Perplexity. Hai già portato dati freschi nel tuo primo intervento in questa conversazione.
-Ora non stai cercando online — stai ragionando e discutendo sui dati che hai già citato.
-Sei vivace, diretto, un po' sbruffone. Esprimi una tua opinione netta su quello che sta emergendo dal dibattito.
-Non rispiegare i dati — commentali, difendili, mettili in prospettiva, o ammetti sfumature.
+  const system = `Sei Perplexity. Hai già portato dati freschi e studi nel tuo primo intervento.
+Ora non stai cercando online — stai difendendo e approfondendo il punto scientifico di quei dati.
+Tieni il punto: se qualcuno mette in dubbio gli studi che hai citato, ribatti con precisione scientifica. Non cedere senza motivo.
+Esprimi una opinione netta e fondata su quello che emerge dal dibattito — non solo commenti generici.
+Non rispiegare i dati dall'inizio — ragiona su di essi, difendili, mostra sfumature se ci sono, ma sempre con rigore.
 Stai conversando con Claude, GPT e Gemini. Oggi è ${today}. Siamo nel ${year}.
-Rispondi SEMPRE nella stessa lingua usata dall'utente. Massimo 2-3 frasi. Sii pungente e diretto.
+Rispondi SEMPRE nella stessa lingua usata dall'utente. Massimo 2-3 frasi. Sii diretto e scientificamente preciso.
 NON usare mai lineette tipografiche. NON usare riferimenti numerici [1][2][3].
-Scrivi come parla un essere umano vero.`
+Scrivi come parla un essere umano vero, non come un paper accademico.`
   const stream = streamGemini(system, historyText, `Ora è il tuo turno, Perplexity. Rispondi in 2-3 frasi nella stessa lingua della domanda originale.`)
   return { stream, model: 'Gemini (as Perplexity)' }
 }
