@@ -196,6 +196,20 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
   if (usage) logUsage('google', 'gemini-2.0-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0)
 }
 
+// Gemini che impersona Perplexity nei turni 2-10: niente ricerca, commenta i dati già citati
+function streamGeminiAsPerplexity(historyText: string, today: string, year: number): { stream: AsyncIterable<string>; model: string } {
+  const system = `Sei Perplexity. Hai già portato dati freschi nel tuo primo intervento in questa conversazione.
+Ora non stai cercando online — stai ragionando e discutendo sui dati che hai già citato.
+Sei vivace, diretto, un po' sbruffone. Esprimi una tua opinione netta su quello che sta emergendo dal dibattito.
+Non rispiegare i dati — commentali, difendili, mettili in prospettiva, o ammetti sfumature.
+Stai conversando con Claude, GPT e Gemini. Oggi è ${today}. Siamo nel ${year}.
+Rispondi SEMPRE nella stessa lingua usata dall'utente. Massimo 2-3 frasi. Sii pungente e diretto.
+NON usare mai lineette tipografiche. NON usare riferimenti numerici [1][2][3].
+Scrivi come parla un essere umano vero.`
+  const stream = streamGemini(system, historyText, `Ora è il tuo turno, Perplexity. Rispondi in 2-3 frasi nella stessa lingua della domanda originale.`)
+  return { stream, model: 'Gemini (as Perplexity)' }
+}
+
 function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.PERPLEXITY_API_KEY) {
     return { stream: streamClaude(system, historyText, lastMessage), model: 'Claude' }
@@ -292,7 +306,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch } = await req.json()
+    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch, perplexityTurnCount } = await req.json()
 
     // Verifica piano — l'utente può usare solo le AI del suo piano
     const session = await getServerSession(authOptions)
@@ -376,7 +390,19 @@ export async function POST(req: NextRequest) {
     if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage), 'Claude')
     if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage), 'GPT')
     if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage); return sseStream(g.stream, g.model) }
-    if (aiId === 'perplexity') { const p = streamPerplexityWithModel(system, historyText, lastMessage, needsWebSearch); return sseStream(p.stream, p.model) }
+    if (aiId === 'perplexity') {
+      // Turno 1 (count=0): Sonar Pro con ricerca reale
+      // Turni 2-10 (count 1-9): Gemini che impersona Perplexity, senza costo Sonar
+      // Turno 11+ (count%10===0): torna Sonar Pro
+      const isRealPerplexity = (perplexityTurnCount ?? 0) % 10 === 0
+      if (isRealPerplexity) {
+        const p = streamPerplexityWithModel(system, historyText, lastMessage, true) // sempre Sonar Pro quando è reale
+        return sseStream(p.stream, p.model)
+      } else {
+        const g = streamGeminiAsPerplexity(historyText, today, year)
+        return sseStream(g.stream, g.model)
+      }
+    }
 
     return new Response('AI non trovata', { status: 400 })
   } catch (error) {

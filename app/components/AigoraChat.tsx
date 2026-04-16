@@ -2465,7 +2465,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn', needsWebSearch: aiId === 'perplexity' ? (perplexityTurnCountRef.current % 4 === 0) : needsWebSearchRef.current }),
+        body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn', needsWebSearch: needsWebSearchRef.current, perplexityTurnCount: perplexityTurnCountRef.current }),
         signal: controller.signal,
       })
 
