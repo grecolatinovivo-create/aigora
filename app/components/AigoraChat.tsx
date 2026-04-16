@@ -2980,13 +2980,18 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
     setTwoVsTwoLoading(false)
 
-    // Dopo che B ha risposto, torna ad A per il round successivo
-    setTwoVsTwoState(prev => {
-      if (!prev) return prev
-      const newRound = prev.round + 1
-      if (newRound > prev.maxRounds) return prev // verrà gestito dal verdetto
-      return { ...prev, currentTurn: 'A', round: newRound, messagesThisTurn: 0 }
-    })
+    // Dopo che B ha risposto, torna ad A per il round successivo (o verdetto)
+    const currentState = twoVsTwoState
+    const newRound = currentState.round + 1
+    if (newRound > currentState.maxRounds) {
+      // Ultimo round completato — chiama il verdetto
+      await handle2v2Verdict()
+    } else {
+      setTwoVsTwoState(prev => {
+        if (!prev) return prev
+        return { ...prev, currentTurn: 'A', round: newRound, messagesThisTurn: 0 }
+      })
+    }
   }
 
   const handle2v2Verdict = async () => {
