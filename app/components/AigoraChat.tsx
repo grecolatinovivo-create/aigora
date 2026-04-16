@@ -1185,10 +1185,13 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ background: '#0d0d14' }}>
+    <div className="flex flex-col h-full relative" style={{ background: '#0d0d14' }}>
+      {/* Sfondo fiamme */}
+      <div className="flame-bg" />
+      <div className="flame-overlay" />
 
       {/* ── HEADER: A vs B con round ── */}
-      <div className="flex-shrink-0" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.9)', borderBottom: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)' }}>
+      <div className="flex-shrink-0 relative z-10" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.85)', borderBottom: '1px solid rgba(255,80,0,0.15)', backdropFilter: 'blur(20px)' }}>
         {/* Barra A vs B */}
         <div className="flex items-center px-3 pb-2 pt-1 gap-2">
           <button onClick={onBack} className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
@@ -1234,7 +1237,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       </div>
 
       {/* ── MESSAGGI ── */}
-      <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-2">
+      <div className="flex-1 overflow-y-auto py-3 pb-4 px-3 flex flex-col gap-2 relative z-10">
         {state.messages.map((msg, i) => {
           const isA = msg.team === 'A'
           const isArbiter = msg.team === 'arbiter'
@@ -1288,7 +1291,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
 
       {/* ── INPUT ── */}
       {!state.ended && (
-        <div className="flex-shrink-0" style={{ background: 'rgba(7,7,15,0.9)', borderTop: '1px solid rgba(255,255,255,0.06)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        <div className="flex-shrink-0 relative z-10" style={{ background: 'rgba(7,7,15,0.9)', borderTop: '1px solid rgba(255,80,0,0.2)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
 
           {/* Banner turno */}
           <div className="px-4 pt-2 pb-1.5">
@@ -3996,7 +3999,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
             <div className="flex-shrink-0" style={{ background: '#0d0d14' }}>
               {/* Riga 1: back + badge A — score — badge B */}
-              <div className="flex items-center justify-between px-2 py-1.5" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex items-center justify-between px-2 py-1.5" style={{ background: 'rgba(0,0,0,0.5)', borderBottom: '1px solid rgba(255,80,0,0.2)' }}>
                 <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
                   className="w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -4012,7 +4015,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 </div>
               </div>
               {/* Riga 2: barra membri squadre */}
-              <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex" style={{ borderBottom: '1px solid rgba(255,80,0,0.15)' }}>
                 {/* Squadra A */}
                 <div className="flex-1 flex flex-col gap-1 px-2 py-1.5" style={{ background: 'rgba(59,130,246,0.05)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                   {[
@@ -4025,16 +4028,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     </div>
                   ))}
                 </div>
-                {/* Squadra B — solo AI */}
+                {/* Squadra B — due AI */}
                 <div className="flex-1 flex flex-col justify-center gap-1 px-2 py-1.5" style={{ background: 'rgba(239,68,68,0.05)' }}>
                   {[
                     { name: AI_NAMES[twoVsTwoState.config.teamB.aiId1], color: AI_COLOR[twoVsTwoState.config.teamB.aiId1] },
-                    { name: AI_NAMES[twoVsTwoState.config.arbiterAiId], color: '#A78BFA' },
+                    { name: AI_NAMES[twoVsTwoState.config.teamB.aiId2 ?? twoVsTwoState.config.teamB.aiId1], color: AI_COLOR[twoVsTwoState.config.teamB.aiId2 ?? twoVsTwoState.config.teamB.aiId1] },
                   ].map((m, i) => (
                     <div key={i} className="flex items-center gap-1">
                       <div className="w-3 h-3 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ fontSize: 5, background: m.color }}>{m.name[0]}</div>
-                      <div className="text-[8px] font-semibold" style={{ color: i === 0 ? '#f87171' : '#A78BFA' }}>
-                        {m.name}{i === 1 && <span className="ml-1 opacity-50">arb</span>}
+                      <div className="text-[8px] font-semibold" style={{ color: '#f87171' }}>
+                        {m.name}
                       </div>
                     </div>
                   ))}
@@ -4123,9 +4126,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-1" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden' }}>
+          <div className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden' }}>
+            {phase === 'running' && selectedMode === '2v2' && (<><div className="flame-bg" /><div className="flame-overlay" /></>)}
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
-              <>
+              <div className="relative z-10 flex flex-col gap-1 w-full">
                 {twoVsTwoState.messages.map((msg, i) => {
                   const isArbiter = msg.team === 'arbiter'
                   const isA = msg.team === 'A'
@@ -4189,7 +4193,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   align={twoVsTwoState.currentTurn === 'B' ? 'right' : 'left'}
                 />}
                 <div ref={messagesEndRef} />
-              </>
+              </div>
             ) : (
               <>
                 {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} isAdmin={effectivePlan === 'admin'} />)}
@@ -4205,33 +4209,33 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             const myColor = '#3b82f6'
             const myAiId = twoVsTwoState.config.teamA.aiId
             return (
-              <div className="flex-shrink-0" style={{ background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="px-3 pt-1.5 pb-1">
-                  <div className="text-[8px] text-center font-bold" style={{ color: isMyTurn ? myColor : 'rgba(255,255,255,0.3)' }}>
+              <div className="flex-shrink-0" style={{ backgroundColor: 'rgba(7,7,15,0.95)', borderTop: '1px solid rgba(255,80,0,0.2)', paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+                <div className="px-3 pt-2 pb-1">
+                  <div className="text-[9px] text-center font-bold" style={{ color: isMyTurn ? myColor : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)') }}>
                     {isMyTurn ? `Il tuo turno · ${twoVsTwoState.messagesThisTurn}/${twoVsTwoState.maxMessagesPerTurn}` : `Turno Squadra ${twoVsTwoState.currentTurn}…`}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 px-3 pb-2">
+                <div className="flex items-center gap-2 px-3 pb-1.5">
                   <textarea value={inputText} onChange={e => setInputText(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && inputText.trim() && isMyTurn) { e.preventDefault(); handle2v2HumanMessage(inputText.trim()); setInputText('') } }}
                     disabled={!isMyTurn || twoVsTwoLoading}
                     placeholder={isMyTurn ? 'Il tuo argomento…' : 'Attendi il tuo turno…'}
                     rows={1}
-                    className="flex-1 px-3.5 py-2 text-[12px] outline-none resize-none overflow-hidden"
-                    style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', border: `1px solid ${isMyTurn ? `${myColor}50` : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)')}`, color: isDark ? '#f0f0f0' : '#111', opacity: isMyTurn ? 1 : 0.4, borderRadius: inputText.includes('\n') || inputText.length > 40 ? '16px' : '9999px', lineHeight: '1.4' }}
+                    className="flex-1 px-3.5 py-2 text-[12px] outline-none resize-none overflow-hidden transition-all"
+                    style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', border: `1px solid ${isMyTurn ? `${myColor}50` : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')}`, color: isDark ? '#f0f0f0' : '#111', opacity: isMyTurn ? 1 : 0.5, borderRadius: inputText.includes('\n') || inputText.length > 40 ? '16px' : '9999px', lineHeight: '1.4', cursor: isMyTurn ? 'text' : 'not-allowed' }}
                   />
                   <button onClick={() => { if (inputText.trim() && isMyTurn) { handle2v2HumanMessage(inputText.trim()); setInputText('') } }}
                     disabled={!inputText.trim() || !isMyTurn || twoVsTwoLoading}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white disabled:opacity-30"
-                    style={{ background: `linear-gradient(135deg, ${myColor}, #1d4ed8)` }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white disabled:opacity-30 flex-shrink-0 transition-all hover:scale-105 active:scale-95"
+                    style={{ background: `linear-gradient(135deg, ${myColor}, #1d4ed8)`, boxShadow: inputText.trim() && isMyTurn ? `0 2px 10px ${myColor}55` : undefined }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
                   </button>
                 </div>
                 {isMyTurn && (
-                  <div className="px-3 pb-2">
+                  <div className="px-3 pb-1">
                     <button onClick={() => handle2v2AIResponse('A', 'Supporta con un argomento forte.')} disabled={twoVsTwoLoading}
-                      className="w-full py-1.5 rounded-xl text-[10px] font-bold disabled:opacity-40"
-                      style={{ backgroundColor: 'rgba(59,130,246,0.1)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)' }}>
+                      className="w-full py-1.5 rounded-xl text-[10px] font-bold disabled:opacity-40 transition-all"
+                      style={{ backgroundColor: isDark ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.08)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)' }}>
                       Chiedi supporto a {AI_NAMES[myAiId]} →
                     </button>
                   </div>
@@ -4729,7 +4733,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
 
           {/* Messaggi mobile */}
-          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 12, overflowX: 'hidden' }}>
+          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden' }}>
             {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} isAdmin={effectivePlan === 'admin'} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
             <div ref={messagesEndRef} />
