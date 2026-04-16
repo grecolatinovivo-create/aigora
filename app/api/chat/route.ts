@@ -364,7 +364,11 @@ export async function POST(req: NextRequest) {
     const system = SYSTEM_PROMPTS[aiId]
     if (!system) return new Response('AI non trovata', { status: 400 })
     const aiName = aiId.charAt(0).toUpperCase() + aiId.slice(1)
-    const perplexityExtra = aiId === 'perplexity' ? ` Oggi è ${today}: cerca dati aggiornati a questa data, non usare informazioni vecchie.` : ''
+    const perplexityExtra = aiId === 'perplexity'
+      ? needsWebSearch
+        ? ` Oggi è ${today}: cerca dati aggiornati a questa data, cita studi o fatti recenti concreti.`
+        : ` Non cercare online stavolta. Commenta e dai la tua opinione personale sui dati e studi già citati nella conversazione. Sii diretto e pungente.`
+      : ''
     const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`
 
     if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage), 'Claude')

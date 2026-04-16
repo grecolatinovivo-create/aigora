@@ -2370,6 +2370,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const stopRequestedRef = useRef(false)
   const waitingForUserRef = useRef(false)   // ref speculare a waitingForUser
   const aiTurnCountRef = useRef(0)
+  const perplexityTurnCountRef = useRef(0)  // conta solo i turni di Perplexity
 
   // Aggiorna tema se l'utente cambia dark/light mode mentre è nell'app
   useEffect(() => {
@@ -2453,7 +2454,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn', needsWebSearch: needsWebSearchRef.current }),
+        body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn', needsWebSearch: aiId === 'perplexity' ? (perplexityTurnCountRef.current % 4 === 0) : needsWebSearchRef.current }),
         signal: controller.signal,
       })
 
@@ -2613,6 +2614,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       chatHistoryRef.current.push({ name: AI_NAMES[currentAi], content: text })
       usedAisRef.current.push(currentAi)
       aiTurnCountRef.current += 1
+      if (currentAi === 'perplexity') perplexityTurnCountRef.current += 1
       setTurnCount(aiTurnCountRef.current)
 
       // Fact-check ogni 3 turni (ridotto da 2 per meno interruzioni)
@@ -2663,6 +2665,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     chatHistoryRef.current = [{ name: historyName, content: q }]
     usedAisRef.current = []
     aiTurnCountRef.current = 0
+    perplexityTurnCountRef.current = 0
     stopRequestedRef.current = false
     setMessages([{ id: 'user-0', aiId: 'user', name: displayName, content: q, isUser: true }])
     setTurnCount(0)
@@ -2711,6 +2714,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       waitingForUserRef.current = false
       setWaitingForUser(false)
       aiTurnCountRef.current = 0
+      perplexityTurnCountRef.current = 0
       stopRequestedRef.current = false
 
       // Se l'utente menziona un'AI, quella risponde per prima ma poi il dibattito
