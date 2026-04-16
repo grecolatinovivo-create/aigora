@@ -3922,17 +3922,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           borderRadius: 50 * phoneScale,
           width: 390 * phoneScale,
           height: 790 * phoneScale,
-          overflow: 'visible',
+          overflow: 'hidden',
         }}
       >
       <div
-        className="phone-shell relative scale-in"
+        className="phone-shell scale-in"
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
           width: 390,
           height: 790,
           transform: `scale(${phoneScale})`,
-          transformOrigin: 'top center',
-          marginLeft: -(390 * (1 - phoneScale)) / 2,
+          transformOrigin: 'top left',
         }}
       >
 
@@ -4798,9 +4800,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       {/* ── PANNELLO SINTESI ── */}
       <div className={`flex-shrink-0 transition-all duration-500 ease-out${showSynthesis ? ' synthesis-panel-mobile' : ''}`}
         style={{ width: showSynthesis ? 340 * phoneScale : 0, opacity: showSynthesis ? 1 : 0, overflow: 'hidden' }}>
-        <div style={{ width: 340 * phoneScale, height: 790 * phoneScale, position: 'relative' }}>
+        <div style={{ width: 340 * phoneScale, height: 790 * phoneScale, position: 'relative', overflow: 'hidden' }}>
           <div className="glass-dark rounded-3xl overflow-hidden slide-in-right"
-            style={{ width: 340, height: 790, transform: `scale(${phoneScale})`, transformOrigin: 'top center', marginLeft: -(340 * (1 - phoneScale)) / 2 }}>
+            style={{ position: 'absolute', top: 0, left: 0, width: 340, height: 790, transform: `scale(${phoneScale})`, transformOrigin: 'top left' }}>
 
             {/* Header pannello */}
             <div className="px-5 py-4 border-b border-white/8 flex items-start justify-between">
