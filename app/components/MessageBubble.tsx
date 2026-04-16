@@ -55,9 +55,15 @@ export default function MessageBubble({ message, bgTheme = 'black', fontSize = 1
   if (message.isUser) {
     return (
       <div className="flex justify-end px-3 mb-1 message-enter">
-        <div className="max-w-[78%]">
+        <div style={{ maxWidth: '78%', minWidth: 0 }}>
           <div className="rounded-2xl rounded-br-sm px-3 py-2 leading-relaxed text-white"
-            style={{ backgroundColor: '#005c4b', fontSize }}>
+            style={{
+              backgroundColor: '#005c4b',
+              fontSize,
+              wordBreak: 'break-word',
+              overflowWrap: 'anywhere',
+              whiteSpace: 'pre-wrap',
+            }}>
             {message.content}
           </div>
         </div>
@@ -70,17 +76,24 @@ export default function MessageBubble({ message, bgTheme = 'black', fontSize = 1
   const avatarColor = AI_AVATAR[message.aiId] || '#6B7280'
 
   return (
-    <div className="flex items-end gap-2 px-3 mb-1 message-enter">
+    <div className="flex items-end gap-2 px-3 mb-1 message-enter" style={{ minWidth: 0 }}>
       <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mb-0.5"
         style={{ backgroundColor: avatarColor }}>
         {message.name[0]}
       </div>
-      <div className="max-w-[78%]">
+      <div style={{ maxWidth: '78%', minWidth: 0, flex: '0 1 auto' }}>
         <div className="text-[11px] font-semibold mb-0.5 ml-1" style={{ color: bubble.nameColor }}>
           {message.name}
         </div>
         <div className="rounded-2xl rounded-bl-sm px-3 py-2 leading-relaxed"
-          style={{ backgroundColor: bubble.bg, color: bubble.textColor, fontSize }}>
+          style={{
+            backgroundColor: bubble.bg,
+            color: bubble.textColor,
+            fontSize,
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+            whiteSpace: 'pre-wrap',
+          }}>
           {renderText(message.content, !!message.isStreaming)}
         </div>
       </div>

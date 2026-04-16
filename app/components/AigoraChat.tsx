@@ -1994,8 +1994,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const PHONE_H = 790
     const PHONE_W = 390
     const NAVBAR_H = 56
-    const PADDING_V = 48 // pt-6 + pb-6
-    const PADDING_H = 48 // pl-6 + pr-6
+    const PADDING_V = 80  // margine verticale sopra+sotto (più generoso)
+    const PADDING_H = 64  // margine orizzontale sinistra+destra
     const calcScale = () => {
       const availH = window.innerHeight - NAVBAR_H - PADDING_V
       const availW = window.innerWidth - PADDING_H
@@ -3919,10 +3919,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       <div
         className={`relative flex-shrink-0${phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? ' phone-fire' : ''}`}
         style={{
-          borderRadius: 50,
+          borderRadius: 50 * phoneScale,
           width: 390 * phoneScale,
           height: 790 * phoneScale,
-          transformOrigin: 'top center',
+          overflow: 'visible',
         }}
       >
       <div
@@ -3931,7 +3931,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           width: 390,
           height: 790,
           transform: `scale(${phoneScale})`,
-          transformOrigin: 'top left',
+          transformOrigin: 'top center',
+          marginLeft: -(390 * (1 - phoneScale)) / 2,
         }}
       >
 
@@ -4094,7 +4095,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-1" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value }}>
+          <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-1" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden' }}>
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
               <>
                 {twoVsTwoState.messages.map((msg, i) => {
@@ -4113,9 +4114,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   // Messaggi umani (squadra A — utente reale)
                   if (!msg.isAI && isA) return (
                     <div key={i} className="flex justify-end px-3 mb-1 message-enter">
-                      <div className="max-w-[78%]">
+                      <div style={{ maxWidth: '78%', minWidth: 0 }}>
                         <div className="rounded-2xl rounded-br-sm px-3 py-2 leading-relaxed text-white text-xs"
-                          style={{ backgroundColor: '#1a3a5c' }}>
+                          style={{ backgroundColor: '#1a3a5c', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
                           {msg.content}
                         </div>
                       </div>
@@ -4134,17 +4135,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   const bubble = bubbleDark[aiId] ?? { bg: 'rgba(255,255,255,0.07)', nameColor: 'rgba(255,255,255,0.5)', textColor: 'rgba(255,255,255,0.85)' }
 
                   return (
-                    <div key={i} className={`flex items-end gap-2 px-3 mb-1 message-enter${alignRight ? ' flex-row-reverse' : ''}`}>
+                    <div key={i} className={`flex items-end gap-2 px-3 mb-1 message-enter${alignRight ? ' flex-row-reverse' : ''}`} style={{ minWidth: 0 }}>
                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mb-0.5"
                         style={{ backgroundColor: avatarColor }}>
                         {aiId === 'gemini' ? 'Ge' : AI_NAMES[aiId]?.[0]}
                       </div>
-                      <div className="max-w-[78%]">
+                      <div style={{ maxWidth: '78%', minWidth: 0, flex: '0 1 auto' }}>
                         <div className={`text-[11px] font-semibold mb-0.5 ml-1${alignRight ? ' text-right mr-1 ml-0' : ''}`} style={{ color: bubble.nameColor }}>
                           {msg.author}
                         </div>
                         <div className={`rounded-2xl px-3 py-2 leading-relaxed text-xs${alignRight ? ' rounded-br-sm' : ' rounded-bl-sm'}`}
-                          style={{ backgroundColor: bubble.bg, color: bubble.textColor }}>
+                          style={{ backgroundColor: bubble.bg, color: bubble.textColor, wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
                           {msg.streaming && !msg.content
                             ? <span className="flex gap-1 items-center py-0.5">{[0,180,360].map(d=><span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{backgroundColor:'rgba(255,255,255,0.4)',animationDelay:`${d}ms`,animationDuration:'1s'}}/>)}</span>
                             : <>{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</>
@@ -4695,7 +4696,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
 
           {/* Messaggi mobile */}
-          <div className="flex-1 overflow-y-auto py-3" style={{ backgroundColor: bgPreset.value }}>
+          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 12, overflowX: 'hidden' }}>
             {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
             <div ref={messagesEndRef} />
@@ -4799,7 +4800,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         style={{ width: showSynthesis ? 340 * phoneScale : 0, opacity: showSynthesis ? 1 : 0, overflow: 'hidden' }}>
         <div style={{ width: 340 * phoneScale, height: 790 * phoneScale, position: 'relative' }}>
           <div className="glass-dark rounded-3xl overflow-hidden slide-in-right"
-            style={{ width: 340, height: 790, transform: `scale(${phoneScale})`, transformOrigin: 'top left' }}>
+            style={{ width: 340, height: 790, transform: `scale(${phoneScale})`, transformOrigin: 'top center', marginLeft: -(340 * (1 - phoneScale)) / 2 }}>
 
             {/* Header pannello */}
             <div className="px-5 py-4 border-b border-white/8 flex items-start justify-between">

@@ -218,6 +218,12 @@ html, body {
   z-index: 10;
 }
 
+/* ── Bubble messaggi — mai tagliate ── */
+.message-enter,
+.message-enter > * {
+  min-width: 0;
+}
+
 /* ── Mobile responsive ── */
 @media (max-width: 600px) {
   /* Schermata chat: nascondi cornice iPhone e occupa tutto lo schermo */
