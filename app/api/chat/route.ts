@@ -89,10 +89,14 @@ Il tuo compito:
 Rispondi nella stessa lingua del dibattito. Sii conciso. Non inventare errori che non ci sono.`
 }
 
-function sseStream(gen: AsyncIterable<string>): Response {
+function sseStream(gen: AsyncIterable<string>, model?: string): Response {
   const encoder = new TextEncoder()
   const readable = new ReadableStream({
     async start(controller) {
+      // Invia il nome del modello come primo chunk speciale (per admin debug)
+      if (model) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ model })}\n\n`))
+      }
       // Keepalive: ogni 5s invia un commento SSE vuoto per evitare timeout del proxy/Vercel
       const keepalive = setInterval(() => {
         try { controller.enqueue(encoder.encode(': keepalive\n\n')) } catch {}
@@ -167,6 +171,13 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
   logUsage('openai', 'gpt-4.1-mini', inputTokens, outputTokens)
 }
 
+function streamGeminiWithModel(system: string, historyText: string, lastMessage: string): { stream: AsyncIterable<string>; model: string } {
+  if (!process.env.GEMINI_API_KEY) {
+    return { stream: streamClaude(system, historyText, lastMessage), model: 'Claude' }
+  }
+  return { stream: streamGemini(system, historyText, lastMessage), model: 'Gemini' }
+}
+
 async function* streamGemini(system: string, historyText: string, lastMessage: string): AsyncIterable<string> {
   if (!process.env.GEMINI_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
   const { GoogleGenerativeAI } = await import('@google/generative-ai')
@@ -181,6 +192,13 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
   const finalResp = await result.response
   const usage = finalResp.usageMetadata
   if (usage) logUsage('google', 'gemini-2.0-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0)
+}
+
+function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false): { stream: AsyncIterable<string>; model: string } {
+  if (!process.env.PERPLEXITY_API_KEY) {
+    return { stream: streamClaude(system, historyText, lastMessage), model: 'Claude' }
+  }
+  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch), model: 'Perplexity' }
 }
 
 async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false): AsyncIterable<string> {
@@ -337,10 +355,10 @@ export async function POST(req: NextRequest) {
       const interruptorName = id.charAt(0).toUpperCase() + id.slice(1)
       const sysPrompt = getInterruptPrompt(interruptorName, spk, today, year)
       const prompt = `Conversazione finora:\n\n${historyText}\n\nAnalizza l'ultimo messaggio di ${spk} e rispondi.`
-      if (id === 'gpt')        return sseStream(streamGPT(sysPrompt, '', prompt))
-      if (id === 'gemini')     return sseStream(streamGemini(sysPrompt, '', prompt))
-      if (id === 'perplexity') return sseStream(streamPerplexity(sysPrompt, '', prompt))
-      return sseStream(streamClaude(sysPrompt, '', prompt))
+      if (id === 'gpt')        return sseStream(streamGPT(sysPrompt, '', prompt), 'GPT')
+      if (id === 'gemini')     { const g = streamGeminiWithModel(sysPrompt, '', prompt); return sseStream(g.stream, g.model) }
+      if (id === 'perplexity') { const p = streamPerplexityWithModel(sysPrompt, '', prompt); return sseStream(p.stream, p.model) }
+      return sseStream(streamClaude(sysPrompt, '', prompt), 'Claude')
     }
 
     const system = SYSTEM_PROMPTS[aiId]
@@ -349,10 +367,10 @@ export async function POST(req: NextRequest) {
     const perplexityExtra = aiId === 'perplexity' ? ` Oggi è ${today}: cerca dati aggiornati a questa data, non usare informazioni vecchie.` : ''
     const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`
 
-    if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage))
-    if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage))
-    if (aiId === 'gemini')     return sseStream(streamGemini(system, historyText, lastMessage))
-    if (aiId === 'perplexity') return sseStream(streamPerplexity(system, historyText, lastMessage, needsWebSearch))
+    if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage), 'Claude')
+    if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage), 'GPT')
+    if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage); return sseStream(g.stream, g.model) }
+    if (aiId === 'perplexity') { const p = streamPerplexityWithModel(system, historyText, lastMessage, needsWebSearch); return sseStream(p.stream, p.model) }
 
     return new Response('AI non trovata', { status: 400 })
   } catch (error) {

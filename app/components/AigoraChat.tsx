@@ -2444,6 +2444,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setActiveAi(aiId)
 
     let fullText = ''
+    let realModel: string | undefined
     const controller = new AbortController()
     // Timeout di sicurezza: se dopo 25s non arriva [DONE], abbandona
     const timeout = setTimeout(() => controller.abort(), 25000)
@@ -2473,7 +2474,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim()
           if (d === '[DONE]') { done = true; break }
-          try { fullText += JSON.parse(d).text } catch {}
+          try {
+            const parsed = JSON.parse(d)
+            if (parsed.model) realModel = parsed.model
+            else if (parsed.text) fullText += parsed.text
+          } catch {}
         }
         if (streamDone) break
       }
@@ -2482,7 +2487,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         for (const line of buffer.split('\n')) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim()
-          if (d !== '[DONE]') try { fullText += JSON.parse(d).text } catch {}
+          if (d !== '[DONE]') try {
+            const parsed = JSON.parse(d)
+            if (parsed.model) realModel = parsed.model
+            else if (parsed.text) fullText += parsed.text
+          } catch {}
         }
       }
     } catch (err: any) {
@@ -2497,7 +2506,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (stopRequestedRef.current) { setActiveAi(null); return null }
 
     const msgId = `${aiId}-${Date.now()}`
-    setMessages(prev => [...prev, { id: msgId, aiId, name: AI_NAMES[aiId] || aiId, content: '', isStreaming: true, isSynthesis }])
+    setMessages(prev => [...prev, { id: msgId, aiId, name: AI_NAMES[aiId] || aiId, content: '', isStreaming: true, isSynthesis, realModel }])
     await typewriteText(msgId, fullText)
     setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isStreaming: false, content: fullText } : m))
     setActiveAi(null)
@@ -4157,7 +4166,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </>
             ) : (
               <>
-                {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} />)}
+                {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} isAdmin={effectivePlan === 'admin'} />)}
                 {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
                 <div ref={messagesEndRef} />
               </>
@@ -4690,7 +4699,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Messaggi mobile */}
           <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 12, overflowX: 'hidden' }}>
-            {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} />)}
+            {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} isAdmin={effectivePlan === 'admin'} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
             <div ref={messagesEndRef} />
           </div>

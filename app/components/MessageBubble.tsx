@@ -8,6 +8,7 @@ export interface Message {
   isStreaming?: boolean
   isUser?: boolean
   isSynthesis?: boolean
+  realModel?: string
 }
 
 const AI_BUBBLE_LIGHT: Record<string, { bg: string; nameColor: string; textColor: string }> = {
@@ -47,9 +48,10 @@ interface MessageBubbleProps {
   message: Message
   bgTheme?: 'black' | 'white'
   fontSize?: number
+  isAdmin?: boolean
 }
 
-export default function MessageBubble({ message, bgTheme = 'black', fontSize = 13 }: MessageBubbleProps) {
+export default function MessageBubble({ message, bgTheme = 'black', fontSize = 13, isAdmin = false }: MessageBubbleProps) {
   const isDark = bgTheme === 'white'
 
   if (message.isUser) {
@@ -83,7 +85,7 @@ export default function MessageBubble({ message, bgTheme = 'black', fontSize = 1
       </div>
       <div style={{ maxWidth: '78%', minWidth: 0, flex: '0 1 auto' }}>
         <div className="text-[11px] font-semibold mb-0.5 ml-1" style={{ color: bubble.nameColor }}>
-          {message.name}
+          {message.name}{isAdmin && message.realModel && message.realModel !== message.name ? <span style={{ opacity: 0.5, fontWeight: 400, fontSize: 10 }}> ({message.realModel})</span> : null}
         </div>
         <div className="rounded-2xl rounded-bl-sm px-3 py-2 leading-relaxed"
           style={{
