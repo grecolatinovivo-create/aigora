@@ -1264,14 +1264,20 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
                 </div>
                 <div className="px-3 py-2 text-xs leading-relaxed"
                   style={{ background: isAI ? `${aiColor}18` : teamBg, color: 'rgba(255,255,255,0.85)', borderRadius: isRight ? '12px 3px 12px 12px' : '3px 12px 12px 12px' }}>
-                  {msg.content}{msg.streaming && <span className="typewriter-cursor" />}
+                  {msg.streaming && !msg.content ? (
+                    <span className="flex gap-1 items-center py-0.5">
+                      {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: aiColor, opacity: 0.6, animationDelay: `${d}ms` }} />)}
+                    </span>
+                  ) : (
+                    <>{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</>
+                  )}
                 </div>
               </div>
             </div>
           )
         })}
 
-        {loading && (
+        {loading && !(state.messages.length > 0 && state.messages[state.messages.length - 1].isAI && state.messages[state.messages.length - 1].streaming) && (
           <div className="flex items-center gap-2 px-2">
             <div className="flex gap-1">{[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}</div>
             <span className="text-[10px] text-white/30">L'AI sta pensando…</span>
@@ -2823,7 +2829,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
-          try { fullText += JSON.parse(d).text } catch {}
+          try { const p = JSON.parse(d); if (p.text) fullText += p.text } catch {}
         }
         if (sd) break
       }
@@ -2831,7 +2837,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         for (const line of buffer.split('\n')) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim()
-          if (d !== '[DONE]') try { fullText += JSON.parse(d).text } catch {}
+          if (d !== '[DONE]') try { const p = JSON.parse(d); if (p.text) fullText += p.text } catch {}
         }
       }
       // ── Poi typewrite lettera per lettera (identico a typewriteText) ──
@@ -2931,7 +2937,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue
             const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
-            try { fullText += JSON.parse(d).text } catch {}
+            try { const p = JSON.parse(d); if (p.text) fullText += p.text } catch {}
           }
           if (sd) break
         }
@@ -2939,7 +2945,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           for (const line of buffer.split('\n')) {
             if (!line.startsWith('data: ')) continue
             const d = line.slice(6).trim()
-            if (d !== '[DONE]') try { fullText += JSON.parse(d).text } catch {}
+            if (d !== '[DONE]') try { const p = JSON.parse(d); if (p.text) fullText += p.text } catch {}
           }
         }
         // Typewrite
@@ -3002,7 +3008,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
-          try { verdict += JSON.parse(d).text } catch {}
+          try { const p = JSON.parse(d); if (p.text) verdict += p.text } catch {}
           setTwoVsTwoState(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: verdict, streaming: true }; return { ...prev, messages: msgs, verdict } })
         }
         if (sd) break
@@ -3011,7 +3017,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         for (const line of buffer.split('\n')) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim()
-          if (d !== '[DONE]') { try { verdict += JSON.parse(d).text } catch {} }
+          if (d !== '[DONE]') { try { const p = JSON.parse(d); if (p.text) verdict += p.text } catch {} }
         }
       }
       // Estrai punteggio dal verdetto
@@ -4177,7 +4183,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     </div>
                   )
                 })}
-                {twoVsTwoLoading && <ThinkingBubble
+                {twoVsTwoLoading && !(twoVsTwoState.messages.length > 0 && twoVsTwoState.messages[twoVsTwoState.messages.length - 1].isAI && twoVsTwoState.messages[twoVsTwoState.messages.length - 1].streaming) && <ThinkingBubble
                   aiId={twoVsTwoState.currentTurn === 'A' ? twoVsTwoState.config.teamA.aiId : twoVsTwoState.config.teamB.aiId1}
                   isDark={true}
                   align={twoVsTwoState.currentTurn === 'B' ? 'right' : 'left'}
