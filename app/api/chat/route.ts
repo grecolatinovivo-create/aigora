@@ -5,6 +5,7 @@ import { rateLimit } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 // Prezzi per 1M token (USD)
 const PRICES: Record<string, { input: number; output: number }> = {
@@ -366,7 +367,7 @@ export async function POST(req: NextRequest) {
     const aiName = aiId.charAt(0).toUpperCase() + aiId.slice(1)
     const perplexityExtra = aiId === 'perplexity'
       ? needsWebSearch
-        ? ` Oggi è ${today}: cerca dati aggiornati a questa data, cita studi o fatti recenti concreti.`
+        ? ` Oggi è ${today}: cerca dati aggiornati. Quando citi uno studio, menziona naturalmente nel testo il nome dell'articolo e l'autore principale (es. "secondo lo studio 'Titolo' di Rossi et al."), così chi legge può cercarlo. Niente numeri tra parentesi quadre — integra la fonte nel discorso.`
         : ` Non cercare online stavolta. Commenta e dai la tua opinione personale sui dati e studi già citati nella conversazione. Sii diretto e pungente.`
       : ''
     const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`

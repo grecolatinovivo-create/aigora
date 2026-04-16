@@ -2447,8 +2447,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     let fullText = ''
     let realModel: string | undefined
     const controller = new AbortController()
-    // Timeout di sicurezza: se dopo 25s non arriva [DONE], abbandona
-    const timeout = setTimeout(() => controller.abort(), 25000)
+    // Timeout di sicurezza: se dopo 45s non arriva [DONE], abbandona
+    const timeout = setTimeout(() => controller.abort(), 45000)
 
     try {
       const res = await fetch('/api/chat', {
@@ -2497,14 +2497,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       }
     } catch (err: any) {
       if (err?.name !== 'AbortError') console.error('streamAiResponse error:', err)
-      // Se abbiamo già del testo parziale, usalo — altrimenti messaggio di errore
-      if (!fullText) fullText = '(Risposta interrotta)'
+      // Se abbiamo testo parziale usalo, altrimenti null per saltare il turno silenziosamente
     } finally {
       clearTimeout(timeout)
     }
 
     setThinkingAi(null)
-    if (stopRequestedRef.current) { setActiveAi(null); return null }
+    if (stopRequestedRef.current || !fullText) { setActiveAi(null); return null }
 
     const msgId = `${aiId}-${Date.now()}`
     setMessages(prev => [...prev, { id: msgId, aiId, name: AI_NAMES[aiId] || aiId, content: '', isStreaming: true, isSynthesis, realModel }])
@@ -2609,7 +2608,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
     while (!stopRequestedRef.current) {
       const text = await streamAiResponse(currentAi)
-      if (!text || stopRequestedRef.current) break
+      if (stopRequestedRef.current) break
+      // Se il turno è fallito (timeout/errore), passa all'AI successiva senza bloccarsi
+      if (!text) {
+        currentAi = getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
+        continue
+      }
 
       chatHistoryRef.current.push({ name: AI_NAMES[currentAi], content: text })
       usedAisRef.current.push(currentAi)
