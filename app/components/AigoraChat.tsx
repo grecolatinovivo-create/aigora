@@ -1944,6 +1944,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [nameConfirmed, setNameConfirmed] = useState(!!(propUserName?.trim()))
   const [nameInput, setNameInput] = useState('')
   const [inputText, setInputText] = useState('')
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const inputRefDesktop = useRef<HTMLTextAreaElement>(null)
+  // Auto-resize textarea
+  useEffect(() => {
+    for (const ref of [inputRef, inputRefDesktop]) {
+      if (ref.current) {
+        ref.current.style.height = 'auto'
+        ref.current.style.height = Math.min(ref.current.scrollHeight, 120) + 'px'
+      }
+    }
+  }, [inputText])
   const [bgPreset, setBgPreset] = useState(() => {
     // Usa il tema di sistema: scuro → Notte, chiaro → Crema
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -4225,17 +4236,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             backgroundColor: bgPreset.header,
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
           }}>
-            <input
+            <textarea
+              ref={inputRef}
               value={inputText}
+              rows={1}
               onChange={e => setInputText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSendMessage() }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage() } }}
               placeholder='Scrivi un messaggio…'
-              className={`flex-1 rounded-full px-3.5 py-2 text-[12px] outline-none transition-all${waitingForUser ? ' input-waiting' : ''}`}
+              className={`flex-1 px-3.5 py-2 text-[12px] outline-none transition-all resize-none overflow-hidden${waitingForUser ? ' input-waiting' : ''}`}
               style={{
                 backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
                 color: isDark ? '#f0f0f0' : '#111',
+                borderRadius: inputText.includes('\n') || inputText.length > 40 ? '16px' : '9999px',
                 boxShadow: waitingForUser ? (isDark ? '0 0 0 2px rgba(196,181,253,0.15)' : '0 0 0 2px rgba(109,40,217,0.1)') : undefined,
+                lineHeight: '1.4',
               }}
             />
             <button onClick={isListening ? stopListening : startListening}
@@ -4772,16 +4787,20 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           }}>
-            <input
+            <textarea
+              ref={inputRefDesktop}
               value={inputText}
+              rows={1}
               onChange={e => setInputText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSendMessage() }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage() } }}
               placeholder='Scrivi un messaggio…'
-              className={`flex-1 rounded-full px-4 py-2.5 text-[14px] outline-none transition-all${waitingForUser ? ' input-waiting' : ''}`}
+              className={`flex-1 px-4 py-2.5 text-[14px] outline-none transition-all resize-none overflow-hidden${waitingForUser ? ' input-waiting' : ''}`}
               style={{
                 backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
                 color: isDark ? '#f0f0f0' : '#111',
+                borderRadius: inputText.includes('\n') || inputText.length > 50 ? '18px' : '9999px',
+                lineHeight: '1.4',
               }}
             />
             <button onClick={isListening ? stopListening : startListening}
