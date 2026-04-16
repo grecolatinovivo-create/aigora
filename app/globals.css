@@ -297,6 +297,51 @@ html, body {
   z-index: 0;
 }
 
+/* ── Schermata verdetto 2v2 ── */
+@keyframes verdict-reveal {
+  0%   { opacity: 0; transform: scale(0.85) translateY(20px); }
+  60%  { opacity: 1; transform: scale(1.03) translateY(-4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes score-pop {
+  0%   { opacity: 0; transform: scale(0.4); }
+  65%  { opacity: 1; transform: scale(1.18); }
+  85%  { transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes gavel-strike {
+  0%   { transform: rotate(-40deg) translateY(-8px); }
+  40%  { transform: rotate(10deg) translateY(4px); }
+  55%  { transform: rotate(-5deg) translateY(2px); }
+  70%  { transform: rotate(3deg) translateY(1px); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+@keyframes winner-glow {
+  0%, 100% { box-shadow: 0 0 18px 2px rgba(255,200,50,0.25); }
+  50%       { box-shadow: 0 0 36px 8px rgba(255,200,50,0.5); }
+}
+@keyframes suspense-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.96); }
+  50%       { opacity: 1;   transform: scale(1.04); }
+}
+@keyframes suspense-orb {
+  0%   { transform: scale(1) rotate(0deg);   opacity: 0.5; }
+  33%  { transform: scale(1.2) rotate(120deg); opacity: 0.8; }
+  66%  { transform: scale(0.9) rotate(240deg); opacity: 0.6; }
+  100% { transform: scale(1) rotate(360deg); opacity: 0.5; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.verdict-reveal { animation: verdict-reveal 0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
+.score-pop      { animation: score-pop 0.55s cubic-bezier(0.22,1,0.36,1) forwards; }
+.gavel-strike   { animation: gavel-strike 0.6s cubic-bezier(0.22,1,0.36,1) forwards; }
+.winner-glow    { animation: winner-glow 2s ease-in-out infinite; }
+.suspense-pulse { animation: suspense-pulse 1.4s ease-in-out infinite; }
+.suspense-orb   { animation: suspense-orb 3s ease-in-out infinite; }
+.fade-up        { animation: fade-up 0.5s ease forwards; }
+
 /* ── Mobile responsive ── */
 @media (max-width: 600px) {
   /* Schermata chat: nascondi cornice iPhone e occupa tutto lo schermo */
