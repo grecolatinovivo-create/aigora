@@ -764,7 +764,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     const check = () => {
       const portrait = window.innerHeight > window.innerWidth
       setIsPortrait(portrait)
-      if (!portrait) setHintDismissed(false) // reset hint se ruota di nuovo
+      if (!portrait) setHintDismissed(false)
     }
     check()
     window.addEventListener('resize', check)
@@ -1987,6 +1987,24 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [mobileFontSize, setMobileFontSize] = useState(14)
   const [isListening, setIsListening] = useState(false)
+  const [phoneScale, setPhoneScale] = useState(1)
+
+  // Scala dinamica del telefono: non sborda mai dallo schermo
+  useEffect(() => {
+    const PHONE_H = 790
+    const PHONE_W = 390
+    const NAVBAR_H = 56
+    const PADDING_V = 48 // pt-6 + pb-6
+    const PADDING_H = 48 // pl-6 + pr-6
+    const calcScale = () => {
+      const availH = window.innerHeight - NAVBAR_H - PADDING_V
+      const availW = window.innerWidth - PADDING_H
+      setPhoneScale(Math.min(1, availH / PHONE_H, availW / PHONE_W))
+    }
+    calcScale()
+    window.addEventListener('resize', calcScale)
+    return () => window.removeEventListener('resize', calcScale)
+  }, [])
   const recognitionRef = useRef<any>(null)
   const listeningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -3897,9 +3915,25 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         </div>
       )}
 
-      {/* Wrapper fiamme */}
-      <div className={`relative${phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? ' phone-fire' : ''}`} style={{ borderRadius: 50 }}>
-      <div className="phone-shell relative scale-in" style={{ width: 390, height: 790 }}>
+      {/* Wrapper fiamme — scala il telefono per non sforare mai lo schermo */}
+      <div
+        className={`relative flex-shrink-0${phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? ' phone-fire' : ''}`}
+        style={{
+          borderRadius: 50,
+          width: 390 * phoneScale,
+          height: 790 * phoneScale,
+          transformOrigin: 'top center',
+        }}
+      >
+      <div
+        className="phone-shell relative scale-in"
+        style={{
+          width: 390,
+          height: 790,
+          transform: `scale(${phoneScale})`,
+          transformOrigin: 'top left',
+        }}
+      >
 
         {/* Cornice */}
         <div className="absolute inset-0 rounded-[50px] bg-[#1c1c1e]"
@@ -4762,9 +4796,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
       {/* ── PANNELLO SINTESI ── */}
       <div className={`flex-shrink-0 transition-all duration-500 ease-out${showSynthesis ? ' synthesis-panel-mobile' : ''}`}
-        style={{ width: showSynthesis ? 340 : 0, opacity: showSynthesis ? 1 : 0, overflow: 'hidden' }}>
-        <div style={{ width: 340 }}>
-          <div className="glass-dark rounded-3xl overflow-hidden slide-in-right" style={{ height: 790 }}>
+        style={{ width: showSynthesis ? 340 * phoneScale : 0, opacity: showSynthesis ? 1 : 0, overflow: 'hidden' }}>
+        <div style={{ width: 340 * phoneScale, height: 790 * phoneScale, position: 'relative' }}>
+          <div className="glass-dark rounded-3xl overflow-hidden slide-in-right"
+            style={{ width: 340, height: 790, transform: `scale(${phoneScale})`, transformOrigin: 'top left' }}>
 
             {/* Header pannello */}
             <div className="px-5 py-4 border-b border-white/8 flex items-start justify-between">
