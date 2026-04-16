@@ -2447,8 +2447,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
       while (!done) {
         const { done: streamDone, value } = await reader.read()
-        if (streamDone) break
-        buffer += decoder.decode(value, { stream: true })
+        if (value) buffer += decoder.decode(value, { stream: true })
         const lines = buffer.split('\n')
         // Tieni l'ultima riga incompleta nel buffer
         buffer = lines.pop() ?? ''
@@ -2457,6 +2456,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           const d = line.slice(6).trim()
           if (d === '[DONE]') { done = true; break }
           try { fullText += JSON.parse(d).text } catch {}
+        }
+        if (streamDone) break
+      }
+      // Flush del buffer residuo dopo la fine dello stream
+      if (buffer.trim()) {
+        for (const line of buffer.split('\n')) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d !== '[DONE]') try { fullText += JSON.parse(d).text } catch {}
         }
       }
     } catch (err: any) {
@@ -2511,8 +2519,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       let buffer = '', done = false
       while (!done) {
         const { done: sd, value } = await reader.read()
-        if (sd) break
-        buffer += decoder.decode(value, { stream: true })
+        if (value) buffer += decoder.decode(value, { stream: true })
         const lines = buffer.split('\n')
         buffer = lines.pop() ?? ''
         for (const line of lines) {
@@ -2520,6 +2527,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           const d = line.slice(6).trim()
           if (d === '[DONE]') { done = true; break }
           try { fullText += JSON.parse(d).text } catch {}
+        }
+        if (sd) break
+      }
+      if (buffer.trim()) {
+        for (const line of buffer.split('\n')) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d !== '[DONE]') try { fullText += JSON.parse(d).text } catch {}
         }
       }
     } catch (err: any) {
@@ -2755,13 +2770,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const decoder = new TextDecoder()
       let buffer = '', fullText = '', done = false
       while (!done) {
-        const { done: sd, value } = await reader.read(); if (sd) break
-        buffer += decoder.decode(value, { stream: true })
+        const { done: sd, value } = await reader.read()
+        if (value) buffer += decoder.decode(value, { stream: true })
         const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
           try { fullText += JSON.parse(d).text } catch {}
+        }
+        if (sd) break
+      }
+      if (buffer.trim()) {
+        for (const line of buffer.split('\n')) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d !== '[DONE]') try { fullText += JSON.parse(d).text } catch {}
         }
       }
       // ── Poi typewrite lettera per lettera (identico a typewriteText) ──
@@ -2855,13 +2878,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         const decoder = new TextDecoder()
         let buffer = '', fullText = '', done = false
         while (!done) {
-          const { done: sd, value } = await reader.read(); if (sd) break
-          buffer += decoder.decode(value, { stream: true })
+          const { done: sd, value } = await reader.read()
+          if (value) buffer += decoder.decode(value, { stream: true })
           const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue
             const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
             try { fullText += JSON.parse(d).text } catch {}
+          }
+          if (sd) break
+        }
+        if (buffer.trim()) {
+          for (const line of buffer.split('\n')) {
+            if (!line.startsWith('data: ')) continue
+            const d = line.slice(6).trim()
+            if (d !== '[DONE]') try { fullText += JSON.parse(d).text } catch {}
           }
         }
         // Typewrite
@@ -2918,14 +2949,22 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       let buffer = '', verdict = '', done = false
       setTwoVsTwoState(prev => prev ? { ...prev, messages: [...prev.messages, { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: '', streaming: true }], ended: true } : prev)
       while (!done) {
-        const { done: sd, value } = await reader.read(); if (sd) break
-        buffer += decoder.decode(value, { stream: true })
+        const { done: sd, value } = await reader.read()
+        if (value) buffer += decoder.decode(value, { stream: true })
         const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
           try { verdict += JSON.parse(d).text } catch {}
           setTwoVsTwoState(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: verdict, streaming: true }; return { ...prev, messages: msgs, verdict } })
+        }
+        if (sd) break
+      }
+      if (buffer.trim()) {
+        for (const line of buffer.split('\n')) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d !== '[DONE]') { try { verdict += JSON.parse(d).text } catch {} }
         }
       }
       // Estrai punteggio dal verdetto
@@ -2960,8 +2999,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       let buffer = '', aiText = '', done = false
       setDevilSession(prev => prev ? { ...prev, messages: [...updatedMsgs, { role: 'ai' as const, aiId: attackerId, content: '' }] } : prev)
       while (!done) {
-        const { done: sd, value } = await reader.read(); if (sd) break
-        buffer += decoder.decode(value, { stream: true })
+        const { done: sd, value } = await reader.read()
+        if (value) buffer += decoder.decode(value, { stream: true })
         const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
@@ -2969,6 +3008,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           try { aiText += JSON.parse(d).text } catch {}
           setDevilSession(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { role: 'ai', aiId: attackerId, content: aiText }; return { ...prev, messages: msgs } })
         }
+        if (sd) break
+      }
+      if (buffer.trim()) {
+        for (const line of buffer.split('\n')) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d !== '[DONE]') { try { aiText += JSON.parse(d).text } catch {} }
+        }
+        setDevilSession(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { role: 'ai', aiId: attackerId, content: aiText }; return { ...prev, messages: msgs } })
       }
       const argStrength = Math.min(text.length / 20, 3) + (text.includes('perché') || text.includes('quindi') || text.includes('infatti') ? 1 : 0)
       setDevilSession(prev => prev ? { ...prev, score: Math.min(10, Math.max(0, prev.score + (argStrength > 2 ? 0.3 : -0.2))) } : prev)
@@ -2991,8 +3039,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           let buffer = '', verdict = '', done = false
           setDevilSession(prev => prev ? { ...prev, messages: [...prev.messages, { role: 'ai' as const, aiId: 'claude', content: '⚖️ Verdetto:\n' }], round: newRound } : prev)
           while (!done) {
-            const { done: sd, value } = await reader.read(); if (sd) break
-            buffer += decoder.decode(value, { stream: true })
+            const { done: sd, value } = await reader.read()
+            if (value) buffer += decoder.decode(value, { stream: true })
             const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
             for (const line of lines) {
               if (!line.startsWith('data: ')) continue
@@ -3000,6 +3048,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               try { verdict += JSON.parse(d).text } catch {}
               setDevilSession(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { role: 'ai', aiId: 'claude', content: '⚖️ Verdetto:\n' + verdict }; return { ...prev, messages: msgs } })
             }
+            if (sd) break
+          }
+          if (buffer.trim()) {
+            for (const line of buffer.split('\n')) {
+              if (!line.startsWith('data: ')) continue
+              const d = line.slice(6).trim()
+              if (d !== '[DONE]') { try { verdict += JSON.parse(d).text } catch {} }
+            }
+            setDevilSession(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { role: 'ai', aiId: 'claude', content: '⚖️ Verdetto:\n' + verdict }; return { ...prev, messages: msgs } })
           }
         }
       } catch {}
@@ -3040,15 +3097,24 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       })
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
+      let buffer = ''
       while (true) {
         const { done, value } = await reader.read()
+        if (value) buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d === '[DONE]') break
+          try { fullText += JSON.parse(d).text; setSynthesis(fullText) } catch {}
+        }
         if (done) break
-        for (const line of decoder.decode(value, { stream: true }).split('\n')) {
-          if (line.startsWith('data: ')) {
-            const d = line.slice(6).trim()
-            if (d === '[DONE]') break
-            try { fullText += JSON.parse(d).text; setSynthesis(fullText) } catch {}
-          }
+      }
+      if (buffer.trim()) {
+        for (const line of buffer.split('\n')) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim()
+          if (d !== '[DONE]') try { fullText += JSON.parse(d).text; setSynthesis(fullText) } catch {}
         }
       }
     } catch { fullText = 'Errore nella sintesi.' }

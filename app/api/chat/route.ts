@@ -137,7 +137,7 @@ async function* streamClaude(system: string, historyText: string, lastMessage: s
   userContent.push({ type: 'text', text: lastMessage })
   const stream = await client.messages.stream({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 180,
+    max_tokens: 350,
     system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } } as any],
     messages: [{ role: 'user', content: userContent as any }],
   })
@@ -157,7 +157,7 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
     messages.push({ role: 'assistant', content: 'Ho letto la conversazione. Procedo con il mio turno.' })
   }
   messages.push({ role: 'user', content: lastMessage })
-  const stream = await client.chat.completions.create({ model: 'gpt-4.1-mini', max_tokens: 180, stream: true, stream_options: { include_usage: true }, messages })
+  const stream = await client.chat.completions.create({ model: 'gpt-4.1-mini', max_tokens: 350, stream: true, stream_options: { include_usage: true }, messages })
   let inputTokens = 0, outputTokens = 0
   for await (const chunk of stream) {
     const text = chunk.choices[0]?.delta?.content
@@ -172,7 +172,7 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
   const { GoogleGenerativeAI } = await import('@google/generative-ai')
   const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   const fullSystem = historyText ? `${system}\n\nConversazione fino ad ora:\n\n${historyText}` : system
-  const model = client.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: fullSystem })
+  const model = client.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: fullSystem, generationConfig: { maxOutputTokens: 350 } })
   const result = await model.generateContentStream(lastMessage)
   for await (const chunk of result.stream) {
     const text = chunk.text()
@@ -192,7 +192,7 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
   // Perplexity non supporta stream_options — usiamo una chiamata non-streaming per avere i token usage
   // e una streaming per il testo, oppure stimiamo i token dal testo
   const stream = await client.chat.completions.create({
-    model, max_tokens: 180, stream: true,
+    model, max_tokens: 350, stream: true,
     // NON passare stream_options: Perplexity API non lo supporta e causa errori silenti
     messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
   } as any) as any
