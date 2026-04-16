@@ -198,7 +198,7 @@ function streamPerplexityWithModel(system: string, historyText: string, lastMess
   if (!process.env.PERPLEXITY_API_KEY) {
     return { stream: streamClaude(system, historyText, lastMessage), model: 'Claude' }
   }
-  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch), model: 'Perplexity' }
+  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
 }
 
 async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false): AsyncIterable<string> {
