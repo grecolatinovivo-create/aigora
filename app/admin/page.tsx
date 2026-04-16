@@ -42,6 +42,7 @@ export default async function AdminPage() {
   // Costi API
   const usageRaw = await prisma.apiUsage.findMany({ orderBy: { createdAt: 'desc' } })
   const usageByProvider: Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }> = {}
+  const usageByModel: Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }> = {}
   let totalCost = 0
   for (const u of usageRaw) {
     if (!usageByProvider[u.provider]) usageByProvider[u.provider] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
@@ -49,6 +50,12 @@ export default async function AdminPage() {
     usageByProvider[u.provider].cost += u.costUsd
     usageByProvider[u.provider].inputTokens += u.inputTokens
     usageByProvider[u.provider].outputTokens += u.outputTokens
+    // Aggrega anche per modello (utile per sonar vs sonar-pro)
+    if (!usageByModel[u.model]) usageByModel[u.model] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
+    usageByModel[u.model].calls++
+    usageByModel[u.model].cost += u.costUsd
+    usageByModel[u.model].inputTokens += u.inputTokens
+    usageByModel[u.model].outputTokens += u.outputTokens
     totalCost += u.costUsd
   }
 
@@ -98,20 +105,21 @@ export default async function AdminPage() {
               {formatCost(totalCost)}
             </span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {[
-              { key: 'anthropic', label: 'Claude', color: '#7C3AED' },
-              { key: 'openai',    label: 'GPT',    color: '#10A37F' },
-              { key: 'google',    label: 'Gemini', color: '#1A73E8' },
-              { key: 'perplexity',label: 'Perplexity', color: '#FF6B2B' },
-            ].map(({ key, label, color }) => {
-              const u = usageByProvider[key]
+              { key: 'anthropic', label: 'Claude',     color: '#7C3AED', byProvider: true },
+              { key: 'openai',    label: 'GPT',        color: '#10A37F', byProvider: true },
+              { key: 'google',    label: 'Gemini',     color: '#1A73E8', byProvider: true },
+              { key: 'sonar',     label: 'Sonar',      color: '#FF6B2B', byProvider: false },
+              { key: 'sonar-pro', label: 'Sonar Pro',  color: '#FF3D00', byProvider: false },
+            ].map(({ key, label, color, byProvider }) => {
+              const u = byProvider ? usageByProvider[key] : usageByModel[key]
               return (
                 <div key={key} className="rounded-xl p-3" style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>
                   <div className="text-xs font-bold mb-1" style={{ color }}>{label}</div>
                   <div className="text-white font-bold text-lg">{formatCost(u?.cost ?? 0)}</div>
                   <div className="text-white/40 text-[10px] mt-1">
-                    {u?.calls ?? 0} chiamate · {((u?.inputTokens ?? 0) + (u?.outputTokens ?? 0)).toLocaleString()} token
+                    {u?.calls ?? 0} chiamate · {((u?.inputTokens ?? 0) + (u?.outputTokens ?? 0)).toLocaleString()} tok
                   </div>
                 </div>
               )
