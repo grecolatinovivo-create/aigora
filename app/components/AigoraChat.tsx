@@ -4206,12 +4206,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   </div>
                 </div>
                 <div className="flex items-center gap-2 px-3 pb-2">
-                  <input value={inputText} onChange={e => setInputText(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && inputText.trim() && isMyTurn) { handle2v2HumanMessage(inputText.trim()); setInputText('') } }}
+                  <textarea value={inputText} onChange={e => setInputText(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && inputText.trim() && isMyTurn) { e.preventDefault(); handle2v2HumanMessage(inputText.trim()); setInputText('') } }}
                     disabled={!isMyTurn || twoVsTwoLoading}
                     placeholder={isMyTurn ? 'Il tuo argomento…' : 'Attendi il tuo turno…'}
-                    className="flex-1 rounded-full px-3.5 py-2 text-[12px] outline-none"
-                    style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', border: `1px solid ${isMyTurn ? `${myColor}50` : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)')}`, color: isDark ? '#f0f0f0' : '#111', opacity: isMyTurn ? 1 : 0.4 }}
+                    rows={1}
+                    className="flex-1 px-3.5 py-2 text-[12px] outline-none resize-none overflow-hidden"
+                    style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', border: `1px solid ${isMyTurn ? `${myColor}50` : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)')}`, color: isDark ? '#f0f0f0' : '#111', opacity: isMyTurn ? 1 : 0.4, borderRadius: inputText.includes('\n') || inputText.length > 40 ? '16px' : '9999px', lineHeight: '1.4' }}
                   />
                   <button onClick={() => { if (inputText.trim() && isMyTurn) { handle2v2HumanMessage(inputText.trim()); setInputText('') } }}
                     disabled={!inputText.trim() || !isMyTurn || twoVsTwoLoading}
