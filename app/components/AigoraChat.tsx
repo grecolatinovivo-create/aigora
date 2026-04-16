@@ -2718,7 +2718,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       waitingForUserRef.current = false
       setWaitingForUser(false)
       aiTurnCountRef.current = 0
-      perplexityTurnCountRef.current = 0
+      // perplexityTurnCountRef NON si resetta tra i round: conta i turni totali di Perplexity
+      // nella sessione, così il pattern Pro/Sonar/Sonar/Sonar rimane coerente
       stopRequestedRef.current = false
 
       // Se l'utente menziona un'AI, quella risponde per prima ma poi il dibattito
