@@ -206,7 +206,7 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
   const userMessage = historyText ? `Conversazione:\n\n${historyText}\n\n${lastMessage}` : lastMessage
-  const model = 'sonar-pro'
+  const model = needsWebSearch ? 'sonar-pro' : 'sonar'
   // Perplexity non supporta stream_options — usiamo una chiamata non-streaming per avere i token usage
   // e una streaming per il testo, oppure stimiamo i token dal testo
   const stream = await client.chat.completions.create({
