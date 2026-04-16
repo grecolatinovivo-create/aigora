@@ -2553,7 +2553,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim()
           if (d === '[DONE]') { done = true; break }
-          try { fullText += JSON.parse(d).text } catch {}
+          try { const p = JSON.parse(d); if (p.text) fullText += p.text } catch {}
         }
         if (sd) break
       }
@@ -2561,7 +2561,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         for (const line of buffer.split('\n')) {
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim()
-          if (d !== '[DONE]') try { fullText += JSON.parse(d).text } catch {}
+          if (d !== '[DONE]') try { const p = JSON.parse(d); if (p.text) fullText += p.text } catch {}
         }
       }
     } catch (err: any) {
