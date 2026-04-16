@@ -1994,11 +1994,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const PHONE_H = 790
     const PHONE_W = 390
     const NAVBAR_H = 56
-    const PADDING_V = 80  // margine verticale sopra+sotto (più generoso)
-    const PADDING_H = 64  // margine orizzontale sinistra+destra
+    const MARGIN_V = 40  // margine sopra+sotto
+    const MARGIN_H = 32  // margine sinistra+destra
     const calcScale = () => {
-      const availH = window.innerHeight - NAVBAR_H - PADDING_V
-      const availW = window.innerWidth - PADDING_H
+      const availH = window.innerHeight - NAVBAR_H - MARGIN_V
+      const availW = window.innerWidth - MARGIN_H
       setPhoneScale(Math.min(1, availH / PHONE_H, availW / PHONE_W))
     }
     calcScale()
@@ -3918,23 +3918,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       {/* Wrapper fiamme — scala il telefono per non sforare mai lo schermo */}
       <div
         className={`relative flex-shrink-0${phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? ' phone-fire' : ''}`}
-        style={{
-          borderRadius: 50 * phoneScale,
-          width: 390 * phoneScale,
-          height: 790 * phoneScale,
-          overflow: 'hidden',
-        }}
+        style={{ borderRadius: 50 * phoneScale }}
       >
       <div
         className="phone-shell scale-in"
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
           width: 390,
           height: 790,
-          transform: `scale(${phoneScale})`,
-          transformOrigin: 'top left',
+          zoom: phoneScale,
         }}
       >
 
@@ -4800,9 +4791,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       {/* ── PANNELLO SINTESI ── */}
       <div className={`flex-shrink-0 transition-all duration-500 ease-out${showSynthesis ? ' synthesis-panel-mobile' : ''}`}
         style={{ width: showSynthesis ? 340 * phoneScale : 0, opacity: showSynthesis ? 1 : 0, overflow: 'hidden' }}>
-        <div style={{ width: 340 * phoneScale, height: 790 * phoneScale, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'relative' }}>
           <div className="glass-dark rounded-3xl overflow-hidden slide-in-right"
-            style={{ position: 'absolute', top: 0, left: 0, width: 340, height: 790, transform: `scale(${phoneScale})`, transformOrigin: 'top left' }}>
+            style={{ width: 340, height: 790, zoom: phoneScale }}>
 
             {/* Header pannello */}
             <div className="px-5 py-4 border-b border-white/8 flex items-start justify-between">
