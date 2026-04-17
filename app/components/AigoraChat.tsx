@@ -2049,7 +2049,7 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displa
                     className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5">
                     Il mio profilo pubblico
                   </a>
-                  {userPlan === 'admin' && (
+                  {(userPlan === 'admin' || isBeta) && (
                     <button onClick={() => { onMultiplayer?.(); setShowProfileMenu(false) }}
                       className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                       style={{ color: 'rgba(255,255,255,0.7)' }}>
