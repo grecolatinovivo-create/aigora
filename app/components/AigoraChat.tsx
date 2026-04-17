@@ -2047,19 +2047,19 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displa
                 <>
                   <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
                     className="w-full px-4 py-3 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5">
-                    ◈ Il mio profilo pubblico
+                    Il mio profilo pubblico
                   </a>
                   {userPlan === 'admin' && (
                     <button onClick={() => { onMultiplayer?.(); setShowProfileMenu(false) }}
                       className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                       style={{ color: 'rgba(255,255,255,0.7)' }}>
-                      ⊹ Multiplayer
+                      Multiplayer
                     </button>
                   )}
                   <button onClick={() => { onFeed?.(); setShowProfileMenu(false) }}
                     className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                     style={{ color: 'rgba(255,255,255,0.7)' }}>
-                    <span>◎ Feed dibattiti</span>
+                    <span>Feed dibattiti</span>
                     {(unreadCount ?? 0) > 0 && (
                       <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white" style={{ backgroundColor: '#7C3AED' }}>{unreadCount}</span>
                     )}
@@ -2067,19 +2067,19 @@ function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displa
                   <button onClick={() => { onCrea?.(); setShowProfileMenu(false) }}
                     className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                     style={{ color: 'rgba(255,255,255,0.7)' }}>
-                    ＋ Crea dibattito
+                    Crea dibattito
                   </button>
                   {userPlan === 'admin' && (
                     <button onClick={() => window.location.href = '/admin'}
                       className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
-                      ◉ Pannello Admin
+                      Pannello Admin
                     </button>
                   )}
                 </>
               )}
               <button onClick={onSignOut}
                 className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium">
-                ← Esci dall'account
+                Esci dall'account
               </button>
             </div>
           </>
