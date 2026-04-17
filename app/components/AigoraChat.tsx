@@ -2552,6 +2552,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (messages.length >= 2) saveCurrentChat()
   }, [messages, thinkingAi, waitingForUser, scrollToBottom, saveCurrentChat])
 
+  // Scroll automatico durante streaming 2v2
+  useEffect(() => {
+    if (twoVsTwoState) scrollToBottom()
+  }, [twoVsTwoState?.messages, twoVsTwoLoading, scrollToBottom])
+
   const wasDebatingRef = useRef(false) // stava girando il debate quando si è andati in cronologia
 
   // Stop loop quando si va in cronologia/profilo, riprende quando si torna in running
