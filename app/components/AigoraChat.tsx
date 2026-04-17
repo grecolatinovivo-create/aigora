@@ -1228,12 +1228,11 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
             <div className="verdict-reveal w-full">
               <div className="flex items-stretch gap-3">
                 {/* Squadra A */}
-                <div className="flex-1 rounded-2xl p-4 flex flex-col items-center gap-2 relative overflow-hidden"
+                <div className={`flex-1 rounded-2xl p-4 flex flex-col items-center gap-2 relative overflow-hidden${winnerA ? ' winner-glow' : ''}`}
                   style={{
                     background: winnerA ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.06)',
                     border: winnerA ? '2px solid rgba(59,130,246,0.6)' : '1px solid rgba(59,130,246,0.2)',
-                  }}
-                  className={winnerA ? 'winner-glow' : ''}>
+                  }}>
                   {winnerA && <div className="absolute top-2 right-2 text-base">🏆</div>}
                   <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#60a5fa' }}>SQUADRA A</div>
                   <div className="score-pop text-4xl font-black" style={{ color: winnerA ? '#fff' : 'rgba(255,255,255,0.5)', animationDelay: '0.3s' }}>{scoreA}</div>
@@ -1248,12 +1247,11 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
                 </div>
 
                 {/* Squadra B */}
-                <div className="flex-1 rounded-2xl p-4 flex flex-col items-center gap-2 relative overflow-hidden"
+                <div className={`flex-1 rounded-2xl p-4 flex flex-col items-center gap-2 relative overflow-hidden${winnerB ? ' winner-glow' : ''}`}
                   style={{
                     background: winnerB ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.06)',
                     border: winnerB ? '2px solid rgba(239,68,68,0.6)' : '1px solid rgba(239,68,68,0.2)',
-                  }}
-                  className={winnerB ? 'winner-glow' : ''}>
+                  }}>
                   {winnerB && <div className="absolute top-2 right-2 text-base">🏆</div>}
                   <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#f87171' }}>SQUADRA B</div>
                   <div className="score-pop text-4xl font-black" style={{ color: winnerB ? '#fff' : 'rgba(255,255,255,0.5)', animationDelay: '0.5s' }}>{scoreB}</div>
