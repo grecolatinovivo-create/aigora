@@ -2546,6 +2546,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputBarRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const [inputBarHeight, setInputBarHeight] = useState(80)
   const messagesRef = useRef<Message[]>([])
   const chatHistoryRef = useRef<{ name: string; content: string }[]>([])
@@ -2606,9 +2607,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const historyName = userName.trim() || 'Utente'
 
   const scrollToBottom = useCallback(() => {
-    // setTimeout(0) garantisce che il DOM abbia finito di renderizzare prima di scrollare
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      const el = messagesContainerRef.current
+      if (el) el.scrollTop = el.scrollHeight
     }, 0)
   }, [])
 
@@ -4408,7 +4409,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0, paddingBottom: inputBarHeight + 8 }}>
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto py-2 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0, paddingBottom: inputBarHeight + 8 }}>
             {phase === 'running' && selectedMode === '2v2' && (<><div className="flame-bg" /><div className="flame-overlay" /></>)}
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
               <div className="relative z-10 flex flex-col gap-1 w-full">
