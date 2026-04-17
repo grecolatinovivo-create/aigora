@@ -2149,6 +2149,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
   const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
+  const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
   const [devilLoading, setDevilLoading] = useState(false)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
@@ -2554,6 +2555,29 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const aiTurnCountRef = useRef(0)
   const perplexityTurnCountRef = useRef(0)  // conta solo i turni di Perplexity
   const isLoadingHistoryRef = useRef(false) // previeni saveCurrentChat durante apertura chat da cronologia
+
+  // Musica 2v2 — parte quando inizia la sfida, si ferma quando finisce
+  useEffect(() => {
+    const isActive = twoVsTwoState !== null && !twoVsTwoState.ended
+    if (isActive) {
+      if (!twoVsTwoAudioRef.current) {
+        twoVsTwoAudioRef.current = new Audio('/dust-at-high-noon.mp3')
+        twoVsTwoAudioRef.current.loop = true
+        twoVsTwoAudioRef.current.volume = 0.25
+      }
+      twoVsTwoAudioRef.current.play().catch(() => {})
+    } else {
+      if (twoVsTwoAudioRef.current) {
+        twoVsTwoAudioRef.current.pause()
+        twoVsTwoAudioRef.current.currentTime = 0
+      }
+    }
+    return () => {
+      if (!isActive && twoVsTwoAudioRef.current) {
+        twoVsTwoAudioRef.current.pause()
+      }
+    }
+  }, [twoVsTwoState?.ended, twoVsTwoState !== null])
 
   // Misura altezza input bar in tempo reale (cresce col textarea multiriga)
   useEffect(() => {
