@@ -407,17 +407,14 @@ export async function POST(req: NextRequest) {
     if (aiId === 'perplexity') {
       // Turno 1 (count=0): Sonar Pro con ricerca reale
       // Turni 2-10 (count 1-9): Gemini che impersona Perplexity, senza costo Sonar
-      // Turno 11+ (count%10===0): torna Sonar Pro
-      const isAdmin = session?.user?.email === process.env.ADMIN_EMAIL
+      // Turno 11+ (count%10===0): torna Sonar Pro — stesso schema per tutti, admin incluso
       const isRealPerplexity = (perplexityTurnCount ?? 0) % 10 === 0
       if (isRealPerplexity) {
         const p = streamPerplexityWithModel(system, historyText, lastMessage, true)
-        // Admin vede "Perplexity Pro", utenti vedono "Perplexity"
-        return sseStream(p.stream, isAdmin ? 'Perplexity Pro' : 'Perplexity')
+        return sseStream(p.stream, 'Perplexity')
       } else {
         const g = streamGeminiAsPerplexity(historyText, today, year)
-        // Admin vede "Perplexity (Gemini)", utenti vedono "Perplexity"
-        return sseStream(g.stream, isAdmin ? 'Perplexity (Gemini)' : 'Perplexity')
+        return sseStream(g.stream, 'Perplexity')
       }
     }
 
