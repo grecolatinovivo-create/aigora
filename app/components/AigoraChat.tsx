@@ -1132,37 +1132,171 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
   const myName = myTeam === 'A' ? config.teamA.humanName : "Squadra B"
   const theirName = myTeam === 'A' ? "Squadra B" : config.teamA.humanName
 
+  // Schermata suspense — l'arbitro sta deliberando
+  if (state.ended && !state.verdict) {
+    const arbAI = AI_OPTIONS.find(a => a.id === config.arbiterAiId)
+    const arbColor = AI_COLOR[config.arbiterAiId] ?? '#A78BFA'
+    return (
+      <div className="flex flex-col h-full relative overflow-hidden" style={{ background: '#07070f', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
+        {/* Sfondo fiamme spente — brace */}
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(120,30,0,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8 relative z-10">
+          {/* Orbe arbitro pulsante */}
+          <div className="relative flex items-center justify-center">
+            {/* Anelli concentrici */}
+            <div className="absolute w-32 h-32 rounded-full suspense-orb" style={{ background: `radial-gradient(circle, ${arbColor}22 0%, transparent 70%)`, border: `1px solid ${arbColor}30` }} />
+            <div className="absolute w-24 h-24 rounded-full suspense-orb" style={{ background: `radial-gradient(circle, ${arbColor}30 0%, transparent 70%)`, border: `1px solid ${arbColor}40`, animationDelay: '0.4s', animationDirection: 'reverse' }} />
+            {/* Avatar arbitro */}
+            <div className="w-16 h-16 rounded-full flex items-center justify-center font-black text-white text-xl suspense-pulse"
+              style={{ background: `linear-gradient(135deg, ${arbColor}, ${arbColor}88)`, boxShadow: `0 0 24px ${arbColor}55`, fontSize: 28 }}>
+              {config.arbiterAiId === 'gemini' ? '✦' : arbAI?.name[0] ?? '⚖'}
+            </div>
+          </div>
+
+          {/* Testo di attesa */}
+          <div className="text-center flex flex-col gap-2">
+            <div className="font-black text-white text-lg leading-tight">
+              {AI_NAMES[config.arbiterAiId]}
+            </div>
+            <div className="text-white/40 text-sm">sta deliberando il verdetto…</div>
+          </div>
+
+          {/* Separatore con score A — B in grigio */}
+          <div className="flex items-center gap-4 w-full max-w-xs">
+            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+            <div className="flex items-center gap-3">
+              <div className="text-center">
+                <div className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(59,130,246,0.5)' }}>A</div>
+                <div className="text-lg font-black" style={{ color: 'rgba(255,255,255,0.15)' }}>?</div>
+              </div>
+              <div className="text-xs text-white/15 font-black">—</div>
+              <div className="text-center">
+                <div className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(239,68,68,0.5)' }}>B</div>
+                <div className="text-lg font-black" style={{ color: 'rgba(255,255,255,0.15)' }}>?</div>
+              </div>
+            </div>
+            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+          </div>
+
+          {/* Loader a punti */}
+          <div className="flex gap-2">
+            {[0, 200, 400].map(d => (
+              <span key={d} className="w-2 h-2 rounded-full" style={{ background: arbColor, animation: `suspense-pulse 1.4s ease-in-out infinite`, animationDelay: `${d}ms` }} />
+            ))}
+          </div>
+
+          {/* Quote topic */}
+          <div className="text-center px-4">
+            <div className="text-[10px] text-white/20 italic">"{config.topic}"</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Schermata verdetto finale
   if (state.ended && state.verdict) {
+    const scoreA = state.scoreA ?? 0
+    const scoreB = state.scoreB ?? 0
+    const winnerA = scoreA > scoreB
+    const winnerB = scoreB > scoreA
+    const draw = scoreA === scoreB
+    const arbColor = AI_COLOR[config.arbiterAiId] ?? '#A78BFA'
+
     return (
-      <div className="flex flex-col h-full" style={{ background: '#07070f' }}>
-        <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-white/8"
-          style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.8)', backdropFilter: 'blur(20px)' }}>
-          <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+      <div className="flex flex-col h-full relative overflow-hidden" style={{ background: '#07070f' }}>
+        {/* Sfondo brace/cenere */}
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 100% 60% at 50% 100%, rgba(80,20,0,0.3) 0%, transparent 65%)', pointerEvents: 'none' }} />
+
+        {/* Header */}
+        <div className="flex-shrink-0 flex items-center gap-3 px-4 relative z-10"
+          style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', background: 'rgba(7,7,15,0.85)', borderBottom: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)' }}>
+          <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div className="font-black text-white text-sm">Verdetto finale</div>
+          <div className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${arbColor}20`, color: arbColor, border: `1px solid ${arbColor}40` }}>
+            {AI_NAMES[config.arbiterAiId]}
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-5 py-8 gap-6">
-          <div className="text-5xl">🏆</div>
-          <div className="text-white font-black text-xl text-center">Il duello è finito</div>
-          <div className="w-full rounded-3xl p-5" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)' }}>
-            <div className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-3">{AI_NAMES[config.arbiterAiId]} — Verdetto</div>
-            <div className="text-sm text-white/80 leading-relaxed">{state.verdict}</div>
-          </div>
-          <div className="flex gap-3 w-full">
-            <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)' }}>
-              <div className="text-[9px] font-black uppercase text-blue-400 mb-1">SQUADRA A</div>
-              <div className="text-xs text-white/70">{config.teamA.humanName}</div>
+
+        <div className="flex-1 overflow-y-auto relative z-10" style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
+          <div className="flex flex-col items-center px-5 py-6 gap-5">
+
+            {/* Punteggi animati */}
+            <div className="verdict-reveal w-full">
+              <div className="flex items-stretch gap-3">
+                {/* Squadra A */}
+                <div className="flex-1 rounded-2xl p-4 flex flex-col items-center gap-2 relative overflow-hidden"
+                  style={{
+                    background: winnerA ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.06)',
+                    border: winnerA ? '2px solid rgba(59,130,246,0.6)' : '1px solid rgba(59,130,246,0.2)',
+                  }}
+                  className={winnerA ? 'winner-glow' : ''}>
+                  {winnerA && <div className="absolute top-2 right-2 text-base">🏆</div>}
+                  <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#60a5fa' }}>SQUADRA A</div>
+                  <div className="score-pop text-4xl font-black" style={{ color: winnerA ? '#fff' : 'rgba(255,255,255,0.5)', animationDelay: '0.3s' }}>{scoreA}</div>
+                  <div className="text-[10px] text-white/40 truncate max-w-full">{config.teamA.humanName}</div>
+                  <div className="text-[9px]" style={{ color: `${AI_COLOR[config.teamA.aiId]}80` }}>+ {AI_NAMES[config.teamA.aiId]}</div>
+                </div>
+
+                {/* Centro */}
+                <div className="flex flex-col items-center justify-center gap-1 flex-shrink-0">
+                  <div className="text-white/20 text-xs font-black">vs</div>
+                  {draw && <div className="text-[9px] text-white/30 font-bold">pari</div>}
+                </div>
+
+                {/* Squadra B */}
+                <div className="flex-1 rounded-2xl p-4 flex flex-col items-center gap-2 relative overflow-hidden"
+                  style={{
+                    background: winnerB ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.06)',
+                    border: winnerB ? '2px solid rgba(239,68,68,0.6)' : '1px solid rgba(239,68,68,0.2)',
+                  }}
+                  className={winnerB ? 'winner-glow' : ''}>
+                  {winnerB && <div className="absolute top-2 right-2 text-base">🏆</div>}
+                  <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: '#f87171' }}>SQUADRA B</div>
+                  <div className="score-pop text-4xl font-black" style={{ color: winnerB ? '#fff' : 'rgba(255,255,255,0.5)', animationDelay: '0.5s' }}>{scoreB}</div>
+                  <div className="text-[10px] text-white/40">AI</div>
+                  <div className="text-[9px]" style={{ color: `${AI_COLOR[config.teamB.aiId1]}80` }}>+ {AI_NAMES[config.teamB.aiId1]}</div>
+                </div>
+              </div>
             </div>
-            <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}>
-              <div className="text-[9px] font-black uppercase text-red-400 mb-1">SQUADRA B</div>
-              <div className="text-xs text-white/70">{"Squadra B"}</div>
+
+            {/* Titolo vincitore */}
+            <div className="fade-up text-center" style={{ animationDelay: '0.5s', opacity: 0 }}>
+              {draw ? (
+                <div className="text-white/60 font-bold text-sm">Pareggio perfetto ⚖️</div>
+              ) : (
+                <div>
+                  <div className="text-[10px] text-white/30 uppercase tracking-widest mb-1">Ha vinto</div>
+                  <div className="font-black text-white text-base">{winnerA ? config.teamA.humanName : 'Squadra B'}</div>
+                </div>
+              )}
             </div>
+
+            {/* Divisore */}
+            <div className="w-full flex items-center gap-3">
+              <div className="flex-1 h-px" style={{ background: `${arbColor}30` }} />
+              <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: arbColor }}>⚖ {AI_NAMES[config.arbiterAiId]}</div>
+              <div className="flex-1 h-px" style={{ background: `${arbColor}30` }} />
+            </div>
+
+            {/* Testo verdetto */}
+            <div className="fade-up w-full rounded-2xl p-4" style={{ background: `${arbColor}0d`, border: `1px solid ${arbColor}25`, animationDelay: '0.7s', opacity: 0 }}>
+              <div className="text-sm text-white/80 leading-relaxed">{state.verdict}</div>
+            </div>
+
+            {/* Topic */}
+            <div className="text-[10px] text-white/20 italic text-center px-2">"{config.topic}"</div>
+
+            {/* CTA */}
+            <button onClick={onBack}
+              className="fade-up w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.4), rgba(124,58,237,0.15))', border: '1px solid rgba(124,58,237,0.35)', animationDelay: '1s', opacity: 0 }}>
+              Torna alla home
+            </button>
           </div>
-          <button onClick={onBack} className="w-full py-3 rounded-2xl font-bold text-white/60 text-sm" style={{ background: 'rgba(255,255,255,0.06)' }}>
-            Torna alla home
-          </button>
         </div>
       </div>
     )
@@ -4291,6 +4425,102 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <div className="flex-shrink-0 flex justify-center py-2" style={{ backgroundColor: bgPreset.header }}>
             <div className="w-28 h-1 rounded-full" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.18)' }} />
           </div>
+
+          {/* Overlay suspense/verdetto 2v2 — dentro la cornice iPhone desktop */}
+          {phase === 'running' && selectedMode === '2v2' && twoVsTwoState?.ended && (() => {
+            const cfg = twoVsTwoState.config
+            const arbColor2 = AI_COLOR[cfg.arbiterAiId] ?? '#A78BFA'
+            const arbAI2 = AI_OPTIONS.find(a => a.id === cfg.arbiterAiId)
+
+            // Suspense — verdetto in arrivo
+            if (!twoVsTwoState.verdict) return (
+              <div className="absolute inset-0 z-40 rounded-[44px] overflow-hidden flex flex-col items-center justify-center gap-5"
+                style={{ background: '#07070f' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 50% at 50% 100%, rgba(120,30,0,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                {/* Orbe */}
+                <div className="relative flex items-center justify-center z-10">
+                  <div className="absolute w-24 h-24 rounded-full suspense-orb" style={{ background: `radial-gradient(circle, ${arbColor2}22 0%, transparent 70%)`, border: `1px solid ${arbColor2}30` }} />
+                  <div className="absolute w-16 h-16 rounded-full suspense-orb" style={{ background: `radial-gradient(circle, ${arbColor2}30 0%, transparent 70%)`, border: `1px solid ${arbColor2}40`, animationDelay: '0.4s', animationDirection: 'reverse' }} />
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-black text-white suspense-pulse"
+                    style={{ background: `linear-gradient(135deg, ${arbColor2}, ${arbColor2}88)`, boxShadow: `0 0 18px ${arbColor2}55`, fontSize: 22 }}>
+                    {cfg.arbiterAiId === 'gemini' ? '✦' : arbAI2?.name[0] ?? '⚖'}
+                  </div>
+                </div>
+                <div className="text-center z-10">
+                  <div className="font-black text-white text-sm">{AI_NAMES[cfg.arbiterAiId]}</div>
+                  <div className="text-white/40 text-xs mt-1">delibera il verdetto…</div>
+                </div>
+                <div className="flex gap-1.5 z-10">
+                  {[0,200,400].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full suspense-pulse" style={{ background: arbColor2, animationDelay: `${d}ms` }} />)}
+                </div>
+                <div className="text-[9px] text-white/15 italic z-10 px-6 text-center">"{cfg.topic}"</div>
+              </div>
+            )
+
+            // Verdetto — schermata risultati
+            const sA = twoVsTwoState.scoreA ?? 0
+            const sB = twoVsTwoState.scoreB ?? 0
+            const wA = sA > sB, wB = sB > sA, dr = sA === sB
+            return (
+              <div className="absolute inset-0 z-40 rounded-[44px] overflow-hidden flex flex-col"
+                style={{ background: '#07070f' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 100% 60% at 50% 100%, rgba(80,20,0,0.3) 0%, transparent 65%)', pointerEvents: 'none' }} />
+                {/* Mini header */}
+                <div className="flex-shrink-0 flex items-center justify-between px-4 relative z-10"
+                  style={{ paddingTop: '20px', paddingBottom: '10px', background: 'rgba(7,7,15,0.85)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
+                    className="w-7 h-7 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <div className="font-black text-white text-xs">Verdetto finale</div>
+                  <div className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${arbColor2}20`, color: arbColor2, border: `1px solid ${arbColor2}40` }}>
+                    {AI_NAMES[cfg.arbiterAiId]}
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto relative z-10 px-4 py-4 flex flex-col gap-4">
+                  {/* Scores */}
+                  <div className="verdict-reveal flex gap-3">
+                    <div className={`flex-1 rounded-2xl p-3 flex flex-col items-center gap-1.5${wA ? ' winner-glow' : ''}`}
+                      style={{ background: wA ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.06)', border: wA ? '2px solid rgba(59,130,246,0.55)' : '1px solid rgba(59,130,246,0.2)' }}>
+                      {wA && <div className="text-sm">🏆</div>}
+                      <div className="text-[8px] font-black uppercase" style={{ color: '#60a5fa' }}>A</div>
+                      <div className="score-pop text-3xl font-black" style={{ color: wA ? '#fff' : 'rgba(255,255,255,0.4)', animationDelay: '0.3s' }}>{sA}</div>
+                      <div className="text-[9px] text-white/40 truncate w-full text-center">{cfg.teamA.humanName}</div>
+                    </div>
+                    <div className="flex items-center justify-center text-white/20 text-xs font-black flex-shrink-0">vs</div>
+                    <div className={`flex-1 rounded-2xl p-3 flex flex-col items-center gap-1.5${wB ? ' winner-glow' : ''}`}
+                      style={{ background: wB ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.06)', border: wB ? '2px solid rgba(239,68,68,0.55)' : '1px solid rgba(239,68,68,0.2)' }}>
+                      {wB && <div className="text-sm">🏆</div>}
+                      <div className="text-[8px] font-black uppercase" style={{ color: '#f87171' }}>B</div>
+                      <div className="score-pop text-3xl font-black" style={{ color: wB ? '#fff' : 'rgba(255,255,255,0.4)', animationDelay: '0.5s' }}>{sB}</div>
+                      <div className="text-[9px] text-white/40">AI</div>
+                    </div>
+                  </div>
+                  {/* Vincitore */}
+                  <div className="fade-up text-center" style={{ animationDelay: '0.5s', opacity: 0 }}>
+                    {dr ? <div className="text-white/50 text-xs font-bold">Pareggio ⚖️</div>
+                      : <div><div className="text-[9px] text-white/30 uppercase tracking-widest">Ha vinto</div><div className="font-black text-white text-sm mt-0.5">{wA ? cfg.teamA.humanName : 'Squadra B'}</div></div>}
+                  </div>
+                  {/* Divisore */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px" style={{ background: `${arbColor2}25` }} />
+                    <div className="text-[8px] font-black uppercase tracking-widest" style={{ color: arbColor2 }}>⚖ {AI_NAMES[cfg.arbiterAiId]}</div>
+                    <div className="flex-1 h-px" style={{ background: `${arbColor2}25` }} />
+                  </div>
+                  {/* Testo verdetto */}
+                  <div className="fade-up rounded-xl p-3" style={{ background: `${arbColor2}0d`, border: `1px solid ${arbColor2}20`, animationDelay: '0.7s', opacity: 0 }}>
+                    <div className="text-xs text-white/75 leading-relaxed">{twoVsTwoState.verdict}</div>
+                  </div>
+                  {/* CTA */}
+                  <button onClick={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
+                    className="fade-up w-full py-3 rounded-2xl font-bold text-white text-xs"
+                    style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.4), rgba(124,58,237,0.15))', border: '1px solid rgba(124,58,237,0.35)', animationDelay: '1s', opacity: 0 }}>
+                    Torna alla home
+                  </button>
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Pannello profilo AI — dentro la cornice iPhone desktop */}
           {selectedAiProfile && AI_PROFILES[selectedAiProfile] && (() => {
