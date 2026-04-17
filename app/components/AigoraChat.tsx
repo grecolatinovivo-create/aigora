@@ -2544,6 +2544,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   }, [])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputBarRef = useRef<HTMLDivElement>(null)
+  const [inputBarHeight, setInputBarHeight] = useState(80)
   const messagesRef = useRef<Message[]>([])
   const chatHistoryRef = useRef<{ name: string; content: string }[]>([])
   const usedAisRef = useRef<string[]>([])
@@ -2552,6 +2554,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const aiTurnCountRef = useRef(0)
   const perplexityTurnCountRef = useRef(0)  // conta solo i turni di Perplexity
   const isLoadingHistoryRef = useRef(false) // previeni saveCurrentChat durante apertura chat da cronologia
+
+  // Misura altezza input bar in tempo reale (cresce col textarea multiriga)
+  useEffect(() => {
+    const el = inputBarRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setInputBarHeight(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // Aggiorna tema se l'utente cambia dark/light mode mentre è nell'app
   useEffect(() => {
@@ -4370,7 +4381,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0, paddingBottom: 'max(80px, calc(env(safe-area-inset-bottom) + 80px))' }}>
+          <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0, paddingBottom: inputBarHeight + 8 }}>
             {phase === 'running' && selectedMode === '2v2' && (<><div className="flame-bg" /><div className="flame-overlay" /></>)}
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
               <div className="relative z-10 flex flex-col gap-1 w-full">
@@ -4453,7 +4464,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             const myColor = '#3b82f6'
             const myAiId = twoVsTwoState.config.teamA.aiId
             return (
-              <div className="flex-shrink-0" style={{ backgroundColor: 'rgba(7,7,15,0.95)', borderTop: '1px solid rgba(255,80,0,0.2)', paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+              <div ref={inputBarRef} className="flex-shrink-0" style={{ backgroundColor: 'rgba(7,7,15,0.95)', borderTop: '1px solid rgba(255,80,0,0.2)', paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
                 <div className="px-3 pt-2 pb-1">
                   <div className="text-[9px] text-center font-bold" style={{ color: isMyTurn ? myColor : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)') }}>
                     {isMyTurn ? `Il tuo turno · ${twoVsTwoState.messagesThisTurn}/${twoVsTwoState.maxMessagesPerTurn}` : `Turno Squadra ${twoVsTwoState.currentTurn}…`}
@@ -5141,7 +5152,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               Solo i partecipanti possono scrivere
             </div>
           ) : (
-          <div className="flex-shrink-0 flex items-center gap-2 px-3 py-3" style={{
+          <div ref={inputBarRef} className="flex-shrink-0 flex items-center gap-2 px-3 py-3" style={{
             backgroundColor: bgPreset.header,
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
