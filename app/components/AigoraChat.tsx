@@ -570,6 +570,7 @@ interface TwoVsTwoState {
   maxMessagesPerTurn: number
   scoreA: number
   scoreB: number
+  roundScores: { round: number; winner: 'A' | 'B' | 'draw' }[]
   ended: boolean
   verdict: string | null
   waitingForOpponent?: boolean
@@ -1227,7 +1228,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
 
             {/* Punteggi animati */}
             <div className="verdict-reveal w-full">
-              <div className="flex items-stretch gap-3">
+              <div className="flex items-stretch gap-3 mb-3">
                 {/* Squadra A */}
                 <div className={`flex-1 rounded-2xl p-4 flex flex-col items-center gap-2 relative overflow-hidden${winnerA ? ' winner-glow' : ''}`}
                   style={{
@@ -1260,6 +1261,25 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
                   <div className="text-[9px]" style={{ color: `${AI_COLOR[config.teamB.aiId1]}80` }}>+ {AI_NAMES[config.teamB.aiId1]}</div>
                 </div>
               </div>
+
+              {/* Round per round */}
+              {state.roundScores && state.roundScores.length > 0 && (
+                <div className="flex gap-1.5 justify-center flex-wrap">
+                  {state.roundScores.sort((a, b) => a.round - b.round).map(rs => (
+                    <div key={rs.round} className="flex flex-col items-center gap-0.5">
+                      <div className="text-[8px] text-white/25">R{rs.round}</div>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black"
+                        style={{
+                          background: rs.winner === 'A' ? 'rgba(59,130,246,0.3)' : rs.winner === 'B' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)',
+                          border: rs.winner === 'A' ? '1px solid rgba(59,130,246,0.6)' : rs.winner === 'B' ? '1px solid rgba(239,68,68,0.6)' : '1px solid rgba(255,255,255,0.2)',
+                          color: rs.winner === 'A' ? '#60a5fa' : rs.winner === 'B' ? '#f87171' : 'rgba(255,255,255,0.4)',
+                        }}>
+                        {rs.winner === 'draw' ? '=' : rs.winner}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Titolo vincitore */}
@@ -1318,7 +1338,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
   }
 
   return (
-    <div className="flex flex-col h-full relative" style={{ background: '#0d0d14' }}>
+    <div className="flex flex-col h-full relative overflow-hidden" style={{ background: '#0d0d14' }}>
       {/* Sfondo fiamme */}
       <div className="flame-bg" />
       <div className="flame-overlay" />
@@ -1405,8 +1425,12 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
                       {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: aiColor, opacity: 0.6, animationDelay: `${d}ms` }} />)}
                     </span>
                   ) : (
-                    <>{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</>
-                  )}
+                    <span dangerouslySetInnerHTML={{ __html: msg.content
+                      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+                      .replace(/\n/g, '<br/>')
+                    }} />
+                  )}{msg.streaming && msg.content && <span className="typewriter-cursor" />}
                 </div>
               </div>
             </div>
@@ -2925,6 +2949,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       maxMessagesPerTurn: 3,
       scoreA: 0,
       scoreB: 0,
+      roundScores: [],
       ended: false,
       verdict: null,
       waitingForOpponent: !!config.roomCode,
@@ -2955,6 +2980,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         return { name: label, content: m.content }
       })
 
+    // Controlla se gli avversari hanno già parlato
+    const enemyMessages = state.messages.filter(m => m.team !== team && m.team !== 'arbiter')
+    const enemyHaveSpoken = enemyMessages.length > 0
+
     // Aggiungi placeholder con streaming (mostra i tre puntini finché content è vuoto)
     setTwoVsTwoState(prev => prev ? {
       ...prev,
@@ -2967,9 +2996,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({
           action: '2v2', aiId,
           history: [
-            { name: 'Sistema', content: `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore, attacca le posizioni di ${enemyAiNames}. Tono diretto, coinvolto, da alleato — non da professore neutrale. 2-3 frasi nella lingua del messaggio. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[aiId]?.carattere ?? ''}` },
+            { name: 'Sistema', content: `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore${enemyHaveSpoken ? `, attacca le posizioni di ${enemyAiNames}` : ''}. Tono diretto, coinvolto, da alleato — non da professore neutrale. 2-3 frasi nella lingua del messaggio. Non descrivere mai le tue azioni o emozioni con asterischi (*faccio X*, *mi fermo*, ecc.) — parla solo con argomenti. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[aiId]?.carattere ?? ''}` },
             ...history,
-            { name: 'Sistema', content: `${humanName} ha appena detto: "${trigger}". Schierati con lui, rinforza il suo punto e smonta quello degli avversari.` }
+            { name: 'Sistema', content: enemyHaveSpoken
+              ? `${humanName} ha appena detto: "${trigger}". Schierati con lui, rinforza il suo punto e smonta quello degli avversari.`
+              : `${humanName} ha appena detto: "${trigger}". Schierati con lui e porta argomenti forti a favore della vostra posizione. Gli avversari non hanno ancora parlato: non citarli, concentrati solo sui vostri argomenti.`
+            }
           ],
           needsWebSearch: false
         }),
@@ -3086,7 +3118,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({
           action: '2v2', aiId: bAiId,
           history: [
-            { name: 'Sistema', content: `Sei ${AI_NAMES[bAiId]}, membro della Squadra B. Stai dibattendo contro ${teamAHumanName} e ${teamAAiName} sul tema: "${twoVsTwoState.config.topic}". Il tuo unico compito è smontare gli argomenti avversari con forza e convinzione. Tono diretto, aggressivo nei confronti delle idee avversarie. 2-3 frasi nella lingua del messaggio. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[bAiId]?.carattere ?? ''}` },
+            { name: 'Sistema', content: `Sei ${AI_NAMES[bAiId]}, membro della Squadra B. Stai dibattendo contro ${teamAHumanName} e ${teamAAiName} sul tema: "${twoVsTwoState.config.topic}". Il tuo unico compito è smontare gli argomenti avversari con forza e convinzione. Tono diretto, aggressivo nei confronti delle idee avversarie. 2-3 frasi nella lingua del messaggio. Non descrivere mai le tue azioni o emozioni con asterischi (*faccio X*, *mi fermo*, ecc.) — parla solo con argomenti. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[bAiId]?.carattere ?? ''}` },
             ...bHistory,
             { name: 'Sistema', content: `${teamAHumanName} ha appena detto: "${text}". Attacca questo argomento.` }
           ],
@@ -3162,12 +3194,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (!twoVsTwoState) return
     setTwoVsTwoLoading(true)
     const { config } = twoVsTwoState
-    const arbId = config.arbiterAiId; const arbName = AI_NAMES[arbId]
-    const history = twoVsTwoState.messages.map(m => ({ name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author, content: m.content }))
+    const arbId = config.arbiterAiId
+    const arbName = AI_NAMES[arbId]
+    const maxRounds = twoVsTwoState.maxRounds
+
+    // Costruisci la history per round, escludendo messaggi arbiter intermedi
+    const allMsgs = twoVsTwoState.messages.filter(m => m.team !== 'arbiter')
+    const history = allMsgs.map(m => ({ name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author, content: m.content }))
+
     try {
+      // Prompt arbitro: assegna 1 punto a round, nessuna motivazione per ogni round, solo esito secco finale
+      const promptContent = `Sei un arbitro imparziale. Hai assistito a un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Ci sono stati ${maxRounds} round. Assegna 1 punto per ogni round a chi ha argomentato meglio. Non spiegare ogni singolo round. Scrivi SOLO questa struttura, niente altro prima:\nROUND_SCORES: R1=A R2=B R3=A (continua per tutti i round, ogni round vince A o B o D per pareggio)\nPoi scrivi 2-3 frasi di commento finale sintetico sull'andamento generale del dibattito. Sii diretto e neutro. Non descrivere emozioni o sensazioni personali.`
+
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'turn', aiId: arbId, history: [{ name: 'Sistema', content: `${AI_PROFILES[arbId]?.carattere ?? ''} Sei l'arbitro di questo dibattito 2v2 sul tema: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: 2 AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Cerca di essere neutro, ma il tuo carattere e le tue opinioni personali potrebbero inconsapevolmente influenzare il giudizio — è umano, succede. ${Math.random() < 0.2 ? `Oggi ti sembra che la Squadra ${Math.random() < 0.5 ? 'A' : 'B'} abbia argomentato in modo più convincente, anche se non sai bene spiegare perché — forse è solo istinto.` : ''} Pronuncia il verdetto. Alla fine scrivi SEMPRE su una riga separata: PUNTEGGIO: A=X B=Y (interi 0-10). Poi 2-3 frasi di spiegazione.` }, ...history], needsWebSearch: false }),
+        body: JSON.stringify({ action: '2v2', aiId: arbId, history: [{ name: 'Sistema', content: promptContent }, ...history, { name: 'Sistema', content: 'Pronuncia il verdetto ora.' }], needsWebSearch: false }),
       })
       if (!res.ok || !res.body) throw new Error()
       const reader = res.body.getReader(); const decoder = new TextDecoder()
@@ -3181,7 +3222,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           if (!line.startsWith('data: ')) continue
           const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
           try { const p = JSON.parse(d); if (p.text) verdict += p.text } catch {}
-          setTwoVsTwoState(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: verdict, streaming: true }; return { ...prev, messages: msgs, verdict } })
+          setTwoVsTwoState(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: verdict, streaming: true }; return { ...prev, messages: msgs } })
         }
         if (sd) break
       }
@@ -3192,17 +3233,33 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           if (d !== '[DONE]') { try { const p = JSON.parse(d); if (p.text) verdict += p.text } catch {} }
         }
       }
-      // Estrai punteggio dal verdetto
-      const scoreMatch = verdict.match(/PUNTEGGIO:\s*A=(\d+)\s*B=(\d+)/i)
-      const sA = scoreMatch ? parseInt(scoreMatch[1]) : 0
-      const sB = scoreMatch ? parseInt(scoreMatch[2]) : 0
-      // Rimuovi la riga del punteggio dal testo mostrato
-      const cleanVerdict = verdict.replace(/PUNTEGGIO:\s*A=\d+\s*B=\d+/i, '').trim()
+
+      // Estrai punteggi per round: ROUND_SCORES: R1=A R2=B R3=D ...
+      const roundScoreLine = verdict.match(/ROUND_SCORES:\s*([^\n]+)/i)
+      const roundScores: { round: number; winner: 'A' | 'B' | 'draw' }[] = []
+      let sA = 0; let sB = 0
+      if (roundScoreLine) {
+        const parts = roundScoreLine[1].match(/R(\d+)=([ABD])/gi) ?? []
+        parts.forEach(p => {
+          const m = p.match(/R(\d+)=([ABD])/i)
+          if (m) {
+            const r = parseInt(m[1])
+            const w = m[2].toUpperCase() as 'A' | 'B' | 'D'
+            if (w === 'A') { sA++; roundScores.push({ round: r, winner: 'A' }) }
+            else if (w === 'B') { sB++; roundScores.push({ round: r, winner: 'B' }) }
+            else roundScores.push({ round: r, winner: 'draw' })
+          }
+        })
+      }
+
+      // Rimuovi la riga ROUND_SCORES dal testo del verdetto
+      const cleanVerdict = verdict.replace(/ROUND_SCORES:[^\n]*/i, '').replace(/^\s*\n/, '').trim()
+
       setTwoVsTwoState(prev => {
         if (!prev) return prev
         const msgs = [...prev.messages]
         msgs[msgs.length-1] = { ...msgs[msgs.length-1], content: cleanVerdict, streaming: false }
-        return { ...prev, messages: msgs, scoreA: sA, scoreB: sB }
+        return { ...prev, messages: msgs, scoreA: sA, scoreB: sB, roundScores, verdict: cleanVerdict }
       })
     } catch {}
     setTwoVsTwoLoading(false)
