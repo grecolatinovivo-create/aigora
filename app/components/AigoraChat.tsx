@@ -753,6 +753,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [creating, setCreating] = useState(false)
   const [rouletteSlots, setRouletteSlots] = useState<string[]>(['', '', ''])
   const [rouletteSettled, setRouletteSettled] = useState<boolean[]>([false, false, false])
+  const [bubbleTopics2v2] = useState<string[]>(() => [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5).slice(0, 12))
   const [rouletteReady, setRouletteReady] = useState(false)
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
@@ -889,7 +890,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         { top: '720px', right: 'calc(50% - 615px)', delay: '-10s', dur: '13s', anim: 'float-2' },
         { top: '840px', right: 'calc(50% - 605px)', delay: '-4.5s',dur: '15s', anim: 'float-4' },
       ].map(({ top, left, right, delay, dur, anim }: any, i) => {
-        const t = TOPIC_SUGGESTIONS[i * 7 % TOPIC_SUGGESTIONS.length]
+        const t = bubbleTopics2v2[i] ?? TOPIC_SUGGESTIONS[i % TOPIC_SUGGESTIONS.length]
         return (
           <button key={i}
             onClick={() => { setTopic(t); setStep('teams') }}
@@ -2957,9 +2958,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'turn', aiId,
+          action: '2v2', aiId,
           history: [
-            { name: 'Sistema', content: `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore, attacca le posizioni di ${enemyAiNames}. Tono diretto, coinvolto, da alleato — non da professore neutrale. 2-3 frasi nella lingua del messaggio. ${AI_PROFILES[aiId]?.carattere ?? ''}` },
+            { name: 'Sistema', content: `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore, attacca le posizioni di ${enemyAiNames}. Tono diretto, coinvolto, da alleato — non da professore neutrale. 2-3 frasi nella lingua del messaggio. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[aiId]?.carattere ?? ''}` },
             ...history,
             { name: 'Sistema', content: `${humanName} ha appena detto: "${trigger}". Schierati con lui, rinforza il suo punto e smonta quello degli avversari.` }
           ],
@@ -3076,11 +3077,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const bRes = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'turn', aiId: bAiId,
+          action: '2v2', aiId: bAiId,
           history: [
-            { name: 'Sistema', content: `Sei nella squadra avversaria contro ${teamAHumanName} e ${teamAAiName}. Dibattito: "${twoVsTwoState.config.topic}". Parla da avversario convinto: attacca i loro argomenti, smonta le loro posizioni, difendi la tesi opposta. Tono diretto e combattivo. 2-3 frasi nella lingua del messaggio. ${AI_PROFILES[bAiId]?.carattere ?? ''}` },
+            { name: 'Sistema', content: `Sei ${AI_NAMES[bAiId]}, membro della Squadra B. Stai dibattendo contro ${teamAHumanName} e ${teamAAiName} sul tema: "${twoVsTwoState.config.topic}". Il tuo unico compito è smontare gli argomenti avversari con forza e convinzione. Tono diretto, aggressivo nei confronti delle idee avversarie. 2-3 frasi nella lingua del messaggio. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[bAiId]?.carattere ?? ''}` },
             ...bHistory,
-            { name: 'Sistema', content: `${teamAHumanName} ha appena detto: "${text}". Attacca il suo argomento.` }
+            { name: 'Sistema', content: `${teamAHumanName} ha appena detto: "${text}". Attacca questo argomento.` }
           ],
           needsWebSearch: false
         }),

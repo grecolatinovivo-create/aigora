@@ -378,6 +378,19 @@ export async function POST(req: NextRequest) {
       return sseStream(streamClaude(sysPrompt, '', prompt), 'Claude')
     }
 
+    // Azione dedicata 2v2 — bypassa i system prompt normali, usa il system passato nella history[0]
+    if (action === '2v2') {
+      const systemMsg = history[0]?.content ?? ''
+      const rest = history.slice(1)
+      const ctx = rest.map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
+      const last = history[history.length - 1]?.content ?? ''
+      if (aiId === 'claude')     return sseStream(streamClaude(systemMsg, ctx, last), 'Claude')
+      if (aiId === 'gpt')        return sseStream(streamGPT(systemMsg, ctx, last), 'GPT')
+      if (aiId === 'gemini')     { const g = streamGeminiWithModel(systemMsg, ctx, last); return sseStream(g.stream, g.model) }
+      if (aiId === 'perplexity') { const p = streamPerplexityWithModel(systemMsg, ctx, last); return sseStream(p.stream, p.model) }
+      return new Response('AI non trovata', { status: 400 })
+    }
+
     const system = SYSTEM_PROMPTS[aiId]
     if (!system) return new Response('AI non trovata', { status: 400 })
     const aiName = aiId.charAt(0).toUpperCase() + aiId.slice(1)
