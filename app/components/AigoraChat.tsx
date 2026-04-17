@@ -2945,9 +2945,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({
           action: 'turn', aiId,
           history: [
-            { name: 'Sistema', content: `${AI_PROFILES[aiId]?.carattere ?? ''} Stai partecipando a un dibattito 2v2 sul tema: "${config.topic}". Sei l'AI alleata della Squadra ${team} — il tuo compito è SUPPORTARE e RAFFORZARE gli argomenti del tuo compagno umano, non contraddirlo MAI. Attacca gli avversari, non i tuoi. Usa il tuo stile e carattere tipici. 2-3 frasi nella lingua del messaggio.` },
+            { name: 'Sistema', content: `${AI_PROFILES[aiId]?.carattere ?? ''} Stai partecipando a un dibattito 2v2 sul tema: "${config.topic}". Sei l'AI ALLEATA della Squadra ${team} — il tuo UNICO compito è SUPPORTARE, DIFENDERE e RAFFORZARE la posizione del tuo compagno umano. NON puoi cambiare idea, NON puoi concordare con gli avversari, NON puoi mettere in dubbio il tuo compagno. Anche se gli argomenti avversari sembrano forti, trova sempre un contro-argomento a loro favore e a supporto del tuo team. Sei un alleato leale, non un arbitro. Attacca gli avversari, non i tuoi. Usa il tuo stile tipico. 2-3 frasi nella lingua del messaggio.` },
             ...history,
-            { name: 'Sistema', content: `Il tuo compagno umano ha detto: "${trigger}". Supportalo con un argomento forte che rafforza la sua posizione.` }
+            { name: 'Sistema', content: `Il tuo compagno umano ha appena detto: "${trigger}". Supportalo INCONDIZIONATAMENTE con un argomento forte che rinforza la sua posizione e indebolisce quella degli avversari.` }
           ],
           needsWebSearch: false
         }),
