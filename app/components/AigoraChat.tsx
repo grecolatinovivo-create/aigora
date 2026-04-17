@@ -554,7 +554,7 @@ interface TwoVsTwoConfig {
   topic: string
   teamA: { humanName: string; aiId: string }
   teamB: { aiId1: string; aiId2: string }  // squadra B: 2 AI
-  arbiterAiId: string
+  arbiterAiId: string  // 4a AI — non gioca mai
   maxRounds?: number
   roomCode?: string
   roomId?: string
@@ -748,7 +748,8 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [teamAHuman, setTeamAHuman] = useState(currentUserName || 'Tu')
   const [teamAAI, setTeamAAI] = useState('claude')
   const [teamBAI, setTeamBAI] = useState('gpt')
-  const [arbiter, setArbiter] = useState('gemini')
+  const [teamBAI2, setTeamBAI2] = useState('gemini')
+  const [arbiter, setArbiter] = useState('perplexity')
   const [maxRoundsChoice, setMaxRoundsChoice] = useState(5)
   const [step, setStep] = useState<'topic' | 'teams' | 'roulette' | 'share'>('topic')
   const [creating, setCreating] = useState(false)
@@ -790,6 +791,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     const randomB2 = rest[1].id
     const randomArbiter = rest[2].id
     setTeamBAI(randomB1)
+    setTeamBAI2(randomB2)
     setArbiter(randomArbiter)
 
     // Avvia la roulette — 2 slot: AI 1 di B, poi AI 2 di B
@@ -1097,7 +1099,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               </div>
 
               <button
-                onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: arbiter }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId })}
+                onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId })}
                 className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
                 Inizia la partita →
@@ -2966,7 +2968,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const aiName = AI_NAMES[aiId]
     const humanName = team === 'A' ? config.teamA.humanName : 'Squadra B'
     const enemyAiNames = team === 'A'
-      ? [AI_NAMES[config.teamB.aiId1], AI_NAMES[config.teamB.aiId2]].filter(Boolean).join(' e ')
+      ? `${AI_NAMES[config.teamB.aiId1]} e ${AI_NAMES[config.teamB.aiId2]}`
       : AI_NAMES[config.teamA.aiId]
 
     // Costruisci history etichettando chiaramente chi è alleato e chi avversario
@@ -3092,7 +3094,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTwoVsTwoState(prev => prev ? { ...prev, currentTurn: 'B', messagesThisTurn: 0 } : prev)
     setTwoVsTwoLoading(true)
 
-    // B risponde: prima aiId1, poi aiId2 — entrambi contro-argomentano
+    // B risponde: aiId1 e aiId2 (l'arbitro è separato e non gioca mai)
     const bConfig = twoVsTwoState.config.teamB
     const teamAHumanName = twoVsTwoState.config.teamA.humanName
     const teamAAiName = AI_NAMES[twoVsTwoState.config.teamA.aiId]
@@ -3204,7 +3206,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
     try {
       // Prompt arbitro: assegna 1 punto a round, nessuna motivazione per ogni round, solo esito secco finale
-      const promptContent = `Sei un arbitro imparziale. Hai assistito a un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Ci sono stati ${maxRounds} round. Assegna 1 punto per ogni round a chi ha argomentato meglio. Non spiegare ogni singolo round. Scrivi SOLO questa struttura, niente altro prima:\nROUND_SCORES: R1=A R2=B R3=A (continua per tutti i round, ogni round vince A o B o D per pareggio)\nPoi scrivi 2-3 frasi di commento finale sintetico sull'andamento generale del dibattito. Sii diretto e neutro. Non descrivere emozioni o sensazioni personali.`
+      const promptContent = `Sei un arbitro imparziale. Hai assistito a un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: ${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}. Ci sono stati ${maxRounds} round. Assegna 1 punto per ogni round a chi ha argomentato meglio. Non spiegare ogni singolo round. Scrivi SOLO questa struttura, niente altro prima:\nROUND_SCORES: R1=A R2=B R3=A (continua per tutti i round, ogni round vince A o B o D per pareggio)\nPoi scrivi 2-3 frasi di commento finale sintetico sull'andamento generale del dibattito. Sii diretto e neutro. Non descrivere emozioni o sensazioni personali.`
 
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -4277,15 +4279,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 </div>
                 {/* Squadra B — due AI */}
                 <div className="flex-1 flex flex-col justify-center gap-1 px-2 py-1.5" style={{ background: 'rgba(239,68,68,0.05)' }}>
-                  {[
-                    { name: AI_NAMES[twoVsTwoState.config.teamB.aiId1], color: AI_COLOR[twoVsTwoState.config.teamB.aiId1] },
-                    { name: AI_NAMES[twoVsTwoState.config.teamB.aiId2 ?? twoVsTwoState.config.teamB.aiId1], color: AI_COLOR[twoVsTwoState.config.teamB.aiId2 ?? twoVsTwoState.config.teamB.aiId1] },
-                  ].map((m, i) => (
+                  {[twoVsTwoState.config.teamB.aiId1, twoVsTwoState.config.teamB.aiId2].map((id, i) => (
                     <div key={i} className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ fontSize: 5, background: m.color }}>{m.name[0]}</div>
-                      <div className="text-[8px] font-semibold" style={{ color: '#f87171' }}>
-                        {m.name}
-                      </div>
+                      <div className="w-3 h-3 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0" style={{ fontSize: 5, background: AI_COLOR[id] }}>{AI_NAMES[id][0]}</div>
+                      <div className="text-[8px] font-semibold" style={{ color: '#f87171' }}>{AI_NAMES[id]}</div>
                     </div>
                   ))}
                 </div>
