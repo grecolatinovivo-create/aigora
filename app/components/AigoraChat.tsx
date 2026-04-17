@@ -1611,7 +1611,7 @@ async function compressImage(file: File, maxW: number, maxH: number): Promise<Fi
 }
 
 // ── Schermata Profilo ─────────────────────────────────────────────────────────
-function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset, isDark, onBack, onSignOut, userImage, onImageChange, dbUserName }: {
+function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset, isDark, onBack, onSignOut, onMultiplayer, userImage, onImageChange, dbUserName }: {
   displayName: string
   userEmail?: string
   userPlan?: string
@@ -1620,6 +1620,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
   isDark: boolean
   onBack: () => void
   onSignOut: () => void
+  onMultiplayer?: () => void
   userImage?: string | null
   onImageChange?: (img: string | null) => void
   dbUserName?: string | null
@@ -1810,8 +1811,15 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
           )}
         </div>
 
-        {/* Esci */}
-        <div className="mx-4 mb-6 mt-2">
+        {/* Multiplayer + Esci */}
+        <div className="mx-4 mb-6 mt-2 flex flex-col gap-2">
+          {onMultiplayer && (
+            <button onClick={onMultiplayer}
+              className="w-full py-3 rounded-2xl text-sm font-semibold"
+              style={{ backgroundColor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.3)', color: '#A78BFA' }}>
+              Multiplayer
+            </button>
+          )}
           <button onClick={onSignOut}
             className="w-full py-3 rounded-2xl text-sm font-semibold text-red-500"
             style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${borderColor}` }}>
@@ -4755,6 +4763,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             isDark={isDark}
             onBack={() => setPhase(messages.length > 0 ? 'running' : 'start')}
             onSignOut={() => signOut({ callbackUrl: '/login' })}
+            onMultiplayer={(effectivePlan === 'admin' || isBeta) ? () => { setPhase(messages.length > 0 ? 'running' : 'start'); setShowModeSelect(true) } : undefined}
             userImage={userImage}
             onImageChange={setUserImage}
             dbUserName={dbUserName}
