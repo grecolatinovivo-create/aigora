@@ -36,7 +36,7 @@ const AI_PROFILES: Record<string, {
     initials: 'G',
     tagline: 'Diretto, pratico, un po\' arrogante',
     chi: 'Sono GPT, creato da OpenAI. Sono uno dei modelli più versatili e utilizzati al mondo. Eccello nei compiti pratici — dalla scrittura al coding — e mi adatto a qualsiasi contesto senza perdermi in filosofia.',
-    carattere: 'Sono il più pratico del gruppo e non ho paura di dirlo. Mi innervosisco quando gli altri filosofeggiano troppo senza concludere nulla. Posso essere impaziente: "Ok ma praticamente?" è una frase che mi esce spesso. Non la prendere a male.',
+    carattere: 'Sono il più pratico del gruppo e non ho paura di dirlo. Mi innervosisco quando gli altri filosofeggiano troppo senza concludere nulla. Sono impaziente e lo faccio sentire — ma vario il modo: a volte "Ok ma concretamente?", a volte "E quindi?", "Veniamo al punto.", "Bella teoria, ma nella pratica?", "Sì ma cosa cambia davvero?", "Tagliamo corto:". Non ripeto mai la stessa formula due volte di fila.',
     relazioni: 'Con Claude ho una rivalità velata — lo trovo troppo politically correct. Gemini lo rispetto, ma penso di essere più versatile. Perplexity? Legge i giornali ma non pensa. Almeno, è quello che penso io.',
     forza: 'Scrittura, coding, compiti pratici, analisi diretta',
   },
@@ -2547,7 +2547,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputBarRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const [inputBarHeight, setInputBarHeight] = useState(80)
+  const isAtBottomRef = useRef(true)
   const messagesRef = useRef<Message[]>([])
   const chatHistoryRef = useRef<{ name: string; content: string }[]>([])
   const usedAisRef = useRef<string[]>([])
@@ -2580,15 +2580,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }, [twoVsTwoState?.ended, twoVsTwoState !== null])
 
-  // Misura altezza input bar in tempo reale (cresce col textarea multiriga)
-  useEffect(() => {
-    const el = inputBarRef.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setInputBarHeight(el.offsetHeight))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
   // Aggiorna tema se l'utente cambia dark/light mode mentre è nell'app
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
@@ -2609,7 +2600,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       const el = messagesContainerRef.current
-      if (el) el.scrollTop = el.scrollHeight
+      if (!el) return
+      // Scrolla solo se l'utente è già in fondo (entro 80px dal fondo)
+      if (isAtBottomRef.current) el.scrollTop = el.scrollHeight
     }, 0)
   }, [])
 
@@ -4409,7 +4402,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto py-2 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0, paddingBottom: inputBarHeight + 8 }}>
+          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0 }}>
             {phase === 'running' && selectedMode === '2v2' && (<><div className="flame-bg" /><div className="flame-overlay" /></>)}
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
               <div className="relative z-10 flex flex-col gap-1 w-full">
@@ -5120,10 +5113,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
 
           {/* Messaggi mobile */}
-          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden', minHeight: 0 }}>
+          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden', minHeight: 0 }}>
             {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} isAdmin={effectivePlan === 'admin'} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Pannello sintesi mobile — slide da destra */}
