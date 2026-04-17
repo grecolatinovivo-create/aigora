@@ -1370,7 +1370,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       </div>
 
       {/* ── MESSAGGI ── */}
-      <div className="flex-1 overflow-y-auto py-3 pb-4 px-3 flex flex-col gap-2 relative z-10">
+      <div className="flex-1 overflow-y-auto py-3 pb-4 px-3 flex flex-col gap-2 relative z-10" style={{ minHeight: 0 }}>
         {state.messages.map((msg, i) => {
           const isA = msg.team === 'A'
           const isArbiter = msg.team === 'arbiter'
@@ -4288,7 +4288,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden' }}>
+          <div className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0 }}>
             {phase === 'running' && selectedMode === '2v2' && (<><div className="flame-bg" /><div className="flame-overlay" /></>)}
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
               <div className="relative z-10 flex flex-col gap-1 w-full">
@@ -4991,7 +4991,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
 
           {/* Messaggi mobile */}
-          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden' }}>
+          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden', minHeight: 0 }}>
             {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} isAdmin={effectivePlan === 'admin'} />)}
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
             <div ref={messagesEndRef} />
