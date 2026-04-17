@@ -766,19 +766,6 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
   const [copied, setCopied] = useState(false)
-  const [isPortrait, setIsPortrait] = useState(false)
-  const [hintDismissed, setHintDismissed] = useState(false)
-
-  useEffect(() => {
-    const check = () => {
-      const portrait = window.innerHeight > window.innerWidth
-      setIsPortrait(portrait)
-      if (!portrait) setHintDismissed(false)
-    }
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
 
   // Quando l'utente sceglie l'AI per A, auto-assegna B e arbitro tra le rimanenti
   const handleTeamAAI = (id: string) => {
@@ -845,219 +832,157 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // ── Render: schermata fullscreen verticale stile WhatsApp ──
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-y-auto py-10"
-      style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,0.14) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(239,68,68,0.1) 0%, transparent 60%)' }}>
+    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f' }}>
 
-      {/* Navbar */}
-      <div className="fixed top-0 left-0 right-0 h-[52px] flex items-center justify-between px-6 z-50"
-        style={{ backgroundColor: 'rgba(7,7,15,0.5)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
-        <button onClick={step === 'share' ? () => setStep('teams') : step === 'teams' ? () => setStep('topic') : onBack}
-          className="flex items-center gap-2 text-sm font-medium transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Indietro
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
+        style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: 'rgba(7,7,15,0.97)', borderColor: 'rgba(255,255,255,0.07)' }}>
+        <button
+          onClick={step === 'share' ? () => setStep('teams') : step === 'teams' ? () => setStep('topic') : step === 'roulette' ? undefined : onBack}
+          className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
+          style={{ backgroundColor: 'rgba(255,255,255,0.06)', opacity: step === 'roulette' ? 0.3 : 1, pointerEvents: step === 'roulette' ? 'none' : 'auto' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <span className="font-black text-lg"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></span>
-        <div className="flex gap-2">
-          {['topic', 'teams', 'roulette', 'share'].map((s) => (
-            <div key={s} className="w-2 h-2 rounded-full transition-all"
-              style={{ background: step === s ? '#3b82f6' : 'rgba(255,255,255,0.2)', transform: step === s ? 'scale(1.3)' : 'scale(1)' }} />
-          ))}
+        <div className="flex-1 text-center">
+          <div className="font-black text-[15px]"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></div>
+          <div className="text-[11px] text-white/30">2 vs 2</div>
+        </div>
+        {/* Progress dots */}
+        <div className="flex gap-1.5 flex-shrink-0">
+          {(['topic', 'teams', 'roulette', 'share'] as const).map((s, i) => {
+            const stepIdx = ['topic','teams','roulette','share'].indexOf(step)
+            const isDone = i < stepIdx
+            const isCurrent = s === step
+            return (
+              <div key={s} className="rounded-full transition-all duration-300"
+                style={{
+                  width: isCurrent ? 20 : 6, height: 6,
+                  background: isCurrent ? '#3b82f6' : isDone ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.15)',
+                }} />
+            )
+          })}
         </div>
       </div>
 
-      {/* ── HINT ROTAZIONE ── */}
-      {isPortrait && !hintDismissed && step === 'teams' && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center pb-8 pointer-events-none">
-          <div className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl scale-in"
-            style={{ background: 'rgba(20,20,32,0.95)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-              style={{ animation: 'rotate-hint 2.5s ease-in-out infinite', transformOrigin: 'center' }}>
-              <rect x="5" y="2" width="14" height="20" rx="2" /><path d="M12 18h.01" />
-            </svg>
+      {/* Corpo scrollabile */}
+      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+
+        {/* ── STEP 1: Topic ── */}
+        {step === 'topic' && (
+          <div className="flex flex-col px-5 pt-8 pb-6 gap-6 min-h-full">
             <div>
-              <div className="text-white text-xs font-bold">Ruota il telefono</div>
-              <div className="text-white/40 text-[10px]">per la migliore esperienza</div>
+              <div className="text-2xl font-black text-white mb-1">Su cosa volete sfidarvi?</div>
+              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Scrivi l'argomento del dibattito.</div>
             </div>
-            <button onClick={() => setHintDismissed(true)} className="ml-2 text-white/30 hover:text-white/60 transition-colors text-lg leading-none">✕</button>
-          </div>
-        </div>
-      )}
 
-      {/* ── Bubble fluttuanti — stesse della start, distanza aumentata ── */}
-      {[
-        { top: '180px', left: 'calc(50% - 620px)', delay: '-2s',   dur: '14s', anim: 'float-1' },
-        { top: '320px', left: 'calc(50% - 610px)', delay: '-7s',   dur: '13s', anim: 'float-3' },
-        { top: '460px', left: 'calc(50% - 620px)', delay: '-4s',   dur: '15s', anim: 'float-2' },
-        { top: '600px', left: 'calc(50% - 605px)', delay: '-9s',   dur: '12s', anim: 'float-4' },
-        { top: '720px', left: 'calc(50% - 615px)', delay: '-5s',   dur: '14s', anim: 'float-1' },
-        { top: '840px', left: 'calc(50% - 605px)', delay: '-11s',  dur: '13s', anim: 'float-3' },
-        { top: '180px', right: 'calc(50% - 620px)', delay: '-3s',  dur: '13s', anim: 'float-2' },
-        { top: '320px', right: 'calc(50% - 610px)', delay: '-8s',  dur: '15s', anim: 'float-4' },
-        { top: '460px', right: 'calc(50% - 620px)', delay: '-6s',  dur: '12s', anim: 'float-1' },
-        { top: '600px', right: 'calc(50% - 605px)', delay: '-1s',  dur: '14s', anim: 'float-3' },
-        { top: '720px', right: 'calc(50% - 615px)', delay: '-10s', dur: '13s', anim: 'float-2' },
-        { top: '840px', right: 'calc(50% - 605px)', delay: '-4.5s',dur: '15s', anim: 'float-4' },
-      ].map(({ top, left, right, delay, dur, anim }: any, i) => {
-        const t = bubbleTopics2v2[i] ?? TOPIC_SUGGESTIONS[i % TOPIC_SUGGESTIONS.length]
-        return (
-          <button key={i}
-            onClick={() => { setTopic(t); setStep('teams') }}
-            className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] cursor-pointer transition-all hover:scale-105 hover:brightness-125"
-            style={{
-              top, left, right,
-              color: 'rgba(255,255,255,0.5)',
-              backgroundColor: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              backdropFilter: 'blur(6px)',
-              maxWidth: '160px',
-              textAlign: 'center',
-              lineHeight: 1.4,
-              animation: `${anim} ${dur} ease-in-out infinite`,
-              animationDelay: delay,
-              zIndex: 20,
-              pointerEvents: 'auto',
-            }}>
-            {t}
-          </button>
-        )
-      })}
+            <textarea
+              value={topic}
+              onChange={e => setTopic(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && topic.trim()) { e.preventDefault(); setStep('teams') } }}
+              placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030"
+              rows={3}
+              autoFocus
+              className="w-full rounded-2xl px-4 py-3.5 text-[15px] outline-none resize-none"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f0f0', lineHeight: 1.5, caretColor: '#3b82f6' }}
+            />
 
-      {/* ── iPad Pro landscape ── */}
-      <div className="scale-in relative" style={{ width: 720, maxWidth: '97vw', padding: '0 4px' }}>
-        <div className="relative" style={{ borderRadius: 22, height: 596 }}>
-
-          {/* Corpo scocca — vetro nero trasparente */}
-          <div className="absolute inset-0 rounded-[22px]" style={{
-            background: 'rgba(8, 8, 12, 0.72)',
-            backdropFilter: 'blur(32px) saturate(1.2)',
-            WebkitBackdropFilter: 'blur(32px) saturate(1.2)',
-            boxShadow: '0 0 0 1px rgba(255,255,255,0.10), 0 0 0 2px rgba(0,0,0,0.6), 0 50px 100px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.07)',
-          }} />
-
-          {/* ── Pulsanti lato SINISTRO (lato corto) ── */}
-          {/* Power/lock */}
-          <div className="absolute rounded-r-[2px]" style={{ left: -4, top: '38%', width: 4, height: 32, background: 'linear-gradient(to right, #2a2a2c, #3a3a3c)', boxShadow: '2px 0 4px rgba(0,0,0,0.6), inset -1px 0 0 rgba(255,255,255,0.05)' }} />
-
-          {/* ── Pulsanti lato SUPERIORE ── */}
-          {/* Volume su */}
-          <div className="absolute rounded-b-[2px]" style={{ top: -4, left: '30%', width: 28, height: 4, background: 'linear-gradient(to bottom, #2a2a2c, #3a3a3c)', boxShadow: '0 2px 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.05)' }} />
-          {/* Volume giù */}
-          <div className="absolute rounded-b-[2px]" style={{ top: -4, left: 'calc(30% + 36px)', width: 28, height: 4, background: 'linear-gradient(to bottom, #2a2a2c, #3a3a3c)', boxShadow: '0 2px 4px rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.05)' }} />
-          {/* Mute switch */}
-          <div className="absolute rounded-b-[2px]" style={{ top: -4, left: 'calc(30% - 20px)', width: 16, height: 4, background: 'linear-gradient(to bottom, #2a2a2c, #3a3a3c)', boxShadow: '0 2px 4px rgba(0,0,0,0.6)' }} />
-
-          {/* ── Fotocamera — lato DESTRO, centrata verticalmente ── */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col items-center justify-center" style={{ width: 14, zIndex: 20, gap: 4 }}>
-            {/* Modulo camera */}
-            <div className="relative flex items-center justify-center" style={{ width: 11, height: 11 }}>
-              <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle, #1a1a1c, #0d0d0f)', border: '1px solid #3a3a3c', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.9)' }} />
-              <div className="absolute rounded-full" style={{ width: 6, height: 6, background: 'radial-gradient(circle at 33% 33%, #162840, #04080f)', border: '0.5px solid #0a1828', boxShadow: 'inset 0 0 4px rgba(0,80,180,0.4), 0 0 2px rgba(0,0,0,0.8)' }} />
-              <div className="absolute rounded-full" style={{ width: 2.5, height: 2.5, top: 2, left: 2, background: 'rgba(255,255,255,0.18)' }} />
-            </div>
-            {/* LED */}
-            <div className="rounded-full" style={{ width: 3, height: 3, background: '#1a2a1a', border: '0.5px solid #2a3a2a' }} />
-          </div>
-
-          {/* Connettore USB-C — lato destro, sotto la camera */}
-          <div className="absolute right-0 top-1/2 translate-y-6 -translate-x-0" style={{ zIndex: 20 }}>
-            <div className="rounded-l-sm" style={{ width: 3, height: 12, background: '#111', border: '0.5px solid #3a3a3c' }} />
-          </div>
-
-          {/* Home bar — lato sinistro, centrata */}
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full" style={{ width: 4, height: 52, background: 'rgba(255,255,255,0.12)', zIndex: 20 }} />
-
-          {/* ── Screen con cornicina uniforme ── */}
-          {/* Cornicina nera — stessa distanza su tutti i lati */}
-          <div className="absolute rounded-[14px]" style={{ top: 14, left: 14, right: 14, bottom: 14, background: '#050508', zIndex: 5 }} />
-          {/* Glare */}
-          <div className="absolute pointer-events-none rounded-[14px]" style={{ top: 14, left: 14, right: 14, bottom: 14, background: 'linear-gradient(155deg, rgba(255,255,255,0.05) 0%, transparent 50%)', zIndex: 16 }} />
-
-          {/* Screen vero */}
-          <div className="relative overflow-hidden flex flex-col" style={{ margin: '14px', borderRadius: 10, background: '#0d0d14', height: 568, zIndex: 10 }}>
-
-          {/* ── STEP 1: Topic ── */}
-          {step === 'topic' && (
-            <div className="flex flex-col items-center justify-center flex-1 px-10 py-10 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-black text-white mb-1">Su cosa volete sfidarvi?</div>
-                <div className="text-sm text-white/40">L'argomento sarà assegnato a entrambe le squadre.</div>
+            {/* Suggerimenti come chip */}
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.25)' }}>Oppure scegli un tema</div>
+              <div className="flex flex-wrap gap-2">
+                {bubbleTopics2v2.slice(0, 10).map(t => (
+                  <button key={t} onClick={() => { setTopic(t); setStep('teams') }}
+                    className="px-3.5 py-1.5 rounded-full text-[12px] transition-all active:scale-95"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.55)' }}>
+                    {t}
+                  </button>
+                ))}
               </div>
-              <textarea value={topic} onChange={e => setTopic(e.target.value)}
-                placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030" rows={4}
-                className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-5 py-4 text-sm outline-none focus:border-blue-500/40 placeholder:text-white/20 resize-none"
-                autoFocus />
+            </div>
+
+            <div className="mt-auto pt-4">
               <button onClick={() => topic.trim() && setStep('teams')} disabled={!topic.trim()}
-                className="px-10 py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-30 transition-all hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.4)' }}>
-                Continua →
+                className="w-full py-4 rounded-2xl font-bold text-white text-[15px] disabled:opacity-30 transition-all active:scale-[0.98]"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: topic.trim() ? '0 4px 20px rgba(59,130,246,0.35)' : 'none' }}>
+                Avanti →
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ── STEP 2: Scegli la tua AI ── */}
-          {step === 'teams' && (
-            <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-6">
+        {/* ── STEP 2: Scegli la tua AI ── */}
+        {step === 'teams' && (
+          <div className="flex flex-col px-5 pt-8 pb-6 gap-6">
+            {/* Topic recap */}
+            <div className="px-4 py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="text-[10px] text-white/30 uppercase tracking-widest mb-0.5">Argomento</div>
+              <div className="text-[13px] font-semibold text-white/75 leading-snug">"{topic}"</div>
+            </div>
 
-              {/* Topic recap */}
-              <div className="text-center px-4 py-2 rounded-xl w-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[10px] text-white/30 uppercase tracking-widest mb-0.5">Argomento</div>
-                <div className="text-sm font-semibold text-white/80 truncate">"{topic}"</div>
-              </div>
-
-              {/* Scelta AI — 4 grandi pulsanti */}
-              <div className="w-full">
-                <div className="text-[10px] text-white/30 uppercase tracking-widest text-center mb-4">Scegli il tuo compagno AI</div>
-                <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
-                  {AI_OPTIONS.map(ai => (
-                    <button key={ai.id} onClick={() => {
-                      setTeamAAI(ai.id)
-                      // B e arbitro vengono assegnati casualmente dalla roulette in handleCreate
-                    }}
-                      className="flex flex-col items-center gap-2 py-4 px-3 rounded-2xl transition-all hover:scale-[1.03]"
-                      style={{ background: teamAAI === ai.id ? `${ai.color}20` : 'rgba(255,255,255,0.04)', border: teamAAI === ai.id ? `2px solid ${ai.color}60` : '1px solid rgba(255,255,255,0.08)' }}>
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm"
-                        style={{ background: ai.color }}>
-                        {ai.id === 'gemini' ? 'Ge' : ai.name[0]}
+            {/* Scelta AI */}
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.25)' }}>Scegli il tuo alleato AI</div>
+              <div className="flex flex-col gap-2.5">
+                {AI_OPTIONS.map(ai => (
+                  <button key={ai.id} onClick={() => setTeamAAI(ai.id)}
+                    className="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98]"
+                    style={{
+                      background: teamAAI === ai.id ? `${ai.color}18` : 'rgba(255,255,255,0.04)',
+                      border: teamAAI === ai.id ? `2px solid ${ai.color}55` : '1px solid rgba(255,255,255,0.07)',
+                    }}>
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0"
+                      style={{ background: ai.color, boxShadow: teamAAI === ai.id ? `0 0 16px ${ai.color}55` : 'none' }}>
+                      {ai.id === 'gemini' ? 'Ge' : ai.name[0]}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-bold text-[14px]" style={{ color: teamAAI === ai.id ? 'white' : 'rgba(255,255,255,0.6)' }}>{ai.name}</div>
+                      <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{AI_DESC[ai.id]}</div>
+                    </div>
+                    {teamAAI === ai.id && (
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: ai.color }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                       </div>
-                      <div className="text-xs font-bold" style={{ color: teamAAI === ai.id ? ai.color : 'rgba(255,255,255,0.5)' }}>{ai.name}</div>
-                    </button>
-                  ))}
-                </div>
+                    )}
+                  </button>
+                ))}
               </div>
-
-              <div className="text-[10px] text-white/25 text-center">Le AI avversaria e arbitro verranno assegnate dalla roulette</div>
-
-              {/* Selettore round */}
-              <div className="w-full max-w-xs">
-                <div className="text-[10px] text-white/30 uppercase tracking-widest text-center mb-3">Numero di round</div>
-                <div className="flex gap-2 justify-center">
-                  {[3, 5, 7, 9, 11].map(r => (
-                    <button key={r} onClick={() => setMaxRoundsChoice(r)}
-                      className="w-10 h-10 rounded-xl font-black text-sm transition-all hover:scale-105"
-                      style={{
-                        background: maxRoundsChoice === r ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.05)',
-                        border: maxRoundsChoice === r ? '2px solid rgba(99,102,241,0.7)' : '1px solid rgba(255,255,255,0.1)',
-                        color: maxRoundsChoice === r ? 'white' : 'rgba(255,255,255,0.4)',
-                        boxShadow: maxRoundsChoice === r ? '0 0 12px rgba(99,102,241,0.4)' : 'none',
-                      }}>
-                      {r}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* CTA */}
-              <button onClick={handleCreate} disabled={creating}
-                className="px-12 py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 transition-all hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #7C3AED)', boxShadow: '0 4px 24px rgba(99,102,241,0.4)' }}>
-                {creating ? 'Preparo la roulette…' : 'Avvia la roulette →'}
-              </button>
             </div>
-          )}
 
-          {/* ── STEP 3: Roulette ── */}
-          {step === 'roulette' && (
+            {/* Selettore round */}
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.25)' }}>Numero di round</div>
+              <div className="flex gap-2">
+                {[3, 5, 7, 9, 11].map(r => (
+                  <button key={r} onClick={() => setMaxRoundsChoice(r)}
+                    className="flex-1 h-11 rounded-xl font-black text-sm transition-all active:scale-95"
+                    style={{
+                      background: maxRoundsChoice === r ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)',
+                      border: maxRoundsChoice === r ? '2px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.08)',
+                      color: maxRoundsChoice === r ? 'white' : 'rgba(255,255,255,0.35)',
+                    }}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              Le AI avversarie e l'arbitro saranno assegnati dalla roulette
+            </div>
+
+            <button onClick={handleCreate} disabled={creating}
+              className="w-full py-4 rounded-2xl font-bold text-white text-[15px] disabled:opacity-50 transition-all active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, #3b82f6, #7C3AED)', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}>
+              {creating ? 'Preparo la roulette…' : 'Avvia la roulette →'}
+            </button>
+          </div>
+        )}
+
+        {/* ── STEP 3: Roulette ── */}
+        {step === 'roulette' && (
+          <div className="flex flex-col px-5 pt-8 pb-6 min-h-full">
             <RouletteScreen
               teamAAI={teamAAI}
               rouletteSlots={rouletteSlots}
@@ -1066,55 +991,68 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               ready={rouletteReady}
               onContinue={() => setStep('share')}
             />
-          )}
+          </div>
+        )}
 
-          {/* ── STEP 4: Condividi ── */}
-          {step === 'share' && (
-            <div className="flex flex-col items-center justify-center flex-1 px-10 py-8 gap-5">
-              {/* Titolo semplice */}
-              <div className="text-center">
-                <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">2 vs 2</div>
-                <div className="text-xl font-black text-white">Partita pronta</div>
-                <div className="text-white/40 text-sm mt-1">Condividi il codice con il tuo avversario</div>
-              </div>
+        {/* ── STEP 4: Condividi ── */}
+        {step === 'share' && (
+          <div className="flex flex-col px-5 pt-8 pb-6 gap-6">
+            <div>
+              <div className="text-2xl font-black text-white mb-1">Partita pronta.</div>
+              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Condividi il codice con il tuo avversario.</div>
+            </div>
 
-              {/* Codice */}
-              <div className="w-full rounded-3xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Codice di accesso</div>
-                <div className="text-4xl font-black text-white tracking-[0.15em] mb-4">{roomCode}</div>
-                <button onClick={handleCopy}
-                  className="w-full py-2.5 rounded-2xl text-sm font-bold transition-all"
-                  style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.07)', border: copied ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)', color: copied ? '#10A37F' : 'rgba(255,255,255,0.65)' }}>
-                  {copied ? 'Link copiato!' : 'Copia link'}
-                </button>
-              </div>
-
-              {/* Riepilogo squadre — con le AI reali estratte dalla roulette */}
-              <div className="w-full flex gap-3">
-                <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                  <div className="text-[9px] font-black uppercase text-blue-400 mb-1">SQUADRA A</div>
-                  <div className="text-xs text-white/70">{teamAHuman}</div>
-                  <div className="text-[10px] text-white/30">{AI_NAMES[teamAAI]}</div>
-                </div>
-                <div className="flex-shrink-0 flex items-center text-white/20 font-black text-sm">vs</div>
-                <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  <div className="text-[9px] font-black uppercase text-red-400 mb-1">SQUADRA B</div>
-                  <div className="text-[10px] text-white/60">{AI_NAMES[teamBAI]}</div>
-                  <div className="text-[10px] text-white/30">{AI_NAMES[arbiter]}</div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId })}
-                className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-                Inizia la partita →
+            {/* Codice grande */}
+            <div className="rounded-3xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>Codice di accesso</div>
+              <div className="text-5xl font-black text-white tracking-[0.2em] mb-5">{roomCode}</div>
+              <button onClick={handleCopy}
+                className="w-full py-3 rounded-2xl text-sm font-bold transition-all active:scale-[0.98]"
+                style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.07)', border: copied ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)', color: copied ? '#10A37F' : 'rgba(255,255,255,0.6)' }}>
+                {copied ? '✓ Link copiato' : 'Copia link'}
               </button>
             </div>
-          )}
 
+            {/* Riepilogo squadre */}
+            <div className="flex gap-3">
+              <div className="flex-1 rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                <div className="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">SQUADRA A</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
+                    style={{ background: '#3b82f6' }}>{teamAHuman[0]?.toUpperCase()}</div>
+                  <div className="text-[12px] font-semibold text-white/75 truncate">{teamAHuman}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
+                    style={{ background: AI_COLOR[teamAAI] }}>{teamAAI === 'gemini' ? 'Ge' : AI_NAMES[teamAAI][0]}</div>
+                  <div className="text-[11px] text-white/40">{AI_NAMES[teamAAI]}</div>
+                </div>
+              </div>
+              <div className="flex items-center text-white/20 font-black text-sm flex-shrink-0">vs</div>
+              <div className="flex-1 rounded-2xl p-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <div className="text-[9px] font-black uppercase tracking-widest text-red-400 mb-2">SQUADRA B</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
+                    style={{ background: AI_COLOR[teamBAI] }}>{teamBAI === 'gemini' ? 'Ge' : AI_NAMES[teamBAI][0]}</div>
+                  <div className="text-[11px] text-white/60">{AI_NAMES[teamBAI]}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
+                    style={{ background: AI_COLOR[teamBAI2] }}>{teamBAI2 === 'gemini' ? 'Ge' : AI_NAMES[teamBAI2][0]}</div>
+                  <div className="text-[11px] text-white/40">{AI_NAMES[teamBAI2]}</div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId })}
+              className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
+              Inizia la partita →
+            </button>
           </div>
-        </div>
+        )}
+
       </div>
     </div>
   )
