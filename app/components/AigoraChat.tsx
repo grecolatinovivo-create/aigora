@@ -2601,8 +2601,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTimeout(() => {
       const el = messagesContainerRef.current
       if (!el) return
-      // Scrolla solo se l'utente è già in fondo (entro 80px dal fondo)
-      if (isAtBottomRef.current) el.scrollTop = el.scrollHeight
+      // Con column-reverse, scrollTop=0 è il fondo. Scrolla solo se l'utente è già in fondo.
+      if (isAtBottomRef.current) el.scrollTop = 0
     }, 0)
   }, [])
 
@@ -4402,26 +4402,30 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0 }}>
+          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollTop < 80 }} className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col-reverse gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0 }}>
             {phase === 'running' && selectedMode === '2v2' && (<><div className="flame-bg" /><div className="flame-overlay" /></>)}
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
-              <div className="relative z-10 flex flex-col gap-1 w-full">
-                {twoVsTwoState.messages.map((msg, i) => {
+              // 2v2: figli diretti del flex-col-reverse, ordine naturale (il reverse esterno mette l'ultimo in fondo)
+              <>
+                {twoVsTwoLoading && !(twoVsTwoState.messages.length > 0 && twoVsTwoState.messages[twoVsTwoState.messages.length - 1].isAI && twoVsTwoState.messages[twoVsTwoState.messages.length - 1].streaming) && <ThinkingBubble
+                  aiId={twoVsTwoState.currentTurn === 'A' ? twoVsTwoState.config.teamA.aiId : twoVsTwoState.config.teamB.aiId1}
+                  isDark={true}
+                  align={twoVsTwoState.currentTurn === 'B' ? 'right' : 'left'}
+                />}
+                {twoVsTwoState.messages.slice().reverse().map((msg, i) => {
                   const isArbiter = msg.team === 'arbiter'
                   const isA = msg.team === 'A'
                   const alignRight = !isA
 
-                  // Arbitro — box centrato
                   if (isArbiter) return (
-                    <div key={i} className="mx-3 my-2 rounded-2xl p-3" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
+                    <div key={i} className="mx-3 my-2 rounded-2xl p-3 relative z-10" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
                       <div className="text-[8px] font-black uppercase mb-1" style={{ color: '#A78BFA' }}>{AI_NAMES[twoVsTwoState.config.arbiterAiId]} — Verdetto</div>
                       <div className="text-xs text-white/80 leading-relaxed">{msg.content}{msg.streaming && <span className="typewriter-cursor" />}</div>
                     </div>
                   )
 
-                  // Messaggi umani (squadra A — utente reale)
                   if (!msg.isAI && isA) return (
-                    <div key={i} className="flex justify-end px-3 mb-1 message-enter">
+                    <div key={i} className="flex justify-end px-3 mb-1 message-enter relative z-10">
                       <div style={{ maxWidth: '78%', minWidth: 0 }}>
                         <div className="rounded-2xl rounded-br-sm px-3 py-2 leading-relaxed text-white text-xs"
                           style={{ backgroundColor: '#1a3a5c', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
@@ -4431,7 +4435,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     </div>
                   )
 
-                  // Messaggi AI — stessa struttura di MessageBubble dark
                   const aiId = msg.aiId ?? ''
                   const avatarColor = AI_COLOR[aiId] || '#6B7280'
                   const bubbleDark: Record<string, { bg: string; nameColor: string; textColor: string }> = {
@@ -4443,7 +4446,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   const bubble = bubbleDark[aiId] ?? { bg: 'rgba(255,255,255,0.07)', nameColor: 'rgba(255,255,255,0.5)', textColor: 'rgba(255,255,255,0.85)' }
 
                   return (
-                    <div key={i} className={`flex items-end gap-2 px-3 mb-1 message-enter${alignRight ? ' flex-row-reverse' : ''}`} style={{ minWidth: 0 }}>
+                    <div key={i} className={`flex items-end gap-2 px-3 mb-1 message-enter relative z-10${alignRight ? ' flex-row-reverse' : ''}`} style={{ minWidth: 0 }}>
                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mb-0.5"
                         style={{ backgroundColor: avatarColor }}>
                         {aiId === 'gemini' ? 'Ge' : AI_NAMES[aiId]?.[0]}
@@ -4463,18 +4466,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     </div>
                   )
                 })}
-                {twoVsTwoLoading && !(twoVsTwoState.messages.length > 0 && twoVsTwoState.messages[twoVsTwoState.messages.length - 1].isAI && twoVsTwoState.messages[twoVsTwoState.messages.length - 1].streaming) && <ThinkingBubble
-                  aiId={twoVsTwoState.currentTurn === 'A' ? twoVsTwoState.config.teamA.aiId : twoVsTwoState.config.teamB.aiId1}
-                  isDark={true}
-                  align={twoVsTwoState.currentTurn === 'B' ? 'right' : 'left'}
-                />}
-                <div ref={messagesEndRef} />
-              </div>
+              </>
             ) : (
               <>
-                {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} isAdmin={effectivePlan === 'admin'} />)}
                 {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
-                <div ref={messagesEndRef} />
+                {messages.slice().reverse().map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} isAdmin={effectivePlan === 'admin'} />)}
               </>
             )}
           </div>
@@ -5113,9 +5109,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
 
           {/* Messaggi mobile */}
-          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }} className="flex-1 overflow-y-auto" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden', minHeight: 0 }}>
-            {messages.map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} isAdmin={effectivePlan === 'admin'} />)}
+          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollTop < 80 }} className="flex-1 overflow-y-auto flex flex-col-reverse" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden', minHeight: 0 }}>
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
+            {messages.slice().reverse().map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} isAdmin={effectivePlan === 'admin'} />)}
           </div>
 
           {/* Pannello sintesi mobile — slide da destra */}
