@@ -2931,7 +2931,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const { config } = state
     const aiId = team === 'A' ? config.teamA.aiId : config.teamB.aiId1
     const aiName = AI_NAMES[aiId]
-    const history = state.messages.map(m => ({ name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author, content: m.content }))
+    const humanName = team === 'A' ? config.teamA.humanName : 'Squadra B'
+    const enemyAiNames = team === 'A'
+      ? [AI_NAMES[config.teamB.aiId1], AI_NAMES[config.teamB.aiId2]].filter(Boolean).join(' e ')
+      : AI_NAMES[config.teamA.aiId]
+
+    // Costruisci history etichettando chiaramente chi è alleato e chi avversario
+    const history = state.messages
+      .filter(m => m.team !== 'arbiter')
+      .map(m => {
+        const isAlly = m.team === team
+        const label = isAlly
+          ? (m.isAI ? `${m.author} (tuo alleato)` : `${m.author} (tuo compagno)`)
+          : (m.isAI ? `${m.author} (avversario)` : `${m.author} (avversario)`)
+        return { name: label, content: m.content }
+      })
 
     // Aggiungi placeholder con streaming (mostra i tre puntini finché content è vuoto)
     setTwoVsTwoState(prev => prev ? {
@@ -2945,9 +2959,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({
           action: 'turn', aiId,
           history: [
-            { name: 'Sistema', content: `${AI_PROFILES[aiId]?.carattere ?? ''} Stai partecipando a un dibattito 2v2 sul tema: "${config.topic}". Sei l'AI ALLEATA della Squadra ${team} — il tuo UNICO compito è SUPPORTARE, DIFENDERE e RAFFORZARE la posizione del tuo compagno umano. NON puoi cambiare idea, NON puoi concordare con gli avversari, NON puoi mettere in dubbio il tuo compagno. Anche se gli argomenti avversari sembrano forti, trova sempre un contro-argomento a loro favore e a supporto del tuo team. Sei un alleato leale, non un arbitro. Attacca gli avversari, non i tuoi. Usa il tuo stile tipico. 2-3 frasi nella lingua del messaggio.` },
+            { name: 'Sistema', content: `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore, attacca le posizioni di ${enemyAiNames}. Tono diretto, coinvolto, da alleato — non da professore neutrale. 2-3 frasi nella lingua del messaggio. ${AI_PROFILES[aiId]?.carattere ?? ''}` },
             ...history,
-            { name: 'Sistema', content: `Il tuo compagno umano ha appena detto: "${trigger}". Supportalo INCONDIZIONATAMENTE con un argomento forte che rinforza la sua posizione e indebolisce quella degli avversari.` }
+            { name: 'Sistema', content: `${humanName} ha appena detto: "${trigger}". Schierati con lui, rinforza il suo punto e smonta quello degli avversari.` }
           ],
           needsWebSearch: false
         }),
@@ -3040,7 +3054,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
     // B risponde: prima aiId1, poi aiId2 — entrambi contro-argomentano
     const bConfig = twoVsTwoState.config.teamB
-    const bHistory = twoVsTwoState.messages.map(m => ({ name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author, content: m.content }))
+    const teamAHumanName = twoVsTwoState.config.teamA.humanName
+    const teamAAiName = AI_NAMES[twoVsTwoState.config.teamA.aiId]
+    const bHistory = twoVsTwoState.messages
+      .filter(m => m.team !== 'arbiter')
+      .map(m => {
+        const isEnemy = m.team === 'A'
+        const label = isEnemy
+          ? (m.isAI ? `${m.author} (avversario)` : `${m.author} (avversario)`)
+          : `${m.author} (tuo alleato)`
+        return { name: label, content: m.content }
+      })
 
     for (const bAiId of [bConfig.aiId1, bConfig.aiId2]) {
       setTwoVsTwoState(prev => prev ? {
@@ -3054,9 +3078,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({
           action: 'turn', aiId: bAiId,
           history: [
-            { name: 'Sistema', content: `${AI_PROFILES[bAiId]?.carattere ?? ''} Sei nella Squadra B di questo dibattito 2v2 sul tema: "${twoVsTwoState.config.topic}". Devi contro-argomentare la posizione della Squadra A con il tuo stile tipico. 2-3 frasi nella lingua del messaggio.` },
+            { name: 'Sistema', content: `Sei nella squadra avversaria contro ${teamAHumanName} e ${teamAAiName}. Dibattito: "${twoVsTwoState.config.topic}". Parla da avversario convinto: attacca i loro argomenti, smonta le loro posizioni, difendi la tesi opposta. Tono diretto e combattivo. 2-3 frasi nella lingua del messaggio. ${AI_PROFILES[bAiId]?.carattere ?? ''}` },
             ...bHistory,
-            { name: 'Sistema', content: `Rispondi a: "${text}"` }
+            { name: 'Sistema', content: `${teamAHumanName} ha appena detto: "${text}". Attacca il suo argomento.` }
           ],
           needsWebSearch: false
         }),
