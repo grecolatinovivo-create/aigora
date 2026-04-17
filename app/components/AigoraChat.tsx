@@ -2606,7 +2606,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const historyName = userName.trim() || 'Utente'
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // setTimeout(0) garantisce che il DOM abbia finito di renderizzare prima di scrollare
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 0)
   }, [])
 
   useEffect(() => {
