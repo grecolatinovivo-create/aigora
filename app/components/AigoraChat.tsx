@@ -346,9 +346,8 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
           {(() => {
             const isSelected = selected === 'classico'
             return (
-              <div onClick={() => selected === 'classico' ? onSelect('classico') : setSelected('classico')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
-                style={{ animationDelay: '0.05s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
-                <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 160, height: 336 }}>
+              <div className="flex flex-col items-center gap-4 scale-in" style={{ animationDelay: '0.05s', animationFillMode: 'both', cursor: 'not-allowed', opacity: 0.45 }}>
+                <div className="relative" style={{ width: 160, height: 336 }}>
                   <div className="absolute inset-0 rounded-[38px]"
                     style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #10A37F, 0 0 40px rgba(16,163,127,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
                   {/* Glare */}
@@ -390,8 +389,12 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
                       </div>
                     </div>
                   </div>
+                  {/* Coming Soon overlay */}
+                  <div className="absolute inset-0 rounded-[38px] flex flex-col items-center justify-center gap-1.5" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)', zIndex: 30 }}>
+                    <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}>Coming Soon</div>
+                  </div>
                 </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest transition-colors" style={{ color: isSelected ? '#10A37F' : 'rgba(255,255,255,0.25)' }}>Classico</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Classico</div>
               </div>
             )
           })()}
@@ -463,9 +466,8 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
           {(() => {
             const isSelected = selected === 'devil'
             return (
-              <div onClick={() => selected === 'devil' ? onSelect('devil') : setSelected('devil')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
-                style={{ animationDelay: '0.25s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05)' : 'scale(1)' }}>
-                <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 160, height: 336 }}>
+              <div className="flex flex-col items-center gap-4 scale-in" style={{ animationDelay: '0.25s', animationFillMode: 'both', cursor: 'not-allowed', opacity: 0.45 }}>
+                <div className="relative" style={{ width: 160, height: 336 }}>
                   <div className="absolute inset-0 rounded-[38px]"
                     style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #ef4444, 0 0 40px rgba(239,68,68,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
                   <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top:6,left:6,right:6,height:'45%',background:'linear-gradient(160deg,rgba(255,255,255,0.07) 0%,transparent 60%)',zIndex:10 }} />
@@ -505,8 +507,12 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
                       <div className="flex-shrink-0 px-1.5 py-1 rounded-lg text-[6px] font-bold whitespace-nowrap" style={{ background:'rgba(239,68,68,0.2)',border:'1px solid rgba(239,68,68,0.4)',color:'#f87171' }}>Fine turno →</div>
                     </div>
                   </div>
+                  {/* Coming Soon overlay */}
+                  <div className="absolute inset-0 rounded-[38px] flex flex-col items-center justify-center gap-1.5" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)', zIndex: 30 }}>
+                    <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}>Coming Soon</div>
+                  </div>
                 </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest transition-colors" style={{ color: isSelected ? '#ef4444' : 'rgba(255,255,255,0.25)' }}>Devil's Advocate</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Devil's Advocate</div>
               </div>
             )
           })()}
