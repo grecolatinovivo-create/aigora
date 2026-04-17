@@ -2478,6 +2478,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const chatTitleRef = useRef<string>('')
 
   const saveCurrentChat = useCallback(async () => {
+    if (isLoadingHistoryRef.current) return
     if (messagesRef.current.length < 2) return
 
     // Genera titolo contestuale la prima volta (quando abbiamo almeno 1 msg AI)
@@ -2524,6 +2525,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const waitingForUserRef = useRef(false)   // ref speculare a waitingForUser
   const aiTurnCountRef = useRef(0)
   const perplexityTurnCountRef = useRef(0)  // conta solo i turni di Perplexity
+  const isLoadingHistoryRef = useRef(false) // previeni saveCurrentChat durante apertura chat da cronologia
 
   // Aggiorna tema se l'utente cambia dark/light mode mentre è nell'app
   useEffect(() => {
@@ -3462,7 +3464,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   <SwipeableChatRow
                     key={chat.id}
                     chat={chat}
-                    onOpen={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running'); setShowHistory(false) }}
+                    onOpen={() => {
+                      isLoadingHistoryRef.current = true
+                      currentChatIdRef.current = chat.id
+                      chatTitleRef.current = chat.title
+                      chatHistoryRef.current = chat.history ?? []
+                      setMessages(chat.messages)
+                      setPhase('running')
+                      setShowHistory(false)
+                      setTimeout(() => { isLoadingHistoryRef.current = false }, 100)
+                    }}
                     onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
                     bgColor="rgba(10,10,18,0.97)"
                   />
@@ -3884,7 +3895,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             ) : (
               savedChats.map(chat => (
                 <div key={chat.id} className="flex items-center group border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <button onClick={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running'); setShowHistory(false) }}
+                  <button onClick={() => {
+                      isLoadingHistoryRef.current = true
+                      currentChatIdRef.current = chat.id
+                      chatTitleRef.current = chat.title
+                      chatHistoryRef.current = chat.history ?? []
+                      setMessages(chat.messages)
+                      setPhase('running')
+                      setShowHistory(false)
+                      setTimeout(() => { isLoadingHistoryRef.current = false }, 100)
+                    }}
                     className="flex-1 text-left px-5 py-3 min-w-0">
                     <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
                     <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
@@ -3899,8 +3919,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             )}
           </div>
           <div className="px-5 py-4 border-t border-white/8">
-            <button onClick={() => {
+            <button onClick={async () => {
+              const ids = savedChats.map(c => c.id)
               setSavedChats([])
+              // Cancella tutte le chat dal server
+              await Promise.all(ids.map(id => fetch(`/api/chats/${id}`, { method: 'DELETE' }).catch(() => {})))
             }} className="text-red-400/60 hover:text-red-400 text-xs transition-colors">
               Cancella cronologia
             </button>
@@ -4640,7 +4663,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 <SwipeableChatRow
                   key={chat.id}
                   chat={chat}
-                  onOpen={() => { setMessages(chat.messages); chatHistoryRef.current = chat.history; setPhase('running') }}
+                  onOpen={() => {
+                    isLoadingHistoryRef.current = true
+                    currentChatIdRef.current = chat.id
+                    chatTitleRef.current = chat.title
+                    chatHistoryRef.current = chat.history ?? []
+                    setMessages(chat.messages)
+                    setPhase('running')
+                    setTimeout(() => { isLoadingHistoryRef.current = false }, 100)
+                  }}
                   onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
                   bgColor={bgPreset.value}
                 />
