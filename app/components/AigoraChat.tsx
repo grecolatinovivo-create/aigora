@@ -311,9 +311,10 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
   const info = MODE_INFO[selected]
 
   return (
+    <>
+    <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />
     <div className="fixed inset-0 z-[9999] flex flex-col overflow-hidden"
-      style={{ backgroundColor: '#07070f' }}
-      ref={el => { if (el) { document.body.style.backgroundColor = '#07070f'; document.documentElement.style.backgroundColor = '#07070f' } }}>
+      style={{ backgroundColor: '#07070f' }}>
 
       {/* Header compatto */}
       <div className="flex-shrink-0 flex items-center px-5 border-b"
@@ -402,6 +403,7 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
 
       </div>
     </div>
+    </>
   )
 }
 
@@ -710,8 +712,10 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 
   // ── Render: schermata fullscreen verticale stile WhatsApp ──
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f', backgroundColor: '#07070f' }}
-      ref={el => { if (el) { document.body.style.backgroundColor = '#07070f'; document.documentElement.style.backgroundColor = '#07070f' } }}>
+    <>
+    {/* Pannello di copertura safe-area — copre anche le bande sopra/sotto */}
+    <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />
+    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f' }}>
 
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
@@ -771,20 +775,41 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               {/* Area centrale */}
               <div className="flex-1 flex flex-col items-center justify-center gap-6">
                 {/* Dado — sempre visibile, cliccabile solo prima della rivelazione */}
-                <button
-                  onClick={handleRoll}
-                  disabled={topicRevealed || diceRolling}
-                  className="flex items-center justify-center rounded-full transition-transform active:scale-95"
-                  style={{
-                    width: 120, height: 120,
-                    background: topicRevealed ? 'rgba(124,58,237,0.15)' : 'linear-gradient(135deg, rgba(124,58,237,0.35), rgba(59,130,246,0.25))',
-                    border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.2)' : 'rgba(167,139,250,0.4)'}`,
-                    cursor: topicRevealed ? 'default' : 'pointer',
-                    animation: diceRolling ? 'dice-roll 0.9s ease-in-out' : (topicRevealed ? 'none' : 'dice-idle 3s ease-in-out infinite'),
-                    fontSize: 52,
-                  }}>
-                  🎲
-                </button>
+                <div className="flex flex-col items-center gap-3">
+                  <button
+                    onClick={handleRoll}
+                    disabled={topicRevealed || diceRolling}
+                    className="flex items-center justify-center rounded-full"
+                    style={{
+                      width: 130, height: 130,
+                      background: topicRevealed ? 'rgba(124,58,237,0.12)' : 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))',
+                      border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.15)' : 'rgba(167,139,250,0.4)'}`,
+                      cursor: topicRevealed ? 'default' : 'pointer',
+                      animation: diceRolling ? 'dice-roll 1.1s cubic-bezier(0.25,0.46,0.45,0.94) forwards' : (topicRevealed ? 'none' : 'dice-idle 3s ease-in-out infinite'),
+                      fontSize: 56,
+                      flexShrink: 0,
+                    }}>
+                    🎲
+                  </button>
+                  {/* ALEA IACTA EST — appare durante e dopo il lancio */}
+                  {(diceRolling || topicRevealed) && (
+                    <div style={{
+                      fontFamily: 'Georgia, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      letterSpacing: '0.28em',
+                      color: 'rgba(167,139,250,0.85)',
+                      animation: diceRolling ? 'alea-appear 0.4s ease-out forwards' : 'none',
+                    }}>
+                      ALEA IACTA EST!
+                    </div>
+                  )}
+                  {/* Hint pre-lancio */}
+                  {!topicRevealed && !diceRolling && (
+                    <div className="text-[12px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Tocca per lanciare</div>
+                  )}
+                </div>
 
                 {/* Risultato rivelato — appare sotto il dado */}
                 {topicRevealed && (
@@ -956,6 +981,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 
       </div>
     </div>
+    </>
   )
 }
 
