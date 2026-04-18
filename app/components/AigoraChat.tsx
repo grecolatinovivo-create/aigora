@@ -727,6 +727,8 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
   const [copied, setCopied] = useState(false)
+  // Transizione desktop iPad→iPhone
+  const [desktopTransition, setDesktopTransition] = useState<'idle' | 'exit' | 'done'>('idle')
   // AI-chosen topic: random pick from pool, revealed on dice roll
   const [aiTopicPool] = useState<string[]>(() => [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5))
   const [aiTopicIndex, setAiTopicIndex] = useState(0)
@@ -911,20 +913,12 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           </div>
         )}
 
-        {/* ── STEP 4: Condividi ── */}
+        {/* ── STEP 4: Riepilogo squadre ── */}
         {step === 'share' && (
           <div className="flex flex-col px-5 pt-8 pb-6 gap-6">
             <div>
               <div className="text-2xl font-black text-white mb-1">Partita pronta.</div>
-              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Condividi il codice con il tuo avversario.</div>
-            </div>
-            <div className="rounded-3xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>Codice di accesso</div>
-              <div className="text-5xl font-black text-white tracking-[0.2em] mb-5">{roomCode}</div>
-              <button onClick={handleCopy} className="w-full py-3 rounded-2xl text-sm font-bold transition-all active:scale-[0.98]"
-                style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.07)', border: copied ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)', color: copied ? '#10A37F' : 'rgba(255,255,255,0.6)' }}>
-                {copied ? '✓ Link copiato' : 'Copia link'}
-              </button>
+              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Tutto pronto. Inizia quando vuoi.</div>
             </div>
             <div className="flex gap-3">
               <div className="flex-1 rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
@@ -951,7 +945,17 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 </div>
               </div>
             </div>
-            <button onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId })}
+            {/* Bottone: su desktop triggera transizione iPad→iPhone, su mobile chiama subito onStart */}
+            <button
+              onClick={() => {
+                const startConfig = { topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId }
+                if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
+                  setDesktopTransition('exit')
+                  setTimeout(() => { setDesktopTransition('done'); onStart(startConfig) }, 500)
+                } else {
+                  onStart(startConfig)
+                }
+              }}
               className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
               Inizia la partita →
@@ -1012,8 +1016,14 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 
       {/* ── LAYOUT DESKTOP: cornice iPad orizzontale ── */}
       <div className="hidden lg:flex flex-1 items-center justify-center" style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(124,58,237,0.12) 0%, transparent 70%)' }}>
-        {/* Cornice iPad landscape */}
-        <div style={{ position: 'relative', width: 1024, height: 680 }}>
+        {/* Cornice iPad landscape — esce con fade+scale quando desktopTransition === 'exit' */}
+        <div style={{
+          position: 'relative', width: 1024, height: 680,
+          transition: 'opacity 0.45s ease, transform 0.45s ease',
+          opacity: desktopTransition === 'exit' ? 0 : 1,
+          transform: desktopTransition === 'exit' ? 'scale(0.92)' : 'scale(1)',
+          pointerEvents: desktopTransition === 'exit' ? 'none' : 'auto',
+        }}>
           {/* Corpo iPad */}
           <div className="absolute inset-0 rounded-[28px]"
             style={{ background: '#1a1a1e', boxShadow: '0 0 0 1.5px #3a3a3c, 0 40px 120px rgba(0,0,0,0.8), 0 0 0 0.5px #555 inset' }} />
@@ -2021,6 +2031,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [show2v2Setup, setShow2v2Setup] = useState(false)
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
+  const [phoneEnterAnim, setPhoneEnterAnim] = useState(false)
   const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
@@ -2843,6 +2854,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
     setShow2v2Setup(false)
+    setPhoneEnterAnim(true)
+    setTimeout(() => setPhoneEnterAnim(false), 600)
     // Animazione navbar: prima "2 VS 2", poi dopo 2.5s il tema
     setShow2v2Label('title')
     setTimeout(() => setShow2v2Label('topic'), 2500)
@@ -4163,7 +4176,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         style={{ borderRadius: 50 * phoneScale }}
       >
       <div
-        className="phone-shell scale-in"
+        className={`phone-shell${phoneEnterAnim ? ' iphone-enter' : ' scale-in'}`}
         style={{
           width: 390,
           height: 790,
