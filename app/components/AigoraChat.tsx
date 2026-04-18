@@ -1136,10 +1136,18 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
   const { config } = state
 
   // ── Coin flip ── mostrato prima del primo messaggio
-  const [coinPhase, setCoinPhase] = useState<'flipping' | 'result' | 'done'>(
-    state.messages.length === 0 ? 'flipping' : 'done'
-  )
-  const [coinWinner, setCoinWinner] = useState<'A' | 'B'>(() => (Math.random() < 0.5 ? 'A' : 'B'))
+  const isFirstMount = useRef(true)
+  const [coinPhase, setCoinPhase] = useState<'flipping' | 'result' | 'done'>('flipping')
+  const [coinWinner] = useState<'A' | 'B'>(() => (Math.random() < 0.5 ? 'A' : 'B'))
+  useEffect(() => {
+    // Se la partita ha già messaggi (es. reload), salta il coin flip
+    if (state.messages.length > 0 && isFirstMount.current) {
+      isFirstMount.current = false
+      setCoinPhase('done')
+      return
+    }
+    isFirstMount.current = false
+  }, [])
   useEffect(() => {
     if (coinPhase !== 'flipping') return
     const t = setTimeout(() => setCoinPhase('result'), 1800)
@@ -1368,7 +1376,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       {coinPhase !== 'done' && (
         <div
           onClick={() => { if (coinPhase === 'result') setCoinPhase('done') }}
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-8"
+          className="absolute inset-0 z-[200] flex flex-col items-center justify-center gap-8"
           style={{ background: 'rgba(7,7,15,0.97)', backdropFilter: 'blur(16px)', cursor: coinPhase === 'result' ? 'pointer' : 'default' }}
         >
           {/* Moneta */}
