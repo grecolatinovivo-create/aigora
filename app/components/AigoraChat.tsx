@@ -2564,7 +2564,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const displayName = userName.trim() || 'Tu'
   const historyName = userName.trim() || 'Utente'
 
-  // ── Colore chrome mobile — aggiorna body/html/meta ad ogni cambio di schermata o tema ──
+  // ── Colore sfondo body/html — aggiorna ad ogni cambio di schermata o tema ──
   useEffect(() => {
     let color = '#07070f'
     if (phase === 'running' || phase === 'done' || phase === 'history' || phase === 'profile' || phase === 'new') {
@@ -2572,20 +2572,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
     document.body.style.setProperty('background-color', color, 'important')
     document.documentElement.style.setProperty('background-color', color, 'important')
-    // Meta theme-color — crealo se non esiste
-    let meta = document.querySelector("meta[name='theme-color']")
-    if (!meta) {
-      meta = document.createElement('meta')
-      ;(meta as HTMLMetaElement).name = 'theme-color'
-      document.head.appendChild(meta)
-    }
-    meta.setAttribute('content', color)
-    // Status bar iOS — icone bianche su sfondo scuro, nere su sfondo chiaro
-    const colorIsDark = color === '#07070f' || color === '#0d0d14' || color === '#111118'
-    let metaStatus = document.querySelector("meta[name='apple-mobile-web-app-status-bar-style']")
-    if (metaStatus) {
-      metaStatus.setAttribute('content', colorIsDark ? 'black-translucent' : 'default')
-    }
   }, [phase, bgPreset.value, showModeSelect, show2v2Setup, selectedMode, twoVsTwoState])
 
 
