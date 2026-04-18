@@ -2572,6 +2572,24 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     return bgPreset.header
   })()
 
+  // ── Safe area divs — creati una volta sola, sempre presenti nel DOM ──
+  const safeTopRef = useRef<HTMLDivElement | null>(null)
+  const safeBottomRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    // Crea i div fissi per il color sampling di Safari iOS
+    const top = document.createElement('div')
+    top.style.cssText = 'position:fixed;top:0;left:0;right:0;height:50px;pointer-events:none;z-index:1'
+    document.body.appendChild(top)
+    safeTopRef.current = top
+
+    const bottom = document.createElement('div')
+    bottom.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:50px;pointer-events:none;z-index:1'
+    document.body.appendChild(bottom)
+    safeBottomRef.current = bottom
+
+    return () => { top.remove(); bottom.remove() }
+  }, [])
+
   // ── Theme color dinamico per mobile (chrome del browser) ──
   useEffect(() => {
     let color = '#07070f' // default: home/landing
@@ -2580,21 +2598,24 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     } else if (selectedMode === '2v2' && twoVsTwoState) {
       color = '#0d0d14'
     } else if (phase === 'running' || phase === 'done') {
-      color = bgPreset.header  // header della chat = fascia superiore
+      color = bgPreset.header
     } else if (phase === 'history' || phase === 'profile' || phase === 'new') {
       color = bgPreset.header
     } else if (phase === 'start') {
       color = '#07070f'
     }
-    // Rimuovi tutti i meta theme-color esistenti (Next.js ne può creare più di uno)
+    // Aggiorna meta theme-color
     document.querySelectorAll('meta[name="theme-color"]').forEach(el => el.remove())
     const m = document.createElement('meta')
     m.setAttribute('name', 'theme-color')
     m.setAttribute('content', color)
     document.head.appendChild(m)
-    // Imposta anche html e body così le safe area (sopra e sotto) prendono lo stesso colore
+    // Aggiorna html/body
     document.documentElement.style.backgroundColor = color
     document.body.style.backgroundColor = color
+    // Aggiorna i div fissi per il color sampling di Safari
+    if (safeTopRef.current) safeTopRef.current.style.backgroundColor = color
+    if (safeBottomRef.current) safeBottomRef.current.style.backgroundColor = color
   }, [showModeSelect, show2v2Setup, selectedMode, twoVsTwoState, phase, bgPreset.header])
 
   const scrollToBottom = useCallback(() => {
@@ -4003,13 +4024,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   return (
     <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
-      {/* ── Safe area color sampling — solo mobile ──
-          Safari iOS campiona il colore del toolbar dagli elementi position:fixed
-          vicino ai bordi. Questi div fissi invisibili forzano il colore corretto. */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 pointer-events-none"
-        style={{ height: '50px', backgroundColor: safeAreaColor, zIndex: 1 }} />
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 pointer-events-none"
-        style={{ height: '50px', backgroundColor: safeAreaColor, zIndex: 1 }} />
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
       {messages.length === 0 && selectedMode !== '2v2' && [
