@@ -3573,27 +3573,27 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
         {/* ── Pannello cronologia (disponibile anche dalla start) ── */}
         <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
-          <div className="w-72 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
-              <span className="text-white font-bold text-sm">Cronologia</span>
+          <div className="w-72 h-full flex flex-col" style={{ backgroundColor: bgPreset.value, borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, backdropFilter: 'blur(20px)' }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+              <span className="font-bold text-sm" style={{ color: isDark ? '#fff' : '#111' }}>Cronologia</span>
               <div className="flex items-center gap-3">
                 <button onClick={() => { handleReset(); setPhase('new'); setShowHistory(false) }}
                   className="text-purple-400 hover:text-purple-300 text-xs font-semibold transition-colors">
                   + Nuova
                 </button>
-                <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
+                <button onClick={() => setShowHistory(false)} className="text-xl leading-none transition-colors" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>×</button>
               </div>
             </div>
             {/* Undo banner */}
             {undoChat && (
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/8" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
-                <span className="text-white/60 text-xs truncate mr-2">"{undoChat.title}" eliminata · rimossa entro 30gg</span>
+              <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(239,68,68,0.1)' }}>
+                <span className="text-xs truncate mr-2" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>"{undoChat.title}" eliminata · rimossa entro 30gg</span>
                 <button onClick={handleUndoDelete} className="text-red-400 text-xs font-bold flex-shrink-0 hover:text-red-300 transition-colors">Annulla</button>
               </div>
             )}
             <div className="flex-1 overflow-y-auto py-2">
               {savedChats.length === 0 ? (
-                <p className="text-white/25 text-xs text-center mt-8 px-4">Nessuna chat salvata.</p>
+                <p className="text-xs text-center mt-8 px-4" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)' }}>Nessuna chat salvata.</p>
               ) : (
                 savedChats.map(chat => (
                   <SwipeableChatRow
@@ -3610,7 +3610,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                       setTimeout(() => { isLoadingHistoryRef.current = false }, 100)
                     }}
                     onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
-                    bgColor="rgba(10,10,18,0.97)"
+                    bgColor={bgPreset.value}
+                    isDark={isDark}
                   />
                 ))
               )}
