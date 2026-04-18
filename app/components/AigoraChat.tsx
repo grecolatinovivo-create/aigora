@@ -2563,6 +2563,31 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const displayName = userName.trim() || 'Tu'
   const historyName = userName.trim() || 'Utente'
 
+  // ── Theme color dinamico per mobile (chrome del browser) ──
+  useEffect(() => {
+    let color = '#07070f' // default: home/landing
+    if (showModeSelect) {
+      color = '#07070f'
+    } else if (show2v2Setup) {
+      color = '#07070f'
+    } else if (selectedMode === '2v2' && twoVsTwoState) {
+      color = '#0d0d14'
+    } else if (phase === 'running' || phase === 'done') {
+      color = bgPreset.value
+    } else if (phase === 'history' || phase === 'profile' || phase === 'new') {
+      color = bgPreset.value
+    }
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) {
+      meta.setAttribute('content', color)
+    } else {
+      const m = document.createElement('meta')
+      m.setAttribute('name', 'theme-color')
+      m.setAttribute('content', color)
+      document.head.appendChild(m)
+    }
+  }, [showModeSelect, show2v2Setup, selectedMode, twoVsTwoState, phase, bgPreset.value])
+
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       const el = messagesContainerRef.current
