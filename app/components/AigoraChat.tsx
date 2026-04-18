@@ -364,41 +364,33 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
         </button>
 
         {/* Card Classico — coming soon */}
-        <div className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl"
+        <div className="flex-1 flex flex-col items-center justify-center rounded-3xl relative overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            opacity: 0.5,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.09)',
             cursor: 'not-allowed',
             minHeight: 0,
           }}>
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Classico</div>
-              <div className="text-xl font-black text-white leading-tight">Dibattito libero</div>
-            </div>
-            <div className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>Presto</div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+            <div className="text-[11px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>Classico · Dibattito libero</div>
+            <div className="font-black uppercase tracking-widest" style={{ fontSize: 28, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>COMING</div>
+            <div className="font-black uppercase tracking-widest" style={{ fontSize: 28, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>SOON</div>
           </div>
-          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>4 AI discutono con te su qualsiasi argomento. Formato aperto.</div>
         </div>
 
         {/* Card Devil's Advocate — coming soon */}
-        <div className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl"
+        <div className="flex-1 flex flex-col items-center justify-center rounded-3xl relative overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            opacity: 0.5,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.09)',
             cursor: 'not-allowed',
             minHeight: 0,
           }}>
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Devil's Advocate</div>
-              <div className="text-xl font-black text-white leading-tight">Difendi la tua posizione</div>
-            </div>
-            <div className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>Presto</div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+            <div className="text-[11px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>Devil's Advocate · Difendi la tua tesi</div>
+            <div className="font-black uppercase tracking-widest" style={{ fontSize: 28, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>COMING</div>
+            <div className="font-black uppercase tracking-widest" style={{ fontSize: 28, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>SOON</div>
           </div>
-          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>3 AI attaccano la tua tesi. Difenditi fino all'ultimo argomento.</div>
         </div>
 
       </div>
