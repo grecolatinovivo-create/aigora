@@ -59,6 +59,18 @@ export default async function AdminPage() {
     totalCost += u.costUsd
   }
 
+  // Costi per utente divisi per AI
+  const usageByUser: Record<string, Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }>> = {}
+  for (const u of usageRaw) {
+    if (!u.userId) continue
+    if (!usageByUser[u.userId]) usageByUser[u.userId] = {}
+    if (!usageByUser[u.userId][u.provider]) usageByUser[u.userId][u.provider] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
+    usageByUser[u.userId][u.provider].calls++
+    usageByUser[u.userId][u.provider].cost += u.costUsd
+    usageByUser[u.userId][u.provider].inputTokens += u.inputTokens
+    usageByUser[u.userId][u.provider].outputTokens += u.outputTokens
+  }
+
   const users = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
@@ -177,6 +189,40 @@ export default async function AdminPage() {
                     </span>
                   </div>
                 </summary>
+
+                {/* Costi token per AI */}
+                {(() => {
+                  const userUsage = usageByUser[user.id]
+                  const providers = [
+                    { key: 'anthropic', label: 'Claude',     color: '#7C3AED' },
+                    { key: 'openai',    label: 'GPT',        color: '#10A37F' },
+                    { key: 'google',    label: 'Gemini',     color: '#1A73E8' },
+                    { key: 'perplexity',label: 'Perplexity', color: '#FF6B2B' },
+                  ]
+                  const userTotal = userUsage ? Object.values(userUsage).reduce((acc, v) => acc + v.cost, 0) : 0
+                  return (
+                    <div className="border-t border-white/8 px-5 py-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Costi token</span>
+                        <span className="text-white font-bold text-sm">{formatCost(userTotal)}</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {providers.map(({ key, label, color }) => {
+                          const u = userUsage?.[key]
+                          return (
+                            <div key={key} className="rounded-xl p-2.5" style={{ backgroundColor: `${color}12`, border: `1px solid ${color}25` }}>
+                              <div className="text-[10px] font-bold mb-1" style={{ color }}>{label}</div>
+                              <div className="text-white font-bold text-sm">{formatCost(u?.cost ?? 0)}</div>
+                              <div className="text-white/30 text-[9px] mt-0.5">
+                                {u?.calls ?? 0} call · {((u?.inputTokens ?? 0) + (u?.outputTokens ?? 0)).toLocaleString()} tok
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Chat dell'utente */}
                 <div className="border-t border-white/8">

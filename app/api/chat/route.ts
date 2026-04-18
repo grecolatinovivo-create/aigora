@@ -16,12 +16,12 @@ const PRICES: Record<string, { input: number; output: number }> = {
   'sonar-pro':                 { input: 3.00,  output: 3.00  },
 }
 
-async function logUsage(provider: string, model: string, inputTokens: number, outputTokens: number) {
+async function logUsage(provider: string, model: string, inputTokens: number, outputTokens: number, userId?: string) {
   try {
     const prices = PRICES[model] ?? { input: 0, output: 0 }
     const costUsd = (inputTokens * prices.input + outputTokens * prices.output) / 1_000_000
     const { prisma } = await import('@/lib/prisma')
-    await prisma.apiUsage.create({ data: { provider, model, inputTokens, outputTokens, costUsd } })
+    await prisma.apiUsage.create({ data: { provider, model, inputTokens, outputTokens, costUsd, ...(userId ? { userId } : {}) } })
   } catch {}
 }
 
@@ -129,7 +129,7 @@ function sseStream(gen: AsyncIterable<string>, model?: string): Response {
   })
 }
 
-async function* streamClaude(system: string, historyText: string, lastMessage: string): AsyncIterable<string> {
+async function* streamClaude(system: string, historyText: string, lastMessage: string, userId?: string): AsyncIterable<string> {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const userContent: any[] = []
@@ -151,10 +151,10 @@ async function* streamClaude(system: string, historyText: string, lastMessage: s
     if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') yield chunk.delta.text
   }
   const usage = (await stream.finalMessage()).usage
-  logUsage('anthropic', 'claude-haiku-4-5-20251001', usage.input_tokens, usage.output_tokens)
+  logUsage('anthropic', 'claude-haiku-4-5-20251001', usage.input_tokens, usage.output_tokens, userId)
 }
 
-async function* streamGPT(system: string, historyText: string, lastMessage: string): AsyncIterable<string> {
+async function* streamGPT(system: string, historyText: string, lastMessage: string, userId?: string): AsyncIterable<string> {
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const messages: any[] = [{ role: 'system', content: system }]
@@ -170,17 +170,17 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
     if (text) yield text
     if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens; outputTokens = chunk.usage.completion_tokens }
   }
-  logUsage('openai', 'gpt-4.1-mini', inputTokens, outputTokens)
+  logUsage('openai', 'gpt-4.1-mini', inputTokens, outputTokens, userId)
 }
 
-function streamGeminiWithModel(system: string, historyText: string, lastMessage: string): { stream: AsyncIterable<string>; model: string } {
+function streamGeminiWithModel(system: string, historyText: string, lastMessage: string, userId?: string): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.GEMINI_API_KEY) {
-    return { stream: streamClaude(system, historyText, lastMessage), model: 'Claude' }
+    return { stream: streamClaude(system, historyText, lastMessage, userId), model: 'Claude' }
   }
-  return { stream: streamGemini(system, historyText, lastMessage), model: 'Gemini' }
+  return { stream: streamGemini(system, historyText, lastMessage, userId), model: 'Gemini' }
 }
 
-async function* streamGemini(system: string, historyText: string, lastMessage: string): AsyncIterable<string> {
+async function* streamGemini(system: string, historyText: string, lastMessage: string, userId?: string): AsyncIterable<string> {
   if (!process.env.GEMINI_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
   const { GoogleGenerativeAI } = await import('@google/generative-ai')
   const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -193,7 +193,7 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
   }
   const finalResp = await result.response
   const usage = finalResp.usageMetadata
-  if (usage) logUsage('google', 'gemini-2.0-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0)
+  if (usage) logUsage('google', 'gemini-2.0-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId)
 }
 
 // Gemini che impersona Perplexity nei turni 2-10: niente ricerca, commenta i dati già citati
@@ -211,14 +211,14 @@ Scrivi come parla un essere umano vero, non come un paper accademico.`
   return { stream, model: 'Gemini (as Perplexity)' }
 }
 
-function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false): { stream: AsyncIterable<string>; model: string } {
+function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.PERPLEXITY_API_KEY) {
-    return { stream: streamClaude(system, historyText, lastMessage), model: 'Claude' }
+    return { stream: streamClaude(system, historyText, lastMessage, userId), model: 'Claude' }
   }
-  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
+  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch, userId), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
 }
 
-async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false): AsyncIterable<string> {
+async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string): AsyncIterable<string> {
   if (!process.env.PERPLEXITY_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
@@ -247,7 +247,7 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
     outputTokens = Math.ceil(outputText.length / 4)
     inputTokens = Math.ceil((system.length + userMessage.length) / 4)
   }
-  logUsage('perplexity', model, inputTokens, outputTokens)
+  logUsage('perplexity', model, inputTokens, outputTokens, userId)
 }
 
 // Routing intelligente — Claude decide AI, modalità e se serve web search
@@ -311,6 +311,7 @@ export async function POST(req: NextRequest) {
 
     // Verifica piano — l'utente può usare solo le AI del suo piano
     const session = await getServerSession(authOptions)
+    let currentUserId: string | undefined = undefined
     if (session?.user?.email && aiId && action !== 'route' && action !== 'synthesize' && action !== 'factcheck') {
       // Rate limit per account: max 50 turni/ora (admin esente)
       if (session.user.email !== process.env.ADMIN_EMAIL) {
@@ -324,6 +325,7 @@ export async function POST(req: NextRequest) {
 
       const { prisma } = await import('@/lib/prisma')
       const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
+      currentUserId = dbUser?.id
       const plan = dbUser?.email === process.env.ADMIN_EMAIL ? 'admin' : (dbUser?.plan ?? 'none')
       const PLAN_AIS: Record<string, string[]> = {
         free:    ['claude', 'gemini', 'perplexity', 'gpt'],
@@ -384,10 +386,10 @@ export async function POST(req: NextRequest) {
       const rest = history.slice(1)
       const ctx = rest.map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
       const last = history[history.length - 1]?.content ?? ''
-      if (aiId === 'claude')     return sseStream(streamClaude(systemMsg, ctx, last), 'Claude')
-      if (aiId === 'gpt')        return sseStream(streamGPT(systemMsg, ctx, last), 'GPT')
-      if (aiId === 'gemini')     { const g = streamGeminiWithModel(systemMsg, ctx, last); return sseStream(g.stream, g.model) }
-      if (aiId === 'perplexity') { const p = streamPerplexityWithModel(systemMsg, ctx, last); return sseStream(p.stream, p.model) }
+      if (aiId === 'claude')     return sseStream(streamClaude(systemMsg, ctx, last, currentUserId), 'Claude')
+      if (aiId === 'gpt')        return sseStream(streamGPT(systemMsg, ctx, last, currentUserId), 'GPT')
+      if (aiId === 'gemini')     { const g = streamGeminiWithModel(systemMsg, ctx, last, currentUserId); return sseStream(g.stream, g.model) }
+      if (aiId === 'perplexity') { const p = streamPerplexityWithModel(systemMsg, ctx, last, false, currentUserId); return sseStream(p.stream, p.model) }
       return new Response('AI non trovata', { status: 400 })
     }
 
@@ -401,16 +403,16 @@ export async function POST(req: NextRequest) {
       : ''
     const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`
 
-    if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage), 'Claude')
-    if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage), 'GPT')
-    if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage); return sseStream(g.stream, g.model) }
+    if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage, currentUserId), 'Claude')
+    if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage, currentUserId), 'GPT')
+    if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage, currentUserId); return sseStream(g.stream, g.model) }
     if (aiId === 'perplexity') {
       // Turno 1 (count=0): Sonar Pro con ricerca reale
       // Turni 2-10 (count 1-9): Gemini che impersona Perplexity, senza costo Sonar
       // Turno 11+ (count%10===0): torna Sonar Pro — stesso schema per tutti, admin incluso
       const isRealPerplexity = (perplexityTurnCount ?? 0) % 10 === 0
       if (isRealPerplexity) {
-        const p = streamPerplexityWithModel(system, historyText, lastMessage, true)
+        const p = streamPerplexityWithModel(system, historyText, lastMessage, true, currentUserId)
         return sseStream(p.stream, 'Perplexity')
       } else {
         const g = streamGeminiAsPerplexity(historyText, today, year)
