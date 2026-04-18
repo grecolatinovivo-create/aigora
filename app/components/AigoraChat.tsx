@@ -364,32 +364,34 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
         </button>
 
         {/* Card Classico — coming soon */}
-        <div className="flex-1 flex flex-col items-center justify-center rounded-3xl relative overflow-hidden"
+        <div className="flex-1 flex flex-col rounded-3xl relative overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.09)',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1.5px solid rgba(255,255,255,0.10)',
             cursor: 'not-allowed',
             minHeight: 0,
           }}>
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
-            <div className="text-[11px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>Classico · Dibattito libero</div>
-            <div className="font-black uppercase tracking-widest" style={{ fontSize: 28, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>COMING</div>
-            <div className="font-black uppercase tracking-widest" style={{ fontSize: 28, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>SOON</div>
+          {/* Label in alto a sinistra */}
+          <div className="absolute top-4 left-5 text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Classico</div>
+          {/* SOON centrato */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="font-black uppercase" style={{ fontSize: 44, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.22)' }}>SOON</div>
           </div>
         </div>
 
         {/* Card Devil's Advocate — coming soon */}
-        <div className="flex-1 flex flex-col items-center justify-center rounded-3xl relative overflow-hidden"
+        <div className="flex-1 flex flex-col rounded-3xl relative overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.09)',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1.5px solid rgba(255,255,255,0.10)',
             cursor: 'not-allowed',
             minHeight: 0,
           }}>
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
-            <div className="text-[11px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>Devil's Advocate · Difendi la tua tesi</div>
-            <div className="font-black uppercase tracking-widest" style={{ fontSize: 28, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>COMING</div>
-            <div className="font-black uppercase tracking-widest" style={{ fontSize: 28, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>SOON</div>
+          {/* Label in alto a sinistra */}
+          <div className="absolute top-4 left-5 text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Devil's Advocate</div>
+          {/* SOON centrato */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="font-black uppercase" style={{ fontSize: 44, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.22)' }}>SOON</div>
           </div>
         </div>
 
