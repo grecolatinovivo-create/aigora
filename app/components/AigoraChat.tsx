@@ -1522,10 +1522,10 @@ function DevilsAdvocateScreen({ session, onMessage, onEndTurn, loading, isDark, 
   const scoreColor = session.score >= 7 ? '#10A37F' : session.score >= 5 ? '#F59E0B' : '#ef4444'
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: mobileBg.value }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
-        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', paddingBottom: '10px', backgroundColor: mobileBg.header, borderColor }}>
+        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', paddingBottom: '10px', backgroundColor: bgPreset.header, borderColor }}>
         <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={textColor} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -1587,7 +1587,7 @@ function DevilsAdvocateScreen({ session, onMessage, onEndTurn, loading, isDark, 
       </div>
 
       {/* Input + Fine turno */}
-      <div className="flex-shrink-0 border-t" style={{ backgroundColor: mobileBg.header, borderColor, paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+      <div className="flex-shrink-0 border-t" style={{ backgroundColor: bgPreset.header, borderColor, paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-center gap-2 px-3 pt-2 pb-1">
           <input
             value={input}
@@ -1733,10 +1733,10 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
   const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: mobileBg.value }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
-        style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: mobileBg.header, borderColor }}>
+        style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor }}>
         <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-full"
           style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textColor} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -1752,7 +1752,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
 
       <div className="flex-1 overflow-y-auto">
         {/* Avatar + info */}
-        <div className="flex items-center gap-4 px-5 pt-6 pb-5" style={{ backgroundColor: mobileBg.header, borderBottom: `1px solid ${borderColor}` }}>
+        <div className="flex items-center gap-4 px-5 pt-6 pb-5" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${borderColor}` }}>
           {/* Avatar cliccabile per cambio foto */}
           <div className="relative flex-shrink-0 cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
             <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-2xl font-black text-white"
@@ -1783,7 +1783,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
         </div>
 
         {/* Stats */}
-        <div className="flex border-b" style={{ borderColor, backgroundColor: mobileBg.header }}>
+        <div className="flex border-b" style={{ borderColor, backgroundColor: bgPreset.header }}>
           {[
             ['Dibattiti', savedChats.length],
             ['Seguiti', following.length],
