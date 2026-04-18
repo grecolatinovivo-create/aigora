@@ -3560,8 +3560,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     return (
       <>
       <div className="desktop-bg relative overflow-hidden"
-        ref={el => { if (el) { document.body.style.backgroundColor = '#07070f'; document.documentElement.style.backgroundColor = '#07070f' } }}
-        style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        ref={el => { if (el) { document.body.style.setProperty('background-color', '#07070f', 'important'); document.documentElement.style.setProperty('background-color', '#07070f', 'important') } }}
+        style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ── Pannello cronologia (disponibile anche dalla start) ── */}
         <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
@@ -4756,7 +4756,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
       {/* ── SCHERMO NATIVO MOBILE ── */}
       <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', overflow: 'hidden' }}
-        ref={el => { if (el) document.body.style.backgroundColor = bgPreset.value }}>
+        ref={el => { if (el) { document.body.style.setProperty('background-color', bgPreset.value, 'important'); document.documentElement.style.setProperty('background-color', bgPreset.value, 'important') } }}>
 
         {/* Schermata cronologia mobile */}
         {phase === 'history' && (
