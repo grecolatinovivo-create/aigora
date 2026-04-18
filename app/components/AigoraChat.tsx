@@ -3619,6 +3619,24 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         </div>
         {showHistory && <div className="fixed inset-0 z-[39]" onClick={() => setShowHistory(false)} />}
 
+        {/* ── Navbar mobile (solo mobile) ── */}
+        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-5"
+          style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '10px' }}>
+          {/* Logo */}
+          <span className="font-black text-xl tracking-tight leading-none">
+            <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
+          </span>
+          {/* Avatar utente */}
+          <button onClick={() => setPhase('profile')}
+            className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
+            style={{ background: userImage ? 'transparent' : 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 2px 12px rgba(124,58,237,0.4)' }}>
+            {userImage
+              ? <img src={userImage} alt="avatar" className="w-full h-full object-cover" />
+              : (displayName[0] ?? 'U').toUpperCase()
+            }
+          </button>
+        </div>
+
         {/* ── Navbar desktop ── */}
         <div className="hidden lg:block flex-shrink-0">
           <Navbar {...navbarProps} />
@@ -3785,9 +3803,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 ))}
 
                 {/* Lista room */}
-                {rooms.length === 0 ? (
-                  <div className="text-center py-8 text-white/25 text-sm">Nessun dibattito ancora.</div>
-                ) : rooms.map((room: any) => {
+                {rooms.length > 0 && rooms.map((room: any) => {
                   const aiColors: Record<string,string> = { claude:'#7C3AED', gpt:'#10A37F', gemini:'#1A73E8', perplexity:'#FF6B2B' }
                   const aiNames: Record<string,string> = { claude:'Claude', gpt:'GPT', gemini:'Gemini', perplexity:'Perplexity' }
                   const ais: string[] = Array.isArray(room.aiIds) ? room.aiIds : []
