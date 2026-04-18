@@ -718,6 +718,8 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 }) {
   const [topic, setTopic] = useState('')
   const [teamAHuman, setTeamAHuman] = useState(currentUserName || 'Utente')
+  // Aggiorna il nome se arriva dal DB dopo il mount
+  useEffect(() => { if (currentUserName) setTeamAHuman(currentUserName) }, [currentUserName])
   const [teamAAI, setTeamAAI] = useState('claude')
   const [teamBAI, setTeamBAI] = useState('gpt')
   const [teamBAI2, setTeamBAI2] = useState('gemini')
