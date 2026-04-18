@@ -3315,7 +3315,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const existingScoreB = twoVsTwoState.scoreB ?? 0
 
     try {
-      const promptContent = `Sei ${arbName}, arbitro imparziale. Hai arbitrato un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]} (${existingScoreA} punti). Squadra B: AI — ${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]} (${existingScoreB} punti). Il dibattito è finito. Scrivi un commento finale sintetico in 2-3 frasi: chi ha dominato, perché, e un giudizio complessivo. Niente numeri, già calcolati. Sii diretto e neutro.`
+      const tiebreakInstruction = existingScoreA === existingScoreB
+        ? ` I punti sono in parità. Devi comunque dichiarare un vincitore: scrivi "VINCITORE: A" oppure "VINCITORE: B" in base alla qualità complessiva degli argomenti. Niente pareggi.`
+        : ''
+      const promptContent = `Sei ${arbName}, arbitro imparziale. Hai arbitrato un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]} (${existingScoreA} punti). Squadra B: AI — ${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]} (${existingScoreB} punti). Il dibattito è finito.${tiebreakInstruction} Scrivi un commento finale sintetico in 2-3 frasi: chi ha dominato, perché, e un giudizio complessivo. Niente numeri, già calcolati. Sii diretto e neutro.`
 
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -3345,11 +3348,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         }
       }
 
+      // Estrai vincitore da tiebreak se presente
+      const tiebreakMatch = verdict.match(/VINCITORE:\s*(A|B)/i)
+      const tiebreakWinner = tiebreakMatch ? tiebreakMatch[1].toUpperCase() as 'A' | 'B' : null
+      const cleanVerdict = verdict.replace(/VINCITORE:\s*(A|B)\s*/i, '').trim()
       setTwoVsTwoState(prev => {
         if (!prev) return prev
         const msgs = [...prev.messages]
-        msgs[msgs.length-1] = { ...msgs[msgs.length-1], content: verdict.trim(), streaming: false }
-        return { ...prev, messages: msgs, verdict: verdict.trim() }
+        msgs[msgs.length-1] = { ...msgs[msgs.length-1], content: cleanVerdict || verdict.trim(), streaming: false }
+        const newScoreA = tiebreakWinner === 'A' ? (prev.scoreA ?? 0) + 1 : (prev.scoreA ?? 0)
+        const newScoreB = tiebreakWinner === 'B' ? (prev.scoreB ?? 0) + 1 : (prev.scoreB ?? 0)
+        return { ...prev, messages: msgs, verdict: cleanVerdict || verdict.trim(), scoreA: newScoreA, scoreB: newScoreB }
       })
     } catch {}
     setTwoVsTwoLoading(false)
