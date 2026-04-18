@@ -2617,7 +2617,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       safeTopRef.current?.remove(); safeTopRef.current = null
       safeBottomRef.current?.remove(); safeBottomRef.current = null
     }
-  }, [showModeSelect, show2v2Setup, selectedMode, twoVsTwoState, phase, bgPreset.header])
+  }, [showModeSelect, show2v2Setup, selectedMode, twoVsTwoState, phase, bgPreset.header, bgPreset.value])
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -4800,8 +4800,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       </div>
 
       {/* ── SCHERMO NATIVO MOBILE ── */}
-      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, height: '100dvh', overflow: 'hidden' }}
-        ref={el => { if (el) document.body.style.backgroundColor = bgPreset.value }}>
+      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, height: '100dvh', overflow: 'hidden' }}>
 
         {/* Schermata cronologia mobile */}
         {phase === 'history' && (
