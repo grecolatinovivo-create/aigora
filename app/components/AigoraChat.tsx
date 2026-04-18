@@ -3972,8 +3972,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
-    <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative"
-      ref={el => { if (el) { document.body.style.backgroundColor = '#07070f'; document.documentElement.style.backgroundColor = '#07070f' } }}>
+    <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
