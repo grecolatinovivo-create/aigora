@@ -2564,6 +2564,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const displayName = userName.trim() || 'Tu'
   const historyName = userName.trim() || 'Utente'
 
+  // ── Colore safe area corrente ──
+  const safeAreaColor = (() => {
+    if (showModeSelect || show2v2Setup) return '#07070f'
+    if (selectedMode === '2v2' && twoVsTwoState) return '#0d0d14'
+    if (phase === 'start') return '#07070f'
+    return bgPreset.header
+  })()
+
   // ── Theme color dinamico per mobile (chrome del browser) ──
   useEffect(() => {
     let color = '#07070f' // default: home/landing
@@ -3994,6 +4002,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
     <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
+
+      {/* ── Safe area covers — solo mobile ── */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-[9999] pointer-events-none"
+        style={{ height: 'env(safe-area-inset-top)', backgroundColor: safeAreaColor, transition: 'background-color 0.3s ease' }} />
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] pointer-events-none"
+        style={{ height: 'env(safe-area-inset-bottom)', backgroundColor: safeAreaColor, transition: 'background-color 0.3s ease' }} />
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
       {messages.length === 0 && selectedMode !== '2v2' && [
