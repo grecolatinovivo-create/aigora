@@ -4863,60 +4863,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           />
         )}
 
-        {/* Schermata 'new' — chat vuota con bubble e input */}
-        {phase === 'new' && (
-          <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: mobileBg.value }}>
-            {/* Header */}
-            <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
-              style={{ backgroundColor: mobileBg.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-              <button onClick={() => setPhase('history')}
-                className="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-full active:scale-95"
-                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)'} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-              </button>
-              <div className="flex-1 min-w-0 text-center">
-                <div className="font-bold text-[14px]" style={{ color: isDark ? '#fff' : '#111' }}>
-                  <span style={{ color: isDark ? '#fff' : '#111' }}>Ai</span>
-                  <span style={{ color: '#A78BFA' }}>GORÀ</span>
-                </div>
-                <div className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>Nuova conversazione</div>
-              </div>
-              <div className="w-9" />
-            </div>
-
-            {/* Area centrale — vuota come una chat di gruppo */}
-            <div className="flex-1" />
-
-            {/* Input bar — uguale alla chat */}
-            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5" style={{
-              backgroundColor: mobileBg.header,
-              borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-              paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
-            }}>
-              <input
-                autoFocus
-                value={question}
-                onChange={e => setQuestion(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && question.trim()) { handleStart(question) } }}
-                placeholder="Poni una domanda alle AI…"
-                className="flex-1 rounded-full px-3.5 py-2 text-[13px] outline-none"
-                style={{
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-                  color: isDark ? '#f0f0f0' : '#111',
-                }}
-              />
-              <button onClick={() => { if (question.trim()) handleStart(question) }} disabled={!question.trim()}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: question.trim() ? '0 2px 10px rgba(124,58,237,0.4)' : undefined }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Schermata chat mobile */}
-        {phase !== 'history' && phase !== 'profile' && phase !== 'new' && !(phase === 'running' && selectedMode === '2v2') && <>
+        {/* Schermata chat mobile (inclusa 'new' — chat vuota) */}
+        {phase !== 'history' && phase !== 'profile' && !(phase === 'running' && selectedMode === '2v2') && <>
 
           {/* Header mobile */}
           <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
@@ -5189,8 +5137,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               value={inputText}
               rows={1}
               onChange={e => setInputText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage() } }}
-              placeholder='Scrivi un messaggio…'
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (phase === 'new') { if (inputText.trim()) handleStart(inputText) } else { handleSendMessage() } } }}
+              placeholder={phase === 'new' ? 'Poni una domanda alle AI…' : 'Scrivi un messaggio…'}
               className={`flex-1 px-4 py-2.5 text-[14px] outline-none transition-all resize-none overflow-hidden${waitingForUser ? ' input-waiting' : ''}`}
               style={{
                 backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
@@ -5210,7 +5158,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 <line x1="8" y1="24" x2="16" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
               </svg>
             </button>
-            <button onClick={handleSendMessage} disabled={!inputText.trim()}
+            <button onClick={() => { if (phase === 'new') { if (inputText.trim()) handleStart(inputText) } else { handleSendMessage() } }} disabled={!inputText.trim()}
               className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 active:scale-95"
               style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: inputText.trim() ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
