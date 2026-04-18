@@ -331,7 +331,7 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
       </div>
 
       {/* ── LAYOUT MOBILE: card verticali ── */}
-      <div className="lg:hidden flex-1 flex flex-col px-4 py-4 gap-3" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+      <div className="lg:hidden flex-1 flex flex-col px-4 py-4 gap-3 overflow-hidden" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
         {/* Card 2 vs 2 — attiva */}
         <button onClick={() => onSelect('2v2')}
           className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all"
