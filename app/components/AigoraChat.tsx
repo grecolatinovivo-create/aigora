@@ -813,15 +813,51 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     <>
         {/* ── STEP 1: Dado ── */}
         {step === 'topic' && (() => {
-          const handleRoll = () => {
+          const handleRoll = async () => {
             if (topicRevealed || diceRolling) return
             setDiceRolling(true)
-            setTimeout(() => {
+            try {
+              const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action: 'turn',
+                  aiId: 'claude',
+                  history: [{
+                    name: 'Sistema',
+                    content: 'Genera UN solo argomento di dibattito in italiano. Deve essere una domanda breve (max 8 parole), provocatoria, divisiva, su un tema attuale o filosofico. Rispondi SOLO con la domanda, niente altro. Niente virgolette, niente spiegazioni.',
+                  }],
+                  needsWebSearch: false,
+                }),
+              })
+              let generatedTopic = ''
+              if (res.ok && res.body) {
+                const reader = res.body.getReader()
+                const decoder = new TextDecoder()
+                let buf = ''
+                while (true) {
+                  const { done, value } = await reader.read()
+                  if (value) buf += decoder.decode(value, { stream: true })
+                  const lines = buf.split('\n'); buf = lines.pop() ?? ''
+                  for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue
+                    const d = line.slice(6).trim()
+                    if (d === '[DONE]') break
+                    try { const p = JSON.parse(d); if (p.text) generatedTopic += p.text } catch {}
+                  }
+                  if (done) break
+                }
+              }
+              const finalTopic = generatedTopic.trim().replace(/^["']|["']$/g, '') || aiTopicPool[aiTopicIndex]
+              setTopic(finalTopic)
+              setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
               setTopicRevealed(true)
+            } catch {
               setTopic(aiTopicPool[aiTopicIndex])
               setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
-              setDiceRolling(false)
-            }, 900)
+              setTopicRevealed(true)
+            }
+            setDiceRolling(false)
           }
           return (
             <div className="flex flex-col h-full px-5 pt-8 pb-6 gap-6" style={{ minHeight: '100%' }}>
@@ -838,8 +874,13 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                     style={{ width: 130, height: 130, background: topicRevealed ? 'rgba(124,58,237,0.12)' : 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))', border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.15)' : 'rgba(167,139,250,0.4)'}`, cursor: topicRevealed ? 'default' : 'pointer', animation: diceRolling ? 'dice-roll 1.1s cubic-bezier(0.25,0.46,0.45,0.94) forwards' : (topicRevealed ? 'none' : 'dice-idle 3s ease-in-out infinite'), fontSize: 56, flexShrink: 0 }}>
                     🎲
                   </button>
-                  {(diceRolling || topicRevealed) && (
-                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 13, letterSpacing: '0.28em', color: 'rgba(167,139,250,0.85)', animation: diceRolling ? 'alea-appear 0.4s ease-out forwards' : 'none' }}>
+                  {diceRolling && (
+                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 13, letterSpacing: '0.28em', color: 'rgba(167,139,250,0.85)', animation: 'alea-appear 0.4s ease-out forwards' }}>
+                      Claude sta pensando…
+                    </div>
+                  )}
+                  {topicRevealed && (
+                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 13, letterSpacing: '0.28em', color: 'rgba(167,139,250,0.85)' }}>
                       ALEA IACTA EST!
                     </div>
                   )}
@@ -851,7 +892,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                   <div className="w-full flex flex-col gap-3 scale-in">
                     <div className="w-full px-5 py-4 rounded-3xl text-center" style={{ background: 'rgba(59,130,246,0.12)', border: '1.5px solid rgba(59,130,246,0.3)' }}>
                       <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(100,160,255,0.8)' }}>Argomento</div>
-                      <div className="text-[17px] font-black text-white leading-snug">"{aiTopicPool[aiTopicIndex]}"</div>
+                      <div className="text-[17px] font-black text-white leading-snug">"{topic}"</div>
                     </div>
                     <div className="w-full px-5 py-4 rounded-3xl text-center" style={{ background: userSide === 'attack' ? 'rgba(239,68,68,0.12)' : 'rgba(16,163,127,0.12)', border: `1.5px solid ${userSide === 'attack' ? 'rgba(239,68,68,0.35)' : 'rgba(16,163,127,0.35)'}` }}>
                       <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: userSide === 'attack' ? '#f87171' : '#34d399' }}>Il tuo ruolo</div>
