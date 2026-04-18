@@ -544,6 +544,8 @@ interface TwoVsTwoState {
   ended: boolean
   verdict: string | null
   waitingForOpponent?: boolean
+  showScoreFlash?: 'A' | 'B' | null
+  scoreFlashAt?: number
 }
 
 // ── Roulette slot machine ─────────────────────────────────────────────────────
@@ -715,7 +717,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   currentUserName: string
 }) {
   const [topic, setTopic] = useState('')
-  const [teamAHuman, setTeamAHuman] = useState(currentUserName || 'Tu')
+  const [teamAHuman, setTeamAHuman] = useState(currentUserName || 'Utente')
   const [teamAAI, setTeamAAI] = useState('claude')
   const [teamBAI, setTeamBAI] = useState('gpt')
   const [teamBAI2, setTeamBAI2] = useState('gemini')
@@ -1131,10 +1133,22 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
   onBack: () => void
 }) {
   const [input, setInput] = useState('')
+  const [flashWinner, setFlashWinner] = useState<'A' | 'B' | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { config } = state
+  const prevScoreFlashAt = useRef<number | undefined>(undefined)
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [state.messages])
+
+  // Flash punteggio quando viene assegnato
+  useEffect(() => {
+    if (state.scoreFlashAt && state.scoreFlashAt !== prevScoreFlashAt.current && state.showScoreFlash) {
+      prevScoreFlashAt.current = state.scoreFlashAt
+      setFlashWinner(state.showScoreFlash)
+      const t = setTimeout(() => setFlashWinner(null), 2000)
+      return () => clearTimeout(t)
+    }
+  }, [state.scoreFlashAt, state.showScoreFlash])
 
   const isMyTurn = state.currentTurn === myTeam && !loading && !state.ended
   const myColor = myTeam === 'A' ? '#3b82f6' : '#ef4444'
@@ -1352,6 +1366,16 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       <div className="flame-bg" />
       <div className="flame-overlay" />
 
+      {/* ── FLASH PUNTEGGIO ── */}
+      {flashWinner && (
+        <div className="absolute inset-x-0 top-0 z-50 flex items-center justify-center pointer-events-none" style={{ paddingTop: 'max(70px, calc(env(safe-area-inset-top) + 60px))' }}>
+          <div className="px-6 py-3 rounded-2xl text-center animate-bounce" style={{ background: flashWinner === 'A' ? 'rgba(59,130,246,0.95)' : 'rgba(239,68,68,0.95)', boxShadow: `0 0 30px ${flashWinner === 'A' ? '#3b82f6' : '#ef4444'}88` }}>
+            <div className="text-white font-black text-lg">+1 PUNTO SQUADRA {flashWinner}!</div>
+            <div className="text-white/80 text-sm">{flashWinner === 'A' ? config.teamA.humanName : 'Squadra B'}</div>
+          </div>
+        </div>
+      )}
+
       {/* ── HEADER: A vs B con round ── */}
       <div className="flex-shrink-0 relative z-10" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.85)', borderBottom: '1px solid rgba(255,80,0,0.15)', backdropFilter: 'blur(20px)' }}>
         {/* Barra A vs B */}
@@ -1367,20 +1391,21 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
             <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>+ {AI_NAMES[config.teamA.aiId]}</div>
           </div>
 
-          {/* Centro — round e turno */}
+          {/* Centro — score + round */}
           <div className="flex flex-col items-center flex-shrink-0 px-2">
-            <div className="text-[9px] text-white/30 mb-0.5">Round {state.round}/{state.maxRounds}</div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: state.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }} />
-              <span className="text-[10px] font-black" style={{ color: state.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }}>
-                Turno {state.currentTurn}
-              </span>
+            {/* Score principale */}
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black leading-none" style={{ color: state.showScoreFlash === 'A' ? '#fff' : '#60a5fa', transition: 'color 0.3s' }}>{state.scoreA ?? 0}</span>
+              <span className="text-[10px] text-white/20 font-bold">—</span>
+              <span className="text-xl font-black leading-none" style={{ color: state.showScoreFlash === 'B' ? '#fff' : '#f87171', transition: 'color 0.3s' }}>{state.scoreB ?? 0}</span>
             </div>
-            {/* Slot messaggi turno corrente */}
-            <div className="flex gap-0.5 mt-1">
-              {Array.from({ length: state.maxMessagesPerTurn ?? 3 }).map((_, i) => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: i < (state.messagesThisTurn ?? 0) ? (state.currentTurn === 'A' ? '#3b82f6' : '#ef4444') : 'rgba(255,255,255,0.15)' }} />
-              ))}
+            <div className="text-[9px] text-white/30 mt-0.5">Round {state.round}/{state.maxRounds}</div>
+            {/* Indicatore turno */}
+            <div className="flex items-center gap-1 mt-0.5">
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: state.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }} />
+              <span className="text-[9px] font-black" style={{ color: state.currentTurn === 'A' ? '#3b82f6' : '#ef4444' }}>
+                {state.currentTurn}
+              </span>
             </div>
           </div>
 
@@ -1463,7 +1488,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
           <div className="px-4 pt-2 pb-1.5">
             {isMyTurn ? (
               <div className="text-[10px] text-center font-bold" style={{ color: myColor }}>
-                Il tuo turno — {state.messagesThisTurn ?? 0}/{state.maxMessagesPerTurn ?? 3} messaggi usati
+                Il tuo turno
               </div>
             ) : (
               <div className="text-[10px] text-center text-white/30">
@@ -3219,7 +3244,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       content: m.content,
     }))
 
-    const promptContent = `Sei ${arbName}, arbitro imparziale di un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Hai appena assistito al round ${roundNumber}. Assegna esattamente 1 punto: scrivi "PUNTO: A" oppure "PUNTO: B" oppure "PUNTO: pareggio". Poi scrivi 1 sola frase secca e diretta che motiva il punto. Non più di 20 parole. Niente di più.`
+    const promptContent = `Sei ${arbName}, arbitro imparziale di un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Hai appena assistito al round ${roundNumber}. Devi assegnare esattamente 1 punto a UNA delle due squadre: scrivi "PUNTO: A" oppure "PUNTO: B". Non puoi mai fare pareggio. Poi scrivi 1 sola frase secca e diretta che motiva il punto. Non più di 20 parole. Niente di più.`
 
     try {
       const res = await fetch('/api/chat', {
@@ -3257,19 +3282,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         if (sd) break
       }
       // Estrai chi ha vinto il round e aggiorna score
-      const winMatch = text.match(/PUNTO:\s*(A|B|pareggio)/i)
-      const winner = winMatch ? winMatch[1].toUpperCase() : null
+      const winMatch = text.match(/PUNTO:\s*(A|B)/i)
+      const winner = winMatch ? winMatch[1].toUpperCase() as 'A' | 'B' : null
       setTwoVsTwoState(prev => {
         if (!prev) return prev
         const msgs = [...prev.messages]
-        msgs[msgs.length - 1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: text.replace(/PUNTO:\s*(A|B|pareggio)\s*/i, '').trim() || text, streaming: false }
+        msgs[msgs.length - 1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: text.replace(/PUNTO:\s*(A|B)\s*/i, '').trim() || text, streaming: false }
         const newScoreA = (prev.scoreA ?? 0) + (winner === 'A' ? 1 : 0)
         const newScoreB = (prev.scoreB ?? 0) + (winner === 'B' ? 1 : 0)
         const newRoundScores = [
           ...(prev.roundScores ?? []),
           { round: roundNumber, winner: (winner === 'A' ? 'A' : winner === 'B' ? 'B' : 'draw') as 'A' | 'B' | 'draw' },
         ]
-        return { ...prev, messages: msgs, scoreA: newScoreA, scoreB: newScoreB, roundScores: newRoundScores }
+        return { ...prev, messages: msgs, scoreA: newScoreA, scoreB: newScoreB, roundScores: newRoundScores, showScoreFlash: winner, scoreFlashAt: Date.now() }
       })
     } catch {}
   }
@@ -3950,7 +3975,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         <TwoVsTwoSetup
           onStart={handle2v2Start}
           onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
-          currentUserName={displayName !== 'Tu' ? displayName : ''}
+          currentUserName={dbUserName || userName.trim() || ''}
         />,
         document.body
       )}
@@ -5248,7 +5273,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         <TwoVsTwoSetup
           onStart={handle2v2Start}
           onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
-          currentUserName={displayName !== 'Tu' ? displayName : ''}
+          currentUserName={dbUserName || userName.trim() || ''}
         />,
         document.body
       )}
