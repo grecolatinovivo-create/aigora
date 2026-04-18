@@ -2570,8 +2570,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (phase === 'running' || phase === 'done' || phase === 'history' || phase === 'profile' || phase === 'new') {
       color = bgPreset.value
     }
-    document.body.style.backgroundColor = color
-    document.documentElement.style.backgroundColor = color
+    document.body.style.setProperty('background-color', color, 'important')
+    document.documentElement.style.setProperty('background-color', color, 'important')
     // Meta theme-color — crealo se non esiste
     let meta = document.querySelector("meta[name='theme-color']")
     if (!meta) {
