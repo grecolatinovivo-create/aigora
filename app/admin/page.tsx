@@ -59,16 +59,18 @@ export default async function AdminPage() {
     totalCost += u.costUsd
   }
 
-  // Costi per utente divisi per AI
+  // Costi per utente — aggregati per provider (claude/gpt/gemini) e per model (sonar/sonar-pro)
   const usageByUser: Record<string, Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }>> = {}
   for (const u of usageRaw) {
     if (!u.userId) continue
     if (!usageByUser[u.userId]) usageByUser[u.userId] = {}
-    if (!usageByUser[u.userId][u.provider]) usageByUser[u.userId][u.provider] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
-    usageByUser[u.userId][u.provider].calls++
-    usageByUser[u.userId][u.provider].cost += u.costUsd
-    usageByUser[u.userId][u.provider].inputTokens += u.inputTokens
-    usageByUser[u.userId][u.provider].outputTokens += u.outputTokens
+    // Per perplexity usa il model come chiave (sonar / sonar-pro), per gli altri usa il provider
+    const key = u.provider === 'perplexity' ? u.model : u.provider
+    if (!usageByUser[u.userId][key]) usageByUser[u.userId][key] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
+    usageByUser[u.userId][key].calls++
+    usageByUser[u.userId][key].cost += u.costUsd
+    usageByUser[u.userId][key].inputTokens += u.inputTokens
+    usageByUser[u.userId][key].outputTokens += u.outputTokens
   }
 
   const users = await prisma.user.findMany({
@@ -206,8 +208,14 @@ export default async function AdminPage() {
                         <span className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Costi token</span>
                         <span className="text-white font-bold text-sm">{formatCost(userTotal)}</span>
                       </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        {providers.map(({ key, label, color }) => {
+                      <div className="grid grid-cols-5 gap-2">
+                        {[
+                          { key: 'anthropic', label: 'Claude',     color: '#7C3AED' },
+                          { key: 'openai',    label: 'GPT',        color: '#10A37F' },
+                          { key: 'google',    label: 'Gemini',     color: '#1A73E8' },
+                          { key: 'sonar',     label: 'Sonar',      color: '#FF6B2B' },
+                          { key: 'sonar-pro', label: 'Sonar Pro',  color: '#FF3D00' },
+                        ].map(({ key, label, color }) => {
                           const u = userUsage?.[key]
                           return (
                             <div key={key} className="rounded-xl p-2.5" style={{ backgroundColor: `${color}12`, border: `1px solid ${color}25` }}>
