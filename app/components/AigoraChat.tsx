@@ -4884,24 +4884,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               <div className="w-9" />
             </div>
 
-            {/* Area centrale */}
-            <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8">
-              {/* Avatar AI */}
-              <div className="flex justify-center gap-5">
-                {AI_ORDER.map(id => (
-                  <div key={id} className="flex flex-col items-center gap-1.5">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                      style={{ backgroundColor: AI_COLOR[id] + '60', border: `2px solid ${AI_COLOR[id]}80` }}>
-                      {id === 'gemini' ? 'Ge' : AI_NAMES[id][0]}
-                    </div>
-                    <span className="text-[10px] font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)' }}>{AI_NAMES[id]}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-center text-sm" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)', maxWidth: '240px', lineHeight: 1.5 }}>
-                Scrivi una domanda per avviare il dibattito
-              </p>
-            </div>
+            {/* Area centrale — vuota come una chat di gruppo */}
+            <div className="flex-1" />
 
             {/* Input bar — uguale alla chat */}
             <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5" style={{
