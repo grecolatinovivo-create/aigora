@@ -2065,11 +2065,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }, [inputText])
   const [bgPreset, setBgPreset] = useState(() => {
-    // Usa il tema di sistema: scuro → Notte, chiaro → Crema
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return BG_PRESETS.find(p => p.label === 'Notte') ?? BG_PRESETS[0]
-    }
-    return BG_PRESETS.find(p => p.label === 'Crema') ?? BG_PRESETS[0]
+    return BG_PRESETS.find(p => p.label === 'Verde') ?? BG_PRESETS[0]
   })
   const [messages, setMessages] = useState<Message[]>([])
   const [activeAi, setActiveAi] = useState<string | null>(null)
