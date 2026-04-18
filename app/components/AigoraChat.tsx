@@ -206,11 +206,12 @@ function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[
 }
 
 // ── Swipeable chat row (swipe left per cancellare) ───────────────────────────
-function SwipeableChatRow({ chat, onOpen, onDelete, bgColor = 'rgba(10,10,18,0.97)' }: {
+function SwipeableChatRow({ chat, onOpen, onDelete, bgColor = 'rgba(10,10,18,0.97)', isDark = true }: {
   chat: { id: string; title: string; date: string; messages: any[]; history: any[] }
   onOpen: () => void
   onDelete: (e: React.MouseEvent) => void
   bgColor?: string
+  isDark?: boolean
 }) {
   const [offset, setOffset] = useState(0)
   const [swiping, setSwiping] = useState(false)
@@ -243,7 +244,7 @@ function SwipeableChatRow({ chat, onOpen, onDelete, bgColor = 'rgba(10,10,18,0.9
   const TRASH = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
 
   return (
-    <div className="relative overflow-hidden border-b border-white/5" style={{ touchAction: 'pan-y' }}>
+    <div className="relative overflow-hidden border-b" style={{ touchAction: 'pan-y', borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)' }}>
       {/* Sfondo rosso fisso a destra — visibile solo durante swipe */}
       <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center"
         style={{ backgroundColor: '#ef4444' }}>
@@ -256,7 +257,7 @@ function SwipeableChatRow({ chat, onOpen, onDelete, bgColor = 'rgba(10,10,18,0.9
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={() => { if (offset < -10) { setOffset(0); return } onOpen() }}
-        className="flex items-center group hover:bg-white/5 transition-colors"
+        className="flex items-center group transition-colors"
         style={{
           transform: `translateX(${offset}px)`,
           transition: swiping ? 'none' : 'transform 0.25s ease',
@@ -264,8 +265,8 @@ function SwipeableChatRow({ chat, onOpen, onDelete, bgColor = 'rgba(10,10,18,0.9
           cursor: 'pointer',
         }}>
         <div className="flex-1 px-5 py-3 min-w-0">
-          <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
-          <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
+          <div className="text-xs font-medium truncate" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.75)' }}>{chat.title}</div>
+          <div className="text-[10px] mt-0.5" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.35)' }}>{chat.date}</div>
         </div>
         {/* Cestino desktop — solo hover, solo lg */}
         <button onClick={onDelete}
@@ -4771,8 +4772,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             <div className="flex-1 overflow-y-auto">
               {savedChats.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-3">
-                  <div className="text-white/20 text-4xl">💬</div>
-                  <p className="text-white/30 text-sm text-center px-8">Nessuna conversazione salvata.<br/>Le chat vengono salvate automaticamente.</p>
+                  <div className="text-4xl" style={{ opacity: 0.25 }}>💬</div>
+                  <p className="text-sm text-center px-8" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>Nessuna conversazione salvata.<br/>Le chat vengono salvate automaticamente.</p>
                 </div>
               ) : savedChats.map((chat) => (
                 <SwipeableChatRow
@@ -4789,6 +4790,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   }}
                   onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
                   bgColor={bgPreset.value}
+                  isDark={isDark}
                 />
               ))}
             </div>

@@ -17,12 +17,14 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#07070f',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it">
+      <head>
+        <meta name="theme-color" content="#07070f" />
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>
