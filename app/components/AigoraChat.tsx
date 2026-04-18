@@ -1045,14 +1045,72 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 <div className="text-[11px] text-white/30">· 2 vs 2</div>
               </div>
               <div className="text-[11px] font-semibold text-white/40">
-                {step === 'topic' ? 'Tema' : step === 'teams' ? 'Squadre' : step === 'roulette' ? 'Roulette' : 'Condividi'}
+                {step === 'topic' ? 'Tema' : step === 'teams' ? 'Squadre' : step === 'roulette' ? 'Roulette' : 'Partita pronta'}
               </div>
               {progressDots}
             </div>
-            {/* Contenuto step */}
-            <div className={`flex-1 ${step === 'topic' || step === 'teams' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-              {stepContent}
-            </div>
+
+            {/* Contenuto step — step 4 ha layout dedicato su desktop */}
+            {step === 'share' ? (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Corpo: titolo centrato + squadre */}
+                <div className="flex-1 flex flex-col items-center justify-center px-12 gap-8">
+                  {/* Titolo */}
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-white tracking-tight">Partita pronta.</div>
+                    <div className="text-base mt-2" style={{ color: 'rgba(255,255,255,0.35)' }}>Tutto pronto. Inizia quando vuoi.</div>
+                  </div>
+                  {/* Squadre con VS centrale */}
+                  <div className="w-full flex items-stretch gap-0">
+                    {/* Squadra A */}
+                    <div className="flex-1 rounded-3xl p-8 flex flex-col gap-4" style={{ background: 'rgba(59,130,246,0.1)', border: '2px solid rgba(59,130,246,0.3)' }}>
+                      <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: '#60a5fa' }}>Squadra A</div>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: '#3b82f6' }}>{teamAHuman[0]?.toUpperCase()}</div>
+                        <div className="text-2xl font-black text-white">{teamAHuman}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: AI_COLOR[teamAAI] }}>{teamAAI === 'gemini' ? 'Ge' : AI_NAMES[teamAAI][0]}</div>
+                        <div className="text-2xl font-black" style={{ color: AI_COLOR[teamAAI] }}>{AI_NAMES[teamAAI]}</div>
+                      </div>
+                    </div>
+                    {/* VS */}
+                    <div className="flex items-center justify-center px-6">
+                      <div className="text-3xl font-black" style={{ color: 'rgba(255,255,255,0.2)' }}>VS</div>
+                    </div>
+                    {/* Squadra B */}
+                    <div className="flex-1 rounded-3xl p-8 flex flex-col gap-4" style={{ background: 'rgba(239,68,68,0.1)', border: '2px solid rgba(239,68,68,0.3)' }}>
+                      <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: '#f87171' }}>Squadra B</div>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: AI_COLOR[teamBAI] }}>{teamBAI === 'gemini' ? 'Ge' : AI_NAMES[teamBAI][0]}</div>
+                        <div className="text-2xl font-black" style={{ color: AI_COLOR[teamBAI] }}>{AI_NAMES[teamBAI]}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: AI_COLOR[teamBAI2] }}>{teamBAI2 === 'gemini' ? 'Ge' : AI_NAMES[teamBAI2][0]}</div>
+                        <div className="text-2xl font-black" style={{ color: AI_COLOR[teamBAI2] }}>{AI_NAMES[teamBAI2]}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Bottone fissato alla base */}
+                <div className="flex-shrink-0 px-8 pb-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <button
+                    onClick={() => {
+                      const startConfig = { topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId }
+                      setDesktopTransition('exit')
+                      setTimeout(() => { setDesktopTransition('done'); onStart(startConfig) }, 500)
+                    }}
+                    className="w-full py-5 rounded-2xl font-black text-white text-xl transition-all hover:scale-[1.01] active:scale-[0.98]"
+                    style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 6px 30px rgba(124,58,237,0.5)' }}>
+                    Inizia la partita →
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className={`flex-1 ${step === 'topic' || step === 'teams' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+                {stepContent}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -2031,7 +2089,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [show2v2Setup, setShow2v2Setup] = useState(false)
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
-  const [phoneEnterAnim, setPhoneEnterAnim] = useState(false)
   const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
@@ -2854,8 +2911,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
     setShow2v2Setup(false)
-    setPhoneEnterAnim(true)
-    setTimeout(() => setPhoneEnterAnim(false), 600)
     // Animazione navbar: prima "2 VS 2", poi dopo 2.5s il tema
     setShow2v2Label('title')
     setTimeout(() => setShow2v2Label('topic'), 2500)
@@ -4176,7 +4231,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         style={{ borderRadius: 50 * phoneScale }}
       >
       <div
-        className={`phone-shell${phoneEnterAnim ? ' iphone-enter' : ' scale-in'}`}
+        className="phone-shell scale-in"
         style={{
           width: 390,
           height: 790,
