@@ -2552,21 +2552,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  // Su mobile lo sfondo è sempre Notte, indipendentemente dal tema scelto
-  const NOTTE = BG_PRESETS.find(p => p.label === 'Notte') ?? BG_PRESETS[3]
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
-  const mobileBg = isMobile ? NOTTE : bgPreset
+  const mobileBg = bgPreset
 
   const isDark = mobileBg.text === 'white'
   const displayName = userName.trim() || 'Tu'
   const historyName = userName.trim() || 'Utente'
 
-  // ── Colore sfondo body/html — il backdrop div gestisce il chrome, questo mantiene coerenza generale ──
+  // ── Colore sfondo body/html + chrome browser ──
   useEffect(() => {
     const color = (phase === 'start') ? '#07070f' : mobileBg.value
+    const headerColor = (phase === 'start') ? '#07070f' : mobileBg.header
     document.body.style.setProperty('background-color', color, 'important')
     document.documentElement.style.setProperty('background-color', color, 'important')
-  }, [phase, mobileBg.value])
+    const metaTheme = document.querySelector('meta[name="theme-color"]')
+    if (metaTheme) metaTheme.setAttribute('content', headerColor)
+  }, [phase, mobileBg.value, mobileBg.header])
 
 
   const scrollToBottom = useCallback(() => {
