@@ -995,7 +995,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   // ── Render ──
   return (
     <>
-    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f' }}>
+    <div className="fixed z-[9999] flex flex-col" style={{ background: '#07070f', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
       {/* ── LAYOUT MOBILE ── */}
       <div className="lg:hidden flex flex-col h-full">
@@ -4755,7 +4755,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       </div>
 
       {/* ── SCHERMO NATIVO MOBILE ── */}
-      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, height: '100dvh', overflow: 'hidden' }}
+      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', overflow: 'hidden' }}
         ref={el => { if (el) document.body.style.backgroundColor = bgPreset.value }}>
 
         {/* Schermata cronologia mobile */}
