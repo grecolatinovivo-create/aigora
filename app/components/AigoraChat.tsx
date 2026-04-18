@@ -1488,16 +1488,6 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
             </button>
           </div>
 
-          {/* Bottone AI alleata — solo se è il mio turno */}
-          {isMyTurn && (
-            <div className="px-3 pb-1">
-              <button onClick={() => onRequestAI(myTeam)} disabled={loading}
-                className="w-full py-2 rounded-xl text-[10px] font-bold disabled:opacity-40 transition-all"
-                style={{ background: `${myColor}15`, color: myTeam === 'A' ? '#60a5fa' : '#f87171', border: `1px solid ${myColor}30` }}>
-                Chiedi supporto a {AI_NAMES[myAiId]} →
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -4972,25 +4962,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 <button onClick={() => setMobileFontSize(s => Math.min(20, s + 1))}
                   className="w-8 h-8 flex items-center justify-center text-base font-bold active:scale-95"
                   style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>+</button>
-              </div>
-              {/* Picker colori — stesso drawer del desktop */}
-              <div className="relative">
-                <button onClick={() => setShowColorPicker(p => !p)}
-                  className="w-8 h-8 rounded-full border-2 active:scale-95 transition-transform"
-                  style={{ backgroundColor: mobileBg.value, borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }} />
-                {showColorPicker && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
-                    <div className="absolute right-0 top-10 z-50 flex gap-1.5 p-2 rounded-2xl shadow-2xl"
-                      style={{ backgroundColor: isDark ? 'rgba(12,12,20,0.97)' : 'rgba(255,255,255,0.97)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
-                      {BG_PRESETS.map(p => (
-                        <button key={p.value} onClick={() => { setBgPreset(p); setShowColorPicker(false) }}
-                          className="w-7 h-7 rounded-full transition-all active:scale-110"
-                          style={{ backgroundColor: p.value, outline: mobileBg.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent', outlineOffset: '2px', border: '1px solid rgba(0,0,0,0.1)' }} />
-                      ))}
-                    </div>
-                  </>
-                )}
               </div>
               <button onClick={handleSynthesize}
                 className="w-9 h-9 flex items-center justify-center rounded-full active:scale-95 text-base"
