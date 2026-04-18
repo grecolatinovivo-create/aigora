@@ -306,14 +306,14 @@ const MODE_INFO = {
   },
 }
 
-function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void; onClose: () => void }) {
+function ModeSelect({ onSelect, onClose, inline }: { onSelect: (mode: GameMode) => void; onClose: () => void; inline?: boolean }) {
   const [selected, setSelected] = useState<GameMode>('2v2')
   const info = MODE_INFO[selected]
 
   return (
     <>
-    <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />
-    <div className="fixed inset-0 z-[9999] flex flex-col overflow-hidden"
+    {!inline && <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />}
+    <div className={inline ? 'absolute inset-0 z-[60] flex flex-col overflow-hidden' : 'fixed inset-0 z-[9999] flex flex-col overflow-hidden'}
       style={{ backgroundColor: '#07070f' }}>
 
       {/* Header compatto */}
@@ -611,10 +611,11 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter, onCo
   )
 }
 
-function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
+function TwoVsTwoSetup({ onStart, onBack, currentUserName, inline }: {
   onStart: (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => void
   onBack: () => void
   currentUserName: string
+  inline?: boolean
 }) {
   const [topic, setTopic] = useState('')
   const [teamAHuman, setTeamAHuman] = useState(currentUserName || 'Tu')
@@ -707,9 +708,9 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   // ── Render: schermata fullscreen verticale stile WhatsApp ──
   return (
     <>
-    {/* Pannello di copertura safe-area — copre anche le bande sopra/sotto */}
-    <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />
-    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f' }}>
+    {/* Pannello di copertura safe-area — solo su mobile (non inline) */}
+    {!inline && <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />}
+    <div className={inline ? 'absolute inset-0 z-[60] flex flex-col' : 'fixed inset-0 z-[9999] flex flex-col'} style={{ background: '#07070f' }}>
 
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
@@ -1967,6 +1968,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [mobileFontSize, setMobileFontSize] = useState(14)
   const [isListening, setIsListening] = useState(false)
   const [phoneScale, setPhoneScale] = useState(1)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile (≤600px) — stessa breakpoint del CSS phone-screen-mobile
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 600px)')
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   // Scala dinamica del telefono: non sborda mai dallo schermo
   useEffect(() => {
@@ -3739,17 +3750,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
       </div>
 
-      {/* ── SELEZIONE FORMATO MULTIPLAYER (dalla start) ── */}
-      {showModeSelect && typeof window !== 'undefined' && createPortal(
+      {/* ── SELEZIONE FORMATO / SETUP 2v2 — solo mobile (su desktop sono inline nella cornice) ── */}
+      {isMobile && showModeSelect && typeof window !== 'undefined' && createPortal(
         <ModeSelect
           onSelect={handleSelectMode}
           onClose={() => setShowModeSelect(false)}
         />,
         document.body
       )}
-
-      {/* ── SETUP 2 vs 2 (dalla start) ── */}
-      {show2v2Setup && typeof window !== 'undefined' && createPortal(
+      {isMobile && show2v2Setup && typeof window !== 'undefined' && createPortal(
         <TwoVsTwoSetup
           onStart={handle2v2Start}
           onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
@@ -5059,6 +5068,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
           )}
         </>}
+
+          {/* ── ModeSelect inline (desktop dentro cornice) ── */}
+          {showModeSelect && (
+            <ModeSelect inline onSelect={handleSelectMode} onClose={() => setShowModeSelect(false)} />
+          )}
+
+          {/* ── TwoVsTwoSetup inline (desktop dentro cornice) ── */}
+          {show2v2Setup && (
+            <TwoVsTwoSetup inline onStart={handle2v2Start} onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }} currentUserName={displayName !== 'Tu' ? displayName : ''} />
+          )}
+
       </div>
       </div>{/* fine wrapper fiamme */}
       </div>{/* fine flex-col wrapper telefono */}
@@ -5136,8 +5156,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         </div>
       </div>
 
-      {/* ── SETUP 2 vs 2 ── */}
-      {show2v2Setup && typeof window !== 'undefined' && createPortal(
+      {/* ── SETUP 2v2 / ModeSelect — solo mobile (su desktop sono inline nella cornice) ── */}
+      {isMobile && show2v2Setup && typeof window !== 'undefined' && createPortal(
         <TwoVsTwoSetup
           onStart={handle2v2Start}
           onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
@@ -5145,9 +5165,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         />,
         document.body
       )}
-
-      {/* ── SELEZIONE FORMATO MULTIPLAYER ── */}
-      {showModeSelect && typeof window !== 'undefined' && createPortal(
+      {isMobile && showModeSelect && typeof window !== 'undefined' && createPortal(
         <ModeSelect
           onSelect={handleSelectMode}
           onClose={() => setShowModeSelect(false)}
