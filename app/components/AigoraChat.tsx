@@ -2566,26 +2566,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // ── Theme color dinamico per mobile (chrome del browser) ──
   useEffect(() => {
     let color = '#07070f' // default: home/landing
-    if (showModeSelect) {
-      color = '#07070f'
-    } else if (show2v2Setup) {
+    if (showModeSelect || show2v2Setup) {
       color = '#07070f'
     } else if (selectedMode === '2v2' && twoVsTwoState) {
       color = '#0d0d14'
-    } else if (phase === 'running' || phase === 'done') {
-      color = bgPreset.value
-    } else if (phase === 'history' || phase === 'profile' || phase === 'new') {
+    } else if (phase === 'running' || phase === 'done' || phase === 'history' || phase === 'profile' || phase === 'new') {
       color = bgPreset.value
     }
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) {
-      meta.setAttribute('content', color)
-    } else {
-      const m = document.createElement('meta')
-      m.setAttribute('name', 'theme-color')
-      m.setAttribute('content', color)
-      document.head.appendChild(m)
-    }
+    // Rimuovi tutti i meta theme-color esistenti (Next.js ne può creare più di uno)
+    document.querySelectorAll('meta[name="theme-color"]').forEach(el => el.remove())
+    const m = document.createElement('meta')
+    m.setAttribute('name', 'theme-color')
+    m.setAttribute('content', color)
+    document.head.appendChild(m)
   }, [showModeSelect, show2v2Setup, selectedMode, twoVsTwoState, phase, bgPreset.value])
 
   const scrollToBottom = useCallback(() => {
