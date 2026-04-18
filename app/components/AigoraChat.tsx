@@ -311,223 +311,92 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
   const info = MODE_INFO[selected]
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col overflow-y-auto"
-      style={{ backgroundColor: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(16,163,127,0.12) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 60% 20%, rgba(26,115,232,0.10) 0%, transparent 50%)' }}>
+    <div className="fixed inset-0 z-[9999] flex flex-col overflow-hidden"
+      style={{ backgroundColor: '#07070f' }}>
 
-      {/* Navbar */}
-      <div className="fixed top-0 left-0 right-0 h-[52px] flex items-center justify-between px-6 z-50"
-        style={{ backgroundColor: 'rgba(7,7,15,0.4)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
-        <button onClick={onClose} className="flex items-center gap-2 text-sm font-medium transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Indietro
+      {/* Header compatto */}
+      <div className="flex-shrink-0 flex items-center px-5 border-b"
+        style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', borderColor: 'rgba(255,255,255,0.07)' }}>
+        <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
+          style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <span className="font-black text-lg"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></span>
-        <div style={{ width: 80 }} />
+        <div className="flex-1 text-center">
+          <div className="font-black text-base text-white">Come vuoi dibattere?</div>
+          <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Scegli il formato</div>
+        </div>
+        <div className="w-9" />
       </div>
 
-      {/* Contenuto */}
-      <div className="flex flex-col items-center w-full px-6 pt-[80px] pb-12">
+      {/* Contenuto — no scroll */}
+      <div className="flex-1 flex flex-col px-4 py-4 gap-3" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
 
         {/* Hero */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-semibold border"
-            style={{ backgroundColor: 'rgba(124,58,237,0.12)', borderColor: 'rgba(124,58,237,0.3)', color: '#c4b5fd' }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse inline-block" />
-            Scegli il formato del dibattito
+        {/* Card 2 vs 2 — attiva */}
+        <button onClick={() => onSelect('2v2')}
+          className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all"
+          style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(91,33,182,0.1) 100%)',
+            border: '1.5px solid rgba(167,139,250,0.35)',
+            boxShadow: '0 4px 20px rgba(124,58,237,0.15)',
+            minHeight: 0,
+          }}>
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>2 vs 2</div>
+              <div className="text-xl font-black text-white leading-tight">Sfida a squadre</div>
+            </div>
+            <div className="flex gap-1">
+              {[['#7C3AED','C'],['#10A37F','G']].map(([c,l]) => (
+                <div key={l} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-black" style={{ background: c }}>{l}</div>
+              ))}
+            </div>
           </div>
-          <h1 className="text-4xl font-black text-white mb-2">Come vuoi dibattere?</h1>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Tre formati diversi, un'unica arena. Clicca quello che fa per te.</p>
+          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Tu + AI vs un altro umano + AI. L'arbitro assegna i punti a ogni round.</div>
+          <div className="flex items-center justify-end mt-3">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
+              Gioca
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </div>
+        </button>
+
+        {/* Card Classico — coming soon */}
+        <div className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            opacity: 0.5,
+            cursor: 'not-allowed',
+            minHeight: 0,
+          }}>
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Classico</div>
+              <div className="text-xl font-black text-white leading-tight">Dibattito libero</div>
+            </div>
+            <div className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>Presto</div>
+          </div>
+          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>4 AI discutono con te su qualsiasi argomento. Formato aperto.</div>
         </div>
 
-        {/* Tre telefoni */}
-        <div className="flex items-end justify-center gap-16 flex-wrap mb-10">
-
-          {/* ── CLASSICO ── */}
-          {(() => {
-            const isSelected = selected === 'classico'
-            return (
-              <div className="flex flex-col items-center gap-4 scale-in" style={{ animationDelay: '0.05s', animationFillMode: 'both', cursor: 'not-allowed', opacity: 0.45 }}>
-                <div className="relative" style={{ width: 160, height: 336 }}>
-                  <div className="absolute inset-0 rounded-[38px]"
-                    style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #10A37F, 0 0 40px rgba(16,163,127,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
-                  {/* Glare */}
-                  <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top: 6, left: 6, right: 6, height: '45%', background: 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, transparent 60%)', zIndex: 10 }} />
-                  {/* Notch */}
-                  <div className="absolute" style={{ width: 50, height: 12, background: '#1c1c1e', borderRadius: '0 0 8px 8px', left: '50%', transform: 'translateX(-50%)', top: 6, zIndex: 20 }} />
-                  {/* Screen */}
-                  <div className="absolute overflow-hidden flex flex-col" style={{ top: 6, left: 6, right: 6, bottom: 6, borderRadius: 32, background: '#f5f0e8' }}>
-                    {/* Header */}
-                    <div className="flex items-center gap-1.5 px-2 py-2 flex-shrink-0" style={{ background: '#ede8dc', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                      <div className="flex">
-                        {[['C','#7C3AED'],['Ge','#1A73E8'],['P','#FF6B2B'],['G','#10A37F']].map(([l,c],i) => (
-                          <div key={i} className="flex items-center justify-center text-white font-bold" style={{ width:18,height:18,borderRadius:'50%',fontSize:6,background:c,marginLeft:i===0?0:-4,border:'1.5px solid #ede8dc' }}>{l}</div>
-                        ))}
-                      </div>
-                      <div><div style={{ fontSize:9,fontWeight:700,color:'#111' }}>AiGORÀ</div><div style={{ fontSize:7,color:'rgba(0,0,0,0.4)' }}>4 AI · dibattito libero</div></div>
-                    </div>
-                    {/* Messages */}
-                    <div className="flex-1 overflow-hidden flex flex-col gap-1.5 p-2">
-                      <div className="self-end text-white text-[7px] px-2 py-1 rounded-[8px] rounded-br-sm max-w-[80%]" style={{ background:'#005c4b', lineHeight:1.3 }}>L'IA sostituirà i lavori creativi?</div>
-                      <div className="flex gap-1 max-w-[85%]">
-                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#7C3AED',marginTop:1 }}>C</div>
-                        <div className="text-[7px] px-2 py-1 rounded-[8px] leading-[1.3]" style={{ background:'#e8e0f8',color:'#1a1a2e' }}>Dipende da cosa intendi per "sostituire". Il ruolo umano cambierà profondamente.</div>
-                      </div>
-                      <div className="flex gap-1 max-w-[85%]">
-                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#10A37F',marginTop:1 }}>G</div>
-                        <div className="text-[7px] px-2 py-1 rounded-[8px] leading-[1.3]" style={{ background:'#d4f5e9',color:'#1a1a2e' }}>Già oggi illustratori perdono lavoro. I dati parlano chiaro.</div>
-                      </div>
-                      <div className="flex gap-1 max-w-[85%]">
-                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#FF6B2B',marginTop:1 }}>P</div>
-                        <div className="text-[7px] px-2 py-1 rounded-[8px] leading-[1.3]" style={{ background:'#ffe8d6',color:'#1a1a2e' }}>-34% commissioni freelance negli ultimi 18 mesi.</div>
-                      </div>
-                    </div>
-                    {/* Input */}
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0" style={{ background:'#ede8dc',borderTop:'1px solid rgba(0,0,0,0.06)' }}>
-                      <div className="flex-1 rounded-xl px-2 py-1 text-[7px]" style={{ background:'rgba(0,0,0,0.06)',color:'rgba(0,0,0,0.4)' }}>Scrivi un messaggio…</div>
-                      <div className="flex items-center justify-center flex-shrink-0" style={{ width:18,height:18,borderRadius:'50%',background:'#10A37F' }}>
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Coming Soon overlay */}
-                  <div className="absolute inset-0 rounded-[38px] flex flex-col items-center justify-center gap-1.5" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)', zIndex: 30 }}>
-                    <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}>Coming Soon</div>
-                  </div>
-                </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Classico</div>
-              </div>
-            )
-          })()}
-
-          {/* ── 2 vs 2 (centrale, più grande) ── */}
-          {(() => {
-            const isSelected = selected === '2v2'
-            return (
-              <div onClick={() => selected === '2v2' ? onSelect('2v2') : setSelected('2v2')} className="flex flex-col items-center gap-4 cursor-pointer scale-in group"
-                style={{ animationDelay: '0.15s', animationFillMode: 'both', transition: 'transform 0.3s', transform: isSelected ? 'scale(1.05) translateY(-8px)' : 'scale(1)' }}>
-                <div className="relative transition-transform duration-300 group-hover:scale-[1.04]" style={{ width: 190, height: 400 }}>
-                  <div className="absolute inset-0 rounded-[38px]"
-                    style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #A78BFA, 0 0 40px rgba(167,139,250,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
-                  <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top:6,left:6,right:6,height:'45%',background:'linear-gradient(160deg,rgba(255,255,255,0.07) 0%,transparent 60%)',zIndex:10 }} />
-                  <div className="absolute" style={{ width:55,height:13,background:'#1c1c1e',borderRadius:'0 0 8px 8px',left:'50%',transform:'translateX(-50%)',top:6,zIndex:20 }} />
-                  <div className="absolute overflow-hidden flex flex-col" style={{ top:6,left:6,right:6,bottom:6,borderRadius:32,background:'#0d0d14' }}>
-                    {/* Header score */}
-                    <div className="flex items-center justify-between px-2 py-1.5 flex-shrink-0" style={{ background:'rgba(0,0,0,0.3)',borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="text-[7px] font-black px-1.5 py-0.5 rounded" style={{ color:'#60a5fa',background:'rgba(59,130,246,0.15)',border:'1px solid rgba(59,130,246,0.3)' }}>SQUADRA A</div>
-                      <div className="text-base font-black text-white">2 — 1</div>
-                      <div className="text-[7px] font-black px-1.5 py-0.5 rounded" style={{ color:'#f87171',background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)' }}>SQUADRA B</div>
-                    </div>
-                    {/* Teams */}
-                    <div className="flex flex-shrink-0" style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="flex-1 flex flex-col gap-1 px-2 py-1.5" style={{ borderRight:'1px solid rgba(255,255,255,0.06)',background:'rgba(59,130,246,0.05)' }}>
-                        {[['G','#F59E0B','Giampiero','#60a5fa'],['C','#7C3AED','Claude','#60a5fa']].map(([l,c,n,tc])=>(
-                          <div key={n} className="flex items-center gap-1">
-                            <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:13,height:13,borderRadius:'50%',fontSize:5,background:c }}>{l}</div>
-                            <div className="text-[7px] font-semibold" style={{ color:tc }}>{n}</div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex-1 flex flex-col gap-1 px-2 py-1.5" style={{ background:'rgba(239,68,68,0.05)' }}>
-                        {[['M','#10A37F','Marco','#f87171'],['G','#10A37F','GPT','#f87171']].map(([l,c,n,tc])=>(
-                          <div key={n} className="flex items-center gap-1">
-                            <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:13,height:13,borderRadius:'50%',fontSize:5,background:c }}>{l}</div>
-                            <div className="text-[7px] font-semibold" style={{ color:tc }}>{n}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Messages */}
-                    <div className="flex-1 overflow-hidden flex flex-col gap-1 p-1.5">
-                      <div className="text-[7px] px-2 py-1 rounded-[6px] max-w-[85%]" style={{ background:'rgba(59,130,246,0.15)',color:'#93c5fd',borderRadius:'3px 6px 6px 6px' }}>L'IA amplifica la creatività umana, non la sostituisce.</div>
-                      <div className="self-end text-[7px] px-2 py-1 max-w-[85%]" style={{ background:'rgba(239,68,68,0.15)',color:'#fca5a5',borderRadius:'6px 3px 6px 6px' }}>Romantico. Nel mondo reale i budget spariscono.</div>
-                      <div className="text-[7px] px-2 py-1 max-w-[85%]" style={{ background:'rgba(59,130,246,0.15)',color:'#93c5fd',borderRadius:'3px 6px 6px 6px',opacity:0.7,fontStyle:'italic' }}>Claude: Anche la fotografia "uccise" la pittura — eppure…</div>
-                      <div className="self-end text-[7px] px-2 py-1 max-w-[85%]" style={{ background:'rgba(239,68,68,0.15)',color:'#fca5a5',borderRadius:'6px 3px 6px 6px',opacity:0.7,fontStyle:'italic' }}>GPT: La fotografia non generava contenuti autonomamente.</div>
-                    </div>
-                    {/* Arbitro */}
-                    <div className="mx-1.5 mb-1.5 flex-shrink-0 rounded-lg p-1.5" style={{ background:'rgba(167,139,250,0.1)',border:'1px solid rgba(167,139,250,0.2)' }}>
-                      <div className="text-[6px] font-black uppercase tracking-wide mb-0.5" style={{ color:'#A78BFA' }}>Gemini — Arbitro</div>
-                      <div className="text-[7px] leading-[1.3]" style={{ color:'rgba(255,255,255,0.6)' }}>Squadra A più solida sul piano storico. Squadra B più concreta sui dati.</div>
-                    </div>
-                    {/* Input */}
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 flex-shrink-0" style={{ background:'rgba(0,0,0,0.3)',borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="flex-1 rounded-xl px-2 py-1 text-[7px]" style={{ background:'rgba(255,255,255,0.07)',color:'rgba(255,255,255,0.3)' }}>Il tuo argomento…</div>
-                      <div className="flex items-center justify-center flex-shrink-0" style={{ width:18,height:18,borderRadius:'50%',background:'rgba(59,130,246,0.3)',border:'1px solid rgba(59,130,246,0.5)' }}>
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="#60a5fa"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest transition-colors" style={{ color: isSelected ? '#A78BFA' : 'rgba(255,255,255,0.25)' }}>2 vs 2</div>
-              </div>
-            )
-          })()}
-
-          {/* ── DEVIL'S ADVOCATE ── */}
-          {(() => {
-            const isSelected = selected === 'devil'
-            return (
-              <div className="flex flex-col items-center gap-4 scale-in" style={{ animationDelay: '0.25s', animationFillMode: 'both', cursor: 'not-allowed', opacity: 0.45 }}>
-                <div className="relative" style={{ width: 160, height: 336 }}>
-                  <div className="absolute inset-0 rounded-[38px]"
-                    style={{ background: '#1c1c1e', boxShadow: isSelected ? '0 0 0 2px #ef4444, 0 0 40px rgba(239,68,68,0.4), 0 30px 80px rgba(0,0,0,0.8)' : '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.7)', transition: 'all 0.3s' }} />
-                  <div className="absolute rounded-t-[32px] pointer-events-none" style={{ top:6,left:6,right:6,height:'45%',background:'linear-gradient(160deg,rgba(255,255,255,0.07) 0%,transparent 60%)',zIndex:10 }} />
-                  <div className="absolute" style={{ width:50,height:12,background:'#1c1c1e',borderRadius:'0 0 8px 8px',left:'50%',transform:'translateX(-50%)',top:6,zIndex:20 }} />
-                  <div className="absolute overflow-hidden flex flex-col" style={{ top:6,left:6,right:6,bottom:6,borderRadius:32,background:'#0d0d14' }}>
-                    {/* Header posizione */}
-                    <div className="flex-shrink-0 px-2 py-2" style={{ background:'linear-gradient(135deg,rgba(239,68,68,0.15),rgba(245,158,11,0.1))',borderBottom:'1px solid rgba(239,68,68,0.2)' }}>
-                      <div className="text-[6px] font-black uppercase tracking-wide mb-0.5" style={{ color:'#f87171' }}>😈 Devil's Advocate</div>
-                      <div className="text-[8px] font-bold text-white leading-[1.3]">"I social media fanno bene alla democrazia"</div>
-                      <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded" style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'#f87171',fontSize:6,fontWeight:700 }}>La tua posizione: DIFENDI</div>
-                    </div>
-                    {/* Messages */}
-                    <div className="flex-1 overflow-hidden flex flex-col gap-1.5 p-2">
-                      <div className="flex gap-1 max-w-[90%]">
-                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#7C3AED',marginTop:1 }}>C</div>
-                        <div className="text-[7px] px-2 py-1 rounded-[8px] leading-[1.3]" style={{ background:'rgba(124,58,237,0.15)',color:'#e2d9ff',borderRadius:'3px 8px 8px 8px' }}>Come giustifichi la diffusione di disinformazione di massa?</div>
-                      </div>
-                      <div className="self-end text-[7px] px-2 py-1 max-w-[80%]" style={{ background:'rgba(239,68,68,0.2)',color:'#fca5a5',borderRadius:'8px 3px 8px 8px',lineHeight:1.3 }}>Le piattaforme hanno amplificato movimenti che altrimenti sarebbero stati silenziati.</div>
-                      <div className="flex gap-1 max-w-[90%]">
-                        <div className="flex-shrink-0 flex items-center justify-center text-white font-bold" style={{ width:14,height:14,borderRadius:'50%',fontSize:5,background:'#10A37F',marginTop:1 }}>G</div>
-                        <div className="text-[7px] px-2 py-1 leading-[1.3]" style={{ background:'rgba(16,163,127,0.15)',color:'#d4f5e9',borderRadius:'3px 8px 8px 8px' }}>Ok, ma il caso Myanmar? Cambridge Analytica?</div>
-                      </div>
-                    </div>
-                    {/* Score */}
-                    <div className="mx-2 mb-1.5 flex-shrink-0 rounded-xl p-2" style={{ background:'rgba(245,158,11,0.1)',border:'1px solid rgba(245,158,11,0.25)' }}>
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="text-[7px]" style={{ color:'rgba(255,255,255,0.4)' }}>Solidità argomenti</div>
-                        <div className="text-sm font-black" style={{ color:'#fbbf24' }}>7.2</div>
-                      </div>
-                      <div className="h-1 rounded-full overflow-hidden" style={{ background:'rgba(255,255,255,0.1)' }}>
-                        <div className="h-full rounded-full" style={{ width:'72%',background:'linear-gradient(90deg,#ef4444,#f59e0b)' }} />
-                      </div>
-                    </div>
-                    {/* Input */}
-                    <div className="flex items-center gap-1 px-2 py-1.5 flex-shrink-0" style={{ background:'rgba(0,0,0,0.3)',borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-                      <div className="flex-1 rounded-xl px-2 py-1 text-[7px]" style={{ background:'rgba(255,255,255,0.07)',color:'rgba(255,255,255,0.3)' }}>Rispondi all'attacco…</div>
-                      <div className="flex-shrink-0 px-1.5 py-1 rounded-lg text-[6px] font-bold whitespace-nowrap" style={{ background:'rgba(239,68,68,0.2)',border:'1px solid rgba(239,68,68,0.4)',color:'#f87171' }}>Fine turno →</div>
-                    </div>
-                  </div>
-                  {/* Coming Soon overlay */}
-                  <div className="absolute inset-0 rounded-[38px] flex flex-col items-center justify-center gap-1.5" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)', zIndex: 30 }}>
-                    <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}>Coming Soon</div>
-                  </div>
-                </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Devil's Advocate</div>
-              </div>
-            )
-          })()}
-
-        </div>
-
-        {/* Info + CTA */}
-        <div className="text-center max-w-md">
-          <h2 className="text-xl font-black text-white mb-2">{info.label}</h2>
-          <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.45)' }}>{info.desc}</p>
-          <button onClick={() => onSelect(selected)}
-            className="px-10 py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.03] active:scale-[0.97]"
-            style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 24px rgba(124,58,237,0.45)' }}>
-            {info.btn}
-          </button>
+        {/* Card Devil's Advocate — coming soon */}
+        <div className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            opacity: 0.5,
+            cursor: 'not-allowed',
+            minHeight: 0,
+          }}>
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Devil's Advocate</div>
+              <div className="text-xl font-black text-white leading-tight">Difendi la tua posizione</div>
+            </div>
+            <div className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>Presto</div>
+          </div>
+          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>3 AI attaccano la tua tesi. Difenditi fino all'ultimo argomento.</div>
         </div>
 
       </div>
@@ -761,11 +630,16 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [creating, setCreating] = useState(false)
   const [rouletteSlots, setRouletteSlots] = useState<string[]>(['', '', ''])
   const [rouletteSettled, setRouletteSettled] = useState<boolean[]>([false, false, false])
-  const [bubbleTopics2v2] = useState<string[]>(() => [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5).slice(0, 12))
   const [rouletteReady, setRouletteReady] = useState(false)
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
   const [copied, setCopied] = useState(false)
+  // AI-chosen topic: random pick from pool, revealed on "Scopri"
+  const [aiTopicPool] = useState<string[]>(() => [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5))
+  const [aiTopicIndex, setAiTopicIndex] = useState(0)
+  const [topicRevealed, setTopicRevealed] = useState(false)
+  // userSide: 'attack' | 'defend' — AI randomly picks when topic is revealed
+  const [userSide, setUserSide] = useState<'attack' | 'defend'>('attack')
 
   // Quando l'utente sceglie l'AI per A, auto-assegna B e arbitro tra le rimanenti
   const handleTeamAAI = (id: string) => {
@@ -866,97 +740,120 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         </div>
       </div>
 
-      {/* Corpo scrollabile */}
-      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+      {/* Corpo — no scroll per topic e teams, scroll per roulette/share */}
+      <div className={`flex-1 ${step === 'topic' || step === 'teams' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ paddingBottom: step === 'topic' || step === 'teams' ? 0 : 'max(20px, env(safe-area-inset-bottom))' }}>
 
-        {/* ── STEP 1: Topic ── */}
+        {/* ── STEP 1: Topic scelto dall'AI ── */}
         {step === 'topic' && (
-          <div className="flex flex-col px-5 pt-8 pb-6 gap-6 min-h-full">
-            <div>
-              <div className="text-2xl font-black text-white mb-1">Su cosa volete sfidarvi?</div>
-              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Scrivi l'argomento del dibattito.</div>
+          <div className="flex flex-col h-full px-5 pt-8 pb-6 gap-6" style={{ minHeight: '100%' }}>
+            <div className="text-center">
+              <div className="text-2xl font-black text-white mb-1">L'AI sceglie il tema</div>
+              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Premi il pulsante per scoprire l'argomento e il tuo ruolo.</div>
             </div>
 
-            <textarea
-              value={topic}
-              onChange={e => setTopic(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && topic.trim()) { e.preventDefault(); setStep('teams') } }}
-              placeholder="Es. L'IA sostituirà i lavori creativi entro il 2030"
-              rows={3}
-              autoFocus
-              className="w-full rounded-2xl px-4 py-3.5 text-[15px] outline-none resize-none"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f0f0', lineHeight: 1.5, caretColor: '#3b82f6' }}
-            />
-
-            {/* Suggerimenti come chip */}
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.25)' }}>Oppure scegli un tema</div>
-              <div className="flex flex-wrap gap-2">
-                {bubbleTopics2v2.slice(0, 10).map(t => (
-                  <button key={t} onClick={() => { setTopic(t); setStep('teams') }}
-                    className="px-3.5 py-1.5 rounded-full text-[12px] transition-all active:scale-95"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.55)' }}>
-                    {t}
+            {/* Card tema */}
+            <div className="flex-1 flex flex-col items-center justify-center gap-6">
+              {!topicRevealed ? (
+                <div className="w-full flex flex-col items-center gap-6">
+                  {/* Icona AI misteriosa */}
+                  <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))', border: '2px solid rgba(167,139,250,0.3)' }}>
+                    <div className="text-4xl">🎲</div>
+                  </div>
+                  <div className="text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    <div className="text-sm">Il tema è segreto.</div>
+                    <div className="text-sm">Premi per scoprirlo.</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full flex flex-col gap-4">
+                  {/* Tema rivelato */}
+                  <div className="w-full px-5 py-5 rounded-3xl text-center"
+                    style={{ background: 'rgba(59,130,246,0.1)', border: '1.5px solid rgba(59,130,246,0.3)' }}>
+                    <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(59,130,246,0.8)' }}>Argomento</div>
+                    <div className="text-lg font-black text-white leading-snug">"{aiTopicPool[aiTopicIndex]}"</div>
+                  </div>
+                  {/* Ruolo rivelato */}
+                  <div className="w-full px-5 py-4 rounded-3xl text-center"
+                    style={{ background: userSide === 'attack' ? 'rgba(239,68,68,0.1)' : 'rgba(16,163,127,0.1)', border: `1.5px solid ${userSide === 'attack' ? 'rgba(239,68,68,0.3)' : 'rgba(16,163,127,0.3)'}` }}>
+                    <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: userSide === 'attack' ? '#f87171' : '#34d399' }}>Il tuo ruolo</div>
+                    <div className="text-lg font-black text-white">{userSide === 'attack' ? '⚔ Attacca' : '🛡 Difendi'}</div>
+                    <div className="text-[12px] mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{userSide === 'attack' ? 'Devi smontare la tesi' : 'Devi sostenere la tesi'}</div>
+                  </div>
+                  {/* Riprova */}
+                  <button onClick={() => {
+                    setAiTopicIndex(i => (i + 1) % aiTopicPool.length)
+                    setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
+                  }} className="text-center text-[12px] py-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                    Non mi piace · Cambia tema
                   </button>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
 
-            <div className="mt-auto pt-4">
-              <button onClick={() => topic.trim() && setStep('teams')} disabled={!topic.trim()}
-                className="w-full py-4 rounded-2xl font-bold text-white text-[15px] disabled:opacity-30 transition-all active:scale-[0.98]"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: topic.trim() ? '0 4px 20px rgba(59,130,246,0.35)' : 'none' }}>
-                Avanti →
-              </button>
+            <div className="flex flex-col gap-2">
+              {!topicRevealed ? (
+                <button onClick={() => {
+                  setTopicRevealed(true)
+                  setTopic(aiTopicPool[aiTopicIndex])
+                  setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
+                }}
+                  className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #7C3AED, #3b82f6)', boxShadow: '0 4px 20px rgba(124,58,237,0.35)' }}>
+                  Scopri il tema 🎲
+                </button>
+              ) : (
+                <button onClick={() => { setTopic(aiTopicPool[aiTopicIndex]); setStep('teams') }}
+                  className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
+                  Avanti →
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        {/* ── STEP 2: Scegli la tua AI ── */}
+        {/* ── STEP 2: Scegli la tua AI — griglia 2x2 ── */}
         {step === 'teams' && (
-          <div className="flex flex-col px-5 pt-8 pb-6 gap-6">
-            {/* Topic recap */}
-            <div className="px-4 py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div className="text-[10px] text-white/30 uppercase tracking-widest mb-0.5">Argomento</div>
-              <div className="text-[13px] font-semibold text-white/75 leading-snug">"{topic}"</div>
+          <div className="flex flex-col h-full px-4 pt-5 pb-4 gap-4" style={{ minHeight: '100%' }}>
+            {/* Topic recap compatto */}
+            <div className="px-4 py-2.5 rounded-2xl flex-shrink-0" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="text-[9px] text-white/30 uppercase tracking-widest mb-0.5">Argomento</div>
+              <div className="text-[12px] font-semibold text-white/75 leading-snug truncate">"{topic}"</div>
             </div>
 
-            {/* Scelta AI */}
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.25)' }}>Scegli il tuo alleato AI</div>
-              <div className="flex flex-col gap-2.5">
-                {AI_OPTIONS.map(ai => (
+            {/* Label */}
+            <div className="text-[11px] font-semibold uppercase tracking-widest flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)' }}>Scegli il tuo alleato AI</div>
+
+            {/* Griglia 2x2 — flex-1 */}
+            <div className="flex-1 grid grid-cols-2 gap-3" style={{ minHeight: 0 }}>
+              {AI_OPTIONS.map(ai => {
+                const isSelected = teamAAI === ai.id
+                return (
                   <button key={ai.id} onClick={() => setTeamAAI(ai.id)}
-                    className="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98]"
+                    className="flex flex-col items-center justify-center gap-2 rounded-3xl transition-all active:scale-[0.97] p-4"
                     style={{
-                      background: teamAAI === ai.id ? `${ai.color}18` : 'rgba(255,255,255,0.04)',
-                      border: teamAAI === ai.id ? `2px solid ${ai.color}55` : '1px solid rgba(255,255,255,0.07)',
+                      background: isSelected ? `${ai.color}18` : 'rgba(255,255,255,0.04)',
+                      border: isSelected ? `2px solid ${ai.color}60` : '1px solid rgba(255,255,255,0.08)',
+                      boxShadow: isSelected ? `0 0 20px ${ai.color}25` : 'none',
                     }}>
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0"
-                      style={{ background: ai.color, boxShadow: teamAAI === ai.id ? `0 0 16px ${ai.color}55` : 'none' }}>
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0"
+                      style={{ background: ai.color, boxShadow: isSelected ? `0 0 16px ${ai.color}55` : 'none' }}>
                       {ai.id === 'gemini' ? 'Ge' : ai.name[0]}
                     </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-bold text-[14px]" style={{ color: teamAAI === ai.id ? 'white' : 'rgba(255,255,255,0.6)' }}>{ai.name}</div>
-                      <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{AI_DESC[ai.id]}</div>
-                    </div>
-                    {teamAAI === ai.id && (
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: ai.color }}>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      </div>
-                    )}
+                    <div className="font-bold text-[14px] text-center" style={{ color: isSelected ? 'white' : 'rgba(255,255,255,0.6)' }}>{ai.name}</div>
+                    <div className="text-[10px] text-center" style={{ color: 'rgba(255,255,255,0.25)' }}>{AI_DESC[ai.id].split(' · ')[1]}</div>
                   </button>
-                ))}
-              </div>
+                )
+              })}
             </div>
 
-            {/* Selettore round */}
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.25)' }}>Numero di round</div>
-              <div className="flex gap-2">
+            {/* Round selector compatto */}
+            <div className="flex-shrink-0">
+              <div className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.2)' }}>Round</div>
+              <div className="flex gap-1.5">
                 {[3, 5, 7, 9, 11].map(r => (
                   <button key={r} onClick={() => setMaxRoundsChoice(r)}
-                    className="flex-1 h-11 rounded-xl font-black text-sm transition-all active:scale-95"
+                    className="flex-1 h-9 rounded-xl font-black text-sm transition-all active:scale-95"
                     style={{
                       background: maxRoundsChoice === r ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)',
                       border: maxRoundsChoice === r ? '2px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.08)',
@@ -968,12 +865,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               </div>
             </div>
 
-            <div className="text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>
-              Le AI avversarie e l'arbitro saranno assegnati dalla roulette
-            </div>
-
-            <button onClick={handleCreate} disabled={creating}
-              className="w-full py-4 rounded-2xl font-bold text-white text-[15px] disabled:opacity-50 transition-all active:scale-[0.98]"
+            <button onClick={handleCreate} disabled={creating} className="flex-shrink-0 w-full py-4 rounded-2xl font-bold text-white text-[15px] disabled:opacity-50 transition-all active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #3b82f6, #7C3AED)', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}>
               {creating ? 'Preparo la roulette…' : 'Avvia la roulette →'}
             </button>
@@ -1733,95 +1625,22 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
           ))}
         </div>
 
-        {/* Tab */}
-        <div className="flex border-b" style={{ borderColor }}>
-          {([['chat', '💬 Chat'], ['following', '👥 Seguiti'], ['followers', '👤 Seguaci']] as const).map(([tab, label]) => (
-            <button key={tab} onClick={() => setProfileTab(tab)}
-              className="flex-1 py-3 text-xs font-bold transition-colors"
-              style={{
-                color: profileTab === tab ? '#A78BFA' : subColor,
-                borderBottom: profileTab === tab ? '2px solid #A78BFA' : '2px solid transparent',
-              }}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Contenuto tab */}
-        <div className="px-4 py-3 flex flex-col gap-2">
-          {/* Chat recenti */}
-          {profileTab === 'chat' && (
-            savedChats.length === 0 ? (
-              <div className="text-center py-8 text-xs" style={{ color: subColor }}>Nessuna chat ancora</div>
-            ) : savedChats.slice(0, 10).map((chat: any) => (
-              <div key={chat.id} className="flex items-center gap-3 p-3 rounded-2xl"
-                style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${borderColor}` }}>
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base flex-shrink-0"
-                  style={{ backgroundColor: isDark ? 'rgba(124,58,237,0.15)' : 'rgba(124,58,237,0.1)' }}>
-                  💬
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold truncate" style={{ color: textColor }}>{chat.title}</div>
-                  <div className="text-[10px]" style={{ color: subColor }}>{chat.date}</div>
-                </div>
-                {chat.isPublic && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(124,58,237,0.15)', color: '#A78BFA' }}>PUB</span>
-                )}
-              </div>
-            ))
-          )}
-
-          {/* Following */}
-          {profileTab === 'following' && (
-            following.length === 0 ? (
-              <div className="text-center py-8 text-xs" style={{ color: subColor }}>Non segui ancora nessuno</div>
-            ) : following.map((u: any) => (
-              <div key={u.id} className="flex items-center gap-3 py-2 border-b" style={{ borderColor }}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                  style={{ backgroundColor: '#7C3AED' }}>
-                  {(u.name || u.email || '?')[0].toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold truncate" style={{ color: textColor }}>{u.name || u.email}</div>
-                </div>
-                <button onClick={() => handleUnfollow(u.id)}
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold"
-                  style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', color: subColor }}>
-                  Smetti
-                </button>
-              </div>
-            ))
-          )}
-
-          {/* Followers */}
-          {profileTab === 'followers' && (
-            followers.length === 0 ? (
-              <div className="text-center py-8 text-xs" style={{ color: subColor }}>Nessun seguace ancora</div>
-            ) : followers.map((u: any) => (
-              <div key={u.id} className="flex items-center gap-3 py-2 border-b" style={{ borderColor }}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                  style={{ backgroundColor: '#10A37F' }}>
-                  {(u.name || u.email || '?')[0].toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold truncate" style={{ color: textColor }}>{u.name || u.email}</div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Multiplayer + Esci */}
-        <div className="mx-4 mb-6 mt-2 flex flex-col gap-2">
+        {/* Multiplayer card + Esci */}
+        <div className="px-4 pt-6 pb-8 flex flex-col gap-3">
           {onMultiplayer && (
             <button onClick={onMultiplayer}
-              className="w-full py-3 rounded-2xl text-sm font-semibold"
-              style={{ backgroundColor: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.3)', color: '#A78BFA' }}>
-              Multiplayer
+              className="w-full flex flex-col items-center gap-2 px-5 py-5 rounded-3xl active:scale-[0.98] transition-transform"
+              style={{
+                background: 'linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(91,33,182,0.15) 100%)',
+                border: '1.5px solid rgba(167,139,250,0.35)',
+                boxShadow: '0 4px 24px rgba(124,58,237,0.2)',
+              }}>
+              <div className="text-2xl font-black" style={{ background: 'linear-gradient(135deg, #c4b5fd, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>⚔ Multiplayer</div>
+              <div className="text-[12px] text-center" style={{ color: 'rgba(196,181,253,0.7)' }}>Sfida un altro utente con le AI al tuo fianco</div>
             </button>
           )}
           <button onClick={onSignOut}
-            className="w-full py-3 rounded-2xl text-sm font-semibold text-red-500"
+            className="w-full py-3.5 rounded-2xl text-sm font-semibold text-red-500 active:scale-[0.98] transition-transform"
             style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${borderColor}` }}>
             Esci dall'account
           </button>
@@ -3166,14 +2985,85 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const currentState = twoVsTwoState
     const newRound = currentState.round + 1
     if (newRound > currentState.maxRounds) {
-      // Ultimo round completato — chiama il verdetto
+      // Ultimo round completato — chiama il verdetto finale
       await handle2v2Verdict()
     } else {
+      // Round intermedio — chiama l'arbitro per il punto del round
+      await handle2v2RoundVerdict(currentState.round)
       setTwoVsTwoState(prev => {
         if (!prev) return prev
         return { ...prev, currentTurn: 'A', round: newRound, messagesThisTurn: 0 }
       })
     }
+  }
+
+  // Mini-verdetto arbitro dopo ogni round
+  const handle2v2RoundVerdict = async (roundNumber: number) => {
+    if (!twoVsTwoState) return
+    const { config } = twoVsTwoState
+    const arbId = config.arbiterAiId
+    const arbName = AI_NAMES[arbId]
+
+    // History del solo round corrente (messaggi non arbiter del round)
+    const nonArbMessages = twoVsTwoState.messages.filter(m => m.team !== 'arbiter')
+    const history = nonArbMessages.map(m => ({
+      name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author,
+      content: m.content,
+    }))
+
+    const promptContent = `Sei ${arbName}, arbitro imparziale di un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Hai appena assistito al round ${roundNumber}. Assegna esattamente 1 punto: scrivi "PUNTO: A" oppure "PUNTO: B" oppure "PUNTO: pareggio". Poi scrivi 1 sola frase secca e diretta che motiva il punto. Non più di 20 parole. Niente di più.`
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: '2v2', aiId: arbId,
+          history: [{ name: 'Sistema', content: promptContent }, ...history, { name: 'Sistema', content: `Pronuncia il punto per il round ${roundNumber}.` }],
+          needsWebSearch: false,
+        }),
+      })
+      if (!res.ok || !res.body) return
+      const reader = res.body.getReader(); const decoder = new TextDecoder()
+      let buffer = '', text = '', done = false
+      // Aggiungi messaggio arbitro streaming
+      setTwoVsTwoState(prev => prev ? {
+        ...prev,
+        messages: [...prev.messages, { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: '', streaming: true }],
+      } : prev)
+      while (!done) {
+        const { done: sd, value } = await reader.read()
+        if (value) buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
+          try { const p = JSON.parse(d); if (p.text) text += p.text } catch {}
+          setTwoVsTwoState(prev => {
+            if (!prev) return prev
+            const msgs = [...prev.messages]
+            msgs[msgs.length - 1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: text, streaming: true }
+            return { ...prev, messages: msgs }
+          })
+        }
+        if (sd) break
+      }
+      // Estrai chi ha vinto il round e aggiorna score
+      const winMatch = text.match(/PUNTO:\s*(A|B|pareggio)/i)
+      const winner = winMatch ? winMatch[1].toUpperCase() : null
+      setTwoVsTwoState(prev => {
+        if (!prev) return prev
+        const msgs = [...prev.messages]
+        msgs[msgs.length - 1] = { team: 'arbiter' as const, isAI: true, aiId: arbId, author: arbName, content: text.replace(/PUNTO:\s*(A|B|pareggio)\s*/i, '').trim() || text, streaming: false }
+        const newScoreA = (prev.scoreA ?? 0) + (winner === 'A' ? 1 : 0)
+        const newScoreB = (prev.scoreB ?? 0) + (winner === 'B' ? 1 : 0)
+        const newRoundScores = [
+          ...(prev.roundScores ?? []),
+          { round: roundNumber, winner: (winner === 'A' ? 'A' : winner === 'B' ? 'B' : 'draw') as 'A' | 'B' | 'draw' },
+        ]
+        return { ...prev, messages: msgs, scoreA: newScoreA, scoreB: newScoreB, roundScores: newRoundScores }
+      })
+    } catch {}
   }
 
   const handle2v2Verdict = async () => {
@@ -3182,19 +3072,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const { config } = twoVsTwoState
     const arbId = config.arbiterAiId
     const arbName = AI_NAMES[arbId]
-    const maxRounds = twoVsTwoState.maxRounds
 
-    // Costruisci la history per round, escludendo messaggi arbiter intermedi
+    // Costruisci la history escludendo messaggi arbiter intermedi
     const allMsgs = twoVsTwoState.messages.filter(m => m.team !== 'arbiter')
     const history = allMsgs.map(m => ({ name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author, content: m.content }))
 
+    // Usa i punteggi già accumulati dai round precedenti
+    const existingScoreA = twoVsTwoState.scoreA ?? 0
+    const existingScoreB = twoVsTwoState.scoreB ?? 0
+
     try {
-      // Prompt arbitro: assegna 1 punto a round, nessuna motivazione per ogni round, solo esito secco finale
-      const promptContent = `Sei un arbitro imparziale. Hai assistito a un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: ${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}. Ci sono stati ${maxRounds} round. Assegna 1 punto per ogni round a chi ha argomentato meglio. Non spiegare ogni singolo round. Scrivi SOLO questa struttura, niente altro prima:\nROUND_SCORES: R1=A R2=B R3=A (continua per tutti i round, ogni round vince A o B o D per pareggio)\nPoi scrivi 2-3 frasi di commento finale sintetico sull'andamento generale del dibattito. Sii diretto e neutro. Non descrivere emozioni o sensazioni personali.`
+      const promptContent = `Sei ${arbName}, arbitro imparziale. Hai arbitrato un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]} (${existingScoreA} punti). Squadra B: AI — ${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]} (${existingScoreB} punti). Il dibattito è finito. Scrivi un commento finale sintetico in 2-3 frasi: chi ha dominato, perché, e un giudizio complessivo. Niente numeri, già calcolati. Sii diretto e neutro.`
 
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: '2v2', aiId: arbId, history: [{ name: 'Sistema', content: promptContent }, ...history, { name: 'Sistema', content: 'Pronuncia il verdetto ora.' }], needsWebSearch: false }),
+        body: JSON.stringify({ action: '2v2', aiId: arbId, history: [{ name: 'Sistema', content: promptContent }, ...history, { name: 'Sistema', content: 'Scrivi il commento finale.' }], needsWebSearch: false }),
       })
       if (!res.ok || !res.body) throw new Error()
       const reader = res.body.getReader(); const decoder = new TextDecoder()
@@ -3220,32 +3112,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         }
       }
 
-      // Estrai punteggi per round: ROUND_SCORES: R1=A R2=B R3=D ...
-      const roundScoreLine = verdict.match(/ROUND_SCORES:\s*([^\n]+)/i)
-      const roundScores: { round: number; winner: 'A' | 'B' | 'draw' }[] = []
-      let sA = 0; let sB = 0
-      if (roundScoreLine) {
-        const parts = roundScoreLine[1].match(/R(\d+)=([ABD])/gi) ?? []
-        parts.forEach(p => {
-          const m = p.match(/R(\d+)=([ABD])/i)
-          if (m) {
-            const r = parseInt(m[1])
-            const w = m[2].toUpperCase() as 'A' | 'B' | 'D'
-            if (w === 'A') { sA++; roundScores.push({ round: r, winner: 'A' }) }
-            else if (w === 'B') { sB++; roundScores.push({ round: r, winner: 'B' }) }
-            else roundScores.push({ round: r, winner: 'draw' })
-          }
-        })
-      }
-
-      // Rimuovi la riga ROUND_SCORES dal testo del verdetto
-      const cleanVerdict = verdict.replace(/ROUND_SCORES:[^\n]*/i, '').replace(/^\s*\n/, '').trim()
-
       setTwoVsTwoState(prev => {
         if (!prev) return prev
         const msgs = [...prev.messages]
-        msgs[msgs.length-1] = { ...msgs[msgs.length-1], content: cleanVerdict, streaming: false }
-        return { ...prev, messages: msgs, scoreA: sA, scoreB: sB, roundScores, verdict: cleanVerdict }
+        msgs[msgs.length-1] = { ...msgs[msgs.length-1], content: verdict.trim(), streaming: false }
+        return { ...prev, messages: msgs, verdict: verdict.trim() }
       })
     } catch {}
     setTwoVsTwoLoading(false)
@@ -4839,7 +4710,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         )}
 
         {/* Schermata chat mobile */}
-        {phase !== 'history' && phase !== 'profile' && phase !== 'new' && <>
+        {phase !== 'history' && phase !== 'profile' && phase !== 'new' && !(phase === 'running' && selectedMode === '2v2') && <>
 
           {/* Header mobile */}
           <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
