@@ -312,7 +312,8 @@ function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void;
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col overflow-hidden"
-      style={{ backgroundColor: '#07070f' }}>
+      style={{ backgroundColor: '#07070f' }}
+      ref={el => { if (el) { document.body.style.backgroundColor = '#07070f'; document.documentElement.style.backgroundColor = '#07070f' } }}>
 
       {/* Header compatto */}
       <div className="flex-shrink-0 flex items-center px-5 border-b"
@@ -634,11 +635,12 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
   const [copied, setCopied] = useState(false)
-  // AI-chosen topic: random pick from pool, revealed on "Scopri"
+  // AI-chosen topic: random pick from pool, revealed on dice roll
   const [aiTopicPool] = useState<string[]>(() => [...TOPIC_SUGGESTIONS].sort(() => Math.random() - 0.5))
   const [aiTopicIndex, setAiTopicIndex] = useState(0)
   const [topicRevealed, setTopicRevealed] = useState(false)
-  // userSide: 'attack' | 'defend' — AI randomly picks when topic is revealed
+  const [diceRolling, setDiceRolling] = useState(false)
+  // userSide: 'attack' | 'defend' — randomly assigned on dice roll
   const [userSide, setUserSide] = useState<'attack' | 'defend'>('attack')
 
   // Quando l'utente sceglie l'AI per A, auto-assegna B e arbitro tra le rimanenti
@@ -708,7 +710,8 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 
   // ── Render: schermata fullscreen verticale stile WhatsApp ──
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f' }}>
+    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f', backgroundColor: '#07070f' }}
+      ref={el => { if (el) { document.body.style.backgroundColor = '#07070f'; document.documentElement.style.backgroundColor = '#07070f' } }}>
 
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
@@ -743,65 +746,71 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
       {/* Corpo — no scroll per topic e teams, scroll per roulette/share */}
       <div className={`flex-1 ${step === 'topic' || step === 'teams' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ paddingBottom: step === 'topic' || step === 'teams' ? 0 : 'max(20px, env(safe-area-inset-bottom))' }}>
 
-        {/* ── STEP 1: Topic scelto dall'AI ── */}
-        {step === 'topic' && (
-          <div className="flex flex-col h-full px-5 pt-8 pb-6 gap-6" style={{ minHeight: '100%' }}>
-            <div className="text-center">
-              <div className="text-2xl font-black text-white mb-1">L'AI sceglie il tema</div>
-              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Premi il pulsante per scoprire l'argomento e il tuo ruolo.</div>
-            </div>
-
-            {/* Card tema */}
-            <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              {!topicRevealed ? (
-                <div className="w-full flex flex-col items-center gap-6">
-                  {/* Icona AI misteriosa */}
-                  <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))', border: '2px solid rgba(167,139,250,0.3)' }}>
-                    <div className="text-4xl">🎲</div>
-                  </div>
-                  <div className="text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    <div className="text-sm">Il tema è segreto.</div>
-                    <div className="text-sm">Premi per scoprirlo.</div>
-                  </div>
+        {/* ── STEP 1: Topic scelto dall'AI — dado cliccabile ── */}
+        {step === 'topic' && (() => {
+          const handleRoll = () => {
+            if (topicRevealed || diceRolling) return
+            setDiceRolling(true)
+            // Dopo 900ms (durata animazione) rivela il tema
+            setTimeout(() => {
+              setTopicRevealed(true)
+              setTopic(aiTopicPool[aiTopicIndex])
+              setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
+              setDiceRolling(false)
+            }, 900)
+          }
+          return (
+            <div className="flex flex-col h-full px-5 pt-8 pb-6 gap-6" style={{ minHeight: '100%' }}>
+              <div className="text-center">
+                <div className="text-2xl font-black text-white mb-1">L'AI sceglie il tema</div>
+                <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  {topicRevealed ? 'Ecco il tuo argomento e ruolo.' : 'Tocca il dado per scoprire argomento e ruolo.'}
                 </div>
-              ) : (
-                <div className="w-full flex flex-col gap-4">
-                  {/* Tema rivelato */}
-                  <div className="w-full px-5 py-5 rounded-3xl text-center"
-                    style={{ background: 'rgba(59,130,246,0.1)', border: '1.5px solid rgba(59,130,246,0.3)' }}>
-                    <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(59,130,246,0.8)' }}>Argomento</div>
-                    <div className="text-lg font-black text-white leading-snug">"{aiTopicPool[aiTopicIndex]}"</div>
-                  </div>
-                  {/* Ruolo rivelato */}
-                  <div className="w-full px-5 py-4 rounded-3xl text-center"
-                    style={{ background: userSide === 'attack' ? 'rgba(239,68,68,0.1)' : 'rgba(16,163,127,0.1)', border: `1.5px solid ${userSide === 'attack' ? 'rgba(239,68,68,0.3)' : 'rgba(16,163,127,0.3)'}` }}>
-                    <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: userSide === 'attack' ? '#f87171' : '#34d399' }}>Il tuo ruolo</div>
-                    <div className="text-lg font-black text-white">{userSide === 'attack' ? '⚔ Attacca' : '🛡 Difendi'}</div>
-                    <div className="text-[12px] mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{userSide === 'attack' ? 'Devi smontare la tesi' : 'Devi sostenere la tesi'}</div>
-                  </div>
-                  {/* Riprova */}
-                  <button onClick={() => {
-                    setAiTopicIndex(i => (i + 1) % aiTopicPool.length)
-                    setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
-                  }} className="text-center text-[12px] py-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                    Non mi piace · Cambia tema
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
 
-            <div className="flex flex-col gap-2">
-              {!topicRevealed ? (
-                <button onClick={() => {
-                  setTopicRevealed(true)
-                  setTopic(aiTopicPool[aiTopicIndex])
-                  setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
-                }}
-                  className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
-                  style={{ background: 'linear-gradient(135deg, #7C3AED, #3b82f6)', boxShadow: '0 4px 20px rgba(124,58,237,0.35)' }}>
-                  Scopri il tema 🎲
+              {/* Area centrale */}
+              <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                {/* Dado — sempre visibile, cliccabile solo prima della rivelazione */}
+                <button
+                  onClick={handleRoll}
+                  disabled={topicRevealed || diceRolling}
+                  className="flex items-center justify-center rounded-full transition-transform active:scale-95"
+                  style={{
+                    width: 120, height: 120,
+                    background: topicRevealed ? 'rgba(124,58,237,0.15)' : 'linear-gradient(135deg, rgba(124,58,237,0.35), rgba(59,130,246,0.25))',
+                    border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.2)' : 'rgba(167,139,250,0.4)'}`,
+                    cursor: topicRevealed ? 'default' : 'pointer',
+                    animation: diceRolling ? 'dice-roll 0.9s ease-in-out' : (topicRevealed ? 'none' : 'dice-idle 3s ease-in-out infinite'),
+                    fontSize: 52,
+                  }}>
+                  🎲
                 </button>
-              ) : (
+
+                {/* Risultato rivelato — appare sotto il dado */}
+                {topicRevealed && (
+                  <div className="w-full flex flex-col gap-3 scale-in">
+                    {/* Tema */}
+                    <div className="w-full px-5 py-4 rounded-3xl text-center"
+                      style={{ background: 'rgba(59,130,246,0.12)', border: '1.5px solid rgba(59,130,246,0.3)' }}>
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(100,160,255,0.8)' }}>Argomento</div>
+                      <div className="text-[17px] font-black text-white leading-snug">"{aiTopicPool[aiTopicIndex]}"</div>
+                    </div>
+                    {/* Ruolo */}
+                    <div className="w-full px-5 py-4 rounded-3xl text-center"
+                      style={{
+                        background: userSide === 'attack' ? 'rgba(239,68,68,0.12)' : 'rgba(16,163,127,0.12)',
+                        border: `1.5px solid ${userSide === 'attack' ? 'rgba(239,68,68,0.35)' : 'rgba(16,163,127,0.35)'}`,
+                      }}>
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: userSide === 'attack' ? '#f87171' : '#34d399' }}>Il tuo ruolo</div>
+                      <div className="text-xl font-black text-white">{userSide === 'attack' ? '⚔ Attacca' : '🛡 Difendi'}</div>
+                      <div className="text-[12px] mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{userSide === 'attack' ? 'Devi smontare la tesi' : 'Devi sostenere la tesi'}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* CTA: Avanti solo dopo rivelazione */}
+              {topicRevealed && (
                 <button onClick={() => { setTopic(aiTopicPool[aiTopicIndex]); setStep('teams') }}
                   className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
                   style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
@@ -809,8 +818,8 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 </button>
               )}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* ── STEP 2: Scegli la tua AI — griglia 2x2 ── */}
         {step === 'teams' && (
@@ -1631,12 +1640,11 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
             <button onClick={onMultiplayer}
               className="w-full flex flex-col items-center gap-2 px-5 py-5 rounded-3xl active:scale-[0.98] transition-transform"
               style={{
-                background: 'linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(91,33,182,0.15) 100%)',
-                border: '1.5px solid rgba(167,139,250,0.35)',
-                boxShadow: '0 4px 24px rgba(124,58,237,0.2)',
+                background: 'linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%)',
+                boxShadow: '0 4px 24px rgba(109,40,217,0.45)',
               }}>
-              <div className="text-2xl font-black" style={{ background: 'linear-gradient(135deg, #c4b5fd, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>⚔ Multiplayer</div>
-              <div className="text-[12px] text-center" style={{ color: 'rgba(196,181,253,0.7)' }}>Sfida un altro utente con le AI al tuo fianco</div>
+              <div className="text-2xl font-black text-white">⚔ Multiplayer</div>
+              <div className="text-[12px] text-center" style={{ color: 'rgba(255,255,255,0.65)' }}>Sfida un altro utente con le AI al tuo fianco</div>
             </button>
           )}
           <button onClick={onSignOut}
