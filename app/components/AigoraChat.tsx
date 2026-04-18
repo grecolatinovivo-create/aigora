@@ -526,6 +526,7 @@ interface TwoVsTwoConfig {
   maxRounds?: number
   roomCode?: string
   roomId?: string
+  teamASide?: 'attack' | 'defend'  // ruolo squadra A: attack = smontare la tesi, defend = sostenere
 }
 
 interface TwoVsTwoState {
@@ -948,7 +949,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
             {/* Bottone: su desktop triggera transizione iPad→iPhone, su mobile chiama subito onStart */}
             <button
               onClick={() => {
-                const startConfig = { topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId }
+                const startConfig = { topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId, teamASide: userSide }
                 if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
                   setDesktopTransition('exit')
                   setTimeout(() => { setDesktopTransition('done'); onStart(startConfig) }, 500)
@@ -1096,7 +1097,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 <div className="flex-shrink-0 px-8 pb-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                   <button
                     onClick={() => {
-                      const startConfig = { topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId }
+                      const startConfig = { topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId, teamASide: userSide }
                       setDesktopTransition('exit')
                       setTimeout(() => { setDesktopTransition('done'); onStart(startConfig) }, 500)
                     }}
@@ -1133,6 +1134,17 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { config } = state
+
+  // ── Coin flip ── mostrato prima del primo messaggio
+  const [coinPhase, setCoinPhase] = useState<'flipping' | 'result' | 'done'>(
+    state.messages.length === 0 ? 'flipping' : 'done'
+  )
+  const [coinWinner, setCoinWinner] = useState<'A' | 'B'>(() => (Math.random() < 0.5 ? 'A' : 'B'))
+  useEffect(() => {
+    if (coinPhase !== 'flipping') return
+    const t = setTimeout(() => setCoinPhase('result'), 1800)
+    return () => clearTimeout(t)
+  }, [coinPhase])
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [state.messages])
 
@@ -1351,6 +1363,58 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       {/* Sfondo fiamme */}
       <div className="flame-bg" />
       <div className="flame-overlay" />
+
+      {/* ── COIN FLIP OVERLAY ── */}
+      {coinPhase !== 'done' && (
+        <div
+          onClick={() => { if (coinPhase === 'result') setCoinPhase('done') }}
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-8"
+          style={{ background: 'rgba(7,7,15,0.97)', backdropFilter: 'blur(16px)', cursor: coinPhase === 'result' ? 'pointer' : 'default' }}
+        >
+          {/* Moneta */}
+          <div style={{ perspective: 600 }}>
+            <div
+              style={{
+                width: 96, height: 96, borderRadius: '50%',
+                background: coinPhase === 'flipping'
+                  ? 'conic-gradient(#facc15, #fbbf24, #f59e0b, #fbbf24, #facc15)'
+                  : (coinWinner === 'A' ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'linear-gradient(135deg, #ef4444, #b91c1c)'),
+                boxShadow: coinPhase === 'flipping'
+                  ? '0 0 40px rgba(250,204,21,0.6)'
+                  : (coinWinner === 'A' ? '0 0 40px rgba(59,130,246,0.7)' : '0 0 40px rgba(239,68,68,0.7)'),
+                animation: coinPhase === 'flipping' ? 'coin-flip 0.4s linear infinite' : 'coin-land 0.3s ease-out forwards',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 32, fontWeight: 900, color: 'white', userSelect: 'none',
+              }}
+            >
+              {coinPhase === 'flipping' ? '🪙' : (coinWinner === 'A' ? 'A' : 'B')}
+            </div>
+          </div>
+
+          {/* Testo risultato */}
+          <div className="text-center flex flex-col gap-2" style={{ animation: coinPhase === 'result' ? 'alea-appear 0.4s ease-out forwards' : undefined, opacity: coinPhase === 'result' ? 1 : 0 }}>
+            <div className="font-black text-white text-2xl">
+              {coinPhase === 'result'
+                ? (coinWinner === myTeam
+                    ? 'Inizi tu! 🎉'
+                    : `Inizia ${coinWinner === 'A' ? config.teamA.humanName : 'Squadra B'}`)
+                : ''}
+            </div>
+            {coinPhase === 'result' && (
+              <div className="text-white/40 text-sm">
+                {coinWinner === 'A' ? config.teamA.humanName : 'Squadra B'} apre il dibattito
+              </div>
+            )}
+          </div>
+
+          {coinPhase === 'flipping' && (
+            <div className="text-white/30 text-sm animate-pulse">Lancio in corso…</div>
+          )}
+          {coinPhase === 'result' && (
+            <div className="text-white/25 text-xs mt-2">Tocca per continuare</div>
+          )}
+        </div>
+      )}
 
       {/* ── HEADER: A vs B con round ── */}
       <div className="flex-shrink-0 relative z-10" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.85)', borderBottom: '1px solid rgba(255,80,0,0.15)', backdropFilter: 'blur(20px)' }}>
@@ -2971,7 +3035,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         body: JSON.stringify({
           action: '2v2', aiId,
           history: [
-            { name: 'Sistema', content: `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore${enemyHaveSpoken ? `, attacca le posizioni di ${enemyAiNames}` : ''}. Tono diretto, coinvolto, da alleato — non da professore neutrale. 2-3 frasi nella lingua del messaggio. Non descrivere mai le tue azioni o emozioni con asterischi (*faccio X*, *mi fermo*, ecc.) — parla solo con argomenti. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[aiId]?.carattere ?? ''}` },
+            { name: 'Sistema', content: (() => {
+              const teamASide = config.teamASide ?? 'attack'
+              const thisSide = team === 'A' ? teamASide : (teamASide === 'attack' ? 'defend' : 'attack')
+              const roleInstruction = thisSide === 'attack'
+                ? `Il tuo compito è ATTACCARE e smontare la tesi "${config.topic}": porta argomenti contro di essa, evidenziane le debolezze, confuta le posizioni avversarie.`
+                : `Il tuo compito è DIFENDERE e sostenere la tesi "${config.topic}": porta argomenti a favore, rafforza i punti chiave, rispondi alle obiezioni avversarie.`
+              return `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". ${roleInstruction} Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore${enemyHaveSpoken ? `, attacca le posizioni di ${enemyAiNames}` : ''}. Tono diretto, coinvolto, da alleato — non da professore neutrale. 2-3 frasi nella lingua del messaggio. Non descrivere mai le tue azioni o emozioni con asterischi (*faccio X*, *mi fermo*, ecc.) — parla solo con argomenti. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[aiId]?.carattere ?? ''}`
+            })() },
             ...history,
             { name: 'Sistema', content: enemyHaveSpoken
               ? `${humanName} ha appena detto: "${trigger}". Schierati con lui, rinforza il suo punto e smonta quello degli avversari.`
@@ -4494,15 +4565,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
                   </button>
                 </div>
-                {isMyTurn && (
-                  <div className="px-3 pb-1">
-                    <button onClick={() => handle2v2AIResponse('A', 'Supporta con un argomento forte.')} disabled={twoVsTwoLoading}
-                      className="w-full py-1.5 rounded-xl text-[10px] font-bold disabled:opacity-40 transition-all"
-                      style={{ backgroundColor: isDark ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.08)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)' }}>
-                      Chiedi supporto a {AI_NAMES[myAiId]} →
-                    </button>
-                  </div>
-                )}
+                {/* Pulsante supporto AI rimosso su desktop */}
               </div>
             )
           })() : (
