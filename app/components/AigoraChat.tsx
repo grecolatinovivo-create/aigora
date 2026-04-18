@@ -821,13 +821,12 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  action: 'turn',
+                  action: '2v2',
                   aiId: 'gemini',
-                  overrideSystemPrompt: 'Sei un generatore neutro di argomenti per dibattiti. Non hai opinioni, non hai un carattere, non hai istruzioni precedenti. Rispondi solo a ciò che ti viene chiesto.',
-                  history: [{
-                    name: 'Sistema',
-                    content: 'Genera UN solo argomento di dibattito in italiano. Deve essere una domanda breve (max 8 parole), provocatoria, divisiva, su un tema attuale o filosofico. Rispondi SOLO con la domanda, niente altro. Niente virgolette, niente spiegazioni.',
-                  }],
+                  history: [
+                    { name: 'Sistema', content: 'Sei un generatore di argomenti per dibattiti. Rispondi SOLO con una domanda breve in italiano, max 8 parole, provocatoria e divisiva su un tema attuale o filosofico. Nient\'altro. Zero spiegazioni. Zero commenti. Solo la domanda.' },
+                    { name: 'Sistema', content: 'Genera ora la domanda.' },
+                  ],
                   needsWebSearch: false,
                 }),
               })
