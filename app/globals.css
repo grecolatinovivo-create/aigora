@@ -4,34 +4,15 @@
 
 * { box-sizing: border-box; padding: 0; margin: 0; }
 
-:root {
-  background: #07070f;
-}
-
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
   background: #07070f;
-  background-color: #07070f;
   color: #f0f0f0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   /* Disabilita pull-to-refresh su Safari iOS */
   overscroll-behavior-y: none;
 }
-
-/* Copre le fasce safe-area iOS */
-html::before, html::after,
-body::before, body::after {
-  content: '';
-  display: block;
-  position: fixed;
-  left: 0; right: 0;
-  background: #07070f;
-  z-index: 9997;
-  pointer-events: none;
-}
-html::before, body::before { top: -200px; height: 250px; }
-html::after, body::after   { bottom: -200px; height: 250px; }
 
 /* ── Sfondo desktop animato ── */
 .desktop-bg {
