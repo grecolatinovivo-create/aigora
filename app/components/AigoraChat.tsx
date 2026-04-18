@@ -1135,25 +1135,6 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { config } = state
 
-  // ── Coin flip ── mostrato prima del primo messaggio
-  const isFirstMount = useRef(true)
-  const [coinPhase, setCoinPhase] = useState<'flipping' | 'result' | 'done'>('flipping')
-  const [coinWinner] = useState<'A' | 'B'>(() => (Math.random() < 0.5 ? 'A' : 'B'))
-  useEffect(() => {
-    // Se la partita ha già messaggi (es. reload), salta il coin flip
-    if (state.messages.length > 0 && isFirstMount.current) {
-      isFirstMount.current = false
-      setCoinPhase('done')
-      return
-    }
-    isFirstMount.current = false
-  }, [])
-  useEffect(() => {
-    if (coinPhase !== 'flipping') return
-    const t = setTimeout(() => setCoinPhase('result'), 1800)
-    return () => clearTimeout(t)
-  }, [coinPhase])
-
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [state.messages])
 
   const isMyTurn = state.currentTurn === myTeam && !loading && !state.ended
@@ -1371,58 +1352,6 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       {/* Sfondo fiamme */}
       <div className="flame-bg" />
       <div className="flame-overlay" />
-
-      {/* ── COIN FLIP OVERLAY ── */}
-      {coinPhase !== 'done' && (
-        <div
-          onClick={() => { if (coinPhase === 'result') setCoinPhase('done') }}
-          className="absolute inset-0 z-[200] flex flex-col items-center justify-center gap-8"
-          style={{ background: 'rgba(7,7,15,0.97)', backdropFilter: 'blur(16px)', cursor: coinPhase === 'result' ? 'pointer' : 'default' }}
-        >
-          {/* Moneta */}
-          <div style={{ perspective: 600 }}>
-            <div
-              style={{
-                width: 96, height: 96, borderRadius: '50%',
-                background: coinPhase === 'flipping'
-                  ? 'conic-gradient(#facc15, #fbbf24, #f59e0b, #fbbf24, #facc15)'
-                  : (coinWinner === 'A' ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'linear-gradient(135deg, #ef4444, #b91c1c)'),
-                boxShadow: coinPhase === 'flipping'
-                  ? '0 0 40px rgba(250,204,21,0.6)'
-                  : (coinWinner === 'A' ? '0 0 40px rgba(59,130,246,0.7)' : '0 0 40px rgba(239,68,68,0.7)'),
-                animation: coinPhase === 'flipping' ? 'coin-flip 0.4s linear infinite' : 'coin-land 0.3s ease-out forwards',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 32, fontWeight: 900, color: 'white', userSelect: 'none',
-              }}
-            >
-              {coinPhase === 'flipping' ? '🪙' : (coinWinner === 'A' ? 'A' : 'B')}
-            </div>
-          </div>
-
-          {/* Testo risultato */}
-          <div className="text-center flex flex-col gap-2" style={{ animation: coinPhase === 'result' ? 'alea-appear 0.4s ease-out forwards' : undefined, opacity: coinPhase === 'result' ? 1 : 0 }}>
-            <div className="font-black text-white text-2xl">
-              {coinPhase === 'result'
-                ? (coinWinner === myTeam
-                    ? 'Inizi tu! 🎉'
-                    : `Inizia ${coinWinner === 'A' ? config.teamA.humanName : 'Squadra B'}`)
-                : ''}
-            </div>
-            {coinPhase === 'result' && (
-              <div className="text-white/40 text-sm">
-                {coinWinner === 'A' ? config.teamA.humanName : 'Squadra B'} apre il dibattito
-              </div>
-            )}
-          </div>
-
-          {coinPhase === 'flipping' && (
-            <div className="text-white/30 text-sm animate-pulse">Lancio in corso…</div>
-          )}
-          {coinPhase === 'result' && (
-            <div className="text-white/25 text-xs mt-2">Tocca per continuare</div>
-          )}
-        </div>
-      )}
 
       {/* ── HEADER: A vs B con round ── */}
       <div className="flex-shrink-0 relative z-10" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.85)', borderBottom: '1px solid rgba(255,80,0,0.15)', backdropFilter: 'blur(20px)' }}>

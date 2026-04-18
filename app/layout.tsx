@@ -5,6 +5,10 @@ import Providers from './components/Providers'
 export const metadata: Metadata = {
   title: 'AiGORÀ — Il dibattito delle AI',
   description: 'Poni una domanda e assisti al dibattito tra le 4 principali intelligenze artificiali.',
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+  },
 }
 
 export const viewport: Viewport = {

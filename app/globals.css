@@ -377,19 +377,6 @@ html, body {
   100% { opacity: 1; transform: scale(1) translateY(0); letter-spacing: 0.3em; }
 }
 
-@keyframes coin-flip {
-  0%   { transform: rotateY(0deg) scaleX(1); }
-  25%  { transform: rotateY(90deg) scaleX(0.1); }
-  50%  { transform: rotateY(180deg) scaleX(1); }
-  75%  { transform: rotateY(270deg) scaleX(0.1); }
-  100% { transform: rotateY(360deg) scaleX(1); }
-}
-@keyframes coin-land {
-  0%   { transform: rotateY(90deg) scaleX(0.1) scale(0.8); opacity: 0; }
-  60%  { transform: rotateY(0deg) scaleX(1) scale(1.12); opacity: 1; }
-  100% { transform: rotateY(0deg) scaleX(1) scale(1); opacity: 1; }
-}
-
 /* ── Mobile responsive ── */
 @media (max-width: 600px) {
   /* Schermata chat: nascondi cornice iPhone e occupa tutto lo schermo */
