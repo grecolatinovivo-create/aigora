@@ -2584,6 +2584,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     m.setAttribute('name', 'theme-color')
     m.setAttribute('content', color)
     document.head.appendChild(m)
+    // Imposta anche html e body così le safe area (sopra e sotto) prendono lo stesso colore
+    document.documentElement.style.backgroundColor = color
+    document.body.style.backgroundColor = color
   }, [showModeSelect, show2v2Setup, selectedMode, twoVsTwoState, phase, bgPreset.header])
 
   const scrollToBottom = useCallback(() => {
