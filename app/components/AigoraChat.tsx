@@ -995,9 +995,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   // ── Render ──
   return (
     <>
-    {/* ── Backdrop globale — colora il chrome Safari su mobile ── */}
-    <div style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 50px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))', left: 0, right: 0, background: bgPreset.value, zIndex: -1, pointerEvents: 'none' }} />
-    <div className="fixed z-[9999] flex flex-col" style={{ background: bgPreset.value, top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+    <div className="fixed z-[9999] flex flex-col" style={{ background: '#07070f', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
       {/* ── LAYOUT MOBILE ── */}
       <div className="lg:hidden flex flex-col h-full">
@@ -3978,6 +3976,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
+    <>
+    {/* ── Backdrop globale — colora il chrome Safari su mobile ── */}
+    <div style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 50px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))', left: 0, right: 0, background: bgPreset.value, zIndex: -1, pointerEvents: 'none' }} />
     <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
 
@@ -5348,5 +5349,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       )}
 
     </div>
+    </>
   )
 }
