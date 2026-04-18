@@ -3554,6 +3554,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     return (
       <>
       <div className="desktop-bg relative overflow-hidden"
+        ref={el => { if (el) { document.body.style.backgroundColor = '#07070f'; document.documentElement.style.backgroundColor = '#07070f' } }}
         style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ── Pannello cronologia (disponibile anche dalla start) ── */}
@@ -3971,7 +3972,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
-    <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
+    <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative"
+      ref={el => { if (el) { document.body.style.backgroundColor = '#07070f'; document.documentElement.style.backgroundColor = '#07070f' } }}>
 
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
@@ -4748,7 +4750,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       </div>
 
       {/* ── SCHERMO NATIVO MOBILE ── */}
-      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, height: '100dvh', overflow: 'hidden' }}>
+      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, height: '100dvh', overflow: 'hidden' }}
+        ref={el => { if (el) document.body.style.backgroundColor = bgPreset.value }}>
 
         {/* Schermata cronologia mobile */}
         {phase === 'history' && (
