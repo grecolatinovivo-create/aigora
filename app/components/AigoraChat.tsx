@@ -800,52 +800,14 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // ── Render: schermata fullscreen verticale stile WhatsApp ──
-  return (
+  // Contenuto step condiviso — usato sia in mobile che in iPad desktop
+  const stepContent = (
     <>
-    {/* Pannello di copertura safe-area */}
-    <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />
-    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f' }}>
-
-      {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
-        style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: 'rgba(7,7,15,0.97)', borderColor: 'rgba(255,255,255,0.07)' }}>
-        <button
-          onClick={step === 'share' ? () => setStep('teams') : step === 'teams' ? () => setStep('topic') : step === 'roulette' ? undefined : onBack}
-          className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
-          style={{ backgroundColor: 'rgba(255,255,255,0.06)', opacity: step === 'roulette' ? 0.3 : 1, pointerEvents: step === 'roulette' ? 'none' : 'auto' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <div className="flex-1 text-center">
-          <div className="font-black text-[15px]"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></div>
-          <div className="text-[11px] text-white/30">2 vs 2</div>
-        </div>
-        {/* Progress dots */}
-        <div className="flex gap-1.5 flex-shrink-0">
-          {(['topic', 'teams', 'roulette', 'share'] as const).map((s, i) => {
-            const stepIdx = ['topic','teams','roulette','share'].indexOf(step)
-            const isDone = i < stepIdx
-            const isCurrent = s === step
-            return (
-              <div key={s} className="rounded-full transition-all duration-300"
-                style={{
-                  width: isCurrent ? 20 : 6, height: 6,
-                  background: isCurrent ? '#3b82f6' : isDone ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.15)',
-                }} />
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Corpo — no scroll per topic e teams, scroll per roulette/share */}
-      <div className={`flex-1 ${step === 'topic' || step === 'teams' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ paddingBottom: step === 'topic' || step === 'teams' ? 0 : 'max(20px, env(safe-area-inset-bottom))' }}>
-
-        {/* ── STEP 1: Topic scelto dall'AI — dado cliccabile ── */}
+        {/* ── STEP 1: Dado ── */}
         {step === 'topic' && (() => {
           const handleRoll = () => {
             if (topicRevealed || diceRolling) return
             setDiceRolling(true)
-            // Dopo 900ms (durata animazione) rivela il tema
             setTimeout(() => {
               setTopicRevealed(true)
               setTopic(aiTopicPool[aiTopicIndex])
@@ -861,61 +823,29 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                   {topicRevealed ? 'Ecco il tuo argomento e ruolo.' : 'Tocca il dado per scoprire argomento e ruolo.'}
                 </div>
               </div>
-
-              {/* Area centrale */}
               <div className="flex-1 flex flex-col items-center justify-center gap-6">
-                {/* Dado — sempre visibile, cliccabile solo prima della rivelazione */}
                 <div className="flex flex-col items-center gap-3">
-                  <button
-                    onClick={handleRoll}
-                    disabled={topicRevealed || diceRolling}
+                  <button onClick={handleRoll} disabled={topicRevealed || diceRolling}
                     className="flex items-center justify-center rounded-full"
-                    style={{
-                      width: 130, height: 130,
-                      background: topicRevealed ? 'rgba(124,58,237,0.12)' : 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))',
-                      border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.15)' : 'rgba(167,139,250,0.4)'}`,
-                      cursor: topicRevealed ? 'default' : 'pointer',
-                      animation: diceRolling ? 'dice-roll 1.1s cubic-bezier(0.25,0.46,0.45,0.94) forwards' : (topicRevealed ? 'none' : 'dice-idle 3s ease-in-out infinite'),
-                      fontSize: 56,
-                      flexShrink: 0,
-                    }}>
+                    style={{ width: 130, height: 130, background: topicRevealed ? 'rgba(124,58,237,0.12)' : 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))', border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.15)' : 'rgba(167,139,250,0.4)'}`, cursor: topicRevealed ? 'default' : 'pointer', animation: diceRolling ? 'dice-roll 1.1s cubic-bezier(0.25,0.46,0.45,0.94) forwards' : (topicRevealed ? 'none' : 'dice-idle 3s ease-in-out infinite'), fontSize: 56, flexShrink: 0 }}>
                     🎲
                   </button>
-                  {/* ALEA IACTA EST — appare durante e dopo il lancio */}
                   {(diceRolling || topicRevealed) && (
-                    <div style={{
-                      fontFamily: 'Georgia, serif',
-                      fontStyle: 'italic',
-                      fontWeight: 700,
-                      fontSize: 13,
-                      letterSpacing: '0.28em',
-                      color: 'rgba(167,139,250,0.85)',
-                      animation: diceRolling ? 'alea-appear 0.4s ease-out forwards' : 'none',
-                    }}>
+                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 13, letterSpacing: '0.28em', color: 'rgba(167,139,250,0.85)', animation: diceRolling ? 'alea-appear 0.4s ease-out forwards' : 'none' }}>
                       ALEA IACTA EST!
                     </div>
                   )}
-                  {/* Hint pre-lancio */}
                   {!topicRevealed && !diceRolling && (
                     <div className="text-[12px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Tocca per lanciare</div>
                   )}
                 </div>
-
-                {/* Risultato rivelato — appare sotto il dado */}
                 {topicRevealed && (
                   <div className="w-full flex flex-col gap-3 scale-in">
-                    {/* Tema */}
-                    <div className="w-full px-5 py-4 rounded-3xl text-center"
-                      style={{ background: 'rgba(59,130,246,0.12)', border: '1.5px solid rgba(59,130,246,0.3)' }}>
+                    <div className="w-full px-5 py-4 rounded-3xl text-center" style={{ background: 'rgba(59,130,246,0.12)', border: '1.5px solid rgba(59,130,246,0.3)' }}>
                       <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(100,160,255,0.8)' }}>Argomento</div>
                       <div className="text-[17px] font-black text-white leading-snug">"{aiTopicPool[aiTopicIndex]}"</div>
                     </div>
-                    {/* Ruolo */}
-                    <div className="w-full px-5 py-4 rounded-3xl text-center"
-                      style={{
-                        background: userSide === 'attack' ? 'rgba(239,68,68,0.12)' : 'rgba(16,163,127,0.12)',
-                        border: `1.5px solid ${userSide === 'attack' ? 'rgba(239,68,68,0.35)' : 'rgba(16,163,127,0.35)'}`,
-                      }}>
+                    <div className="w-full px-5 py-4 rounded-3xl text-center" style={{ background: userSide === 'attack' ? 'rgba(239,68,68,0.12)' : 'rgba(16,163,127,0.12)', border: `1.5px solid ${userSide === 'attack' ? 'rgba(239,68,68,0.35)' : 'rgba(16,163,127,0.35)'}` }}>
                       <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: userSide === 'attack' ? '#f87171' : '#34d399' }}>Il tuo ruolo</div>
                       <div className="text-xl font-black text-white">{userSide === 'attack' ? '⚔ Attacca' : '🛡 Difendi'}</div>
                       <div className="text-[12px] mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{userSide === 'attack' ? 'Devi smontare la tesi' : 'Devi sostenere la tesi'}</div>
@@ -923,12 +853,8 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                   </div>
                 )}
               </div>
-
-              {/* CTA: Avanti solo dopo rivelazione */}
               {topicRevealed && (
-                <button onClick={() => { setTopic(aiTopicPool[aiTopicIndex]); setStep('teams') }}
-                  className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
-                  style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
+                <button onClick={() => { setTopic(aiTopicPool[aiTopicIndex]); setStep('teams') }} className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
                   Avanti →
                 </button>
               )}
@@ -936,32 +862,22 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           )
         })()}
 
-        {/* ── STEP 2: Scegli la tua AI — griglia 2x2 ── */}
+        {/* ── STEP 2: Scegli AI ── */}
         {step === 'teams' && (
           <div className="flex flex-col h-full px-4 pt-5 pb-4 gap-4" style={{ minHeight: '100%' }}>
-            {/* Topic recap compatto */}
             <div className="px-4 py-2.5 rounded-2xl flex-shrink-0" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="text-[9px] text-white/30 uppercase tracking-widest mb-0.5">Argomento</div>
               <div className="text-[12px] font-semibold text-white/75 leading-snug truncate">"{topic}"</div>
             </div>
-
-            {/* Label */}
             <div className="text-[11px] font-semibold uppercase tracking-widest flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)' }}>Scegli il tuo alleato AI</div>
-
-            {/* Griglia 2x2 — flex-1 */}
             <div className="flex-1 grid grid-cols-2 gap-3" style={{ minHeight: 0 }}>
               {AI_OPTIONS.map(ai => {
                 const isSelected = teamAAI === ai.id
                 return (
                   <button key={ai.id} onClick={() => setTeamAAI(ai.id)}
                     className="flex flex-col items-center justify-center gap-2 rounded-3xl transition-all active:scale-[0.97] p-4"
-                    style={{
-                      background: isSelected ? `${ai.color}18` : 'rgba(255,255,255,0.04)',
-                      border: isSelected ? `2px solid ${ai.color}60` : '1px solid rgba(255,255,255,0.08)',
-                      boxShadow: isSelected ? `0 0 20px ${ai.color}25` : 'none',
-                    }}>
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0"
-                      style={{ background: ai.color, boxShadow: isSelected ? `0 0 16px ${ai.color}55` : 'none' }}>
+                    style={{ background: isSelected ? `${ai.color}18` : 'rgba(255,255,255,0.04)', border: isSelected ? `2px solid ${ai.color}60` : '1px solid rgba(255,255,255,0.08)', boxShadow: isSelected ? `0 0 20px ${ai.color}25` : 'none' }}>
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: ai.color, boxShadow: isSelected ? `0 0 16px ${ai.color}55` : 'none' }}>
                       {ai.id === 'gemini' ? 'Ge' : ai.name[0]}
                     </div>
                     <div className="font-bold text-[14px] text-center" style={{ color: isSelected ? 'white' : 'rgba(255,255,255,0.6)' }}>{ai.name}</div>
@@ -970,25 +886,17 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 )
               })}
             </div>
-
-            {/* Round selector compatto */}
             <div className="flex-shrink-0">
               <div className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.2)' }}>Round</div>
               <div className="flex gap-1.5">
                 {[3, 5, 7, 9, 11].map(r => (
-                  <button key={r} onClick={() => setMaxRoundsChoice(r)}
-                    className="flex-1 h-9 rounded-xl font-black text-sm transition-all active:scale-95"
-                    style={{
-                      background: maxRoundsChoice === r ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)',
-                      border: maxRoundsChoice === r ? '2px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.08)',
-                      color: maxRoundsChoice === r ? 'white' : 'rgba(255,255,255,0.35)',
-                    }}>
+                  <button key={r} onClick={() => setMaxRoundsChoice(r)} className="flex-1 h-9 rounded-xl font-black text-sm transition-all active:scale-95"
+                    style={{ background: maxRoundsChoice === r ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)', border: maxRoundsChoice === r ? '2px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.08)', color: maxRoundsChoice === r ? 'white' : 'rgba(255,255,255,0.35)' }}>
                     {r}
                   </button>
                 ))}
               </div>
             </div>
-
             <button onClick={handleCreate} disabled={creating} className="flex-shrink-0 w-full py-4 rounded-2xl font-bold text-white text-[15px] disabled:opacity-50 transition-all active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #3b82f6, #7C3AED)', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}>
               {creating ? 'Preparo la roulette…' : 'Avvia la roulette →'}
@@ -999,14 +907,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         {/* ── STEP 3: Roulette ── */}
         {step === 'roulette' && (
           <div className="flex flex-col px-5 pt-8 pb-6 min-h-full">
-            <RouletteScreen
-              teamAAI={teamAAI}
-              rouletteSlots={rouletteSlots}
-              rouletteSettled={rouletteSettled}
-              arbiter={arbiter}
-              ready={rouletteReady}
-              onContinue={() => setStep('share')}
-            />
+            <RouletteScreen teamAAI={teamAAI} rouletteSlots={rouletteSlots} rouletteSettled={rouletteSettled} arbiter={arbiter} ready={rouletteReady} onContinue={() => setStep('share')} />
           </div>
         )}
 
@@ -1017,30 +918,23 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               <div className="text-2xl font-black text-white mb-1">Partita pronta.</div>
               <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Condividi il codice con il tuo avversario.</div>
             </div>
-
-            {/* Codice grande */}
             <div className="rounded-3xl p-6 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>Codice di accesso</div>
               <div className="text-5xl font-black text-white tracking-[0.2em] mb-5">{roomCode}</div>
-              <button onClick={handleCopy}
-                className="w-full py-3 rounded-2xl text-sm font-bold transition-all active:scale-[0.98]"
+              <button onClick={handleCopy} className="w-full py-3 rounded-2xl text-sm font-bold transition-all active:scale-[0.98]"
                 style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(255,255,255,0.07)', border: copied ? '1px solid rgba(16,163,127,0.4)' : '1px solid rgba(255,255,255,0.1)', color: copied ? '#10A37F' : 'rgba(255,255,255,0.6)' }}>
                 {copied ? '✓ Link copiato' : 'Copia link'}
               </button>
             </div>
-
-            {/* Riepilogo squadre */}
             <div className="flex gap-3">
               <div className="flex-1 rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
                 <div className="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">SQUADRA A</div>
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
-                    style={{ background: '#3b82f6' }}>{teamAHuman[0]?.toUpperCase()}</div>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0" style={{ background: '#3b82f6' }}>{teamAHuman[0]?.toUpperCase()}</div>
                   <div className="text-[12px] font-semibold text-white/75 truncate">{teamAHuman}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
-                    style={{ background: AI_COLOR[teamAAI] }}>{teamAAI === 'gemini' ? 'Ge' : AI_NAMES[teamAAI][0]}</div>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0" style={{ background: AI_COLOR[teamAAI] }}>{teamAAI === 'gemini' ? 'Ge' : AI_NAMES[teamAAI][0]}</div>
                   <div className="text-[11px] text-white/40">{AI_NAMES[teamAAI]}</div>
                 </div>
               </div>
@@ -1048,33 +942,117 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               <div className="flex-1 rounded-2xl p-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
                 <div className="text-[9px] font-black uppercase tracking-widest text-red-400 mb-2">SQUADRA B</div>
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
-                    style={{ background: AI_COLOR[teamBAI] }}>{teamBAI === 'gemini' ? 'Ge' : AI_NAMES[teamBAI][0]}</div>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0" style={{ background: AI_COLOR[teamBAI] }}>{teamBAI === 'gemini' ? 'Ge' : AI_NAMES[teamBAI][0]}</div>
                   <div className="text-[11px] text-white/60">{AI_NAMES[teamBAI]}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
-                    style={{ background: AI_COLOR[teamBAI2] }}>{teamBAI2 === 'gemini' ? 'Ge' : AI_NAMES[teamBAI2][0]}</div>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0" style={{ background: AI_COLOR[teamBAI2] }}>{teamBAI2 === 'gemini' ? 'Ge' : AI_NAMES[teamBAI2][0]}</div>
                   <div className="text-[11px] text-white/40">{AI_NAMES[teamBAI2]}</div>
                 </div>
               </div>
             </div>
-
-            <button
-              onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId })}
+            <button onClick={() => onStart({ topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId })}
               className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
               Inizia la partita →
             </button>
           </div>
         )}
+    </>
+  )
 
+  // Progress dots helper
+  const progressDots = (
+    <div className="flex gap-1.5 flex-shrink-0">
+      {(['topic', 'teams', 'roulette', 'share'] as const).map((s, i) => {
+        const stepIdx = ['topic','teams','roulette','share'].indexOf(step)
+        const isDone = i < stepIdx
+        const isCurrent = s === step
+        return (
+          <div key={s} className="rounded-full transition-all duration-300"
+            style={{ width: isCurrent ? 20 : 6, height: 6, background: isCurrent ? '#3b82f6' : isDone ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.15)' }} />
+        )
+      })}
+    </div>
+  )
+
+  // Back button helper
+  const backBtn = (
+    <button
+      onClick={step === 'share' ? () => setStep('teams') : step === 'teams' ? () => setStep('topic') : step === 'roulette' ? undefined : onBack}
+      className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
+      style={{ backgroundColor: 'rgba(255,255,255,0.06)', opacity: step === 'roulette' ? 0.3 : 1, pointerEvents: step === 'roulette' ? 'none' : 'auto' }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  )
+
+  // ── Render ──
+  return (
+    <>
+    {/* Pannello di copertura safe-area */}
+    <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />
+    <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f' }}>
+
+      {/* ── LAYOUT MOBILE ── */}
+      <div className="lg:hidden flex flex-col h-full">
+        {/* Header mobile */}
+        <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
+          style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: 'rgba(7,7,15,0.97)', borderColor: 'rgba(255,255,255,0.07)' }}>
+          {backBtn}
+          <div className="flex-1 text-center">
+            <div className="font-black text-[15px]"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></div>
+            <div className="text-[11px] text-white/30">2 vs 2</div>
+          </div>
+          {progressDots}
+        </div>
+        <div className={`flex-1 ${step === 'topic' || step === 'teams' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ paddingBottom: step === 'topic' || step === 'teams' ? 0 : 'max(20px, env(safe-area-inset-bottom))' }}>
+          {stepContent}
+        </div>
       </div>
+
+      {/* ── LAYOUT DESKTOP: cornice iPad orizzontale ── */}
+      <div className="hidden lg:flex flex-1 items-center justify-center" style={{ background: 'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(124,58,237,0.12) 0%, transparent 70%)' }}>
+        {/* Cornice iPad landscape */}
+        <div style={{ position: 'relative', width: 1024, height: 680 }}>
+          {/* Corpo iPad */}
+          <div className="absolute inset-0 rounded-[28px]"
+            style={{ background: '#1a1a1e', boxShadow: '0 0 0 1.5px #3a3a3c, 0 40px 120px rgba(0,0,0,0.8), 0 0 0 0.5px #555 inset' }} />
+          {/* Tasto home / Face ID laterale */}
+          <div className="absolute rounded-full" style={{ right: -4, top: '50%', transform: 'translateY(-50%)', width: 8, height: 56, background: '#2a2a2e', boxShadow: '0 0 0 1px #444' }} />
+          {/* Pulsanti volume */}
+          <div className="absolute rounded-full" style={{ left: -4, top: '28%', width: 6, height: 36, background: '#2a2a2e', boxShadow: '0 0 0 1px #444' }} />
+          <div className="absolute rounded-full" style={{ left: -4, top: '42%', width: 6, height: 56, background: '#2a2a2e', boxShadow: '0 0 0 1px #444' }} />
+          {/* Camera frontale */}
+          <div className="absolute rounded-full" style={{ top: '50%', left: 14, transform: 'translateY(-50%)', width: 8, height: 8, background: '#2d2d30', border: '1.5px solid #444' }} />
+          {/* Schermo */}
+          <div className="absolute overflow-hidden flex flex-col"
+            style={{ top: 10, left: 36, right: 10, bottom: 10, borderRadius: 20, background: '#07070f' }}>
+            {/* Status bar iPad */}
+            <div className="flex-shrink-0 flex items-center justify-between px-5 py-2" style={{ background: 'rgba(7,7,15,0.97)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex items-center gap-3">
+                {backBtn}
+                <div className="font-black text-sm"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></div>
+                <div className="text-[11px] text-white/30">· 2 vs 2</div>
+              </div>
+              <div className="text-[11px] font-semibold text-white/40">
+                {step === 'topic' ? 'Tema' : step === 'teams' ? 'Squadre' : step === 'roulette' ? 'Roulette' : 'Condividi'}
+              </div>
+              {progressDots}
+            </div>
+            {/* Contenuto step */}
+            <div className={`flex-1 ${step === 'topic' || step === 'teams' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+              {stepContent}
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
     </>
   )
 }
 
+// ── (old render body removed, now handled above) ──
 // ── 2 vs 2: schermata di gioco ────────────────────────────────────────────────
 function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, onBack }: {
   state: TwoVsTwoState
