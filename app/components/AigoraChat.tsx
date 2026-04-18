@@ -1522,10 +1522,10 @@ function DevilsAdvocateScreen({ session, onMessage, onEndTurn, loading, isDark, 
   const scoreColor = session.score >= 7 ? '#10A37F' : session.score >= 5 ? '#F59E0B' : '#ef4444'
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: mobileBg.value }}>
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
-        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', paddingBottom: '10px', backgroundColor: bgPreset.header, borderColor }}>
+        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', paddingBottom: '10px', backgroundColor: mobileBg.header, borderColor }}>
         <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={textColor} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -1587,7 +1587,7 @@ function DevilsAdvocateScreen({ session, onMessage, onEndTurn, loading, isDark, 
       </div>
 
       {/* Input + Fine turno */}
-      <div className="flex-shrink-0 border-t" style={{ backgroundColor: bgPreset.header, borderColor, paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+      <div className="flex-shrink-0 border-t" style={{ backgroundColor: mobileBg.header, borderColor, paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-center gap-2 px-3 pt-2 pb-1">
           <input
             value={input}
@@ -1733,10 +1733,10 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
   const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: mobileBg.value }}>
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
-        style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor }}>
+        style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: mobileBg.header, borderColor }}>
         <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-full"
           style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textColor} strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -1752,7 +1752,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
 
       <div className="flex-1 overflow-y-auto">
         {/* Avatar + info */}
-        <div className="flex items-center gap-4 px-5 pt-6 pb-5" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${borderColor}` }}>
+        <div className="flex items-center gap-4 px-5 pt-6 pb-5" style={{ backgroundColor: mobileBg.header, borderBottom: `1px solid ${borderColor}` }}>
           {/* Avatar cliccabile per cambio foto */}
           <div className="relative flex-shrink-0 cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
             <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-2xl font-black text-white"
@@ -1783,7 +1783,7 @@ function ProfileScreen({ displayName, userEmail, userPlan, savedChats, bgPreset,
         </div>
 
         {/* Stats */}
-        <div className="flex border-b" style={{ borderColor, backgroundColor: bgPreset.header }}>
+        <div className="flex border-b" style={{ borderColor, backgroundColor: mobileBg.header }}>
           {[
             ['Dibattiti', savedChats.length],
             ['Seguiti', following.length],
@@ -2065,9 +2065,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }, [inputText])
   const [bgPreset, setBgPreset] = useState(() => {
-    // Usa il tema di sistema: scuro → Notte, chiaro → Crema
+    // Mobile: sempre scuro. Desktop: segue il tema di sistema.
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      return BG_PRESETS.find(p => p.label === 'Notte') ?? BG_PRESETS[3]
+    }
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return BG_PRESETS.find(p => p.label === 'Notte') ?? BG_PRESETS[0]
+      return BG_PRESETS.find(p => p.label === 'Notte') ?? BG_PRESETS[3]
     }
     return BG_PRESETS.find(p => p.label === 'Crema') ?? BG_PRESETS[0]
   })
@@ -2545,8 +2548,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }, [twoVsTwoState?.ended, twoVsTwoState !== null])
 
-  // Aggiorna tema se l'utente cambia dark/light mode mentre è nell'app
+  // Aggiorna tema se l'utente cambia dark/light mode mentre è nell'app (solo desktop)
   useEffect(() => {
+    if (window.innerWidth < 1024) return // su mobile tema fisso scuro
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
     const handler = (e: MediaQueryListEvent) => {
       setBgPreset(e.matches
@@ -2558,16 +2562,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  const isDark = bgPreset.text === 'white'
+  // Su mobile lo sfondo è sempre Notte, indipendentemente dal tema scelto
+  const NOTTE = BG_PRESETS.find(p => p.label === 'Notte') ?? BG_PRESETS[3]
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+  const mobileBg = isMobile ? NOTTE : bgPreset
+
+  const isDark = mobileBg.text === 'white'
   const displayName = userName.trim() || 'Tu'
   const historyName = userName.trim() || 'Utente'
 
   // ── Colore sfondo body/html — il backdrop div gestisce il chrome, questo mantiene coerenza generale ──
   useEffect(() => {
-    const color = (phase === 'start') ? '#07070f' : bgPreset.value
+    const color = (phase === 'start') ? '#07070f' : mobileBg.value
     document.body.style.setProperty('background-color', color, 'important')
     document.documentElement.style.setProperty('background-color', color, 'important')
-  }, [phase, bgPreset.value])
+  }, [phase, mobileBg.value])
 
 
   const scrollToBottom = useCallback(() => {
@@ -3563,7 +3572,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
         {/* ── Pannello cronologia (disponibile anche dalla start) ── */}
         <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
-          <div className="w-72 h-full flex flex-col" style={{ backgroundColor: bgPreset.value, borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, backdropFilter: 'blur(20px)' }}>
+          <div className="w-72 h-full flex flex-col" style={{ backgroundColor: mobileBg.value, borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, backdropFilter: 'blur(20px)' }}>
             <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
               <span className="font-bold text-sm" style={{ color: isDark ? '#fff' : '#111' }}>Cronologia</span>
               <div className="flex items-center gap-3">
@@ -3600,7 +3609,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                       setTimeout(() => { isLoadingHistoryRef.current = false }, 100)
                     }}
                     onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
-                    bgColor={bgPreset.value}
+                    bgColor={mobileBg.value}
                     isDark={isDark}
                   />
                 ))
@@ -3978,7 +3987,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   return (
     <>
     {/* ── Backdrop globale — colora il chrome Safari su mobile ── */}
-    <div style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 50px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))', left: 0, right: 0, background: bgPreset.value, zIndex: -1, pointerEvents: 'none' }} />
+    <div style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 50px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))', left: 0, right: 0, background: mobileBg.value, zIndex: -1, pointerEvents: 'none' }} />
     <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
 
@@ -4310,10 +4319,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
         {/* Schermo desktop */}
         <div className="absolute rounded-[44px] overflow-hidden flex flex-col"
-          style={{ top: 9, left: 9, right: 9, bottom: 9, backgroundColor: bgPreset.value }}>
+          style={{ top: 9, left: 9, right: 9, bottom: 9, backgroundColor: mobileBg.value }}>
 
           {/* Status bar */}
-          <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-1.5" style={{ backgroundColor: bgPreset.header }}>
+          <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-1.5" style={{ backgroundColor: mobileBg.header }}>
             <span className="text-[11px] font-semibold tabular-nums" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>{currentTime}</span>
             <div className="w-[72px] h-[18px] bg-[#1c1c1e] rounded-full absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
               <div className="w-1.5 h-1.5 bg-[#333] rounded-full" />
@@ -4374,12 +4383,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               </div>
             </div>
           ) : (
-          <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+          <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2" style={{ backgroundColor: mobileBg.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
             {/* Avatar sovrapposti */}
             <div className="flex -space-x-2 flex-shrink-0">
               {AI_ORDER.map(id => (
                 <div key={id} className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[8px] font-bold ring-1"
-                  style={{ backgroundColor: AI_COLOR[id], ['--tw-ring-color' as string]: bgPreset.header }}>
+                  style={{ backgroundColor: AI_COLOR[id], ['--tw-ring-color' as string]: mobileBg.header }}>
                   {AI_NAMES[id][0]}
                 </div>
               ))}
@@ -4414,7 +4423,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 onClick={() => setShowColorPicker(p => !p)}
                 className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105 border-2"
                 style={{
-                  backgroundColor: bgPreset.value,
+                  backgroundColor: mobileBg.value,
                   borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
                 }}
                 title="Cambia sfondo"
@@ -4430,7 +4439,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                         className="w-6 h-6 rounded-full transition-all hover:scale-110"
                         style={{
                           backgroundColor: p.value,
-                          outline: bgPreset.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent',
+                          outline: mobileBg.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent',
                           outlineOffset: '2px',
                           border: '1px solid rgba(0,0,0,0.1)',
                         }} />
@@ -4451,11 +4460,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Avatar bar — solo chat normale */}
           {!(phase === 'running' && selectedMode === '2v2') && (
-            <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
+            <PhoneAvatarBar activeAi={activeAi} bgColor={mobileBg.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
           )}
 
           {/* Messaggi — 2v2 o normale */}
-          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollTop < 80 }} className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col-reverse gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : bgPreset.value, overflowX: 'hidden', minHeight: 0 }}>
+          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollTop < 80 }} className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col-reverse gap-1 relative" style={{ backgroundColor: phase === 'running' && selectedMode === '2v2' ? '#0d0d14' : mobileBg.value, overflowX: 'hidden', minHeight: 0 }}>
             {phase === 'running' && selectedMode === '2v2' && (<><div className="flame-bg" /><div className="flame-overlay" /></>)}
             {phase === 'running' && selectedMode === '2v2' && twoVsTwoState ? (
               // 2v2: figli diretti del flex-col-reverse, ordine naturale (il reverse esterno mette l'ultimo in fondo)
@@ -4561,7 +4570,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             )
           })() : (
           <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5" style={{
-            backgroundColor: bgPreset.header,
+            backgroundColor: mobileBg.header,
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
           }}>
             <textarea
@@ -4600,7 +4609,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Home indicator */}
-          <div className="flex-shrink-0 flex justify-center py-2" style={{ backgroundColor: bgPreset.header }}>
+          <div className="flex-shrink-0 flex justify-center py-2" style={{ backgroundColor: mobileBg.header }}>
             <div className="w-28 h-1 rounded-full" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.18)' }} />
           </div>
 
@@ -4707,9 +4716,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             const name = AI_NAMES[selectedAiProfile]
             return (
               <div className={`absolute inset-0 z-50 flex flex-col ${closingAiProfile ? 'slide-to-right' : 'slide-from-right'} rounded-[44px] overflow-hidden`}
-                style={{ backgroundColor: bgPreset.value }}>
+                style={{ backgroundColor: mobileBg.value }}>
                 <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
-                  style={{ paddingTop: '16px', paddingBottom: '12px', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                  style={{ paddingTop: '16px', paddingBottom: '12px', backgroundColor: mobileBg.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
                   <button onClick={() => closeAiProfile()} className="flex items-center active:opacity-60 transition-opacity" style={{ color }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                   </button>
@@ -4720,7 +4729,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  <div className="flex flex-col items-center pt-6 pb-5 px-5" style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                  <div className="flex flex-col items-center pt-6 pb-5 px-5" style={{ backgroundColor: mobileBg.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
                     <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black text-white mb-3" style={{ backgroundColor: color, boxShadow: `0 0 0 5px ${color}25, 0 8px 30px ${color}55` }}>{ai.initials}</div>
                     <div className="text-xl font-black mb-1" style={{ color: isDark ? '#fff' : '#111' }}>{name}</div>
                     <div className="text-[10px] font-semibold px-3 py-1 rounded-full mt-1" style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}30` }}>{ai.tagline}</div>
@@ -4756,15 +4765,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       </div>
 
       {/* ── SCHERMO NATIVO MOBILE ── */}
-      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: bgPreset.value, position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', overflow: 'hidden' }}
-        ref={el => { if (el) { document.body.style.setProperty('background-color', bgPreset.value, 'important'); document.documentElement.style.setProperty('background-color', bgPreset.value, 'important') } }}>
+      <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: mobileBg.value, position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', overflow: 'hidden' }}
+        ref={el => { if (el) { document.body.style.setProperty('background-color', mobileBg.value, 'important'); document.documentElement.style.setProperty('background-color', mobileBg.value, 'important') } }}>
 
         {/* Schermata cronologia mobile */}
         {phase === 'history' && (
-          <div className="flex flex-col h-full" style={{ backgroundColor: bgPreset.value }}>
+          <div className="flex flex-col h-full" style={{ backgroundColor: mobileBg.value }}>
             {/* Header cronologia */}
             <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
-              style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+              style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: mobileBg.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
               <button onClick={() => setPhase(messages.length > 0 ? 'running' : 'start')}
                 className="w-9 h-9 flex items-center justify-center rounded-full"
                 style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
@@ -4800,7 +4809,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                     setTimeout(() => { isLoadingHistoryRef.current = false }, 100)
                   }}
                   onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
-                  bgColor={bgPreset.value}
+                  bgColor={mobileBg.value}
                   isDark={isDark}
                 />
               ))}
@@ -4828,7 +4837,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             onEndTurn={handleDevilEndTurn}
             loading={devilLoading}
             isDark={isDark}
-            bgPreset={bgPreset}
+            bgPreset={mobileBg}
             onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
           />
         )}
@@ -4841,7 +4850,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             onEndTurn={handleDevilEndTurn}
             loading={devilLoading}
             isDark={isDark}
-            bgPreset={bgPreset}
+            bgPreset={mobileBg}
             onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
           />
         )}
@@ -4853,7 +4862,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             userEmail={userEmail}
             userPlan={effectivePlan}
             savedChats={savedChats}
-            bgPreset={bgPreset}
+            bgPreset={mobileBg}
             isDark={isDark}
             onBack={() => setPhase(messages.length > 0 ? 'running' : 'start')}
             onSignOut={() => signOut({ callbackUrl: '/login' })}
@@ -4866,10 +4875,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
         {/* Schermata 'new' — chat vuota con bubble e input */}
         {phase === 'new' && (
-          <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: bgPreset.value }}>
+          <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: mobileBg.value }}>
             {/* Header */}
             <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
-              style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+              style={{ backgroundColor: mobileBg.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
               <button onClick={() => setPhase('history')}
                 className="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-full active:scale-95"
                 style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
@@ -4906,7 +4915,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
             {/* Input bar — uguale alla chat */}
             <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5" style={{
-              backgroundColor: bgPreset.header,
+              backgroundColor: mobileBg.header,
               borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
               paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
             }}>
@@ -4937,7 +4946,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Header mobile */}
           <div className="flex-shrink-0 flex items-center gap-2 px-3 pb-3 border-b"
-            style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+            style={{ backgroundColor: mobileBg.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
             {/* < Cronologia */}
             <button onClick={() => setPhase('history')}
               className="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-full active:scale-95"
@@ -4968,7 +4977,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               <div className="relative">
                 <button onClick={() => setShowColorPicker(p => !p)}
                   className="w-8 h-8 rounded-full border-2 active:scale-95 transition-transform"
-                  style={{ backgroundColor: bgPreset.value, borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }} />
+                  style={{ backgroundColor: mobileBg.value, borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)' }} />
                 {showColorPicker && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
@@ -4977,7 +4986,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                       {BG_PRESETS.map(p => (
                         <button key={p.value} onClick={() => { setBgPreset(p); setShowColorPicker(false) }}
                           className="w-7 h-7 rounded-full transition-all active:scale-110"
-                          style={{ backgroundColor: p.value, outline: bgPreset.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent', outlineOffset: '2px', border: '1px solid rgba(0,0,0,0.1)' }} />
+                          style={{ backgroundColor: p.value, outline: mobileBg.value === p.value ? `2px solid ${isDark ? '#fff' : '#000'}` : '2px solid transparent', outlineOffset: '2px', border: '1px solid rgba(0,0,0,0.1)' }} />
                       ))}
                     </div>
                   </>
@@ -5009,13 +5018,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             const name = AI_NAMES[selectedAiProfile]
             return (
               <div className={`fixed inset-0 z-[60] flex flex-col ${closingAiProfile ? 'slide-to-right' : 'slide-from-right'}`}
-                style={{ backgroundColor: bgPreset.value }}>
+                style={{ backgroundColor: mobileBg.value }}>
                 {/* Header stile WhatsApp */}
                 <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b"
                   style={{
                     paddingTop: 'max(14px, env(safe-area-inset-top))',
                     paddingBottom: '12px',
-                    backgroundColor: bgPreset.header,
+                    backgroundColor: mobileBg.header,
                     borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                   }}>
                   <button onClick={() => closeAiProfile()}
@@ -5037,7 +5046,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
                 <div className="flex-1 overflow-y-auto">
                   {/* Hero avatar */}
                   <div className="flex flex-col items-center pt-8 pb-6 px-6"
-                    style={{ backgroundColor: bgPreset.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+                    style={{ backgroundColor: mobileBg.header, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
                     <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black text-white mb-4"
                       style={{ backgroundColor: color, boxShadow: `0 0 0 6px ${color}25, 0 12px 40px ${color}55` }}>
                       {ai.initials}
@@ -5082,9 +5091,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* Pannello invita amici */}
           {showInvitePanel && (
-            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: bgPreset.value }}>
+            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: mobileBg.value }}>
               <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b"
-                style={{ backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+                style={{ backgroundColor: mobileBg.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
                 <button onClick={() => { setShowInvitePanel(false); setInviteSearch(''); setInviteResults([]) }}
                   className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
                   style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
@@ -5153,19 +5162,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           )}
 
           {/* Avatar bar mobile */}
-          <PhoneAvatarBar activeAi={activeAi} bgColor={bgPreset.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
+          <PhoneAvatarBar activeAi={activeAi} bgColor={mobileBg.header} isDark={isDark} aiOrder={AI_ORDER} onAiClick={setSelectedAiProfile} />
 
           {/* Messaggi mobile */}
-          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollTop < 80 }} className="flex-1 overflow-y-auto flex flex-col-reverse" style={{ backgroundColor: bgPreset.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden', minHeight: 0 }}>
+          <div ref={messagesContainerRef} onScroll={e => { const el = e.currentTarget; isAtBottomRef.current = el.scrollTop < 80 }} className="flex-1 overflow-y-auto flex flex-col-reverse" style={{ backgroundColor: mobileBg.value, paddingTop: 12, paddingBottom: 20, overflowX: 'hidden', minHeight: 0 }}>
             {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
             {messages.slice().reverse().map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} fontSize={mobileFontSize} isAdmin={effectivePlan === 'admin'} />)}
           </div>
 
           {/* Pannello sintesi mobile — slide da destra */}
           {showSynthesis && (
-            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: bgPreset.value }}>
+            <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: mobileBg.value }}>
               <div className="flex-shrink-0 flex items-center gap-3 px-4 pb-4 border-b"
-                style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: bgPreset.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                style={{ paddingTop: 'max(16px, env(safe-area-inset-top))', backgroundColor: mobileBg.header, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
                 <button onClick={() => setShowSynthesis(false)}
                   className="w-9 h-9 flex items-center justify-center rounded-full"
                   style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
@@ -5211,12 +5220,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           {/* Input bar mobile — nascosta per gli spettatori */}
           {activeRoom && myRoomRole === 'spectator' ? (
             <div className="flex-shrink-0 flex items-center justify-center py-3 text-xs"
-              style={{ backgroundColor: bgPreset.header, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+              style={{ backgroundColor: mobileBg.header, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
               Solo i partecipanti possono scrivere
             </div>
           ) : (
           <div ref={inputBarRef} className="flex-shrink-0 flex items-center gap-2 px-3 py-3" style={{
-            backgroundColor: bgPreset.header,
+            backgroundColor: mobileBg.header,
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           }}>
