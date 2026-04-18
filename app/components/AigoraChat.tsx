@@ -995,7 +995,9 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   // ── Render ──
   return (
     <>
-    <div className="fixed z-[9999] flex flex-col" style={{ background: '#07070f', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+    {/* ── Backdrop globale — colora il chrome Safari su mobile ── */}
+    <div style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 50px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))', left: 0, right: 0, background: bgPreset.value, zIndex: -1, pointerEvents: 'none' }} />
+    <div className="fixed z-[9999] flex flex-col" style={{ background: bgPreset.value, top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
 
       {/* ── LAYOUT MOBILE ── */}
       <div className="lg:hidden flex flex-col h-full">
@@ -2562,15 +2564,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const displayName = userName.trim() || 'Tu'
   const historyName = userName.trim() || 'Utente'
 
-  // ── Colore sfondo body/html — aggiorna ad ogni cambio di schermata o tema ──
+  // ── Colore sfondo body/html — il backdrop div gestisce il chrome, questo mantiene coerenza generale ──
   useEffect(() => {
-    let color = '#07070f'
-    if (phase === 'running' || phase === 'done' || phase === 'history' || phase === 'profile' || phase === 'new') {
-      color = bgPreset.value
-    }
+    const color = (phase === 'start') ? '#07070f' : bgPreset.value
     document.body.style.setProperty('background-color', color, 'important')
     document.documentElement.style.setProperty('background-color', color, 'important')
-  }, [phase, bgPreset.value, showModeSelect, show2v2Setup, selectedMode, twoVsTwoState])
+  }, [phase, bgPreset.value])
 
 
   const scrollToBottom = useCallback(() => {
@@ -3559,8 +3558,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   if (phase === 'start') {
     return (
       <>
+      {/* ── Backdrop globale — colora il chrome Safari su mobile ── */}
+      <div style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 50px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))', left: 0, right: 0, background: '#07070f', zIndex: -1, pointerEvents: 'none' }} />
       <div className="desktop-bg relative overflow-hidden"
-        ref={el => { if (el) { document.body.style.setProperty('background-color', '#07070f', 'important'); document.documentElement.style.setProperty('background-color', '#07070f', 'important') } }}
         style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ── Pannello cronologia (disponibile anche dalla start) ── */}
