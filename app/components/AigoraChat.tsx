@@ -4003,11 +4003,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   return (
     <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
-      {/* ── Safe area covers — solo mobile ── */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-[9999] pointer-events-none"
-        style={{ height: 'env(safe-area-inset-top)', backgroundColor: safeAreaColor, transition: 'background-color 0.3s ease' }} />
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] pointer-events-none"
-        style={{ height: 'env(safe-area-inset-bottom)', backgroundColor: safeAreaColor, transition: 'background-color 0.3s ease' }} />
+      {/* ── Safe area color sampling — solo mobile ──
+          Safari iOS campiona il colore del toolbar dagli elementi position:fixed
+          vicino ai bordi. Questi div fissi invisibili forzano il colore corretto. */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 pointer-events-none"
+        style={{ height: '50px', backgroundColor: safeAreaColor, zIndex: 1 }} />
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 pointer-events-none"
+        style={{ height: '50px', backgroundColor: safeAreaColor, zIndex: 1 }} />
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
       {messages.length === 0 && selectedMode !== '2v2' && [
