@@ -2571,8 +2571,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       color = '#07070f'
     } else if (selectedMode === '2v2' && twoVsTwoState) {
       color = '#0d0d14'
-    } else if (phase === 'running' || phase === 'done' || phase === 'history' || phase === 'profile' || phase === 'new') {
-      color = bgPreset.value
+    } else if (phase === 'running' || phase === 'done') {
+      color = bgPreset.header  // header della chat = fascia superiore
+    } else if (phase === 'history' || phase === 'profile' || phase === 'new') {
+      color = bgPreset.header
+    } else if (phase === 'start') {
+      color = '#07070f'
     }
     // Rimuovi tutti i meta theme-color esistenti (Next.js ne può creare più di uno)
     document.querySelectorAll('meta[name="theme-color"]').forEach(el => el.remove())
@@ -2580,7 +2584,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     m.setAttribute('name', 'theme-color')
     m.setAttribute('content', color)
     document.head.appendChild(m)
-  }, [showModeSelect, show2v2Setup, selectedMode, twoVsTwoState, phase, bgPreset.value])
+  }, [showModeSelect, show2v2Setup, selectedMode, twoVsTwoState, phase, bgPreset.header])
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
