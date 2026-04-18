@@ -2562,26 +2562,50 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const perplexityTurnCountRef = useRef(0)  // conta solo i turni di Perplexity
   const isLoadingHistoryRef = useRef(false) // previeni saveCurrentChat durante apertura chat da cronologia
 
-  // Musica 2v2 — parte quando inizia la sfida, si ferma quando finisce
+  // Musica 2v2 — fade in all'inizio, fade out alla fine con crossfade
+  const twoVsTwoFadeRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fadeAudio = (audio: HTMLAudioElement, fromVol: number, toVol: number, durationMs: number, onDone?: () => void) => {
+    if (twoVsTwoFadeRef.current) clearInterval(twoVsTwoFadeRef.current)
+    const steps = 40
+    const stepMs = durationMs / steps
+    const delta = (toVol - fromVol) / steps
+    let current = fromVol
+    audio.volume = Math.max(0, Math.min(1, current))
+    twoVsTwoFadeRef.current = setInterval(() => {
+      current += delta
+      audio.volume = Math.max(0, Math.min(1, current))
+      if ((delta > 0 && current >= toVol) || (delta < 0 && current <= toVol)) {
+        if (twoVsTwoFadeRef.current) clearInterval(twoVsTwoFadeRef.current)
+        audio.volume = toVol
+        onDone?.()
+      }
+    }, stepMs)
+  }
+
   useEffect(() => {
     const isActive = twoVsTwoState !== null && !twoVsTwoState.ended
     if (isActive) {
+      // Fade in: crea un nuovo Audio oppure riprendi quello esistente
       if (!twoVsTwoAudioRef.current) {
         twoVsTwoAudioRef.current = new Audio('/dust-at-high-noon.mp3')
         twoVsTwoAudioRef.current.loop = true
-        twoVsTwoAudioRef.current.volume = 0.25
+        twoVsTwoAudioRef.current.volume = 0
       }
-      twoVsTwoAudioRef.current.play().catch(() => {})
+      const audio = twoVsTwoAudioRef.current
+      audio.play().catch(() => {})
+      fadeAudio(audio, audio.volume, 0.25, 1200)
     } else {
       if (twoVsTwoAudioRef.current) {
-        twoVsTwoAudioRef.current.pause()
-        twoVsTwoAudioRef.current.currentTime = 0
+        const audio = twoVsTwoAudioRef.current
+        // Fade out, poi pausa
+        fadeAudio(audio, audio.volume, 0, 1500, () => {
+          audio.pause()
+          audio.currentTime = 0
+        })
       }
     }
     return () => {
-      if (!isActive && twoVsTwoAudioRef.current) {
-        twoVsTwoAudioRef.current.pause()
-      }
+      if (twoVsTwoFadeRef.current) clearInterval(twoVsTwoFadeRef.current)
     }
   }, [twoVsTwoState?.ended, twoVsTwoState !== null])
 
