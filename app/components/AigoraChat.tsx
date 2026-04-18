@@ -995,8 +995,6 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   // ── Render ──
   return (
     <>
-    {/* Pannello di copertura safe-area */}
-    <div style={{ position: 'fixed', inset: '-200px', background: '#07070f', zIndex: 9998, pointerEvents: 'none' }} />
     <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#07070f' }}>
 
       {/* ── LAYOUT MOBILE ── */}
