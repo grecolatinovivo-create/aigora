@@ -307,7 +307,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch, perplexityTurnCount } = await req.json()
+    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch, perplexityTurnCount, overrideSystemPrompt } = await req.json()
 
     // Verifica piano — l'utente può usare solo le AI del suo piano
     const session = await getServerSession(authOptions)
@@ -391,6 +391,15 @@ export async function POST(req: NextRequest) {
       if (aiId === 'gemini')     { const g = streamGeminiWithModel(systemMsg, ctx, last, currentUserId); return sseStream(g.stream, g.model) }
       if (aiId === 'perplexity') { const p = streamPerplexityWithModel(systemMsg, ctx, last, false, currentUserId); return sseStream(p.stream, p.model) }
       return new Response('AI non trovata', { status: 400 })
+    }
+
+    // Se è stato passato un system prompt override (es. generazione topic neutro), usalo direttamente
+    if (overrideSystemPrompt) {
+      const lastMsg = history[history.length - 1]?.content ?? ''
+      const ctx = history.slice(0, -1).map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
+      if (aiId === 'gemini') { const g = streamGeminiWithModel(overrideSystemPrompt, ctx, lastMsg, currentUserId); return sseStream(g.stream, g.model) }
+      if (aiId === 'claude') return sseStream(streamClaude(overrideSystemPrompt, ctx, lastMsg, currentUserId), 'Claude')
+      if (aiId === 'gpt')    return sseStream(streamGPT(overrideSystemPrompt, ctx, lastMsg, currentUserId), 'GPT')
     }
 
     const system = SYSTEM_PROMPTS[aiId]
