@@ -858,6 +858,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [aiTopicIndex, setAiTopicIndex] = useState(0)
   const [topicRevealed, setTopicRevealed] = useState(false)
   const [diceRolling, setDiceRolling] = useState(false)
+  const [diceLanding, setDiceLanding] = useState(false)
   // userSide: 'attack' | 'defend' — randomly assigned on dice roll
   const [userSide, setUserSide] = useState<'attack' | 'defend'>('attack')
 
@@ -971,13 +972,16 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               const finalTopic = generatedTopic.trim().replace(/^["']|["']$/g, '') || aiTopicPool[aiTopicIndex]
               setTopic(finalTopic)
               setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
-              setTopicRevealed(true)
+              setDiceRolling(false)
+              setDiceLanding(true)
+              setTimeout(() => { setDiceLanding(false); setTopicRevealed(true) }, 520)
             } catch {
               setTopic(aiTopicPool[aiTopicIndex])
               setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
-              setTopicRevealed(true)
+              setDiceRolling(false)
+              setDiceLanding(true)
+              setTimeout(() => { setDiceLanding(false); setTopicRevealed(true) }, 520)
             }
-            setDiceRolling(false)
           }
           return (
             <div className="flex flex-col h-full px-5 pt-8 pb-6 gap-6" style={{ minHeight: '100%' }}>
@@ -989,11 +993,27 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               </div>
               <div className="flex-1 flex flex-col items-center justify-center gap-6">
                 <div className="flex flex-col items-center gap-3">
-                  <button onClick={handleRoll} disabled={topicRevealed || diceRolling}
-                    className="flex items-center justify-center rounded-full"
-                    style={{ width: 130, height: 130, background: topicRevealed ? 'rgba(124,58,237,0.12)' : 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))', border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.15)' : 'rgba(167,139,250,0.4)'}`, cursor: topicRevealed ? 'default' : 'pointer', animation: diceRolling ? 'dice-roll 1.1s cubic-bezier(0.25,0.46,0.45,0.94) forwards' : (topicRevealed ? 'none' : 'dice-idle 3s ease-in-out infinite'), fontSize: 56, flexShrink: 0 }}>
-                    🎲
-                  </button>
+                  {/* Dado 3D */}
+                  <div
+                    className={`dice-scene${topicRevealed ? ' done' : ''}`}
+                    onClick={handleRoll}
+                    style={{ pointerEvents: topicRevealed || diceRolling ? 'none' : 'auto' }}
+                  >
+                    <div className={`dice-cube${diceRolling ? ' rolling' : diceLanding ? ' landing' : ' idle'}`}>
+                      {/* Faccia 1 — front */}
+                      <div className="dice-face front"><div className="dots-1"><div className="dot"/></div></div>
+                      {/* Faccia 6 — back */}
+                      <div className="dice-face back"><div className="dots-6"><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
+                      {/* Faccia 3 — right */}
+                      <div className="dice-face right"><div className="dots-3"><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
+                      {/* Faccia 4 — left */}
+                      <div className="dice-face left"><div className="dots-4"><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
+                      {/* Faccia 5 — top */}
+                      <div className="dice-face top"><div className="dots-5"><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
+                      {/* Faccia 2 — bottom */}
+                      <div className="dice-face bottom"><div className="dots-2"><div className="dot"/><div className="dot"/></div></div>
+                    </div>
+                  </div>
                   {diceRolling && (
                     <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 13, letterSpacing: '0.28em', color: 'rgba(167,139,250,0.85)', animation: 'alea-appear 0.4s ease-out forwards' }}>
                       Claude sta pensando…
