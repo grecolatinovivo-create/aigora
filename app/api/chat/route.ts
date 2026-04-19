@@ -327,6 +327,14 @@ export async function POST(req: NextRequest) {
       const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
       currentUserId = dbUser?.id
       const plan = dbUser?.email === process.env.ADMIN_EMAIL ? 'admin' : (dbUser?.plan ?? 'none')
+      // Flag forceGeminiPerp: per-utente o globale (flag dell'admin)
+      const userForceGemini = dbUser?.forceGeminiPerp ?? false
+      if (!userForceGemini && process.env.ADMIN_EMAIL) {
+        const adminUser = await prisma.user.findUnique({ where: { email: process.env.ADMIN_EMAIL } })
+        ;(req as any)._forceGeminiPerp = userForceGemini || (adminUser?.forceGeminiPerp ?? false)
+      } else {
+        ;(req as any)._forceGeminiPerp = userForceGemini
+      }
       const PLAN_AIS: Record<string, string[]> = {
         free:    ['claude', 'gemini', 'perplexity', 'gpt'],
         starter: ['claude', 'gemini'],
@@ -416,9 +424,15 @@ export async function POST(req: NextRequest) {
     if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage, currentUserId), 'GPT')
     if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage, currentUserId); return sseStream(g.stream, g.model) }
     if (aiId === 'perplexity') {
+      // Se il flag forceGeminiPerp è attivo (per-utente o globale), sempre Gemini-as-Perplexity
+      const forceGemini = (req as any)._forceGeminiPerp ?? false
+      if (forceGemini) {
+        const g = streamGeminiAsPerplexity(historyText, today, year)
+        return sseStream(g.stream, 'Perplexity')
+      }
       // Turno 1 (count=0): Sonar Pro con ricerca reale
       // Turni 2-10 (count 1-9): Gemini che impersona Perplexity, senza costo Sonar
-      // Turno 11+ (count%10===0): torna Sonar Pro — stesso schema per tutti, admin incluso
+      // Turno 11+ (count%10===0): torna Sonar Pro
       const isRealPerplexity = (perplexityTurnCount ?? 0) % 10 === 0
       if (isRealPerplexity) {
         const p = streamPerplexityWithModel(system, historyText, lastMessage, true, currentUserId)

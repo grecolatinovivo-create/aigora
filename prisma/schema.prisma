@@ -22,6 +22,7 @@ model User {
   subStatus        String  @default("inactive")
   blocked          Boolean @default(false)
   beta             Boolean @default(false)
+  forceGeminiPerp  Boolean @default(false)
 
   accounts Account[]
   sessions Session[]

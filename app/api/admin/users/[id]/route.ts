@@ -18,28 +18,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const admin = await requireAdmin()
   if (!admin) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 })
 
-  const { action } = await req.json() // 'block' | 'unblock'
-  if (!['block', 'unblock', 'beta', 'unbeta'].includes(action)) {
+  const { action } = await req.json()
+  if (!['block', 'unblock', 'beta', 'unbeta', 'forcegeminiperp', 'unforcegeminiperp'].includes(action)) {
     return NextResponse.json({ error: 'Azione non valida' }, { status: 400 })
   }
 
-  // Non puoi bloccare te stesso
   if (params.id === admin.id) {
-    return NextResponse.json({ error: 'Non puoi bloccare te stesso' }, { status: 400 })
+    return NextResponse.json({ error: 'Non puoi modificare te stesso' }, { status: 400 })
   }
 
   const data: any = {}
   if (action === 'block' || action === 'unblock') data.blocked = action === 'block'
   if (action === 'beta' || action === 'unbeta') data.beta = action === 'beta'
+  if (action === 'forcegeminiperp' || action === 'unforcegeminiperp') data.forceGeminiPerp = action === 'forcegeminiperp'
 
   const updated = await prisma.user.update({ where: { id: params.id }, data })
 
-  // Se bloccato, invalida tutte le sessioni attive
   if (action === 'block') {
     await prisma.activeSession.deleteMany({ where: { userId: params.id } }).catch(() => {})
   }
 
-  return NextResponse.json({ ok: true, blocked: updated.blocked, beta: updated.beta })
+  return NextResponse.json({ ok: true, blocked: updated.blocked, beta: updated.beta, forceGeminiPerp: updated.forceGeminiPerp })
 }
 
 // DELETE — elimina utente e tutti i suoi dati

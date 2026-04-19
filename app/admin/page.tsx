@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import UserActions from './UserActions'
+import GlobalToggle from './GlobalToggle'
 
 const PLAN_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   admin:      { color: '#F59E0B', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.35)'  },
@@ -83,6 +84,10 @@ export default async function AdminPage() {
     },
   })
 
+  // Flag globale Gemini-as-Perplexity (salvato sull'utente admin)
+  const adminUser = users.find(u => u.email === adminEmail)
+  const globalForceGeminiPerp = adminUser?.forceGeminiPerp ?? false
+
   const totalChats = users.reduce((acc, u) => acc + u.chats.length, 0)
   const totalMessages = users.reduce((acc, u) =>
     acc + u.chats.reduce((a, c) => a + (Array.isArray(c.messages) ? (c.messages as any[]).length : 0), 0), 0)
@@ -141,6 +146,15 @@ export default async function AdminPage() {
           </div>
         </div>
 
+        {/* Controlli globali */}
+        <div className="glass rounded-2xl p-4 mb-6 flex items-center justify-between">
+          <div>
+            <div className="text-white font-bold text-sm mb-0.5">Controlli globali API</div>
+            <div className="text-white/30 text-[11px]">Sostituisce Sonar (Perplexity) con Gemini per tutti gli utenti</div>
+          </div>
+          <GlobalToggle initial={globalForceGeminiPerp} />
+        </div>
+
         {/* Utenti */}
         <div className="space-y-4">
           {users.map(user => {
@@ -181,7 +195,7 @@ export default async function AdminPage() {
                         )
                       })()}
                       {user.email !== adminEmail && (
-                        <UserActions userId={user.id} blocked={user.blocked ?? false} beta={user.beta ?? false} />
+                        <UserActions userId={user.id} blocked={user.blocked ?? false} beta={user.beta ?? false} forceGeminiPerp={user.forceGeminiPerp ?? false} />
                       )}
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
                     </div>
