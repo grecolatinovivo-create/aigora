@@ -953,7 +953,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                     needsWebSearch: false,
                   }),
                 }),
-                new Promise(r => setTimeout(r, 4000)), // dado gira almeno 4 secondi
+                new Promise(r => setTimeout(r, 3000)), // dado gira almeno 3 secondi
               ])
               let generatedTopic = ''
               if (res.ok && res.body) {
@@ -980,7 +980,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               setDiceLanding(true)
               setTimeout(() => { setDiceLanding(false); setTopicRevealed(true) }, 520)
             } catch {
-              await new Promise(r => setTimeout(r, 4000))
+              await new Promise(r => setTimeout(r, 3000))
               setTopic(aiTopicPool[aiTopicIndex])
               setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
               setDiceRolling(false)
@@ -1003,11 +1003,6 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                     style={{ width: 130, height: 130, background: topicRevealed ? 'rgba(124,58,237,0.12)' : 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))', border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.15)' : 'rgba(167,139,250,0.4)'}`, cursor: topicRevealed ? 'default' : 'pointer', flexShrink: 0 }}>
                     <span style={{ fontSize: 56, display: 'block', animation: diceRolling ? 'dice-emoji-spin 0.4s linear infinite' : diceLanding ? 'dice-emoji-land 0.5s cubic-bezier(0.22,1,0.36,1) forwards' : topicRevealed ? 'none' : 'dice-emoji-idle 3s ease-in-out infinite' }}>🎲</span>
                   </button>
-                  {diceRolling && (
-                    <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 13, letterSpacing: '0.28em', color: 'rgba(167,139,250,0.85)', animation: 'alea-appear 0.4s ease-out forwards' }}>
-                      Claude sta pensando…
-                    </div>
-                  )}
                   {topicRevealed && (
                     <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 13, letterSpacing: '0.28em', color: 'rgba(167,139,250,0.85)' }}>
                       ALEA IACTA EST!
