@@ -1620,8 +1620,8 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
           {/* Squadra B */}
           <div className="flex-1 flex flex-col items-end gap-0.5">
             <div className="text-[8px] font-black uppercase tracking-wide" style={{ color: '#f87171' }}>B</div>
-            <div className="text-[10px] font-bold text-white truncate max-w-[70px]">{"Squadra B"}</div>
-            <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{AI_NAMES[config.teamB.aiId1]} +</div>
+            <div className="text-[10px] font-bold text-white truncate max-w-[70px]">{AI_NAMES[config.teamB.aiId1]}</div>
+            <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>+ {AI_NAMES[config.teamB.aiId2]}</div>
           </div>
         </div>
 
