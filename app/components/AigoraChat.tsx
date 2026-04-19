@@ -664,6 +664,7 @@ interface TwoVsTwoState {
   waitingForOpponent?: boolean
   showScoreFlash?: 'A' | 'B' | null
   scoreFlashAt?: number
+  roundProgress?: number | null  // 0..1 durante il conto alla rovescia post-round
 }
 
 // ── Roulette slot machine ─────────────────────────────────────────────────────
@@ -1295,13 +1296,15 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
 
 // ── (old render body removed, now handled above) ──
 // ── 2 vs 2: schermata di gioco ────────────────────────────────────────────────
-function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, onBack }: {
+function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, onBack, onNewGame, onMultiplayer }: {
   state: TwoVsTwoState
   onHumanMessage: (text: string) => void
   onRequestAI: (team: 'A' | 'B') => void
   loading: boolean
   myTeam: 'A' | 'B'
   onBack: () => void
+  onNewGame?: () => void
+  onMultiplayer?: () => void
 }) {
   const [input, setInput] = useState('')
   const [flashWinner, setFlashWinner] = useState<'A' | 'B' | null>(null)
@@ -1313,7 +1316,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [state.messages])
 
-  // Banner "ROUND N" all'inizio di ogni round
+  // Banner ROUND N fullscreen quando il round avanza (dopo la progress bar del padre)
   useEffect(() => {
     if (state.round !== prevRound.current && !state.ended) {
       prevRound.current = state.round
@@ -1519,11 +1522,18 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
             <div className="text-[10px] text-white/20 italic text-center px-2">"{config.topic}"</div>
 
             {/* CTA */}
-            <button onClick={() => { SFX.click(); onBack() }}
-              className="fade-up w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.4), rgba(124,58,237,0.15))', border: '1px solid rgba(124,58,237,0.35)', animationDelay: '1s', opacity: 0 }}>
-              Torna alla home
-            </button>
+            <div className="fade-up w-full flex flex-col gap-3" style={{ animationDelay: '1s', opacity: 0 }}>
+              <button onClick={() => { SFX.click(); onNewGame?.() }}
+                className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #7C3AED)', boxShadow: '0 4px 20px rgba(99,102,241,0.35)' }}>
+                ⚔️ Nuova sfida 2v2
+              </button>
+              <button onClick={() => { SFX.click(); onMultiplayer?.() }}
+                className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                🌐 Multiplayer
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1686,6 +1696,15 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       {/* ── INPUT ── */}
       {!state.ended && (
         <div className="flex-shrink-0 relative z-10" style={{ background: 'rgba(7,7,15,0.9)', borderTop: '1px solid rgba(255,80,0,0.2)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+
+          {/* Progress bar conto alla rovescia round */}
+          {state.roundProgress != null && (
+            <div className="px-4 pt-2 pb-1">
+              <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <div className="h-full rounded-full" style={{ width: `${(state.roundProgress ?? 0) * 100}%`, background: 'linear-gradient(90deg, #3b82f6, #7C3AED)', transition: 'width 50ms linear' }} />
+              </div>
+            </div>
+          )}
 
           {/* Banner turno */}
           <div className="px-4 pt-2 pb-1.5">
@@ -3432,9 +3451,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     } else {
       // Round intermedio — chiama l'arbitro per il punto del round
       await handle2v2RoundVerdict(currentState.round)
-      setTwoVsTwoState(prev => {
-        if (!prev) return prev
-        return { ...prev, currentTurn: 'A', round: newRound, messagesThisTurn: 0 }
+      // Progress bar 7s poi banner ROUND e avanzamento
+      let elapsed = 0
+      const DURATION = 7000
+      setTwoVsTwoState(prev => prev ? { ...prev, roundProgress: 0 } : prev)
+      await new Promise<void>(resolve => {
+        const iv = setInterval(() => {
+          elapsed += 50
+          const pct = Math.min(elapsed / DURATION, 1)
+          setTwoVsTwoState(prev => prev ? { ...prev, roundProgress: pct } : prev)
+          if (elapsed >= DURATION) {
+            clearInterval(iv)
+            setTwoVsTwoState(prev => prev ? { ...prev, roundProgress: null, currentTurn: 'A', round: newRound, messagesThisTurn: 0 } : prev)
+            resolve()
+          }
+        }, 50)
       })
     }
   }
@@ -4208,6 +4239,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             loading={twoVsTwoLoading}
             myTeam="A"
             onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
+            onNewGame={() => { setTwoVsTwoState(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true) }}
+            onMultiplayer={() => { setTwoVsTwoState(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false) }}
           />
         </div>,
         document.body
@@ -4777,9 +4810,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             const myAiId = twoVsTwoState.config.teamA.aiId
             return (
               <div ref={inputBarRef} className="flex-shrink-0" style={{ backgroundColor: 'rgba(7,7,15,0.95)', borderTop: '1px solid rgba(255,80,0,0.2)', paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+                {twoVsTwoState.roundProgress && (
+                  <div className="px-3 pt-2 pb-1">
+                    <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${twoVsTwoState.roundProgress * 100}%`, background: 'linear-gradient(90deg, #3b82f6, #7C3AED)', transition: 'width 50ms linear' }} />
+                    </div>
+                  </div>
+                )}
                 <div className="px-3 pt-2 pb-1">
                   <div className="text-[9px] text-center font-bold" style={{ color: isMyTurn ? myColor : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)') }}>
-                    {isMyTurn ? `Il tuo turno · ${twoVsTwoState.messagesThisTurn}/${twoVsTwoState.maxMessagesPerTurn}` : `Turno Squadra ${twoVsTwoState.currentTurn}…`}
+                    {isMyTurn ? 'Il tuo turno' : `Turno Squadra ${twoVsTwoState.currentTurn}…`}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 px-3 pb-1.5">
@@ -5059,6 +5099,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             loading={twoVsTwoLoading}
             myTeam="A"
             onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
+            onNewGame={() => { setTwoVsTwoState(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true) }}
+            onMultiplayer={() => { setTwoVsTwoState(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false) }}
           />
         )}
 
