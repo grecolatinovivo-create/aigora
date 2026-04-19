@@ -44,6 +44,7 @@ export default async function AdminPage() {
   const usageRaw = await prisma.apiUsage.findMany({ orderBy: { createdAt: 'desc' } })
   const usageByProvider: Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }> = {}
   const usageByModel: Record<string, { calls: number; cost: number; inputTokens: number; outputTokens: number }> = {}
+  const usageByAction: Record<string, number> = {} // actionType → numero chiamate
   let totalCost = 0
   for (const u of usageRaw) {
     if (!usageByProvider[u.provider]) usageByProvider[u.provider] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
@@ -51,12 +52,13 @@ export default async function AdminPage() {
     usageByProvider[u.provider].cost += u.costUsd
     usageByProvider[u.provider].inputTokens += u.inputTokens
     usageByProvider[u.provider].outputTokens += u.outputTokens
-    // Aggrega anche per modello (utile per sonar vs sonar-pro)
     if (!usageByModel[u.model]) usageByModel[u.model] = { calls: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
     usageByModel[u.model].calls++
     usageByModel[u.model].cost += u.costUsd
     usageByModel[u.model].inputTokens += u.inputTokens
     usageByModel[u.model].outputTokens += u.outputTokens
+    const at = (u as any).actionType ?? 'risposta'
+    usageByAction[at] = (usageByAction[at] ?? 0) + 1
     totalCost += u.costUsd
   }
 
@@ -144,6 +146,27 @@ export default async function AdminPage() {
               )
             })}
           </div>
+          {/* Breakdown per tipo di chiamata */}
+          {Object.keys(usageByAction).length > 0 && (
+            <div className="mt-3 pt-3 border-t border-white/8 flex flex-wrap gap-2">
+              <span className="text-white/25 text-[10px] uppercase tracking-widest self-center mr-1">Tipo</span>
+              {[
+                { key: 'risposta',  label: '💬 Risposte' },
+                { key: 'factcheck', label: '🔍 Factcheck' },
+                { key: '2v2',       label: '⚔️ 2v2' },
+                { key: 'dado',      label: '🎲 Dado' },
+                { key: 'routing',   label: '🔀 Routing' },
+              ].map(({ key, label }) => {
+                const n = usageByAction[key]
+                if (!n) return null
+                return (
+                  <span key={key} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)' }}>
+                    {label} <span className="text-white/70 font-bold">{n}</span>
+                  </span>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Controlli globali */}

@@ -44,6 +44,7 @@ model ApiUsage {
   outputTokens Int   @default(0)
   costUsd   Float    @default(0)
   userId    String?
+  actionType String? // "risposta" | "factcheck" | "routing" | "2v2" | "dado"
   createdAt DateTime @default(now())
 }
 

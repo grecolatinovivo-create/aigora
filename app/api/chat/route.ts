@@ -20,12 +20,12 @@ const PRICES: Record<string, { input: number; output: number }> = {
   'sonar-pro':                 { input: 3.00,  output: 3.00  },
 }
 
-async function logUsage(provider: string, model: string, inputTokens: number, outputTokens: number, userId?: string) {
+async function logUsage(provider: string, model: string, inputTokens: number, outputTokens: number, userId?: string, actionType?: string) {
   try {
     const prices = PRICES[model] ?? { input: 0, output: 0 }
     const costUsd = (inputTokens * prices.input + outputTokens * prices.output) / 1_000_000
     const { prisma } = await import('@/lib/prisma')
-    await prisma.apiUsage.create({ data: { provider, model, inputTokens, outputTokens, costUsd, ...(userId ? { userId } : {}) } })
+    await prisma.apiUsage.create({ data: { provider, model, inputTokens, outputTokens, costUsd, ...(userId ? { userId } : {}), ...(actionType ? { actionType } : {}) } })
   } catch {}
 }
 
@@ -133,7 +133,7 @@ function sseStream(gen: AsyncIterable<string>, model?: string): Response {
   })
 }
 
-async function* streamClaude(system: string, historyText: string, lastMessage: string, userId?: string): AsyncIterable<string> {
+async function* streamClaude(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta'): AsyncIterable<string> {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const userContent: any[] = []
@@ -155,10 +155,10 @@ async function* streamClaude(system: string, historyText: string, lastMessage: s
     if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') yield chunk.delta.text
   }
   const usage = (await stream.finalMessage()).usage
-  logUsage('anthropic', 'claude-haiku-4-5-20251001', usage.input_tokens, usage.output_tokens, userId)
+  logUsage('anthropic', 'claude-haiku-4-5-20251001', usage.input_tokens, usage.output_tokens, userId, actionType)
 }
 
-async function* streamGPT(system: string, historyText: string, lastMessage: string, userId?: string): AsyncIterable<string> {
+async function* streamGPT(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta'): AsyncIterable<string> {
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const messages: any[] = [{ role: 'system', content: system }]
@@ -174,17 +174,17 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
     if (text) yield text
     if (chunk.usage) { inputTokens = chunk.usage.prompt_tokens; outputTokens = chunk.usage.completion_tokens }
   }
-  logUsage('openai', 'gpt-4.1-mini', inputTokens, outputTokens, userId)
+  logUsage('openai', 'gpt-4.1-mini', inputTokens, outputTokens, userId, actionType)
 }
 
-function streamGeminiWithModel(system: string, historyText: string, lastMessage: string, userId?: string): { stream: AsyncIterable<string>; model: string } {
+function streamGeminiWithModel(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta'): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.GEMINI_API_KEY) {
-    return { stream: streamClaude(system, historyText, lastMessage, userId), model: 'Claude' }
+    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType), model: 'Claude' }
   }
-  return { stream: streamGemini(system, historyText, lastMessage, userId), model: 'Gemini' }
+  return { stream: streamGemini(system, historyText, lastMessage, userId, actionType), model: 'Gemini' }
 }
 
-async function* streamGemini(system: string, historyText: string, lastMessage: string, userId?: string): AsyncIterable<string> {
+async function* streamGemini(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta'): AsyncIterable<string> {
   if (!process.env.GEMINI_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
@@ -196,12 +196,14 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
       const text = chunk.text()
       if (text) yield text
     }
-    const finalResp = await result.response
-    const usage = finalResp.usageMetadata
-    if (usage) logUsage('google', GEMINI_MODEL, usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId)
+    // logUsage in background — non blocca lo stream
+    result.response.then(finalResp => {
+      const usage = finalResp.usageMetadata
+      if (usage) logUsage('google', GEMINI_MODEL, usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId, actionType)
+    }).catch(() => {})
   } catch (err) {
     console.error('Gemini error, falling back to Claude:', err)
-    yield* streamClaude(system, historyText, lastMessage, userId)
+    yield* streamClaude(system, historyText, lastMessage, userId, actionType)
   }
 }
 
@@ -220,14 +222,14 @@ Scrivi come parla un essere umano vero, non come un paper accademico.`
   return { stream, model: 'Gemini (as Perplexity)' }
 }
 
-function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string): { stream: AsyncIterable<string>; model: string } {
+function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta'): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.PERPLEXITY_API_KEY) {
-    return { stream: streamClaude(system, historyText, lastMessage, userId), model: 'Claude' }
+    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType), model: 'Claude' }
   }
-  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch, userId), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
+  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch, userId, actionType), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
 }
 
-async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string): AsyncIterable<string> {
+async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta'): AsyncIterable<string> {
   if (!process.env.PERPLEXITY_API_KEY) { yield* streamGemini(system, historyText, lastMessage, userId); return }
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
@@ -252,7 +254,7 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
       outputTokens = Math.ceil(outputText.length / 4)
       inputTokens = Math.ceil((system.length + userMessage.length) / 4)
     }
-    logUsage('perplexity', model, inputTokens, outputTokens, userId)
+    logUsage('perplexity', model, inputTokens, outputTokens, userId, actionType)
   } catch (err) {
     // Sonar non disponibile o in errore: fallback silenzioso a Gemini-as-Perplexity
     console.error('Perplexity sonar error, falling back to Gemini:', err)
@@ -393,10 +395,10 @@ export async function POST(req: NextRequest) {
       const interruptorName = id.charAt(0).toUpperCase() + id.slice(1)
       const sysPrompt = getInterruptPrompt(interruptorName, spk, today, year)
       const prompt = `Conversazione finora:\n\n${historyText}\n\nAnalizza l'ultimo messaggio di ${spk} e rispondi.`
-      if (id === 'gpt')        return sseStream(streamGPT(sysPrompt, '', prompt), 'GPT')
-      if (id === 'gemini')     { const g = streamGeminiWithModel(sysPrompt, '', prompt); return sseStream(g.stream, g.model) }
-      if (id === 'perplexity') { const p = streamPerplexityWithModel(sysPrompt, '', prompt); return sseStream(p.stream, p.model) }
-      return sseStream(streamClaude(sysPrompt, '', prompt), 'Claude')
+      if (id === 'gpt')        return sseStream(streamGPT(sysPrompt, '', prompt, currentUserId, 'factcheck'), 'GPT')
+      if (id === 'gemini')     { const g = streamGeminiWithModel(sysPrompt, '', prompt, currentUserId, 'factcheck'); return sseStream(g.stream, g.model) }
+      if (id === 'perplexity') { const p = streamPerplexityWithModel(sysPrompt, '', prompt, false, currentUserId, 'factcheck'); return sseStream(p.stream, p.model) }
+      return sseStream(streamClaude(sysPrompt, '', prompt, currentUserId, 'factcheck'), 'Claude')
     }
 
     // Azione dedicata 2v2 — bypassa i system prompt normali, usa il system passato nella history[0]
@@ -405,10 +407,10 @@ export async function POST(req: NextRequest) {
       const rest = history.slice(1)
       const ctx = rest.map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
       const last = history[history.length - 1]?.content ?? ''
-      if (aiId === 'claude')     return sseStream(streamClaude(systemMsg, ctx, last, currentUserId), 'Claude')
-      if (aiId === 'gpt')        return sseStream(streamGPT(systemMsg, ctx, last, currentUserId), 'GPT')
-      if (aiId === 'gemini')     { const g = streamGeminiWithModel(systemMsg, ctx, last, currentUserId); return sseStream(g.stream, g.model) }
-      if (aiId === 'perplexity') { const p = streamPerplexityWithModel(systemMsg, ctx, last, false, currentUserId); return sseStream(p.stream, p.model) }
+      if (aiId === 'claude')     return sseStream(streamClaude(systemMsg, ctx, last, currentUserId, '2v2'), 'Claude')
+      if (aiId === 'gpt')        return sseStream(streamGPT(systemMsg, ctx, last, currentUserId, '2v2'), 'GPT')
+      if (aiId === 'gemini')     { const g = streamGeminiWithModel(systemMsg, ctx, last, currentUserId, '2v2'); return sseStream(g.stream, g.model) }
+      if (aiId === 'perplexity') { const p = streamPerplexityWithModel(systemMsg, ctx, last, false, currentUserId, '2v2'); return sseStream(p.stream, p.model) }
       return new Response('AI non trovata', { status: 400 })
     }
 
@@ -416,9 +418,9 @@ export async function POST(req: NextRequest) {
     if (overrideSystemPrompt) {
       const lastMsg = history[history.length - 1]?.content ?? ''
       const ctx = history.slice(0, -1).map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
-      if (aiId === 'gemini') { const g = streamGeminiWithModel(overrideSystemPrompt, ctx, lastMsg, currentUserId); return sseStream(g.stream, g.model) }
-      if (aiId === 'claude') return sseStream(streamClaude(overrideSystemPrompt, ctx, lastMsg, currentUserId), 'Claude')
-      if (aiId === 'gpt')    return sseStream(streamGPT(overrideSystemPrompt, ctx, lastMsg, currentUserId), 'GPT')
+      if (aiId === 'gemini') { const g = streamGeminiWithModel(overrideSystemPrompt, ctx, lastMsg, currentUserId, 'dado'); return sseStream(g.stream, g.model) }
+      if (aiId === 'claude') return sseStream(streamClaude(overrideSystemPrompt, ctx, lastMsg, currentUserId, 'dado'), 'Claude')
+      if (aiId === 'gpt')    return sseStream(streamGPT(overrideSystemPrompt, ctx, lastMsg, currentUserId, 'dado'), 'GPT')
     }
 
     const system = SYSTEM_PROMPTS[aiId]
