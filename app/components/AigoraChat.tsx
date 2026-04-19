@@ -3248,6 +3248,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: '2v2', aiId,
+          maxTokens: 350,
           history: [
             { name: 'Sistema', content: (() => {
               const teamASide = config.teamASide ?? 'attack'
@@ -3377,8 +3378,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: '2v2', aiId: bAiId,
+          maxTokens: 350,
           history: [
-            { name: 'Sistema', content: `Sei ${AI_NAMES[bAiId]}, membro della Squadra B. Stai dibattendo contro ${teamAHumanName} e ${teamAAiName} sul tema: "${twoVsTwoState.config.topic}". Il tuo unico compito è smontare gli argomenti avversari con forza e convinzione. Tono diretto, aggressivo nei confronti delle idee avversarie. 2-3 frasi nella lingua del messaggio. Non descrivere mai le tue azioni o emozioni con asterischi (*faccio X*, *mi fermo*, ecc.) — parla solo con argomenti. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[bAiId]?.carattere ?? ''}` },
+            { name: 'Sistema', content: `Sei ${AI_NAMES[bAiId]}, membro della Squadra B. Stai dibattendo contro ${teamAHumanName} e ${teamAAiName} sul tema: "${twoVsTwoState.config.topic}". Il tuo unico compito è smontare gli argomenti avversari con forza e convinzione. Tono diretto, aggressivo nei confronti delle idee avversarie. Massimo 2 frasi brevi nella lingua del messaggio. Non descrivere mai le tue azioni o emozioni con asterischi (*faccio X*, *mi fermo*, ecc.) — parla solo con argomenti. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[bAiId]?.carattere ?? ''}` },
             ...bHistory,
             { name: 'Sistema', content: `${teamAHumanName} ha appena detto: "${text}". Attacca questo argomento.` }
           ],
@@ -3479,7 +3481,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       content: m.content,
     }))
 
-    const promptContent = `Sei ${arbName}, arbitro imparziale di un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Hai appena assistito al round ${roundNumber}. Devi assegnare esattamente 1 punto a UNA delle due squadre: scrivi "PUNTO: A" oppure "PUNTO: B". Non puoi mai fare pareggio. Poi scrivi 1 sola frase secca e diretta che motiva il punto. Non più di 20 parole. Niente di più.`
+    const promptContent = `Sei ${arbName}, arbitro imparziale di un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Hai appena assistito al round ${roundNumber}. Devi assegnare esattamente 1 punto a UNA delle due squadre: scrivi "PUNTO: A" oppure "PUNTO: B". Non puoi mai fare pareggio. Poi motiva il punto con una frase secca e diretta. Massimo 150 tokens in totale. Niente di più.`
 
     try {
       const res = await fetch('/api/chat', {

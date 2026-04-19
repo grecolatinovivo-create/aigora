@@ -133,7 +133,7 @@ function sseStream(gen: AsyncIterable<string>, model?: string): Response {
   })
 }
 
-async function* streamClaude(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta'): AsyncIterable<string> {
+async function* streamClaude(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350): AsyncIterable<string> {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const userContent: any[] = []
@@ -147,7 +147,7 @@ async function* streamClaude(system: string, historyText: string, lastMessage: s
   userContent.push({ type: 'text', text: lastMessage })
   const stream = await client.messages.stream({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 350,
+    max_tokens: maxTok,
     system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } } as any],
     messages: [{ role: 'user', content: userContent as any }],
   })
@@ -158,7 +158,7 @@ async function* streamClaude(system: string, historyText: string, lastMessage: s
   logUsage('anthropic', 'claude-haiku-4-5-20251001', usage.input_tokens, usage.output_tokens, userId, actionType)
 }
 
-async function* streamGPT(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta'): AsyncIterable<string> {
+async function* streamGPT(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350): AsyncIterable<string> {
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const messages: any[] = [{ role: 'system', content: system }]
@@ -167,7 +167,7 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
     messages.push({ role: 'assistant', content: 'Ho letto la conversazione. Procedo con il mio turno.' })
   }
   messages.push({ role: 'user', content: lastMessage })
-  const stream = await client.chat.completions.create({ model: 'gpt-4.1-mini', max_tokens: 350, stream: true, stream_options: { include_usage: true }, messages })
+  const stream = await client.chat.completions.create({ model: 'gpt-4.1-mini', max_tokens: maxTok, stream: true, stream_options: { include_usage: true }, messages })
   let inputTokens = 0, outputTokens = 0
   for await (const chunk of stream) {
     const text = chunk.choices[0]?.delta?.content
@@ -177,20 +177,20 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
   logUsage('openai', 'gpt-4.1-mini', inputTokens, outputTokens, userId, actionType)
 }
 
-function streamGeminiWithModel(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta'): { stream: AsyncIterable<string>; model: string } {
+function streamGeminiWithModel(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.GEMINI_API_KEY) {
-    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType), model: 'Claude' }
+    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType, maxTok), model: 'Claude' }
   }
-  return { stream: streamGemini(system, historyText, lastMessage, userId, actionType), model: 'Gemini' }
+  return { stream: streamGemini(system, historyText, lastMessage, userId, actionType, maxTok), model: 'Gemini' }
 }
 
-async function* streamGemini(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta'): AsyncIterable<string> {
+async function* streamGemini(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350): AsyncIterable<string> {
   if (!process.env.GEMINI_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
     const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     const fullSystem = historyText ? `${system}\n\nConversazione fino ad ora:\n\n${historyText}` : system
-    const model = client.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: fullSystem, generationConfig: { maxOutputTokens: 350 } })
+    const model = client.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: fullSystem, generationConfig: { maxOutputTokens: maxTok } })
     const result = await model.generateContentStream(lastMessage)
     for await (const chunk of result.stream) {
       const text = chunk.text()
@@ -222,14 +222,14 @@ Scrivi come parla un essere umano vero, non come un paper accademico.`
   return { stream, model: 'Gemini (as Perplexity)' }
 }
 
-function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta'): { stream: AsyncIterable<string>; model: string } {
+function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta', maxTok = 350): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.PERPLEXITY_API_KEY) {
-    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType), model: 'Claude' }
+    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType, maxTok), model: 'Claude' }
   }
-  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch, userId, actionType), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
+  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch, userId, actionType, maxTok), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
 }
 
-async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta'): AsyncIterable<string> {
+async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta', maxTok = 350): AsyncIterable<string> {
   if (!process.env.PERPLEXITY_API_KEY) { yield* streamGemini(system, historyText, lastMessage, userId); return }
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
@@ -237,7 +237,7 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
   const model = needsWebSearch ? 'sonar-pro' : 'sonar'
   try {
     const stream = await client.chat.completions.create({
-      model, max_tokens: 350, stream: true,
+      model, max_tokens: maxTok, stream: true,
       messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
     } as any) as any
     let outputText = ''
@@ -320,7 +320,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch, perplexityTurnCount, overrideSystemPrompt } = await req.json()
+    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch, perplexityTurnCount, overrideSystemPrompt, maxTokens } = await req.json()
 
     // Verifica piano — l'utente può usare solo le AI del suo piano
     const session = await getServerSession(authOptions)
@@ -407,10 +407,11 @@ export async function POST(req: NextRequest) {
       const rest = history.slice(1)
       const ctx = rest.map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
       const last = history[history.length - 1]?.content ?? ''
-      if (aiId === 'claude')     return sseStream(streamClaude(systemMsg, ctx, last, currentUserId, '2v2'), 'Claude')
-      if (aiId === 'gpt')        return sseStream(streamGPT(systemMsg, ctx, last, currentUserId, '2v2'), 'GPT')
-      if (aiId === 'gemini')     { const g = streamGeminiWithModel(systemMsg, ctx, last, currentUserId, '2v2'); return sseStream(g.stream, g.model) }
-      if (aiId === 'perplexity') { const p = streamPerplexityWithModel(systemMsg, ctx, last, false, currentUserId, '2v2'); return sseStream(p.stream, p.model) }
+      const mt = maxTokens ?? 350
+      if (aiId === 'claude')     return sseStream(streamClaude(systemMsg, ctx, last, currentUserId, '2v2', mt), 'Claude')
+      if (aiId === 'gpt')        return sseStream(streamGPT(systemMsg, ctx, last, currentUserId, '2v2', mt), 'GPT')
+      if (aiId === 'gemini')     { const g = streamGeminiWithModel(systemMsg, ctx, last, currentUserId, '2v2', mt); return sseStream(g.stream, g.model) }
+      if (aiId === 'perplexity') { const p = streamPerplexityWithModel(systemMsg, ctx, last, false, currentUserId, '2v2', mt); return sseStream(p.stream, p.model) }
       return new Response('AI non trovata', { status: 400 })
     }
 
