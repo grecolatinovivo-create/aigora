@@ -1535,7 +1535,11 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
               </div>
             ) : (
               <div className="text-[10px] text-center text-white/30">
-                Turno Squadra {state.currentTurn} — {state.currentTurn === 'A' ? config.teamA.humanName : "Squadra B"} sta rispondendo…
+                {(() => {
+                  const streamingMsg = [...state.messages].reverse().find(m => m.streaming)
+                  const speaker = streamingMsg ? streamingMsg.author : (state.currentTurn === 'A' ? config.teamA.humanName : 'Squadra B')
+                  return `${speaker} sta rispondendo…`
+                })()}
               </div>
             )}
           </div>
@@ -3076,7 +3080,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
               const roleInstruction = thisSide === 'attack'
                 ? `Il tuo compito è ATTACCARE e smontare la tesi "${config.topic}": porta argomenti contro di essa, evidenziane le debolezze, confuta le posizioni avversarie.`
                 : `Il tuo compito è DIFENDERE e sostenere la tesi "${config.topic}": porta argomenti a favore, rafforza i punti chiave, rispondi alle obiezioni avversarie.`
-              return `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". ${roleInstruction} Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore${enemyHaveSpoken ? `, attacca le posizioni di ${enemyAiNames}` : ''}. Tono diretto, coinvolto, da alleato — non da professore neutrale. Massimo 2 frasi brevi nella lingua del messaggio. Non descrivere mai le tue azioni o emozioni con asterischi (*faccio X*, *mi fermo*, ecc.) — parla solo con argomenti. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[aiId]?.carattere ?? ''}`
+              return `Sei in una squadra con ${humanName} contro ${enemyAiNames}. Stai dibattendo: "${config.topic}". ${roleInstruction} Parla come un compagno di squadra appassionato: dai ragione a ${humanName}, aggiungi argomenti a suo favore${enemyHaveSpoken ? `, attacca le posizioni di ${enemyAiNames}` : ''}. Tono diretto, coinvolto, da alleato — non da professore neutrale. Massimo 2 frasi brevi nella lingua del messaggio. Non descrivere mai le tue azioni o emozioni con asterischi (*faccio X*, *mi fermo*, ecc.) — parla solo con argomenti. NON usare mai numeri tra parentesi quadre [1][2][3] per le fonti: se citi uno studio, integra nome e autore direttamente nel testo. Mantieni però il tuo stile e carattere unici: ${AI_PROFILES[aiId]?.carattere ?? ''}`
             })() },
             ...history,
             { name: 'Sistema', content: enemyHaveSpoken
@@ -3261,7 +3265,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const currentState = twoVsTwoState
     const newRound = currentState.round + 1
     if (newRound > currentState.maxRounds) {
-      // Ultimo round completato — chiama il verdetto finale
+      // Ultimo round completato — prima assegna il punto del round, poi verdetto finale
+      await handle2v2RoundVerdict(currentState.round)
       await handle2v2Verdict()
     } else {
       // Round intermedio — chiama l'arbitro per il punto del round
