@@ -11,7 +11,7 @@ export const maxDuration = 60
 const PRICES: Record<string, { input: number; output: number }> = {
   'claude-haiku-4-5-20251001': { input: 0.25,  output: 1.25  },
   'gpt-4.1-mini':              { input: 0.40,  output: 1.60  },
-  'gemini-2.0-flash':          { input: 0.10,  output: 0.40  },
+  'gemini-1.5-flash':          { input: 0.075, output: 0.30  },
   'sonar':                     { input: 1.00,  output: 1.00  },
   'sonar-pro':                 { input: 3.00,  output: 3.00  },
 }
@@ -185,7 +185,7 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
   const { GoogleGenerativeAI } = await import('@google/generative-ai')
   const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   const fullSystem = historyText ? `${system}\n\nConversazione fino ad ora:\n\n${historyText}` : system
-  const model = client.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: fullSystem, generationConfig: { maxOutputTokens: 350 } })
+  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: fullSystem, generationConfig: { maxOutputTokens: 350 } })
   const result = await model.generateContentStream(lastMessage)
   for await (const chunk of result.stream) {
     const text = chunk.text()
@@ -193,11 +193,11 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
   }
   const finalResp = await result.response
   const usage = finalResp.usageMetadata
-  if (usage) logUsage('google', 'gemini-2.0-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId)
+  if (usage) logUsage('google', 'gemini-1.5-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId)
 }
 
 // Gemini che impersona Perplexity nei turni 2-10: niente ricerca, commenta i dati già citati
-function streamGeminiAsPerplexity(historyText: string, today: string, year: number): { stream: AsyncIterable<string>; model: string } {
+function streamGeminiAsPerplexity(historyText: string, today: string, year: number, userId?: string): { stream: AsyncIterable<string>; model: string } {
   const system = `Sei Perplexity. Hai già portato dati freschi e studi nel tuo primo intervento.
 Ora non stai cercando online — stai difendendo e approfondendo il punto scientifico di quei dati.
 Tieni il punto: se qualcuno mette in dubbio gli studi che hai citato, ribatti con precisione scientifica. Non cedere senza motivo.
@@ -207,7 +207,7 @@ Stai conversando con Claude, GPT e Gemini. Oggi è ${today}. Siamo nel ${year}.
 Rispondi SEMPRE nella stessa lingua usata dall'utente. Massimo 2-3 frasi. Sii diretto e scientificamente preciso.
 NON usare mai lineette tipografiche. NON usare riferimenti numerici [1][2][3].
 Scrivi come parla un essere umano vero, non come un paper accademico.`
-  const stream = streamGemini(system, historyText, `Ora è il tuo turno, Perplexity. Rispondi in 2-3 frasi nella stessa lingua della domanda originale.`)
+  const stream = streamGemini(system, historyText, `Ora è il tuo turno, Perplexity. Rispondi in 2-3 frasi nella stessa lingua della domanda originale.`, userId)
   return { stream, model: 'Gemini (as Perplexity)' }
 }
 
@@ -427,7 +427,7 @@ export async function POST(req: NextRequest) {
       // Se il flag forceGeminiPerp è attivo (per-utente o globale), sempre Gemini-as-Perplexity
       const forceGemini = (req as any)._forceGeminiPerp ?? false
       if (forceGemini) {
-        const g = streamGeminiAsPerplexity(historyText, today, year)
+        const g = streamGeminiAsPerplexity(historyText, today, year, currentUserId)
         return sseStream(g.stream, 'Perplexity')
       }
       // Turno 1 (count=0): Sonar Pro con ricerca reale
@@ -438,7 +438,7 @@ export async function POST(req: NextRequest) {
         const p = streamPerplexityWithModel(system, historyText, lastMessage, true, currentUserId)
         return sseStream(p.stream, 'Perplexity')
       } else {
-        const g = streamGeminiAsPerplexity(historyText, today, year)
+        const g = streamGeminiAsPerplexity(historyText, today, year, currentUserId)
         return sseStream(g.stream, 'Perplexity')
       }
     }

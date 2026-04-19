@@ -993,27 +993,11 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               </div>
               <div className="flex-1 flex flex-col items-center justify-center gap-6">
                 <div className="flex flex-col items-center gap-3">
-                  {/* Dado 3D */}
-                  <div
-                    className={`dice-scene${topicRevealed ? ' done' : ''}`}
-                    onClick={handleRoll}
-                    style={{ pointerEvents: topicRevealed || diceRolling ? 'none' : 'auto' }}
-                  >
-                    <div className={`dice-cube${diceRolling ? ' rolling' : diceLanding ? ' landing' : ' idle'}`}>
-                      {/* Faccia 1 — front */}
-                      <div className="dice-face front"><div className="dots-1"><div className="dot"/></div></div>
-                      {/* Faccia 6 — back */}
-                      <div className="dice-face back"><div className="dots-6"><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
-                      {/* Faccia 3 — right */}
-                      <div className="dice-face right"><div className="dots-3"><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
-                      {/* Faccia 4 — left */}
-                      <div className="dice-face left"><div className="dots-4"><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
-                      {/* Faccia 5 — top */}
-                      <div className="dice-face top"><div className="dots-5"><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
-                      {/* Faccia 2 — bottom */}
-                      <div className="dice-face bottom"><div className="dots-2"><div className="dot"/><div className="dot"/></div></div>
-                    </div>
-                  </div>
+                  <button onClick={handleRoll} disabled={topicRevealed || diceRolling}
+                    className="flex items-center justify-center rounded-full"
+                    style={{ width: 130, height: 130, background: topicRevealed ? 'rgba(124,58,237,0.12)' : 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.2))', border: `2px solid ${topicRevealed ? 'rgba(124,58,237,0.15)' : 'rgba(167,139,250,0.4)'}`, cursor: topicRevealed ? 'default' : 'pointer', flexShrink: 0 }}>
+                    <span style={{ fontSize: 56, display: 'block', animation: diceRolling ? 'dice-emoji-spin 0.4s linear infinite' : diceLanding ? 'dice-emoji-land 0.5s cubic-bezier(0.22,1,0.36,1) forwards' : topicRevealed ? 'none' : 'dice-emoji-idle 3s ease-in-out infinite' }}>🎲</span>
+                  </button>
                   {diceRolling && (
                     <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 700, fontSize: 13, letterSpacing: '0.28em', color: 'rgba(167,139,250,0.85)', animation: 'alea-appear 0.4s ease-out forwards' }}>
                       Claude sta pensando…
