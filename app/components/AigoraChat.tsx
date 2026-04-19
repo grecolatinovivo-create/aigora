@@ -938,19 +938,22 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
             setTimeout(() => SFX.diceThud(), 280)
             setDiceRolling(true)
             try {
-              const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  action: '2v2',
-                  aiId: 'gemini',
-                  history: [
-                    { name: 'Sistema', content: 'Sei un generatore di tesi per dibattiti. Rispondi SOLO con una affermazione breve in italiano, max 8 parole, provocatoria e divisiva su un tema attuale o filosofico. Deve essere una tesi netta che si può sostenere o attaccare. Nient\'altro. Zero spiegazioni. Zero commenti. Solo la tesi.' },
-                    { name: 'Sistema', content: 'Genera ora la domanda.' },
-                  ],
-                  needsWebSearch: false,
+              const [res] = await Promise.all([
+                fetch('/api/chat', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    action: '2v2',
+                    aiId: 'gemini',
+                    history: [
+                      { name: 'Sistema', content: 'Sei un generatore di tesi per dibattiti. Rispondi SOLO con una affermazione breve in italiano, max 8 parole, provocatoria e divisiva su un tema attuale o filosofico. Deve essere una tesi netta che si può sostenere o attaccare. Nient\'altro. Zero spiegazioni. Zero commenti. Solo la tesi.' },
+                      { name: 'Sistema', content: 'Genera ora la domanda.' },
+                    ],
+                    needsWebSearch: false,
+                  }),
                 }),
-              })
+                new Promise(r => setTimeout(r, 4000)), // dado gira almeno 4 secondi
+              ])
               let generatedTopic = ''
               if (res.ok && res.body) {
                 const reader = res.body.getReader()
@@ -976,6 +979,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               setDiceLanding(true)
               setTimeout(() => { setDiceLanding(false); setTopicRevealed(true) }, 520)
             } catch {
+              await new Promise(r => setTimeout(r, 4000))
               setTopic(aiTopicPool[aiTopicIndex])
               setUserSide(Math.random() < 0.5 ? 'attack' : 'defend')
               setDiceRolling(false)
