@@ -11,7 +11,7 @@ export const maxDuration = 60
 const PRICES: Record<string, { input: number; output: number }> = {
   'claude-haiku-4-5-20251001': { input: 0.25,  output: 1.25  },
   'gpt-4.1-mini':              { input: 0.40,  output: 1.60  },
-  'gemini-1.5-flash':          { input: 0.075, output: 0.30  },
+  'gemini-2.0-flash':          { input: 0.10,  output: 0.40  },
   'sonar':                     { input: 1.00,  output: 1.00  },
   'sonar-pro':                 { input: 3.00,  output: 3.00  },
 }
@@ -182,18 +182,23 @@ function streamGeminiWithModel(system: string, historyText: string, lastMessage:
 
 async function* streamGemini(system: string, historyText: string, lastMessage: string, userId?: string): AsyncIterable<string> {
   if (!process.env.GEMINI_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
-  const { GoogleGenerativeAI } = await import('@google/generative-ai')
-  const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-  const fullSystem = historyText ? `${system}\n\nConversazione fino ad ora:\n\n${historyText}` : system
-  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: fullSystem, generationConfig: { maxOutputTokens: 350 } })
-  const result = await model.generateContentStream(lastMessage)
-  for await (const chunk of result.stream) {
-    const text = chunk.text()
-    if (text) yield text
+  try {
+    const { GoogleGenerativeAI } = await import('@google/generative-ai')
+    const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const fullSystem = historyText ? `${system}\n\nConversazione fino ad ora:\n\n${historyText}` : system
+    const model = client.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: fullSystem, generationConfig: { maxOutputTokens: 350 } })
+    const result = await model.generateContentStream(lastMessage)
+    for await (const chunk of result.stream) {
+      const text = chunk.text()
+      if (text) yield text
+    }
+    const finalResp = await result.response
+    const usage = finalResp.usageMetadata
+    if (usage) logUsage('google', 'gemini-2.0-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId)
+  } catch (err) {
+    console.error('Gemini error, falling back to Claude:', err)
+    yield* streamClaude(system, historyText, lastMessage, userId)
   }
-  const finalResp = await result.response
-  const usage = finalResp.usageMetadata
-  if (usage) logUsage('google', 'gemini-1.5-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId)
 }
 
 // Gemini che impersona Perplexity nei turni 2-10: niente ricerca, commenta i dati già citati
