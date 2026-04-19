@@ -6,6 +6,124 @@ import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
 import { useAbly, type RoomEvent } from '@/lib/useAbly'
 
+// ── Web Audio sound engine ────────────────────────────────────────────────────
+function getAudioCtx(): AudioContext | null {
+  if (typeof window === 'undefined') return null
+  try {
+    return new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+  } catch { return null }
+}
+let _audioCtx: AudioContext | null = null
+function ctx(): AudioContext | null {
+  if (!_audioCtx || _audioCtx.state === 'closed') _audioCtx = getAudioCtx()
+  return _audioCtx
+}
+function resumeCtx() {
+  const c = ctx(); if (c && c.state === 'suspended') c.resume()
+}
+
+const SFX = {
+  // Click generico — breve burst di rumore bianco filtrato
+  click() {
+    const c = ctx(); if (!c) return
+    resumeCtx()
+    const buf = c.createBuffer(1, c.sampleRate * 0.04, c.sampleRate)
+    const data = buf.getChannelData(0)
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length)
+    const src = c.createBufferSource()
+    src.buffer = buf
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1200; f.Q.value = 0.8
+    const g = c.createGain(); g.gain.setValueAtTime(0.18, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.04)
+    src.connect(f); f.connect(g); g.connect(c.destination)
+    src.start(); src.stop(c.currentTime + 0.04)
+  },
+
+  // Tick roulette — click metallico secco
+  tick() {
+    const c = ctx(); if (!c) return
+    resumeCtx()
+    const osc = c.createOscillator(); osc.type = 'square'; osc.frequency.setValueAtTime(900, c.currentTime); osc.frequency.exponentialRampToValueAtTime(300, c.currentTime + 0.02)
+    const g = c.createGain(); g.gain.setValueAtTime(0.12, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.02)
+    osc.connect(g); g.connect(c.destination)
+    osc.start(); osc.stop(c.currentTime + 0.02)
+  },
+
+  // Slot settle — clack pesante quando si ferma
+  settle() {
+    const c = ctx(); if (!c) return
+    resumeCtx()
+    const osc = c.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, c.currentTime); osc.frequency.exponentialRampToValueAtTime(60, c.currentTime + 0.12)
+    const g = c.createGain(); g.gain.setValueAtTime(0.35, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.12)
+    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 400
+    osc.connect(f); f.connect(g); g.connect(c.destination)
+    osc.start(); osc.stop(c.currentTime + 0.12)
+  },
+
+  // Dado — roll (rumore) + thud (basso)
+  diceRoll() {
+    const c = ctx(); if (!c) return
+    resumeCtx()
+    // rumore di rotolamento
+    const buf = c.createBuffer(1, c.sampleRate * 0.3, c.sampleRate)
+    const data = buf.getChannelData(0)
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 1.5) * 0.4
+    const src = c.createBufferSource(); src.buffer = buf
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 800; f.Q.value = 1.5
+    const g = c.createGain(); g.gain.value = 1
+    src.connect(f); f.connect(g); g.connect(c.destination)
+    src.start(); src.stop(c.currentTime + 0.3)
+  },
+
+  diceThud() {
+    const c = ctx(); if (!c) return
+    resumeCtx()
+    const osc = c.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(80, c.currentTime); osc.frequency.exponentialRampToValueAtTime(30, c.currentTime + 0.18)
+    const g = c.createGain(); g.gain.setValueAtTime(0.5, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.18)
+    osc.connect(g); g.connect(c.destination)
+    osc.start(); osc.stop(c.currentTime + 0.18)
+  },
+
+  // Round banner — gong impattante
+  roundGong() {
+    const c = ctx(); if (!c) return
+    resumeCtx()
+    const osc = c.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(220, c.currentTime); osc.frequency.exponentialRampToValueAtTime(180, c.currentTime + 1.2)
+    const osc2 = c.createOscillator(); osc2.type = 'sine'; osc2.frequency.setValueAtTime(330, c.currentTime); osc2.frequency.exponentialRampToValueAtTime(270, c.currentTime + 1.2)
+    const g = c.createGain(); g.gain.setValueAtTime(0.0, c.currentTime); g.gain.linearRampToValueAtTime(0.45, c.currentTime + 0.01); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 1.8)
+    osc.connect(g); osc2.connect(g); g.connect(c.destination)
+    osc.start(); osc2.start(); osc.stop(c.currentTime + 1.8); osc2.stop(c.currentTime + 1.8)
+  },
+
+  // Punto A — ding vittoria blu
+  pointA() {
+    const c = ctx(); if (!c) return
+    resumeCtx()
+    const freqs = [523, 659, 784]
+    freqs.forEach((freq, i) => {
+      const osc = c.createOscillator(); osc.type = 'sine'; osc.frequency.value = freq
+      const g = c.createGain(); const t = c.currentTime + i * 0.1
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.25, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + 0.4)
+      osc.connect(g); g.connect(c.destination)
+      osc.start(t); osc.stop(t + 0.4)
+    })
+  },
+
+  // Punto B — buzz sconfitta rosso
+  pointB() {
+    const c = ctx(); if (!c) return
+    resumeCtx()
+    const freqs = [784, 659, 523]
+    freqs.forEach((freq, i) => {
+      const osc = c.createOscillator(); osc.type = 'sine'; osc.frequency.value = freq
+      const g = c.createGain(); const t = c.currentTime + i * 0.1
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.25, t + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t + 0.4)
+      osc.connect(g); g.connect(c.destination)
+      osc.start(t); osc.stop(t + 0.4)
+    })
+  },
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const AI_ORDER_DEFAULT = ['claude', 'gemini', 'perplexity', 'gpt']
 const AI_NAMES: Record<string, string> = { claude: 'Claude', gpt: 'GPT', gemini: 'Gemini', perplexity: 'Perplexity' }
 const AI_COLOR: Record<string, string> = { claude: '#7C3AED', gpt: '#10A37F', gemini: '#1A73E8', perplexity: '#FF6B2B' }
@@ -557,27 +675,27 @@ function SlotReel({ finalId, rolling, settled, delay }: { finalId: string; rolli
 
   useEffect(() => {
     if (!rolling) return
-    // Parte veloce
     setSpeed(60)
     intervalRef.current = setInterval(() => {
       setDisplayIdx(i => (i + 1) % names.length)
+      SFX.tick()
     }, 60)
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [rolling])
 
   useEffect(() => {
     if (!settled) return
-    // Rallenta progressivamente poi si ferma sul risultato
     if (intervalRef.current) clearInterval(intervalRef.current)
     const speeds = [80, 120, 180, 260, 360, 500]
     let si = 0
     const slowDown = () => {
       if (si >= speeds.length) {
-        // Fermati sul risultato finale
         setDisplayIdx(AI_OPTIONS.findIndex(a => a.id === finalId))
+        SFX.settle()
         return
       }
       setDisplayIdx(i => (i + 1) % names.length)
+      SFX.tick()
       si++
       setTimeout(slowDown, speeds[si - 1])
     }
@@ -702,7 +820,7 @@ function RouletteScreen({ teamAAI, rouletteSlots, rouletteSettled, arbiter, onCo
       </div>
 
       {/* Pulsante Continua — spazio SEMPRE riservato, visibile solo quando settled */}
-      <button onClick={onContinue} disabled={!ready || !showArbiter}
+      <button onClick={() => { SFX.click(); onContinue() }} disabled={!ready || !showArbiter}
         className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all"
         style={{ visibility: showArbiter ? 'visible' : 'hidden', background: ready ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : 'rgba(255,255,255,0.08)', boxShadow: ready ? '0 4px 20px rgba(124,58,237,0.4)' : 'none', opacity: showArbiter ? (ready ? 1 : 0.5) : 0 }}>
         {ready ? 'Continua →' : 'Preparazione…'}
@@ -815,6 +933,8 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         {step === 'topic' && (() => {
           const handleRoll = async () => {
             if (topicRevealed || diceRolling) return
+            SFX.diceRoll()
+            setTimeout(() => SFX.diceThud(), 280)
             setDiceRolling(true)
             try {
               const res = await fetch('/api/chat', {
@@ -903,7 +1023,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 )}
               </div>
               {topicRevealed && (
-                <button onClick={() => { setStep('teams') }} className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
+                <button onClick={() => { SFX.click(); setStep('teams') }} className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
                   Avanti →
                 </button>
               )}
@@ -923,7 +1043,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               {AI_OPTIONS.map(ai => {
                 const isSelected = teamAAI === ai.id
                 return (
-                  <button key={ai.id} onClick={() => setTeamAAI(ai.id)}
+                  <button key={ai.id} onClick={() => { SFX.click(); setTeamAAI(ai.id) }}
                     className="flex flex-col items-center justify-center gap-2 rounded-3xl transition-all active:scale-[0.97] p-4"
                     style={{ background: isSelected ? `${ai.color}18` : 'rgba(255,255,255,0.04)', border: isSelected ? `2px solid ${ai.color}60` : '1px solid rgba(255,255,255,0.08)', boxShadow: isSelected ? `0 0 20px ${ai.color}25` : 'none' }}>
                     <div className="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: ai.color, boxShadow: isSelected ? `0 0 16px ${ai.color}55` : 'none' }}>
@@ -939,14 +1059,14 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               <div className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.2)' }}>Round</div>
               <div className="flex gap-1.5">
                 {[3, 5, 7, 9, 11].map(r => (
-                  <button key={r} onClick={() => setMaxRoundsChoice(r)} className="flex-1 h-9 rounded-xl font-black text-sm transition-all active:scale-95"
+                  <button key={r} onClick={() => { SFX.click(); setMaxRoundsChoice(r) }} className="flex-1 h-9 rounded-xl font-black text-sm transition-all active:scale-95"
                     style={{ background: maxRoundsChoice === r ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)', border: maxRoundsChoice === r ? '2px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.08)', color: maxRoundsChoice === r ? 'white' : 'rgba(255,255,255,0.35)' }}>
                     {r}
                   </button>
                 ))}
               </div>
             </div>
-            <button onClick={handleCreate} disabled={creating} className="flex-shrink-0 w-full py-4 rounded-2xl font-bold text-white text-[15px] disabled:opacity-50 transition-all active:scale-[0.98]"
+            <button onClick={() => { SFX.click(); handleCreate() }} disabled={creating} className="flex-shrink-0 w-full py-4 rounded-2xl font-bold text-white text-[15px] disabled:opacity-50 transition-all active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #3b82f6, #7C3AED)', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}>
               {creating ? 'Preparo la roulette…' : 'Avvia la roulette →'}
             </button>
@@ -1030,7 +1150,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   // Back button helper
   const backBtn = (
     <button
-      onClick={step === 'share' ? () => setStep('teams') : step === 'teams' ? () => setStep('topic') : step === 'roulette' ? undefined : onBack}
+      onClick={step === 'share' ? () => { SFX.click(); setStep('teams') } : step === 'teams' ? () => { SFX.click(); setStep('topic') } : step === 'roulette' ? undefined : () => { SFX.click(); onBack() }}
       className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0"
       style={{ backgroundColor: 'rgba(255,255,255,0.06)', opacity: step === 'roulette' ? 0.3 : 1, pointerEvents: step === 'roulette' ? 'none' : 'auto' }}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -1177,17 +1297,32 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
 }) {
   const [input, setInput] = useState('')
   const [flashWinner, setFlashWinner] = useState<'A' | 'B' | null>(null)
+  const [roundBanner, setRoundBanner] = useState<number | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { config } = state
   const prevScoreFlashAt = useRef<number | undefined>(undefined)
+  const prevRound = useRef<number>(0)
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [state.messages])
+
+  // Banner "ROUND N" all'inizio di ogni round
+  useEffect(() => {
+    if (state.round !== prevRound.current && !state.ended) {
+      prevRound.current = state.round
+      setRoundBanner(state.round)
+      SFX.roundGong()
+      const t = setTimeout(() => setRoundBanner(null), 2200)
+      return () => clearTimeout(t)
+    }
+  }, [state.round, state.ended])
 
   // Flash punteggio quando viene assegnato
   useEffect(() => {
     if (state.scoreFlashAt && state.scoreFlashAt !== prevScoreFlashAt.current && state.showScoreFlash) {
       prevScoreFlashAt.current = state.scoreFlashAt
       setFlashWinner(state.showScoreFlash)
+      if (state.showScoreFlash === 'A') SFX.pointA()
+      else if (state.showScoreFlash === 'B') SFX.pointB()
       const t = setTimeout(() => setFlashWinner(null), 2000)
       return () => clearTimeout(t)
     }
@@ -1280,7 +1415,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
         {/* Header */}
         <div className="flex-shrink-0 flex items-center gap-3 px-4 relative z-10"
           style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', background: 'rgba(7,7,15,0.85)', borderBottom: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)' }}>
-          <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <button onClick={() => { SFX.click(); onBack() }} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div className="font-black text-white text-sm">Verdetto finale</div>
@@ -1376,7 +1511,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
             <div className="text-[10px] text-white/20 italic text-center px-2">"{config.topic}"</div>
 
             {/* CTA */}
-            <button onClick={onBack}
+            <button onClick={() => { SFX.click(); onBack() }}
               className="fade-up w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.4), rgba(124,58,237,0.15))', border: '1px solid rgba(124,58,237,0.35)', animationDelay: '1s', opacity: 0 }}>
               Torna alla home
@@ -1409,6 +1544,23 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       <div className="flame-bg" />
       <div className="flame-overlay" />
 
+      {/* ── BANNER ROUND ── */}
+      {roundBanner && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none" style={{ background: 'rgba(0,0,0,0.55)' }}>
+          <div style={{ animation: 'round-banner 2.2s ease forwards' }}>
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Inizia il</div>
+              <div className="text-6xl font-black text-white tracking-tight" style={{ textShadow: '0 0 40px rgba(99,102,241,0.8), 0 0 80px rgba(99,102,241,0.4)' }}>ROUND {roundBanner}</div>
+              <div className="flex gap-1.5 mt-2">
+                {Array.from({ length: state.maxRounds }).map((_, i) => (
+                  <div key={i} className="w-2 h-2 rounded-full" style={{ background: i < roundBanner ? 'rgba(99,102,241,0.9)' : 'rgba(255,255,255,0.15)' }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── FLASH PUNTEGGIO ── */}
       {flashWinner && (
         <div className="absolute inset-x-0 top-0 z-50 flex items-center justify-center pointer-events-none" style={{ paddingTop: 'max(70px, calc(env(safe-area-inset-top) + 60px))' }}>
@@ -1423,7 +1575,7 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
       <div className="flex-shrink-0 relative z-10" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))', background: 'rgba(7,7,15,0.85)', borderBottom: '1px solid rgba(255,80,0,0.15)', backdropFilter: 'blur(20px)' }}>
         {/* Barra A vs B */}
         <div className="flex items-center px-3 pb-2 pt-1 gap-2">
-          <button onClick={onBack} className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <button onClick={() => { SFX.click(); onBack() }} className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
 
