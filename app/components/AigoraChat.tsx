@@ -903,7 +903,7 @@ function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 )}
               </div>
               {topicRevealed && (
-                <button onClick={() => { setTopic(aiTopicPool[aiTopicIndex]); setStep('teams') }} className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
+                <button onClick={() => { setStep('teams') }} className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
                   Avanti →
                 </button>
               )}
