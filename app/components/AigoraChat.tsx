@@ -1526,12 +1526,12 @@ function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, o
               <button onClick={() => { SFX.click(); onNewGame?.() }}
                 className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg, #3b82f6, #7C3AED)', boxShadow: '0 4px 20px rgba(99,102,241,0.35)' }}>
-                ⚔️ Nuova sfida 2v2
+                Nuova sfida 2v2
               </button>
               <button onClick={() => { SFX.click(); onMultiplayer?.() }}
                 className="w-full py-3.5 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                🌐 Multiplayer
+                Multiplayer
               </button>
             </div>
           </div>
