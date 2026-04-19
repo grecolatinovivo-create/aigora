@@ -121,7 +121,7 @@ async function streamAiToRoom(
     } else if (aiId === 'gemini') {
       const { GoogleGenerativeAI } = await import('@google/generative-ai')
       const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-      const model = client.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: system })
+      const model = client.getGenerativeModel({ model: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash', systemInstruction: system })
       const result = await model.generateContentStream(userMessage)
       for await (const chunk of result.stream) {
         const text = chunk.text()

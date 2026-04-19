@@ -7,11 +7,15 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
+// Modello Gemini: cambia solo la env var GEMINI_MODEL su Vercel quando Google depreca
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash'
+
 // Prezzi per 1M token (USD)
 const PRICES: Record<string, { input: number; output: number }> = {
   'claude-haiku-4-5-20251001': { input: 0.25,  output: 1.25  },
   'gpt-4.1-mini':              { input: 0.40,  output: 1.60  },
   'gemini-2.0-flash':          { input: 0.10,  output: 0.40  },
+  'gemini-2.5-flash':          { input: 0.30,  output: 2.50  },
   'sonar':                     { input: 1.00,  output: 1.00  },
   'sonar-pro':                 { input: 3.00,  output: 3.00  },
 }
@@ -186,7 +190,7 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
     const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     const fullSystem = historyText ? `${system}\n\nConversazione fino ad ora:\n\n${historyText}` : system
-    const model = client.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: fullSystem, generationConfig: { maxOutputTokens: 350 } })
+    const model = client.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: fullSystem, generationConfig: { maxOutputTokens: 350 } })
     const result = await model.generateContentStream(lastMessage)
     for await (const chunk of result.stream) {
       const text = chunk.text()
@@ -194,7 +198,7 @@ async function* streamGemini(system: string, historyText: string, lastMessage: s
     }
     const finalResp = await result.response
     const usage = finalResp.usageMetadata
-    if (usage) logUsage('google', 'gemini-2.0-flash', usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId)
+    if (usage) logUsage('google', GEMINI_MODEL, usage.promptTokenCount ?? 0, usage.candidatesTokenCount ?? 0, userId)
   } catch (err) {
     console.error('Gemini error, falling back to Claude:', err)
     yield* streamClaude(system, historyText, lastMessage, userId)
