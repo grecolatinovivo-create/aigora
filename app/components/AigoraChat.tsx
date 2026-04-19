@@ -3027,8 +3027,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     while (!stopRequestedRef.current) {
       const text = await streamAiResponse(currentAi)
       if (stopRequestedRef.current) break
-      // Se il turno è fallito (timeout/errore), passa all'AI successiva senza bloccarsi
+      // Se il turno è fallito (timeout/errore), aspetta un po' e passa all'AI successiva
       if (!text) {
+        await new Promise(r => setTimeout(r, 1200))
         currentAi = getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
         continue
       }

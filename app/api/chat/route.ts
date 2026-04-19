@@ -219,35 +219,37 @@ function streamPerplexityWithModel(system: string, historyText: string, lastMess
 }
 
 async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string): AsyncIterable<string> {
-  if (!process.env.PERPLEXITY_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
+  if (!process.env.PERPLEXITY_API_KEY) { yield* streamGemini(system, historyText, lastMessage, userId); return }
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
   const userMessage = historyText ? `Conversazione:\n\n${historyText}\n\n${lastMessage}` : lastMessage
   const model = needsWebSearch ? 'sonar-pro' : 'sonar'
-  // Perplexity non supporta stream_options — usiamo una chiamata non-streaming per avere i token usage
-  // e una streaming per il testo, oppure stimiamo i token dal testo
-  const stream = await client.chat.completions.create({
-    model, max_tokens: 350, stream: true,
-    // NON passare stream_options: Perplexity API non lo supporta e causa errori silenti
-    messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
-  } as any) as any
-  let outputText = ''
-  let inputTokens = 0, outputTokens = 0
-  for await (const chunk of stream) {
-    const text = chunk.choices[0]?.delta?.content
-    if (text) { yield text; outputText += text }
-    // Perplexity a volte manda usage nell'ultimo chunk
-    if ((chunk as any).usage) {
-      inputTokens = (chunk as any).usage.prompt_tokens ?? 0
-      outputTokens = (chunk as any).usage.completion_tokens ?? 0
+  try {
+    const stream = await client.chat.completions.create({
+      model, max_tokens: 350, stream: true,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
+    } as any) as any
+    let outputText = ''
+    let inputTokens = 0, outputTokens = 0
+    for await (const chunk of stream) {
+      const text = chunk.choices[0]?.delta?.content
+      if (text) { yield text; outputText += text }
+      if ((chunk as any).usage) {
+        inputTokens = (chunk as any).usage.prompt_tokens ?? 0
+        outputTokens = (chunk as any).usage.completion_tokens ?? 0
+      }
     }
+    if (outputTokens === 0 && outputText.length > 0) {
+      outputTokens = Math.ceil(outputText.length / 4)
+      inputTokens = Math.ceil((system.length + userMessage.length) / 4)
+    }
+    logUsage('perplexity', model, inputTokens, outputTokens, userId)
+  } catch (err) {
+    // Sonar non disponibile o in errore: fallback silenzioso a Gemini-as-Perplexity
+    console.error('Perplexity sonar error, falling back to Gemini:', err)
+    const { today, year } = getDateStrings()
+    yield* streamGeminiAsPerplexity(historyText, today, year, userId).stream
   }
-  // Se non abbiamo ricevuto usage, stima approssimativa (4 char ≈ 1 token)
-  if (outputTokens === 0 && outputText.length > 0) {
-    outputTokens = Math.ceil(outputText.length / 4)
-    inputTokens = Math.ceil((system.length + userMessage.length) / 4)
-  }
-  logUsage('perplexity', model, inputTokens, outputTokens, userId)
 }
 
 // Routing intelligente — Claude decide AI, modalità e se serve web search
