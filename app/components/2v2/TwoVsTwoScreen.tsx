@@ -433,17 +433,18 @@ export default function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loa
             )}
           </div>
 
-          <div className="flex items-center gap-2 px-3 pb-2">
-            <input value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && input.trim() && isMyTurn && !loading) { onHumanMessage(input.trim()); setInput('') } }}
+          <div className="flex items-end gap-2 px-3 pb-2">
+            <textarea value={input} onChange={e => { setInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && input.trim() && isMyTurn && !loading) { e.preventDefault(); onHumanMessage(input.trim()); setInput(''); (e.target as HTMLTextAreaElement).style.height = 'auto' } }}
               disabled={!isMyTurn || loading}
               placeholder={isMyTurn ? "Il tuo argomento…" : "Attendi il tuo turno…"}
-              className="flex-1 rounded-full px-4 py-2.5 text-xs outline-none transition-all"
-              style={{ background: isMyTurn ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isMyTurn ? `${myColor}50` : 'rgba(255,255,255,0.06)'}`, color: isMyTurn ? '#f0f0f0' : 'rgba(255,255,255,0.25)', cursor: isMyTurn ? 'text' : 'not-allowed' }}
+              rows={1}
+              className="flex-1 rounded-2xl px-4 py-2.5 text-xs outline-none transition-all resize-none overflow-hidden"
+              style={{ background: isMyTurn ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isMyTurn ? `${myColor}50` : 'rgba(255,255,255,0.06)'}`, color: isMyTurn ? '#f0f0f0' : 'rgba(255,255,255,0.25)', cursor: isMyTurn ? 'text' : 'not-allowed', lineHeight: '1.4' }}
             />
             <button onClick={() => { if (input.trim() && isMyTurn && !loading) { onHumanMessage(input.trim()); setInput('') } }}
               disabled={!input.trim() || !isMyTurn || loading}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white disabled:opacity-20 flex-shrink-0 transition-all"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white disabled:opacity-20 flex-shrink-0 transition-all mb-0.5"
               style={{ background: isMyTurn ? `linear-gradient(135deg, ${myColor}, ${myColor}bb)` : 'rgba(255,255,255,0.05)' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
             </button>
