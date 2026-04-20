@@ -3329,25 +3329,26 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
           </div>
 
-          {/* Banner ROUND — dentro phone-shell, FUORI dall'overflow-hidden del schermo */}
-          {desktopRoundBanner && twoVsTwoState && (
-            <div className="absolute rounded-[44px] overflow-hidden z-[60] flex items-center justify-center pointer-events-none"
-              style={{ top: 9, left: 9, right: 9, bottom: 9, background: 'rgba(0,0,0,0.55)' }}>
-              <div style={{ animation: 'round-banner 2.2s ease forwards' }}>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Inizia il</div>
-                  <div className="text-6xl font-black text-white tracking-tight" style={{ textShadow: '0 0 40px rgba(99,102,241,0.8), 0 0 80px rgba(99,102,241,0.4)' }}>ROUND {desktopRoundBanner}</div>
-                  <div className="flex gap-1.5 mt-2">
-                    {Array.from({ length: twoVsTwoState.maxRounds }).map((_, i) => (
-                      <div key={i} className="w-2 h-2 rounded-full" style={{ background: i < desktopRoundBanner ? 'rgba(99,102,241,0.9)' : 'rgba(255,255,255,0.15)' }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Banner ROUND — dentro phone-fire (position:relative), fuori dallo zoom e dall'overflow-hidden */}
+      {desktopRoundBanner && twoVsTwoState && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none"
+          style={{ borderRadius: 50 * phoneScale, overflow: 'hidden', background: 'rgba(0,0,0,0.55)' }}>
+          <div style={{ animation: 'round-banner 2.2s ease forwards' }}>
+            <div className="flex flex-col items-center gap-1">
+              <div className="font-black uppercase tracking-[0.4em] text-white/40" style={{ fontSize: 11 * phoneScale }}>Inizia il</div>
+              <div className="font-black text-white tracking-tight" style={{ fontSize: 60 * phoneScale, textShadow: '0 0 40px rgba(99,102,241,0.8), 0 0 80px rgba(99,102,241,0.4)' }}>ROUND {desktopRoundBanner}</div>
+              <div className="flex gap-1.5 mt-2">
+                {Array.from({ length: twoVsTwoState.maxRounds }).map((_, i) => (
+                  <div key={i} style={{ width: 8 * phoneScale, height: 8 * phoneScale, borderRadius: '50%', background: i < desktopRoundBanner ? 'rgba(99,102,241,0.9)' : 'rgba(255,255,255,0.15)' }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {show2v2Setup && typeof window !== 'undefined' && createPortal(
         <TwoVsTwoSetup
