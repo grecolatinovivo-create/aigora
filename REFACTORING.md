@@ -165,11 +165,11 @@ Estrarre righe 9–275: tutto il sistema audio sintetico (Web Audio API). È com
 
 ## Stato attuale
 
-- Fase 0: ⬜ non iniziata
-- Fase 1: ⬜ non iniziata
-- Fase 2: ⬜ non iniziata
-- Fase 3: ⬜ non iniziata
-- Fase 4: ⬜ non iniziata
+- Fase 0: ✅ completata — cartelle create
+- Fase 1: ✅ completata — `app/types/aigora.ts` + `app/lib/aiProfiles.ts`
+- Fase 2: ✅ completata — `app/lib/audioEngine.ts`
+- Fase 3: ✅ completata — ThinkingBubble, UserTurnPrompt, RotatingTopics, PhoneAvatarBar, SwipeableChatRow
+- Fase 4: ✅ completata — SlotReel, RouletteScreen, ModeSelect→già estratto, Navbar
 - Fase 5: ⬜ non iniziata
 - Fase 6: ⬜ non iniziata
 - Fase 7: ⬜ non iniziata
