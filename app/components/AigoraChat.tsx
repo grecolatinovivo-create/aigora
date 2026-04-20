@@ -448,10 +448,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // Banner ROUND desktop — si attiva 1s dopo il cambio round
   useEffect(() => {
     const round = twoVsTwoState?.round
+    console.log('[ROUND BANNER] useEffect fired, round=', round, 'prev=', prevDesktopRound.current, 'ended=', twoVsTwoState?.ended)
     if (!round || twoVsTwoState?.ended) return
     if (round === prevDesktopRound.current) return
     prevDesktopRound.current = round
     const show = setTimeout(() => {
+      console.log('[ROUND BANNER] setting desktopRoundBanner =', round)
       setDesktopRoundBanner(round)
       const hide = setTimeout(() => setDesktopRoundBanner(null), 2200)
       return () => clearTimeout(hide)
