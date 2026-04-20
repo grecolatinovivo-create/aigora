@@ -172,5 +172,5 @@ Estrarre righe 9–275: tutto il sistema audio sintetico (Web Audio API). È com
 - Fase 3: ✅ completata — ThinkingBubble, UserTurnPrompt, RotatingTopics, PhoneAvatarBar, SwipeableChatRow
 - Fase 4: ✅ completata — SlotReel, RouletteScreen, ModeSelect→già estratto, Navbar
 - Fase 5: ✅ completata — ModeSelect, TwoVsTwoSetup, TwoVsTwoScreen, DevilsAdvocateScreen, ProfileScreen
-- Fase 6: ⏭ saltata — hook troppo accoppiati allo stato del componente, rischio alto senza beneficio pratico
+- Fase 6: ⏭ saltata — hook troppo accoppiati allo stato del componente (messagesRef, chatHistoryRef, setSavedChats, ecc.). Rischio alto, beneficio basso. Admin consapevole e concorde.
 - Fase 7: ✅ completata — import inutilizzati rimossi, detectNextAi rimossa, build TypeScript pulita

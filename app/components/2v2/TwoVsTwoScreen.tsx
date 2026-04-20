@@ -4,7 +4,7 @@ import { AI_OPTIONS, AI_NAMES, AI_COLOR } from '@/app/lib/aiProfiles'
 import { SFX } from '@/app/lib/audioEngine'
 import type { TwoVsTwoState } from '@/app/types/aigora'
 
-export default function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, onBack, onNewGame, onMultiplayer }: {
+export default function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loading, myTeam, onBack, onNewGame, onMultiplayer, onRoundBanner }: {
   state: TwoVsTwoState
   onHumanMessage: (text: string) => void
   onRequestAI: (team: 'A' | 'B') => void
@@ -13,6 +13,7 @@ export default function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loa
   onBack: () => void
   onNewGame?: () => void
   onMultiplayer?: () => void
+  onRoundBanner?: (round: number | null) => void
 }) {
   const [input, setInput] = useState('')
   const [flashWinner, setFlashWinner] = useState<'A' | 'B' | null>(null)
@@ -29,8 +30,9 @@ export default function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loa
     if (state.round !== prevRound.current && !state.ended) {
       prevRound.current = state.round
       setRoundBanner(state.round)
+      onRoundBanner?.(state.round)
       SFX.roundGong()
-      const t = setTimeout(() => setRoundBanner(null), 2200)
+      const t = setTimeout(() => { setRoundBanner(null); onRoundBanner?.(null) }, 2200)
       return () => clearTimeout(t)
     }
   }, [state.round, state.ended])
