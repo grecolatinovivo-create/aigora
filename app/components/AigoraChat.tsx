@@ -109,7 +109,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
   const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
-  const [desktopRoundBanner, setDesktopRoundBanner] = useState<number | null>(null)
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
   const [devilLoading, setDevilLoading] = useState(false)
@@ -2875,20 +2874,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           </div>
         )}
 
-        {/* Schermata 2 vs 2 */}
-        {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && (
-          <TwoVsTwoScreen
-            state={twoVsTwoState}
-            onHumanMessage={handle2v2HumanMessage}
-            onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
-            loading={twoVsTwoLoading}
-            myTeam="A"
-            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
-            onNewGame={() => { setTwoVsTwoState(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true) }}
-            onMultiplayer={() => { setTwoVsTwoState(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false) }}
-            onRoundBanner={setDesktopRoundBanner}
-          />
-        )}
+        {/* Schermata 2 vs 2 — resa via portal (vedi sotto) per evitare clipping del banner ROUND */}
 
         {/* Schermata Devil's Advocate mobile */}
         {phase === 'running' && selectedMode === 'devil' && devilSession && (
@@ -3313,23 +3299,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             </div>
           </div>
 
-          {/* ── ROUND BANNER OVERLAY (desktop) — fuori da overflow-hidden, dentro phone-shell ── */}
-          {desktopRoundBanner && twoVsTwoState && (
-            <div className="absolute rounded-[44px] overflow-hidden z-[60] flex items-center justify-center pointer-events-none"
-              style={{ top: 9, left: 9, right: 9, bottom: 9, background: 'rgba(0,0,0,0.55)' }}>
-              <div style={{ animation: 'round-banner 2.2s ease forwards' }}>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Inizia il</div>
-                  <div className="text-6xl font-black text-white tracking-tight" style={{ textShadow: '0 0 40px rgba(99,102,241,0.8), 0 0 80px rgba(99,102,241,0.4)' }}>ROUND {desktopRoundBanner}</div>
-                  <div className="flex gap-1.5 mt-2">
-                    {Array.from({ length: twoVsTwoState.maxRounds }).map((_, i) => (
-                      <div key={i} className="w-2 h-2 rounded-full" style={{ background: i < desktopRoundBanner ? 'rgba(99,102,241,0.9)' : 'rgba(255,255,255,0.15)' }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -3346,6 +3315,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           onSelect={handleSelectMode}
           onClose={() => setShowModeSelect(false)}
         />,
+        document.body
+      )}
+      {phase === 'running' && selectedMode === '2v2' && twoVsTwoState && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999]" style={{ background: '#0d0d14' }}>
+          <TwoVsTwoScreen
+            state={twoVsTwoState}
+            onHumanMessage={handle2v2HumanMessage}
+            onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
+            loading={twoVsTwoLoading}
+            myTeam="A"
+            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
+            onNewGame={() => { setTwoVsTwoState(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true) }}
+            onMultiplayer={() => { setTwoVsTwoState(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false) }}
+          />
+        </div>,
         document.body
       )}
 
