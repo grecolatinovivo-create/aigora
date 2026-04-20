@@ -110,6 +110,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
   const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
   const [desktopRoundBanner, setDesktopRoundBanner] = useState<number | null>(null)
+  const prevDesktopRound = useRef<number>(0)
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
   const [devilLoading, setDevilLoading] = useState(false)
@@ -443,6 +444,20 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       }
     } catch {}
   }
+
+  // Banner ROUND desktop — si attiva 1s dopo il cambio round
+  useEffect(() => {
+    const round = twoVsTwoState?.round
+    if (!round || twoVsTwoState?.ended) return
+    if (round === prevDesktopRound.current) return
+    prevDesktopRound.current = round
+    const show = setTimeout(() => {
+      setDesktopRoundBanner(round)
+      const hide = setTimeout(() => setDesktopRoundBanner(null), 2200)
+      return () => clearTimeout(hide)
+    }, 1000)
+    return () => clearTimeout(show)
+  }, [twoVsTwoState?.round, twoVsTwoState?.ended])
 
   // Carica cronologia dal server
   useEffect(() => {
@@ -2886,7 +2901,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
             onNewGame={() => { setTwoVsTwoState(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true) }}
             onMultiplayer={() => { setTwoVsTwoState(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false) }}
-            onRoundBanner={setDesktopRoundBanner}
           />
         )}
 
