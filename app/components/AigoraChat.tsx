@@ -7,8 +7,8 @@ import { signOut } from 'next-auth/react'
 import { useAbly, type RoomEvent } from '@/lib/useAbly'
 import {
   AI_ORDER_DEFAULT, AI_NAMES, AI_COLOR, AI_DESC, AI_PROFILES,
-  AI_OPTIONS, ARBITER_OPTIONS, TYPEWRITER_DELAY, BG_PRESETS,
-  TOPIC_SUGGESTIONS, ALL_BUBBLE_TOPICS, DEVIL_POSITIONS, MODE_INFO,
+  AI_OPTIONS, TYPEWRITER_DELAY, BG_PRESETS,
+  ALL_BUBBLE_TOPICS, DEVIL_POSITIONS,
   getRandomBubbleTopics,
 } from '@/app/lib/aiProfiles'
 import { SFX } from '@/app/lib/audioEngine'
@@ -17,7 +17,6 @@ import UserTurnPrompt from '@/app/components/chat/UserTurnPrompt'
 import RotatingTopics from '@/app/components/shared/RotatingTopics'
 import PhoneAvatarBar from '@/app/components/layout/PhoneAvatarBar'
 import SwipeableChatRow from '@/app/components/profile/SwipeableChatRow'
-import SlotReel from '@/app/components/modes/SlotReel'
 import RouletteScreen from '@/app/components/modes/RouletteScreen'
 import Navbar from '@/app/components/layout/Navbar'
 import ModeSelect from '@/app/components/modes/ModeSelect'
@@ -26,19 +25,10 @@ import TwoVsTwoScreen from '@/app/components/2v2/TwoVsTwoScreen'
 import DevilsAdvocateScreen from '@/app/components/devil/DevilsAdvocateScreen'
 import ProfileScreen from '@/app/components/profile/ProfileScreen'
 import type {
-  ChatPhase, GameMode, Team, DevilSession,
+  ChatPhase, GameMode, DevilSession,
   TwoVsTwoConfig, TwoVsTwoState, AigoraChatProps,
 } from '@/app/types/aigora'
 
-
-function detectNextAi(text: string, aiOrder: string[]): string | null {
-  const lower = text.toLowerCase()
-  for (const aiId of aiOrder) {
-    const name = AI_NAMES[aiId].toLowerCase()
-    if (lower.includes(`passo la parola a ${name}`) || lower.includes(`${name}, cosa ne pensi`)) return aiId
-  }
-  return null
-}
 
 // Rileva se l'utente menziona direttamente un'AI nel suo messaggio
 function detectUserMention(text: string, aiOrder: string[]): string | null {
@@ -56,8 +46,6 @@ function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[
   const pool = unused.length > 0 ? unused : others
   return pool[Math.floor(Math.random() * pool.length)]
 }
-
-// ── Swipeable chat row (swipe left per cancellare) ───────────────────────────
 
 // ── Componente principale ─────────────────────────────────────────────────────
 export default function AigoraChat({ allowedAis, userPlan, userName: propUserName, userEmail }: AigoraChatProps) {

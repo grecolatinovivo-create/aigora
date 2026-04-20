@@ -144,11 +144,12 @@ Estrarre righe 9–275: tutto il sistema audio sintetico (Web Audio API). È com
 
 ---
 
-### FASE 7 — Pulizia finale
-- [ ] Rimuovere codice morto o commentato
-- [ ] Verificare che `ActionBar.tsx`, `AvatarBar.tsx`, `MessageBubble.tsx` già esistenti siano allineati o sostituiti
-- [ ] Controllare che non ci siano import circolari
-- [ ] Verificare la build di produzione: `npm run build`
+### FASE 7 — Pulizia finale ✅
+- [x] Rimossi import inutilizzati: `ARBITER_OPTIONS`, `TOPIC_SUGGESTIONS`, `MODE_INFO`, `Team`, `SlotReel`
+- [x] Rimossa funzione morta `detectNextAi` (definita ma mai chiamata)
+- [x] Rimossi commenti orfani
+- [x] `npx tsc --noEmit` → 0 errori
+- [ ] Verificare la build di produzione: `npm run build` (da eseguire in locale)
 - [ ] Commit finale: "refactor: AigoraChat split completato"
 
 ---
@@ -171,5 +172,5 @@ Estrarre righe 9–275: tutto il sistema audio sintetico (Web Audio API). È com
 - Fase 3: ✅ completata — ThinkingBubble, UserTurnPrompt, RotatingTopics, PhoneAvatarBar, SwipeableChatRow
 - Fase 4: ✅ completata — SlotReel, RouletteScreen, ModeSelect→già estratto, Navbar
 - Fase 5: ✅ completata — ModeSelect, TwoVsTwoSetup, TwoVsTwoScreen, DevilsAdvocateScreen, ProfileScreen
-- Fase 6: ⬜ non iniziata
-- Fase 7: ⬜ non iniziata
+- Fase 6: ⏭ saltata — hook troppo accoppiati allo stato del componente, rischio alto senza beneficio pratico
+- Fase 7: ✅ completata — import inutilizzati rimossi, detectNextAi rimossa, build TypeScript pulita
