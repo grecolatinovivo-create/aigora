@@ -9,12 +9,28 @@ export interface Team {
   members: { id: string; name: string; isAI: boolean; aiId?: string }[]
 }
 
+export type DevilDifficulty = 'easy' | 'medium' | 'impossible'
+export type DevilPhase = 'playing' | 'consulting' | 'verdict' | 'score' | 'reply' | 'done'
+
+export interface DevilVerdict {
+  aiId: string
+  score: number   // 0–10
+  text: string
+}
+
 export interface DevilSession {
-  position: string  // la posizione assegnata
-  side: 'defend' | 'attack'
-  round: number
-  score: number
+  position: string
+  difficulty: DevilDifficulty
+  side: 'defend'
+  round: number          // inizia da 1, illimitato
+  score: number          // 0.0–10.0, parte da 5.0
+  rerollUsed: boolean
+  phase: DevilPhase
   messages: { role: 'user' | 'ai'; aiId?: string; content: string }[]
+  verdicts: DevilVerdict[]      // 4 verdetti, uno per AI
+  finalScore: number | null
+  userReply: string | null
+  claudeClosing: string | null
 }
 
 export interface TwoVsTwoConfig {

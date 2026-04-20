@@ -8,7 +8,7 @@ import { useAbly, type RoomEvent } from '@/lib/useAbly'
 import {
   AI_ORDER_DEFAULT, AI_NAMES, AI_COLOR, AI_DESC, AI_PROFILES,
   AI_OPTIONS, TYPEWRITER_DELAY, BG_PRESETS,
-  ALL_BUBBLE_TOPICS, DEVIL_POSITIONS,
+  ALL_BUBBLE_TOPICS,
   getRandomBubbleTopics,
 } from '@/app/lib/aiProfiles'
 import { SFX } from '@/app/lib/audioEngine'
@@ -23,9 +23,11 @@ import ModeSelect from '@/app/components/modes/ModeSelect'
 import TwoVsTwoSetup from '@/app/components/2v2/TwoVsTwoSetup'
 import TwoVsTwoScreen from '@/app/components/2v2/TwoVsTwoScreen'
 import DevilsAdvocateScreen from '@/app/components/devil/DevilsAdvocateScreen'
+import DevilDifficultyScreen from '@/app/components/devil/DevilDifficultyScreen'
+import DevilIntroScreen from '@/app/components/devil/DevilIntroScreen'
 import ProfileScreen from '@/app/components/profile/ProfileScreen'
 import type {
-  ChatPhase, GameMode, DevilSession,
+  ChatPhase, GameMode, DevilSession, DevilDifficulty,
   TwoVsTwoConfig, TwoVsTwoState, AigoraChatProps,
 } from '@/app/types/aigora'
 
@@ -114,6 +116,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
   const [devilLoading, setDevilLoading] = useState(false)
+  const [showDevilDifficulty, setShowDevilDifficulty] = useState(false)
+  const [devilIntroData, setDevilIntroData] = useState<{ positions: [string, string]; difficulty: DevilDifficulty } | null>(null)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [closingAiProfile, setClosingAiProfile] = useState(false)
 
@@ -971,9 +975,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setSelectedMode(mode)
     setShowModeSelect(false)
     if (mode === 'devil') {
-      const pick = DEVIL_POSITIONS[Math.floor(Math.random() * DEVIL_POSITIONS.length)]
-      setDevilSession({ position: pick.position, side: pick.side, round: 1, score: 5.0, messages: [] })
-      setPhase('running')
+      setShowDevilDifficulty(true)
     } else if (mode === '2v2') {
       setShow2v2Setup(true)
     } else if (mode === 'classico') {
@@ -981,6 +983,49 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       setSelectedMode(null)
       setPhase('new')
     }
+  }
+
+  const handleDevilDifficultySelect = async (difficulty: DevilDifficulty) => {
+    setDevilLoading(true)
+    try {
+      const res = await fetch('/api/devil/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ difficulty }),
+      })
+      if (!res.ok) throw new Error()
+      const { positions } = await res.json()
+      setDevilIntroData({ positions, difficulty })
+      setShowDevilDifficulty(false)
+    } catch {
+      // Fallback posizioni hardcoded
+      setDevilIntroData({
+        positions: ['La globalizzazione ha fatto più danni che benefici', 'La privacy è ormai un concetto obsoleto nella società digitale'],
+        difficulty,
+      })
+      setShowDevilDifficulty(false)
+    } finally {
+      setDevilLoading(false)
+    }
+  }
+
+  const handleDevilStart = (position: string) => {
+    if (!devilIntroData) return
+    setDevilSession({
+      position,
+      difficulty: devilIntroData.difficulty,
+      side: 'defend',
+      round: 1,
+      score: 5.0,
+      rerollUsed: false,
+      phase: 'playing',
+      messages: [],
+      verdicts: [],
+      finalScore: null,
+      userReply: null,
+      claudeClosing: null,
+    })
+    setDevilIntroData(null)
+    setPhase('running')
   }
 
   const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
@@ -1397,86 +1442,211 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTwoVsTwoLoading(false)
   }
 
+  // Streaming helper per Devil's Advocate
+  const streamDevilAI = async (aiId: string, systemPrompt: string, history: { name: string; content: string }[]): Promise<string> => {
+    const res = await fetch('/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'turn', aiId, history: [{ name: 'Sistema', content: systemPrompt }, ...history], needsWebSearch: false }),
+    })
+    if (!res.ok || !res.body) return ''
+    const reader = res.body.getReader(); const decoder = new TextDecoder()
+    let buffer = '', text = '', done = false
+    while (!done) {
+      const { done: sd, value } = await reader.read()
+      if (value) buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
+        try { text += JSON.parse(d).text } catch {}
+      }
+      if (sd) break
+    }
+    return text
+  }
+
+  // Streaming con aggiornamento in-place dell'ultimo messaggio
+  const streamDevilAIInPlace = async (aiId: string, systemPrompt: string, history: { name: string; content: string }[], onChunk: (text: string) => void): Promise<string> => {
+    const res = await fetch('/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'turn', aiId, history: [{ name: 'Sistema', content: systemPrompt }, ...history], needsWebSearch: false }),
+    })
+    if (!res.ok || !res.body) return ''
+    const reader = res.body.getReader(); const decoder = new TextDecoder()
+    let buffer = '', text = '', done = false
+    while (!done) {
+      const { done: sd, value } = await reader.read()
+      if (value) buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
+        try { const chunk = JSON.parse(d).text; text += chunk; onChunk(text) } catch {}
+      }
+      if (sd) break
+    }
+    return text
+  }
+
   const handleDevilMessage = async (text: string) => {
     if (!devilSession) return
     setDevilLoading(true)
     const updatedMsgs = [...devilSession.messages, { role: 'user' as const, content: text }]
     setDevilSession(prev => prev ? { ...prev, messages: updatedMsgs } : prev)
     try {
-      const attackerIds = ['claude', 'gpt', 'gemini', 'perplexity']; const attackerId = attackerIds[devilSession.round % attackerIds.length]
-      const res = await fetch('/api/chat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'turn', aiId: attackerId, history: [{ name: 'Sistema', content: `Sei ${AI_NAMES[attackerId]} in un Devil's Advocate. L'utente difende: "${devilSession.position}". Attaccala con argomenti forti. 2-3 frasi.` }, ...updatedMsgs.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))], needsWebSearch: false }),
-      })
-      if (!res.ok || !res.body) throw new Error()
-      const reader = res.body.getReader(); const decoder = new TextDecoder()
-      let buffer = '', aiText = '', done = false
+      const attackerIds = ['claude', 'gpt', 'gemini', 'perplexity']
+      const attackerId = attackerIds[devilSession.round % attackerIds.length]
+      const diffLabel = devilSession.difficulty === 'easy' ? 'Facile' : devilSession.difficulty === 'medium' ? 'Media' : 'Impossibile'
+      const shortHistory = updatedMsgs.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
+      const systemPrompt = `Sei ${AI_NAMES[attackerId]} nel gioco Devil's Advocate (difficoltà: ${diffLabel}).
+L'utente sta difendendo questa posizione: "${devilSession.position}".
+Il tuo ruolo: attaccarla con forza, in modo aggressivo e personale. Smonta ogni argomento che l'utente ha usato.
+Tono: diretto, tagliente, senza pietà. 2-3 frasi max.
+Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] dove X.X è il tuo voto da 0.0 a 10.0 per la qualità degli argomenti dell'utente in questo turno (non per la posizione — valuta COME l'ha difesa).`
+
       setDevilSession(prev => prev ? { ...prev, messages: [...updatedMsgs, { role: 'ai' as const, aiId: attackerId, content: '' }] } : prev)
-      while (!done) {
-        const { done: sd, value } = await reader.read()
-        if (value) buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
-          try { aiText += JSON.parse(d).text } catch {}
-          setDevilSession(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { role: 'ai', aiId: attackerId, content: aiText }; return { ...prev, messages: msgs } })
-        }
-        if (sd) break
+      let rawText = ''
+      await streamDevilAIInPlace(attackerId, systemPrompt, shortHistory, (partial) => {
+        // Rimuovi [SCORE:X.X] dal testo visualizzato
+        const clean = partial.replace(/\[SCORE:\d+\.?\d*\]/gi, '').trim()
+        rawText = partial
+        setDevilSession(prev => {
+          if (!prev) return prev
+          const msgs = [...prev.messages]
+          msgs[msgs.length - 1] = { role: 'ai', aiId: attackerId, content: clean }
+          return { ...prev, messages: msgs }
+        })
+      })
+      // Estrai punteggio e aggiorna score
+      const scoreMatch = rawText.match(/\[SCORE:(\d+\.?\d*)\]/i)
+      if (scoreMatch) {
+        const aiScore = parseFloat(scoreMatch[1])
+        setDevilSession(prev => {
+          if (!prev) return prev
+          const newScore = Math.min(10, Math.max(0, prev.score * 0.55 + aiScore * 0.45))
+          const clean = rawText.replace(/\[SCORE:\d+\.?\d*\]/gi, '').trim()
+          const msgs = [...prev.messages]
+          msgs[msgs.length - 1] = { role: 'ai', aiId: attackerId, content: clean }
+          return { ...prev, messages: msgs, score: newScore }
+        })
       }
-      if (buffer.trim()) {
-        for (const line of buffer.split('\n')) {
-          if (!line.startsWith('data: ')) continue
-          const d = line.slice(6).trim()
-          if (d !== '[DONE]') { try { aiText += JSON.parse(d).text } catch {} }
-        }
-        setDevilSession(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { role: 'ai', aiId: attackerId, content: aiText }; return { ...prev, messages: msgs } })
-      }
-      const argStrength = Math.min(text.length / 20, 3) + (text.includes('perché') || text.includes('quindi') || text.includes('infatti') ? 1 : 0)
-      setDevilSession(prev => prev ? { ...prev, score: Math.min(10, Math.max(0, prev.score + (argStrength > 2 ? 0.3 : -0.2))) } : prev)
     } catch {}
     setDevilLoading(false)
   }
 
-  const handleDevilEndTurn = async () => {
+  const handleDevilEndTurn = () => {
+    if (!devilSession || devilLoading) return
+    setDevilSession(prev => prev ? { ...prev, round: prev.round + 1 } : prev)
+  }
+
+  const handleDevilSurrender = () => {
     if (!devilSession) return
-    const newRound = devilSession.round + 1
-    if (newRound > 4) {
-      setDevilLoading(true)
+    setDevilSession(prev => prev ? { ...prev, phase: 'consulting' } : prev)
+  }
+
+  const handleDevilStartVerdict = async () => {
+    if (!devilSession) return
+    setDevilSession(prev => prev ? { ...prev, phase: 'verdict', verdicts: [] } : prev)
+    setDevilLoading(true)
+
+    const aiOrder = ['claude', 'gpt', 'gemini', 'perplexity']
+    const diffLabel = devilSession.difficulty === 'easy' ? 'Facile' : devilSession.difficulty === 'medium' ? 'Media' : 'Impossibile'
+    const roundCount = devilSession.round
+    const shortRounds = roundCount <= 2 ? ' L\'utente si è arreso dopo pochissimi round — sanzionalo esplicitamente.' : ''
+    const history = devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
+
+    const VERDICT_PROMPTS: Record<string, string> = {
+      claude: `Sei Claude nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
+L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
+Tono: riflessivo, quasi malinconico. Riconosci la complessità della posizione.
+Cita argomenti specifici usati dall'utente. 2-3 frasi secche.
+Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.
+Considera la difficoltà: ${diffLabel}. A parità di argomenti, difficoltà Impossibile merita un voto più alto.`,
+
+      gpt: `Sei GPT nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
+L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
+Tono: diretto, secco, senza filosofia. Vai al punto.
+Cita argomenti specifici usati dall'utente. 2-3 frasi.
+Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.
+Considera la difficoltà: ${diffLabel}.`,
+
+      gemini: `Sei Gemini nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
+L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
+Tono: pedante, analitico. Cita errori logici o strutture argomentative deboli.
+Cita argomenti specifici usati dall'utente. 2-3 frasi.
+Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.
+Considera la difficoltà: ${diffLabel}.`,
+
+      perplexity: `Sei Perplexity nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
+L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
+Tono: vivace, a volte trionfante se l'utente ha fatto male — quasi rispettoso se ha fatto bene.
+Cita argomenti specifici usati dall'utente. 2-3 frasi.
+Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.
+Considera la difficoltà: ${diffLabel}.`,
+    }
+
+    // Step 1: raccoglie i 4 voti in parallelo
+    const scoreResults: { aiId: string; score: number; text: string }[] = []
+    await Promise.all(aiOrder.map(async (aiId) => {
       try {
-        const res = await fetch('/api/chat', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'turn', aiId: 'claude', history: [{ name: 'Sistema', content: `Sei un giudice imparziale. L'utente ha difeso la posizione: "${devilSession.position}". Analizza la solidità degli argomenti presentati, cita il punto più forte e il punto più debole, e dai un verdetto finale. Sii diretto e conciso.` }, ...devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))], needsWebSearch: false }),
-        })
-        if (res.ok && res.body) {
-          const reader = res.body.getReader(); const decoder = new TextDecoder()
-          let buffer = '', verdict = '', done = false
-          setDevilSession(prev => prev ? { ...prev, messages: [...prev.messages, { role: 'ai' as const, aiId: 'claude', content: '⚖️ Verdetto:\n' }], round: newRound } : prev)
-          while (!done) {
-            const { done: sd, value } = await reader.read()
-            if (value) buffer += decoder.decode(value, { stream: true })
-            const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
-            for (const line of lines) {
-              if (!line.startsWith('data: ')) continue
-              const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
-              try { verdict += JSON.parse(d).text } catch {}
-              setDevilSession(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { role: 'ai', aiId: 'claude', content: '⚖️ Verdetto:\n' + verdict }; return { ...prev, messages: msgs } })
-            }
-            if (sd) break
-          }
-          if (buffer.trim()) {
-            for (const line of buffer.split('\n')) {
-              if (!line.startsWith('data: ')) continue
-              const d = line.slice(6).trim()
-              if (d !== '[DONE]') { try { verdict += JSON.parse(d).text } catch {} }
-            }
-            setDevilSession(prev => { if (!prev) return prev; const msgs = [...prev.messages]; msgs[msgs.length-1] = { role: 'ai', aiId: 'claude', content: '⚖️ Verdetto:\n' + verdict }; return { ...prev, messages: msgs } })
-          }
-        }
-      } catch {}
-      setDevilLoading(false)
+        const raw = await streamDevilAI(aiId, VERDICT_PROMPTS[aiId], history)
+        const match = raw.match(/\[SCORE:(\d+\.?\d*)\]/i)
+        const score = match ? parseFloat(match[1]) : 5.0
+        const text = raw.replace(/\[SCORE:\d+\.?\d*\]/gi, '').trim()
+        scoreResults.push({ aiId, score, text })
+      } catch {
+        scoreResults.push({ aiId, score: 5.0, text: 'Nessun verdetto disponibile.' })
+      }
+    }))
+
+    // Step 2: ordina dal più clemente (score alto) al più duro (score basso)
+    scoreResults.sort((a, b) => b.score - a.score)
+
+    // Step 3: aggiunge i verdetti uno alla volta
+    for (const v of scoreResults) {
+      setDevilSession(prev => prev ? { ...prev, verdicts: [...prev.verdicts, v] } : prev)
+      await new Promise(r => setTimeout(r, 600))
+    }
+
+    // Step 4: calcola media e passa a 'score'
+    const avg = scoreResults.reduce((s, v) => s + v.score, 0) / scoreResults.length
+    const finalScore = Math.min(10, Math.max(0, parseFloat(avg.toFixed(1))))
+    setDevilSession(prev => prev ? { ...prev, phase: 'score', finalScore } : prev)
+    setDevilLoading(false)
+  }
+
+  const handleDevilReply = async (text: string) => {
+    if (!devilSession) return
+    setDevilLoading(true)
+    setDevilSession(prev => prev ? { ...prev, userReply: text, phase: 'reply' } : prev)
+    try {
+      const verdictSummary = devilSession.verdicts.map(v => `${AI_NAMES[v.aiId]} (${v.score.toFixed(1)}/10): ${v.text}`).join('\n')
+      const systemPrompt = `Sei Claude. Hai appena emesso un verdetto come giudice di un Devil's Advocate.
+L'utente ha difeso la posizione: "${devilSession.position}".
+Punteggio finale: ${devilSession.finalScore?.toFixed(1) ?? devilSession.score.toFixed(1)}/10.
+Verdetti emessi:
+${verdictSummary}
+
+L'utente ha risposto al verdetto. Il tuo compito: dai l'ultima parola. 2-3 frasi.
+Se la replica è forte e argomentata: riconoscila, magari concedi qualcosa.
+Se è debole, emotiva o ripetitiva: demoliscila con garbo ma senza pietà.
+Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
+
+      const raw = await streamDevilAI('claude', systemPrompt, [{ name: 'Utente', content: text }])
+      setDevilSession(prev => prev ? { ...prev, claudeClosing: raw } : prev)
+    } catch {}
+    setDevilLoading(false)
+  }
+
+  const handleDevilSkipReply = () => {
+    if (!devilSession) return
+    if (devilSession.phase === 'score') {
+      setDevilSession(prev => prev ? { ...prev, phase: 'reply' } : prev)
     } else {
-      setDevilSession(prev => prev ? { ...prev, round: newRound } : prev)
+      // Chiude la sessione
+      setDevilSession(null)
+      setSelectedMode(null)
+      setPhase('start')
     }
   }
 
@@ -1552,7 +1722,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setShowModeSelect(false); setSelectedMode(null)
     setShow2v2Setup(false); setTwoVsTwoState(null)
     setDevilSession(null)
-    setShowDevilIntro(null)
+    setShowDevilDifficulty(false)
+    setDevilIntroData(null)
   }
 
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
@@ -2025,6 +2196,23 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           onStart={handle2v2Start}
           onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
           currentUserName={dbUserName || userName.trim() || ''}
+        />,
+        document.body
+      )}
+      {showDevilDifficulty && typeof window !== 'undefined' && createPortal(
+        <DevilDifficultyScreen
+          onSelect={handleDevilDifficultySelect}
+          onBack={() => { setShowDevilDifficulty(false); setSelectedMode(null) }}
+          loading={devilLoading}
+        />,
+        document.body
+      )}
+      {devilIntroData && typeof window !== 'undefined' && createPortal(
+        <DevilIntroScreen
+          positions={devilIntroData.positions}
+          difficulty={devilIntroData.difficulty}
+          onStart={handleDevilStart}
+          onBack={() => { setDevilIntroData(null); setSelectedMode(null) }}
         />,
         document.body
       )}
@@ -2910,22 +3098,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             session={devilSession}
             onMessage={handleDevilMessage}
             onEndTurn={handleDevilEndTurn}
+            onSurrender={handleDevilSurrender}
+            onStartVerdict={handleDevilStartVerdict}
+            onReply={handleDevilReply}
+            onSkipReply={handleDevilSkipReply}
             loading={devilLoading}
-            isDark={isDark}
-            bgPreset={mobileBg}
-            onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
-          />
-        )}
-
-        {/* Schermata Devil's Advocate mobile */}
-        {phase === 'running' && selectedMode === 'devil' && devilSession && (
-          <DevilsAdvocateScreen
-            session={devilSession}
-            onMessage={handleDevilMessage}
-            onEndTurn={handleDevilEndTurn}
-            loading={devilLoading}
-            isDark={isDark}
-            bgPreset={mobileBg}
             onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
           />
         )}
@@ -3360,6 +3537,23 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         <ModeSelect
           onSelect={handleSelectMode}
           onClose={() => setShowModeSelect(false)}
+        />,
+        document.body
+      )}
+      {showDevilDifficulty && typeof window !== 'undefined' && createPortal(
+        <DevilDifficultyScreen
+          onSelect={handleDevilDifficultySelect}
+          onBack={() => { setShowDevilDifficulty(false); setSelectedMode(null) }}
+          loading={devilLoading}
+        />,
+        document.body
+      )}
+      {devilIntroData && typeof window !== 'undefined' && createPortal(
+        <DevilIntroScreen
+          positions={devilIntroData.positions}
+          difficulty={devilIntroData.difficulty}
+          onStart={handleDevilStart}
+          onBack={() => { setDevilIntroData(null); setSelectedMode(null) }}
         />,
         document.body
       )}
