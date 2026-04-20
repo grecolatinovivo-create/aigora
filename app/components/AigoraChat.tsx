@@ -2351,6 +2351,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           width: 390,
           height: 790,
           zoom: phoneScale,
+          position: 'relative',
         }}
       >
 
@@ -2362,8 +2363,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         <div className="phone-glare" />
 
         {/* Schermo desktop */}
-        <div className="absolute rounded-[44px] overflow-hidden flex flex-col"
-          style={{ top: 9, left: 9, right: 9, bottom: 9, backgroundColor: mobileBg.value }}>
+        <div className="absolute rounded-[44px] flex flex-col"
+          style={{ top: 9, left: 9, right: 9, bottom: 9, backgroundColor: mobileBg.value, overflow: 'clip' }}>
 
           {/* Status bar */}
           <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-1.5" style={{ backgroundColor: mobileBg.header }}>
@@ -3308,7 +3309,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
           {/* ── ROUND BANNER OVERLAY (desktop) — fuori da overflow-hidden, dentro phone-shell ── */}
           {desktopRoundBanner && twoVsTwoState && (
-            <div className="absolute rounded-[44px] z-[60] flex items-center justify-center pointer-events-none"
+            <div className="absolute rounded-[44px] overflow-hidden z-[60] flex items-center justify-center pointer-events-none"
               style={{ top: 9, left: 9, right: 9, bottom: 9, background: 'rgba(0,0,0,0.55)' }}>
               <div style={{ animation: 'round-banner 2.2s ease forwards' }}>
                 <div className="flex flex-col items-center gap-1">
