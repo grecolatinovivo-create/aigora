@@ -1669,14 +1669,20 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
             <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
           </span>
           {/* Avatar utente — va alla chat */}
-          <button onClick={() => { handleReset(); setPhase('new') }}
-            className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
-            style={{ background: userImage ? 'transparent' : 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 2px 12px rgba(124,58,237,0.4)' }}>
-            {userImage
-              ? <img src={userImage} alt="avatar" className="w-full h-full object-cover" />
-              : (displayName[0] ?? 'U').toUpperCase()
-            }
-          </button>
+          {(() => {
+            const pc: Record<string,string> = { admin:'#F59E0B', max:'#FF6B2B', pro:'#A78BFA', starter:'#1A73E8', free:'#10A37F', none:'#6B7280' }
+            const c = pc[effectivePlan ?? 'free'] ?? '#6B7280'
+            return (
+              <button onClick={() => { handleReset(); setPhase('new') }}
+                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
+                style={{ background: userImage ? 'transparent' : c, boxShadow: `0 2px 12px ${c}66` }}>
+                {userImage
+                  ? <img src={userImage} alt="avatar" className="w-full h-full object-cover" />
+                  : (displayName[0] ?? 'U').toUpperCase()
+                }
+              </button>
+            )
+          })()}
         </div>
 
         {/* ── Navbar desktop ── */}
