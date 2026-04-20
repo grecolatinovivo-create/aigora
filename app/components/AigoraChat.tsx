@@ -1403,7 +1403,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const updatedMsgs = [...devilSession.messages, { role: 'user' as const, content: text }]
     setDevilSession(prev => prev ? { ...prev, messages: updatedMsgs } : prev)
     try {
-      const attackerIds = ['claude', 'gpt', 'gemini']; const attackerId = attackerIds[devilSession.round % attackerIds.length]
+      const attackerIds = ['claude', 'gpt', 'gemini', 'perplexity']; const attackerId = attackerIds[devilSession.round % attackerIds.length]
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'turn', aiId: attackerId, history: [{ name: 'Sistema', content: `Sei ${AI_NAMES[attackerId]} in un Devil's Advocate. L'utente difende: "${devilSession.position}". Attaccala con argomenti forti. 2-3 frasi.` }, ...updatedMsgs.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))], needsWebSearch: false }),
@@ -1446,7 +1446,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       try {
         const res = await fetch('/api/chat', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'turn', aiId: 'claude', history: [{ name: 'Sistema', content: `Sei un giudice. L'utente ha difeso: "${devilSession.position}". Dai un verdetto: punteggio 0-10, punto più forte, punto più debole. Sii conciso.` }, ...devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))], needsWebSearch: false }),
+          body: JSON.stringify({ action: 'turn', aiId: 'claude', history: [{ name: 'Sistema', content: `Sei un giudice imparziale. L'utente ha difeso la posizione: "${devilSession.position}". Analizza la solidità degli argomenti presentati, cita il punto più forte e il punto più debole, e dai un verdetto finale. Sii diretto e conciso.` }, ...devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))], needsWebSearch: false }),
         })
         if (res.ok && res.body) {
           const reader = res.body.getReader(); const decoder = new TextDecoder()
@@ -1552,6 +1552,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setShowModeSelect(false); setSelectedMode(null)
     setShow2v2Setup(false); setTwoVsTwoState(null)
     setDevilSession(null)
+    setShowDevilIntro(null)
   }
 
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
@@ -2027,7 +2028,6 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         />,
         document.body
       )}
-
       {/* ── SCHERMATA 2v2 (dalla start, via portal) ── */}
       {selectedMode === '2v2' && twoVsTwoState && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999]" style={{ background: '#0d0d14' }}>

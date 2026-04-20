@@ -19,12 +19,11 @@ Il punteggio è rudimentale:
 - Range bloccato tra 0 e 10
 
 ### AI attaccanti
-Le AI ruotano in modo fisso: `['claude', 'gpt', 'gemini'][round % 3]`
+Le AI ruotano in modo fisso: `['claude', 'gpt', 'gemini', 'perplexity'][round % 4]`
 - Round 1 → Claude attacca
 - Round 2 → GPT attacca
 - Round 3 → Gemini attacca
-- Round 4 → Claude attacca di nuovo
-- Perplexity non partecipa mai
+- Round 4 → Perplexity attacca
 
 ### Stato (`DevilSession`)
 ```ts
@@ -38,13 +37,11 @@ Le AI ruotano in modo fisso: `['claude', 'gpt', 'gemini'][round % 3]`
 ```
 
 ### Problemi evidenti
-- **Punteggio finto**: basato su lunghezza e parole chiave, non sulla qualità reale degli argomenti
-- **8 posizioni fisse**: si ripetono, nessuna varietà
-- **Nessun topic personalizzato**: l'utente non può scegliere o inserire una posizione propria
-- **Solo "defend"**: la modalità "attack" (smontare una posizione) non è mai usata
-- **Verdetto generico**: Claude non sa il punteggio corrente quando scrive il verdetto — non c'è coerenza tra score numerico e testo finale
-- **Nessuna progressione visiva** tra i round: sembra sempre uguale
-- **L'utente non sa cosa lo aspetta**: non c'è intro, non c'è spiegazione della posizione prima di iniziare
+- **Punteggio euristico**: il punteggio viene calcolato lato client con euristiche semplici (lunghezza testo + parole chiave), non con una vera valutazione AI.
+- **Solo 8 posizioni fisse**: tutte `side: 'defend'`, nessuna varietà tematica, nessuna modalità "smonta".
+- **Nessuna schermata intro**: la partita parte subito senza mostrare la posizione assegnata o spiegare le regole; l'utente non può ri-pescare.
+- **Verdetto non coerente col punteggio**: il prompt del verdetto finale non riceve il `score`, quindi Claude non può commentarlo in modo coerente.
+- **Nessuna modalità "attack"**: `side: 'attack'` è nel tipo ma non implementato — il prompt AI è sempre uguale.
 
 ---
 
