@@ -3092,19 +3092,21 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
           />
         )}
 
-        {/* Schermata Devil's Advocate mobile */}
+        {/* Schermata Devil's Advocate — copre tutto il phone shell */}
         {phase === 'running' && selectedMode === 'devil' && devilSession && (
-          <DevilsAdvocateScreen
-            session={devilSession}
-            onMessage={handleDevilMessage}
-            onEndTurn={handleDevilEndTurn}
-            onSurrender={handleDevilSurrender}
-            onStartVerdict={handleDevilStartVerdict}
-            onReply={handleDevilReply}
-            onSkipReply={handleDevilSkipReply}
-            loading={devilLoading}
-            onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
-          />
+          <div className="absolute inset-0 z-50">
+            <DevilsAdvocateScreen
+              session={devilSession}
+              onMessage={handleDevilMessage}
+              onEndTurn={handleDevilEndTurn}
+              onSurrender={handleDevilSurrender}
+              onStartVerdict={handleDevilStartVerdict}
+              onReply={handleDevilReply}
+              onSkipReply={handleDevilSkipReply}
+              loading={devilLoading}
+              onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
+            />
+          </div>
         )}
 
         {/* Schermata profilo mobile */}
