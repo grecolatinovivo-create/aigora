@@ -307,7 +307,7 @@ export default function DevilsAdvocateScreen({
           paddingTop: 'max(12px, env(safe-area-inset-top))',
           paddingBottom: '10px',
           background: 'rgba(10,0,3,0.7)',
-          backdropFilter: 'blur(20px)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
           borderColor: 'rgba(239,68,68,0.2)',
         }}>
         <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
@@ -345,7 +345,7 @@ export default function DevilsAdvocateScreen({
       <div className="flex-shrink-0 px-4 py-2.5 border-b relative z-10"
         style={{
           background: 'rgba(139,0,0,0.25)',
-          backdropFilter: 'blur(10px)',
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
           borderColor: 'rgba(239,68,68,0.25)',
         }}>
         <div className="text-[9px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'rgba(239,68,68,0.7)' }}>⚔ difendi questa posizione</div>
@@ -363,7 +363,7 @@ export default function DevilsAdvocateScreen({
                     background: 'rgba(180,20,20,0.25)',
                     border: '1px solid rgba(239,68,68,0.2)',
                     color: '#fca5a5',
-                    backdropFilter: 'blur(8px)',
+                    backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
                   }}>
                   {msg.content}
                 </div>
@@ -379,7 +379,7 @@ export default function DevilsAdvocateScreen({
                     background: `${AI_COLOR[msg.aiId ?? 'claude']}15`,
                     border: `1px solid ${AI_COLOR[msg.aiId ?? 'claude']}25`,
                     color: 'rgba(255,255,255,0.9)',
-                    backdropFilter: 'blur(8px)',
+                    backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
                   }}>
                   {msg.content}
                 </div>
@@ -399,7 +399,7 @@ export default function DevilsAdvocateScreen({
       </div>
       {/* Input + controlli */}
       <div className="flex-shrink-0 border-t relative z-10"
-        style={{ background: 'rgba(10,0,3,0.75)', backdropFilter: 'blur(20px)', borderColor: 'rgba(239,68,68,0.2)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        style={{ background: 'rgba(10,0,3,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(239,68,68,0.2)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-center gap-2 px-3 pt-2 pb-1">
           <input value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim() && !loading) { onMessage(input.trim()); setInput('') } }}
