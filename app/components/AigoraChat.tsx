@@ -117,6 +117,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
   const [devilLoading, setDevilLoading] = useState(false)
   const [showDevilDifficulty, setShowDevilDifficulty] = useState(false)
+  const devilVerdictRunningRef = useRef(false)
   const [devilIntroData, setDevilIntroData] = useState<{ positions: [string, string]; difficulty: DevilDifficulty } | null>(null)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [closingAiProfile, setClosingAiProfile] = useState(false)
@@ -1014,6 +1015,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handleDevilStart = (position: string) => {
     if (!devilIntroData) return
+    devilVerdictRunningRef.current = false
     setDevilSession({
       position,
       difficulty: devilIntroData.difficulty,
@@ -1559,7 +1561,8 @@ Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] do
   }
 
   const handleDevilStartVerdict = async () => {
-    if (!devilSession) return
+    if (!devilSession || devilVerdictRunningRef.current) return
+    devilVerdictRunningRef.current = true
     setDevilSession(prev => prev ? { ...prev, phase: 'verdict', verdicts: [] } : prev)
     setDevilLoading(true)
 
