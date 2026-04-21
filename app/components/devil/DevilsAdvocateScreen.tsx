@@ -392,14 +392,23 @@ export default function DevilsAdvocateScreen({
             )}
           </div>
         ))}
-        {loading && (
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-[9px] font-bold">C</div>
-            <div className="flex gap-1">
-              {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+        {loading && (() => {
+          const attackerIds = ['claude', 'gpt', 'gemini', 'perplexity']
+          const attackerId = attackerIds[session.round % attackerIds.length]
+          const color = AI_COLOR[attackerId]
+          const initial = attackerId === 'gemini' ? 'Ge' : (AI_NAMES[attackerId] ?? 'C')[0]
+          return (
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold"
+                style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}60` }}>
+                {initial}
+              </div>
+              <div className="flex gap-1">
+                {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
         <div ref={messagesEndRef} />
       </div>
       {/* Input + controlli */}
