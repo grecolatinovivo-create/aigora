@@ -2243,6 +2243,50 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
     <div style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 50px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))', left: 0, right: 0, background: mobileBg.value, zIndex: -1, pointerEvents: 'none' }} />
     <div className="desktop-bg min-h-screen flex items-center justify-center pt-14 p-6 gap-6 chat-layout relative">
 
+      {/* ── Hell Grid — sfondo desktop Devil's Advocate ── */}
+      {phase === 'running' && selectedMode === 'devil' && devilSession && (
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0, background: '#080004' }}>
+          {/* Piano prospettico con griglia */}
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: '-50%',
+            right: '-50%',
+            height: '65%',
+            perspective: '600px',
+            perspectiveOrigin: '50% 0%',
+          }}>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              transform: 'rotateX(55deg)',
+              transformOrigin: '50% 0%',
+              backgroundImage:
+                'repeating-linear-gradient(0deg, transparent, transparent 119px, rgba(160,0,20,0.45) 120px), ' +
+                'repeating-linear-gradient(90deg, transparent, transparent 119px, rgba(160,0,20,0.45) 120px)',
+              backgroundSize: '120px 120px',
+              animation: 'hell-grid-scroll 1.8s linear infinite',
+            }} />
+          </div>
+          {/* Orizzonte — glow rosso al centro */}
+          <div style={{
+            position: 'absolute',
+            top: '35%',
+            left: 0,
+            right: 0,
+            height: '2px',
+            background: 'rgba(220,0,30,0.7)',
+            boxShadow: '0 0 40px 16px rgba(180,0,20,0.5), 0 0 120px 60px rgba(100,0,10,0.3)',
+            animation: 'hell-horizon-pulse 3s ease-in-out infinite',
+          }} />
+          {/* Vignette sui bordi */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(ellipse 70% 80% at 50% 50%, transparent 30%, rgba(4,0,2,0.85) 100%)',
+          }} />
+        </div>
+      )}
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
       {messages.length === 0 && selectedMode !== '2v2' && [

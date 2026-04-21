@@ -79,6 +79,16 @@ html, body {
     radial-gradient(ellipse 50% 40% at 60% 20%, rgba(26,115,232,0.10) 0%, transparent 50%);
 }
 
+/* ── Hell Grid — Devil's Advocate desktop background ── */
+@keyframes hell-grid-scroll {
+  from { background-position: 50% 0px;   }
+  to   { background-position: 50% 120px; }
+}
+@keyframes hell-horizon-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 0.85; }
+}
+
 /* ── Bubble fluttuanti ── */
 @keyframes float-1 {
   0%   { transform: translate(0px, 0px);       opacity: 0;    }
