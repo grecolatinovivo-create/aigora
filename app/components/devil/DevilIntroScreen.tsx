@@ -130,7 +130,7 @@ export default function DevilIntroScreen({
         <div className="text-sm text-center leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
           Devi sostenere questa posizione contro le AI che la attaccheranno.
           <br />
-          <span style={{ color: 'rgba(255,255,255,0.25)' }}>Anche se non ci credi.</span>
+          <span style={{ color: 'rgba(255,255,255,0.5)' }} className="font-black">ANCHE SE NON CI CREDI.</span>
         </div>
 
         {/* Regole */}
