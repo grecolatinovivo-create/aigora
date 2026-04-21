@@ -286,40 +286,72 @@ export default function DevilsAdvocateScreen({
 
   // ── PLAYING ──────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full relative" style={{ backgroundColor: bgColor }}>
+    <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: bgColor }}>
+      {/* Sfondo immagine sfocata */}
+      <div className="absolute inset-0 z-0" style={{
+        backgroundImage: 'url(/devilsadv_img.webp)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        filter: 'blur(18px) brightness(0.25)',
+        transform: 'scale(1.05)',
+      }} />
+      {/* Vignetta rossa ai bordi */}
+      <div className="absolute inset-0 z-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, rgba(80,0,0,0.6) 100%)',
+      }} />
       <NoiseOverlay round={session.round} />
-      {/* Header */}
+
+      {/* Header glassmorphism */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b relative z-10"
-        style={{ paddingTop: 'max(12px, env(safe-area-inset-top))', paddingBottom: '10px', backgroundColor: headerColor, borderColor: 'rgba(239,68,68,0.12)' }}>
+        style={{
+          paddingTop: 'max(12px, env(safe-area-inset-top))',
+          paddingBottom: '10px',
+          background: 'rgba(10,0,3,0.7)',
+          backdropFilter: 'blur(20px)',
+          borderColor: 'rgba(239,68,68,0.2)',
+        }}>
         <button onClick={onBack} className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ backgroundColor: 'rgba(255,255,255,0.07)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm">😈</span>
+            <span className="text-sm" style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.8))' }}>😈</span>
             <span className="font-black text-sm truncate text-white">Devil's Advocate</span>
             <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
-              style={{ background: `${diff.color}20`, color: diff.color }}>
+              style={{ background: `${diff.color}20`, color: diff.color, border: `1px solid ${diff.color}40` }}>
               {diff.emoji} {diff.label}
             </span>
           </div>
-          <div className="text-[10px] truncate" style={{ color: 'rgba(239,68,68,0.7)' }}>Round {session.round}</div>
+          <div className="text-[10px] truncate" style={{ color: 'rgba(239,68,68,0.6)' }}>Round {session.round}</div>
         </div>
-        <div className="flex flex-col items-end flex-shrink-0">
-          <div className="text-xl font-black transition-colors duration-300"
-            style={{ color: scoreFlash === 'down' ? '#ef4444' : getScoreColor(session.score), animation: scoreFlash === 'down' ? 'pulse 0.5s ease' : 'none' }}>
+        {/* Score */}
+        <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0"
+          style={{
+            background: `${getScoreColor(session.score)}15`,
+            border: `1px solid ${getScoreColor(session.score)}40`,
+            boxShadow: scoreFlash === 'down' ? `0 0 16px ${getScoreColor(session.score)}60` : 'none',
+            transition: 'box-shadow 0.3s',
+          }}>
+          <div className="text-lg font-black leading-none"
+            style={{ color: getScoreColor(session.score) }}>
             {session.score.toFixed(1)}
           </div>
-          <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>/ 10</div>
+          <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>/10</div>
         </div>
       </div>
+
       {/* Banner posizione */}
-      <div className="flex-shrink-0 px-4 py-2 border-b relative z-10"
-        style={{ backgroundColor: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.15)' }}>
-        <div className="text-[9px] font-black uppercase tracking-widest mb-0.5" style={{ color: '#ef4444' }}>La tua posizione — difendila</div>
+      <div className="flex-shrink-0 px-4 py-2.5 border-b relative z-10"
+        style={{
+          background: 'rgba(139,0,0,0.25)',
+          backdropFilter: 'blur(10px)',
+          borderColor: 'rgba(239,68,68,0.25)',
+        }}>
+        <div className="text-[9px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'rgba(239,68,68,0.7)' }}>⚔ difendi questa posizione</div>
         <div className="text-xs font-bold text-white leading-snug">"{session.position}"</div>
       </div>
+
       {/* Messaggi */}
       <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-3 relative z-10">
         {session.messages.map((msg, i) => (
@@ -327,18 +359,28 @@ export default function DevilsAdvocateScreen({
             {msg.role === 'user' ? (
               <div className="flex justify-end">
                 <div className="max-w-[80%] px-3 py-2 rounded-2xl rounded-br-sm text-sm"
-                  style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: '#fca5a5' }}>
+                  style={{
+                    background: 'rgba(180,20,20,0.25)',
+                    border: '1px solid rgba(239,68,68,0.2)',
+                    color: '#fca5a5',
+                    backdropFilter: 'blur(8px)',
+                  }}>
                   {msg.content}
                 </div>
               </div>
             ) : (
               <div className="flex items-end gap-2 max-w-[85%]">
                 <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0"
-                  style={{ backgroundColor: AI_COLOR[msg.aiId ?? 'claude'] }}>
+                  style={{ backgroundColor: AI_COLOR[msg.aiId ?? 'claude'], boxShadow: `0 0 8px ${AI_COLOR[msg.aiId ?? 'claude']}60` }}>
                   {msg.aiId === 'gemini' ? 'Ge' : (AI_NAMES[msg.aiId ?? 'claude'] ?? 'C')[0]}
                 </div>
                 <div className="px-3 py-2 rounded-2xl rounded-bl-sm text-sm"
-                  style={{ backgroundColor: `${AI_COLOR[msg.aiId ?? 'claude']}18`, color: 'rgba(255,255,255,0.85)' }}>
+                  style={{
+                    background: `${AI_COLOR[msg.aiId ?? 'claude']}15`,
+                    border: `1px solid ${AI_COLOR[msg.aiId ?? 'claude']}25`,
+                    color: 'rgba(255,255,255,0.9)',
+                    backdropFilter: 'blur(8px)',
+                  }}>
                   {msg.content}
                 </div>
               </div>
@@ -357,7 +399,7 @@ export default function DevilsAdvocateScreen({
       </div>
       {/* Input + controlli */}
       <div className="flex-shrink-0 border-t relative z-10"
-        style={{ backgroundColor: headerColor, borderColor: 'rgba(239,68,68,0.12)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        style={{ background: 'rgba(10,0,3,0.75)', backdropFilter: 'blur(20px)', borderColor: 'rgba(239,68,68,0.2)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         <div className="flex items-center gap-2 px-3 pt-2 pb-1">
           <input value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim() && !loading) { onMessage(input.trim()); setInput('') } }}
