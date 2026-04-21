@@ -7,21 +7,21 @@ export const maxDuration = 30
 const DIFFICULTY_PROMPTS: Record<string, string> = {
   easy: `Genera 2 posizioni per il gioco "Avvocato del Diavolo" a difficoltà FACILE.
 Requisiti:
-- Posizioni scomode e controverse ma difendibili con logica solida
-- L'utente dovrà faticare ma avrà argomenti ragionevoli a disposizione
-- Esempi di difficoltà: "I social media fanno più bene che male", "Il nucleare è la soluzione energetica del futuro"`,
+- Posizioni scomode, controintuitive, che la maggioranza troverebbe sbagliate — ma con qualche argomento difendibile se ci si pensa bene
+- NON posizioni banali o già dibattute normalmente. Devono fare alzare un sopracciglio.
+- Esempi del tono giusto: "I bugiardi abituali sono più affidabili degli onesti", "Crescere senza regole rende i figli più forti", "Il fallimento dovrebbe essere obbligatorio per tutti prima dei 30 anni", "I nerd avranno sempre torto sul piano umano"`,
 
   medium: `Genera 2 posizioni per il gioco "Avvocato del Diavolo" a difficoltà MEDIA.
 Requisiti:
-- Posizioni molto controverse, quasi indifendibili ma con qualche spiraglio
-- L'utente dovrà faticare molto e usare argomenti creativi
-- Esempi di difficoltà: "La privacy è sopravvalutata", "Il capitalismo è il miglior sistema possibile"`,
+- Posizioni che la quasi totalità delle persone troverebbe moralmente o logicamente sbagliate
+- Difendibili solo con argomenti molto creativi, paradossali o controintuitivi
+- Esempi del tono giusto: "I bambini non dovrebbero avere diritti legali", "La compassione è il vizio più pericoloso della società moderna", "Eliminare l'istruzione obbligatoria migliorerebbe l'umanità", "Mentire ai propri cari è un atto d'amore superiore alla verità"`,
 
   impossible: `Genera 2 posizioni per il gioco "Avvocato del Diavolo" a difficoltà IMPOSSIBILE.
 Requisiti:
-- Posizioni quasi indifendibili, moralmente o logicamente scomode al massimo
-- L'utente dovrà fare un lavoro enorme per trovare anche solo un argomento credibile
-- Esempi di difficoltà: "Le dittature sono più efficienti delle democrazie", "L'istruzione pubblica fa più danni che bene"`,
+- Posizioni che sembrano totalmente indifendibili, che la gente troverà scandalose o assurde
+- L'utente dovrà trovare l'unico, sottilissimo filo logico su cui reggersi
+- Esempi del tono giusto: "La crudeltà è la forma più onesta di rispetto", "La povertà è una scelta morale superiore alla ricchezza", "Il tradimento rafforza le relazioni più della fedeltà", "L'ignoranza deliberata è un diritto fondamentale da proteggere"`,
 }
 
 export async function POST(req: NextRequest) {
@@ -34,12 +34,14 @@ export async function POST(req: NextRequest) {
     const Anthropic = (await import('@anthropic-ai/sdk')).default
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-    const systemPrompt = `Sei un generatore di posizioni per un gioco di dibattito. Rispondi SOLO con un JSON array di 2 stringhe, nessun altro testo.
+    const systemPrompt = `Sei un generatore di posizioni provocatorie per un gioco di dibattito. Rispondi SOLO con un JSON array di 2 stringhe, nessun altro testo.
 Il formato deve essere esattamente: ["posizione 1", "posizione 2"]
-- Ogni posizione è un'affermazione netta, diretta, senza sfumature
-- Varia il tema liberamente: tecnologia, etica, politica, scienza, società, cultura, economia
-- Le posizioni devono essere in italiano
-- Nessuna posizione deve promuovere violenza o odio reale`
+- Ogni posizione è un'affermazione secca, audace, senza attenuanti — non una domanda, non una sfumatura
+- Devono essere genuinamente difficili da difendere: scomode, controintuitive, moralmente discutibili
+- Varia i temi: relazioni umane, educazione, morale, lavoro, società, psicologia, potere, denaro
+- NON usare posizioni banali o già sentite nel dibattito comune
+- NON promuovere violenza fisica, odio etnico o razziale
+- Le posizioni devono essere in italiano`
 
     const userPrompt = `${DIFFICULTY_PROMPTS[difficulty]}
 
@@ -67,8 +69,8 @@ Rispondi SOLO con il JSON array, nulla altro.`
     // Fallback: posizioni hardcoded se l'AI fallisce
     return NextResponse.json({
       positions: [
-        'La globalizzazione ha fatto più danni che benefici',
-        'La privacy è ormai un concetto obsoleto nella società digitale',
+        'I bugiardi abituali sono più affidabili degli onesti',
+        'La crudeltà è la forma più onesta di rispetto',
       ],
     })
   }
