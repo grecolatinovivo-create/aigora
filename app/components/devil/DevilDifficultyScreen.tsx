@@ -120,9 +120,15 @@ export default function DevilDifficultyScreen({
           }}
         >
           {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              Generazione posizione…
+            <span className="flex flex-col items-center gap-1.5">
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full border-2 border-red-500/40 border-t-red-400 animate-spin" />
+                <span style={{ color: '#f87171', letterSpacing: '0.05em' }}>GROK sta scegliendo come farti soffrire</span>
+                <span style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.9))' }}>😈</span>
+              </span>
+              <span className="text-[10px] font-normal" style={{ color: 'rgba(239,68,68,0.45)', letterSpacing: '0.15em' }}>
+                — POWERED BY GROK —
+              </span>
             </span>
           ) : (
             'Genera la tua posizione →'

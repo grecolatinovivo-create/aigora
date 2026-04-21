@@ -31,9 +31,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'difficulty required' }, { status: 400 })
     }
 
-    const Anthropic = (await import('@anthropic-ai/sdk')).default
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
     const systemPrompt = `Sei un generatore di posizioni provocatorie per un gioco di dibattito. Rispondi SOLO con un JSON array di 2 stringhe, nessun altro testo.
 Il formato deve essere esattamente: ["posizione 1", "posizione 2"]
 - Ogni posizione è un'affermazione secca, audace, senza attenuanti — non una domanda, non una sfumatura
@@ -43,18 +40,27 @@ Il formato deve essere esattamente: ["posizione 1", "posizione 2"]
 - NON promuovere violenza fisica, odio etnico o razziale
 - Le posizioni devono essere in italiano`
 
-    const userPrompt = `${DIFFICULTY_PROMPTS[difficulty]}
+    const userPrompt = `${DIFFICULTY_PROMPTS[difficulty]}\n\nRispondi SOLO con il JSON array, nulla altro.`
 
-Rispondi SOLO con il JSON array, nulla altro.`
-
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
+    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.XAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'grok-4-1-fast-non-reasoning',
+        max_tokens: 200,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
     })
 
-    const raw = (message.content[0] as any).text?.trim() ?? ''
+    if (!res.ok) throw new Error(`xAI error: ${res.status}`)
+    const data = await res.json()
+    const raw = data.choices?.[0]?.message?.content?.trim() ?? ''
 
     // Estrae il JSON anche se ci sono caratteri extra
     const match = raw.match(/\[[\s\S]*\]/)
