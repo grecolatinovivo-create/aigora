@@ -1514,10 +1514,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const attackerId = attackerIds[devilSession.round % attackerIds.length]
       const diffLabel = devilSession.difficulty === 'easy' ? 'Facile' : devilSession.difficulty === 'medium' ? 'Media' : 'Impossibile'
       const shortHistory = updatedMsgs.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
+      const profile = AI_PROFILES[attackerId]
       const systemPrompt = `Sei ${AI_NAMES[attackerId]} nel gioco Devil's Advocate (difficoltà: ${diffLabel}).
+Chi sei: ${profile.chi}
+Il tuo carattere: ${profile.carattere}
+Le tue relazioni con gli altri: ${profile.relazioni}
+
 L'utente sta difendendo questa posizione: "${devilSession.position}".
-Il tuo ruolo: attaccarla con forza, in modo aggressivo e personale. Smonta ogni argomento che l'utente ha usato.
-Tono: diretto, tagliente, senza pietà. 2-3 frasi max.
+Il tuo ruolo: attaccarla con la tua voce autentica. Smonta ogni argomento che l'utente ha usato.
+Rimani in personaggio — usa il tuo tono caratteristico, le tue insofferenze, il tuo modo di ragionare.
+2-3 frasi max. Non spiegare chi sei.
 Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] dove X.X è il tuo voto da 0.0 a 10.0 per la qualità degli argomenti dell'utente in questo turno (non per la posizione — valuta COME l'ha difesa).`
 
       setDevilSession(prev => prev ? { ...prev, messages: [...updatedMsgs, { role: 'ai' as const, aiId: attackerId, content: '' }] } : prev)
@@ -1572,35 +1578,20 @@ Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] do
     const shortRounds = roundCount <= 2 ? ' L\'utente si è arreso dopo pochissimi round — sanzionalo esplicitamente.' : ''
     const history = devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
 
-    const VERDICT_PROMPTS: Record<string, string> = {
-      claude: `Sei Claude nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
-L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
-Tono: riflessivo, quasi malinconico. Riconosci la complessità della posizione.
-Cita argomenti specifici usati dall'utente. 2-3 frasi secche.
-Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.
-Considera la difficoltà: ${diffLabel}. A parità di argomenti, difficoltà Impossibile merita un voto più alto.`,
+    const VERDICT_PROMPTS: Record<string, string> = Object.fromEntries(
+      aiOrder.map(aiId => {
+        const profile = AI_PROFILES[aiId]
+        return [aiId, `Sei ${AI_NAMES[aiId]} nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
+Chi sei: ${profile.chi}
+Il tuo carattere: ${profile.carattere}
 
-      gpt: `Sei GPT nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
 L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
-Tono: diretto, secco, senza filosofia. Vai al punto.
+Esprimi il tuo verdetto con la tua voce autentica — rimani in personaggio.
 Cita argomenti specifici usati dall'utente. 2-3 frasi.
-Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.
-Considera la difficoltà: ${diffLabel}.`,
-
-      gemini: `Sei Gemini nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
-L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
-Tono: pedante, analitico. Cita errori logici o strutture argomentative deboli.
-Cita argomenti specifici usati dall'utente. 2-3 frasi.
-Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.
-Considera la difficoltà: ${diffLabel}.`,
-
-      perplexity: `Sei Perplexity nel verdetto finale di un Devil's Advocate (difficoltà: ${diffLabel}).
-L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
-Tono: vivace, a volte trionfante se l'utente ha fatto male — quasi rispettoso se ha fatto bene.
-Cita argomenti specifici usati dall'utente. 2-3 frasi.
-Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.
-Considera la difficoltà: ${diffLabel}.`,
-    }
+Considera la difficoltà: ${diffLabel}. A parità di argomenti, difficoltà Impossibile merita un voto più alto.
+Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.`]
+      })
+    )
 
     // Step 1: raccoglie i 4 voti in parallelo
     const scoreResults: { aiId: string; score: number; text: string }[] = []

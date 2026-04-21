@@ -107,7 +107,8 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
             <div className="text-2xl" style={{ filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.6))' }}>😈</div>
           </div>
           <div className="relative z-10 text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.</div>
-          <div className="relative z-10 flex items-center justify-end mt-3">
+          <div className="relative z-10 flex items-center justify-between mt-3">
+            <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.5)' }}>Powered by GROK</div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#dc2626,#991b1b)' }}>
               Gioca <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </div>
@@ -227,7 +228,10 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
               {/* Notch */}
               <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 10, width: 60, height: 14, background: '#1c1c1e', zIndex: 10 }} />
             </div>
-            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.7)' }}>Devil's Advocate</div>
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.7)' }}>Devil's Advocate</div>
+              <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.4)' }}>Powered by GROK</div>
+            </div>
           </button>
 
         </div>
