@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import type { DevilDifficulty } from '@/app/types/aigora'
 import HellGridBg from './HellGridBg'
+import { devilSounds } from './useDevilSounds'
 
 const DIFFICULTY_LABELS: Record<DevilDifficulty, { emoji: string; label: string; color: string }> = {
   easy:       { emoji: '🟢', label: 'Facile',      color: '#4ade80' },
@@ -30,19 +31,26 @@ export default function DevilIntroScreen({
 
   // Flip card animazione all'avvio
   useEffect(() => {
-    const t = setTimeout(() => setFlipped(true), 300)
+    const t = setTimeout(() => {
+      devilSounds.playWhoosh()
+      setFlipped(true)
+      setTimeout(() => devilSounds.playLaugh(0.5), 200)
+    }, 300)
     return () => clearTimeout(t)
   }, [])
 
   const handleReroll = () => {
     if (rerollUsed || flipping) return
+    devilSounds.playClick()
     setFlipping(true)
     setFlipped(false)
     setTimeout(() => {
+      devilSounds.playWhoosh()
       setCurrentIndex(1)
       setRerollUsed(true)
       setFlipped(true)
       setFlipping(false)
+      setTimeout(() => devilSounds.playLaugh(0.45), 200)
     }, 400)
   }
 

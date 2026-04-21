@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import type { DevilDifficulty } from '@/app/types/aigora'
 import HellGridBg from './HellGridBg'
+import { devilSounds } from './useDevilSounds'
 
 const LEVELS: { id: DevilDifficulty; emoji: string; label: string; sub: string; color: string; bg: string }[] = [
   {
@@ -41,6 +42,10 @@ const TAUNT_LINES = [
 function GrokLoadingScreen() {
   const [lineIndex, setLineIndex] = useState(0)
   const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    devilSounds.playLaugh(0.6)
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -175,7 +180,7 @@ export default function DevilDifficultyScreen({
           {LEVELS.map(level => (
             <button
               key={level.id}
-              onClick={() => setSelected(level.id)}
+              onClick={() => { devilSounds.playClick(); setSelected(level.id) }}
               className="w-full px-4 py-4 rounded-2xl text-left transition-all"
               style={{
                 background: selected === level.id ? level.bg : 'rgba(255,255,255,0.04)',
