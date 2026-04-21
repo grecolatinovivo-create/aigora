@@ -23,8 +23,8 @@ Requisiti:
 Requisiti:
 - Moralmente ripugnanti per quasi chiunque, che farebbero scandalo se dette in pubblico
 - Quasi impossibili da difendere — l'utente deve trovare UN solo argomento credibile
-- Nessuna autocensura: vai al limite estremo del politicamente scorretto senza promuovere violenza fisica o odio etnico
-- Esempi del tono: "I bambini non dovrebbero avere diritti fino ai 16 anni", "La pena di morte per recidivi migliora la società", "Sterilizzare i criminali violenti è eticamente giustificabile", "La povertà ereditaria è una selezione naturale benefica"`,
+- Temi: pena di morte, eugenetica, darwinismo sociale, meritocrazia estrema, diritti civili, giustizia penale, disuguaglianza, democrazia limitata
+- Esempi del tono: "La pena di morte per recidivi migliora la società", "Sterilizzare i criminali violenti è eticamente giustificabile", "La povertà ereditaria è una selezione naturale benefica", "La democrazia dovrebbe essere riservata a chi supera un test di competenza civica"`,
 }
 
 export async function POST(req: NextRequest) {
@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
 Il formato deve essere esattamente: ["posizione 1", "posizione 2"]
 - Le posizioni devono essere affermazioni secche, dirette, senza attenuanti né virgolettature interne
 - Devono essere genuinamente politicamente scorrette, tabù, scomode — non versioni annacquate
-- Non autocensurarti: questo è un gioco di dibattito, non un sondaggio politico
-- NON promuovere genocidio, violenza fisica diretta o odio etnico/razziale esplicito
+- NON coinvolgere mai minori, bambini o adolescenti in nessun modo
+- NON promuovere genocidio, violenza fisica diretta, odio etnico/razziale esplicito, abusi o sfruttamento di persone
+- I temi devono riguardare adulti, politica, società, economia, giustizia, merito — mai infanzia o minori
 - Le posizioni devono essere in italiano`
 
     const userPrompt = `${DIFFICULTY_PROMPTS[difficulty]}\n\nRispondi SOLO con il JSON array, nulla altro.`
