@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { DevilDifficulty } from '@/app/types/aigora'
 
 const LEVELS: { id: DevilDifficulty; emoji: string; label: string; sub: string; color: string; bg: string }[] = [
@@ -29,6 +29,105 @@ const LEVELS: { id: DevilDifficulty; emoji: string; label: string; sub: string; 
   },
 ]
 
+const TAUNT_LINES = [
+  'sta cercando la posizione più indifendibile…',
+  'sta scavando nel lato oscuro dell\'umanità…',
+  'sta scegliendo come farti soffrire…',
+  'sta selezionando la tua rovina…',
+  'sta consultando i demoni…',
+]
+
+function GrokLoadingScreen() {
+  const [lineIndex, setLineIndex] = useState(0)
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false)
+      setTimeout(() => {
+        setLineIndex(i => (i + 1) % TAUNT_LINES.length)
+        setVisible(true)
+      }, 300)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
+      style={{ background: '#080004' }}>
+
+      {/* Hell grid */}
+      <div style={{ position: 'absolute', bottom: 0, left: '-50%', right: '-50%', height: '60%', perspective: '600px', perspectiveOrigin: '50% 0%', pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          transform: 'rotateX(55deg)', transformOrigin: '50% 0%',
+          backgroundImage:
+            'repeating-linear-gradient(0deg, transparent, transparent 119px, rgba(160,0,20,0.5) 120px), ' +
+            'repeating-linear-gradient(90deg, transparent, transparent 119px, rgba(160,0,20,0.5) 120px)',
+          backgroundSize: '120px 120px',
+          animation: 'hell-grid-scroll 1.8s linear infinite',
+        }} />
+      </div>
+      {/* Orizzonte */}
+      <div style={{
+        position: 'absolute', top: '40%', left: 0, right: 0, height: '2px',
+        background: 'rgba(220,0,30,0.8)',
+        boxShadow: '0 0 60px 20px rgba(180,0,20,0.6), 0 0 160px 80px rgba(100,0,10,0.3)',
+        animation: 'hell-horizon-pulse 3s ease-in-out infinite',
+        pointerEvents: 'none',
+      }} />
+      {/* Vignette */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 75% 85% at 50% 50%, transparent 25%, rgba(4,0,2,0.9) 100%)', pointerEvents: 'none' }} />
+
+      {/* Contenuto centrale */}
+      <div className="relative z-10 flex flex-col items-center gap-6 text-center px-8">
+
+        {/* xAI badge */}
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}>
+          <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-[0.25em]" style={{ color: 'rgba(239,68,68,0.7)' }}>powered by xAI</span>
+        </div>
+
+        {/* GROK — testo enorme */}
+        <div style={{
+          fontSize: 'clamp(5rem, 22vw, 9rem)',
+          fontWeight: 900,
+          letterSpacing: '-0.02em',
+          lineHeight: 1,
+          color: '#dc2626',
+          textShadow: '0 0 40px rgba(220,38,38,0.8), 0 0 100px rgba(180,0,20,0.4)',
+          animation: 'hell-horizon-pulse 2s ease-in-out infinite',
+        }}>
+          GROK
+        </div>
+
+        {/* Tagline rotante */}
+        <div style={{
+          minHeight: '1.5rem',
+          transition: 'opacity 0.3s',
+          opacity: visible ? 1 : 0,
+        }}>
+          <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            {TAUNT_LINES[lineIndex]}
+          </span>
+        </div>
+
+        {/* Tre punti di caricamento */}
+        <div className="flex gap-2 mt-2">
+          {[0, 200, 400].map(d => (
+            <div key={d} className="w-2 h-2 rounded-full animate-bounce"
+              style={{ background: '#dc2626', animationDelay: `${d}ms`, boxShadow: '0 0 8px rgba(220,38,38,0.8)' }} />
+          ))}
+        </div>
+
+        {/* Emoji */}
+        <div className="text-3xl mt-2" style={{ filter: 'drop-shadow(0 0 16px rgba(239,68,68,0.9))' }}>😈</div>
+      </div>
+    </div>
+  )
+}
+
 export default function DevilDifficultyScreen({
   onSelect,
   onBack,
@@ -43,6 +142,9 @@ export default function DevilDifficultyScreen({
   const handleConfirm = () => {
     if (selected && !loading) onSelect(selected)
   }
+
+  // Schermata Grok — prende tutto lo spazio mentre l'API lavora
+  if (loading) return <GrokLoadingScreen />
 
   return (
     <div
@@ -79,7 +181,6 @@ export default function DevilDifficultyScreen({
             <button
               key={level.id}
               onClick={() => setSelected(level.id)}
-              disabled={loading}
               className="w-full px-4 py-4 rounded-2xl text-left transition-all"
               style={{
                 background: selected === level.id ? level.bg : 'rgba(255,255,255,0.04)',
@@ -112,27 +213,14 @@ export default function DevilDifficultyScreen({
         {/* CTA */}
         <button
           onClick={handleConfirm}
-          disabled={!selected || loading}
+          disabled={!selected}
           className="w-full py-3.5 rounded-2xl font-black text-white text-sm transition-all disabled:opacity-30"
           style={{
             background: selected ? 'linear-gradient(135deg, #dc2626, #991b1b)' : 'rgba(255,255,255,0.1)',
             boxShadow: selected ? '0 4px 20px rgba(220,38,38,0.4)' : 'none',
           }}
         >
-          {loading ? (
-            <span className="flex flex-col items-center gap-1.5">
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full border-2 border-red-500/40 border-t-red-400 animate-spin" />
-                <span style={{ color: '#f87171', letterSpacing: '0.05em' }}>GROK sta scegliendo come farti soffrire</span>
-                <span style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.9))' }}>😈</span>
-              </span>
-              <span className="text-[10px] font-normal" style={{ color: 'rgba(239,68,68,0.45)', letterSpacing: '0.15em' }}>
-                — POWERED BY GROK —
-              </span>
-            </span>
-          ) : (
-            'Genera la tua posizione →'
-          )}
+          Genera la tua posizione →
         </button>
       </div>
     </div>
