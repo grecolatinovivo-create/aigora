@@ -1449,7 +1449,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // Musica Devil's Advocate — unica istanza, gestita qui per evitare duplicati
   useEffect(() => {
     if (!devilSession) return
-    const audio = new Audio('/Devil.mp3')
+    const audio = new Audio('/infernal-neon.mp3')
     audio.volume = 0.25
     audio.loop = true
     audio.play().catch(() => {})
