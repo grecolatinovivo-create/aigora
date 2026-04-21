@@ -59,25 +59,23 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
         {/* Card Devil's Advocate — attiva */}
         <button onClick={() => onSelect('devil')}
           className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all relative overflow-hidden"
-          style={{ border: '1.5px solid rgba(239,68,68,0.35)', boxShadow: '0 4px 20px rgba(239,68,68,0.15)', minHeight: 0 }}>
-          {/* Immagine di sfondo */}
-          <div className="absolute inset-0 z-0" style={{
-            backgroundImage: 'url(/devilsadv_img.webp)',
+          style={{
+            border: '1.5px solid rgba(239,68,68,0.35)',
+            boxShadow: '0 4px 20px rgba(239,68,68,0.15)',
+            minHeight: 0,
+            backgroundImage: 'linear-gradient(180deg, rgba(13,0,5,0.6) 0%, rgba(26,0,8,0.8) 100%), url(/devilsadv_img.webp)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-          }} />
-          {/* Overlay scuro per leggibilità */}
-          <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(180deg, rgba(13,0,5,0.55) 0%, rgba(26,0,8,0.75) 100%)' }} />
-          {/* Contenuto */}
-          <div className="relative z-10 flex items-start justify-between">
+          }}>
+          <div className="flex items-start justify-between">
             <div>
               <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>Devil's Advocate</div>
               <div className="text-xl font-black text-white leading-tight">Difendi l'indifendibile</div>
             </div>
             <div className="text-2xl" style={{ filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.6))' }}>😈</div>
           </div>
-          <div className="relative z-10 text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.</div>
-          <div className="relative z-10 flex items-center justify-end mt-3">
+          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.</div>
+          <div className="flex items-center justify-end mt-3">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#dc2626,#991b1b)' }}>
               Gioca <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </div>
