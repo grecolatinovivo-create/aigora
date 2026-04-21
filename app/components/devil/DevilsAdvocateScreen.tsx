@@ -137,8 +137,8 @@ export default function DevilsAdvocateScreen({
     return (
       <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: bgColor }}>
         <NoiseOverlay round={session.round} />
-        <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b relative z-10"
-          style={{ backgroundColor: headerColor, borderColor: 'rgba(239,68,68,0.15)' }}>
+        <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b relative z-10"
+          style={{ paddingTop: 'max(28px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: headerColor, borderColor: 'rgba(239,68,68,0.15)' }}>
           <div className="text-base">⚖️</div>
           <div className="font-black text-sm text-white flex-1">Verdetto finale</div>
           <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{session.verdicts.length} / 4 giudici</div>
@@ -223,8 +223,8 @@ export default function DevilsAdvocateScreen({
     return (
       <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: bgColor }}>
         <NoiseOverlay round={session.round} />
-        <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b relative z-10"
-          style={{ backgroundColor: headerColor, borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b relative z-10"
+          style={{ paddingTop: 'max(28px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: headerColor, borderColor: 'rgba(255,255,255,0.06)' }}>
           <div className="font-black text-sm text-white flex-1">La tua replica</div>
           <button onClick={onSkipReply} className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Salta →</button>
         </div>
@@ -312,7 +312,7 @@ export default function DevilsAdvocateScreen({
       {/* Header glassmorphism */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b relative z-10"
         style={{
-          paddingTop: 'max(12px, env(safe-area-inset-top))',
+          paddingTop: 'max(28px, env(safe-area-inset-top))',
           paddingBottom: '10px',
           background: 'rgba(10,0,3,0.7)',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
