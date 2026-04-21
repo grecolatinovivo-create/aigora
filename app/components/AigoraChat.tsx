@@ -2289,7 +2289,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
       )}
 
       {/* ── Bubble fluttuanti desktop — solo quando non ci sono messaggi ── */}
-      {messages.length === 0 && selectedMode !== '2v2' && [
+      {messages.length === 0 && selectedMode !== '2v2' && selectedMode !== 'devil' && [
         { top: '180px', left: 'calc(50% - 560px)', delay: '-2s',   dur: '14s', anim: 'float-1' },
         { top: '320px', left: 'calc(50% - 550px)', delay: '-7s',   dur: '13s', anim: 'float-3' },
         { top: '460px', left: 'calc(50% - 560px)', delay: '-4s',   dur: '15s', anim: 'float-2' },

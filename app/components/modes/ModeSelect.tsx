@@ -2,6 +2,39 @@
 import { useState } from 'react'
 import type { GameMode } from '@/app/types/aigora'
 
+function HellGridBg() {
+  return (
+    <>
+      {/* Piano prospettico */}
+      <div style={{ position: 'absolute', bottom: 0, left: '-50%', right: '-50%', height: '65%', perspective: '600px', perspectiveOrigin: '50% 0%', pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          transform: 'rotateX(55deg)', transformOrigin: '50% 0%',
+          backgroundImage:
+            'repeating-linear-gradient(0deg, transparent, transparent 119px, rgba(160,0,20,0.45) 120px), ' +
+            'repeating-linear-gradient(90deg, transparent, transparent 119px, rgba(160,0,20,0.45) 120px)',
+          backgroundSize: '120px 120px',
+          animation: 'hell-grid-scroll 1.8s linear infinite',
+        }} />
+      </div>
+      {/* Orizzonte */}
+      <div style={{
+        position: 'absolute', top: '35%', left: 0, right: 0, height: '2px',
+        background: 'rgba(220,0,30,0.7)',
+        boxShadow: '0 0 40px 16px rgba(180,0,20,0.5), 0 0 120px 60px rgba(100,0,10,0.3)',
+        animation: 'hell-horizon-pulse 3s ease-in-out infinite',
+        pointerEvents: 'none',
+      }} />
+      {/* Vignette */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(ellipse 70% 80% at 50% 50%, transparent 30%, rgba(4,0,2,0.85) 100%)',
+        pointerEvents: 'none',
+      }} />
+    </>
+  )
+}
+
 export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void; onClose: () => void }) {
   const [selected, setSelected] = useState<GameMode>('2v2')
 
@@ -63,19 +96,18 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
             border: '1.5px solid rgba(239,68,68,0.35)',
             boxShadow: '0 4px 20px rgba(239,68,68,0.15)',
             minHeight: 0,
-            backgroundImage: 'linear-gradient(180deg, rgba(13,0,5,0.6) 0%, rgba(26,0,8,0.8) 100%), url(/devilsadv_img.webp)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            background: '#080004',
           }}>
-          <div className="flex items-start justify-between">
+          <HellGridBg />
+          <div className="relative z-10 flex items-start justify-between">
             <div>
               <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>Devil's Advocate</div>
               <div className="text-xl font-black text-white leading-tight">Difendi l'indifendibile</div>
             </div>
             <div className="text-2xl" style={{ filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.6))' }}>😈</div>
           </div>
-          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.</div>
-          <div className="flex items-center justify-end mt-3">
+          <div className="relative z-10 text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.</div>
+          <div className="relative z-10 flex items-center justify-end mt-3">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#dc2626,#991b1b)' }}>
               Gioca <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </div>
@@ -184,10 +216,13 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
               <div className="absolute inset-0 rounded-[32px]" style={{ background: '#1c1c1e', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }} />
               {/* Schermo */}
               <div className="absolute rounded-[26px] overflow-hidden flex flex-col items-center justify-center gap-3"
-                style={{ top: 6, left: 6, right: 6, bottom: 6, background: 'linear-gradient(180deg, #0d0005 0%, #1a0008 100%)' }}>
-                <div className="text-4xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.8))' }}>😈</div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-center px-4" style={{ color: 'rgba(239,68,68,0.8)' }}>Difendi l'indifendibile</div>
-                <div className="px-3 py-1 rounded-full text-[9px] font-black" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>4 AI nemiche</div>
+                style={{ top: 6, left: 6, right: 6, bottom: 6, background: '#080004' }}>
+                <HellGridBg />
+                <div className="relative z-10 flex flex-col items-center gap-3">
+                  <div className="text-4xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.8))' }}>😈</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-center px-4" style={{ color: 'rgba(239,68,68,0.8)' }}>Difendi l'indifendibile</div>
+                  <div className="px-3 py-1 rounded-full text-[9px] font-black" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>4 AI nemiche</div>
+                </div>
               </div>
               {/* Notch */}
               <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 10, width: 60, height: 14, background: '#1c1c1e', zIndex: 10 }} />
