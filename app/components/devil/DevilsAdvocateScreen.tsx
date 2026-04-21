@@ -317,13 +317,15 @@ export default function DevilsAdvocateScreen({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm" style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.8))' }}>😈</span>
-            <span className="font-black text-sm truncate text-white">Devil's Advocate</span>
+            <span className="font-black text-sm text-white">Devil's Advocate</span>
             <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
               style={{ background: `${diff.color}20`, color: diff.color, border: `1px solid ${diff.color}40` }}>
               {diff.emoji} {diff.label}
             </span>
           </div>
-          <div className="text-[10px] truncate" style={{ color: 'rgba(239,68,68,0.6)' }}>Round {session.round}</div>
+          <div className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            ⚔ {session.position}
+          </div>
         </div>
         {/* Score */}
         <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0"
@@ -341,19 +343,22 @@ export default function DevilsAdvocateScreen({
         </div>
       </div>
 
-      {/* Banner posizione */}
-      <div className="flex-shrink-0 px-4 py-2.5 border-b relative z-10"
-        style={{
-          background: 'rgba(139,0,0,0.25)',
-          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-          borderColor: 'rgba(239,68,68,0.25)',
-        }}>
-        <div className="text-[9px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'rgba(239,68,68,0.7)' }}>⚔ difendi questa posizione</div>
-        <div className="text-xs font-bold text-white leading-snug">"{session.position}"</div>
-      </div>
-
       {/* Messaggi */}
       <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-3 relative z-10">
+        {/* Empty state — posizione in evidenza */}
+        {session.messages.length === 0 && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-8">
+            <div className="text-4xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.7))' }}>😈</div>
+            <div className="text-[9px] font-black uppercase tracking-[0.25em]" style={{ color: 'rgba(239,68,68,0.6)' }}>difendi questa posizione</div>
+            <div className="px-5 py-4 rounded-2xl text-center max-w-[85%]"
+              style={{ background: 'rgba(139,0,0,0.2)', border: '1px solid rgba(239,68,68,0.3)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
+              <div className="text-base font-black text-white leading-snug">"{session.position}"</div>
+            </div>
+            <div className="text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              Scrivi il tuo primo argomento
+            </div>
+          </div>
+        )}
         {session.messages.map((msg, i) => (
           <div key={i}>
             {msg.role === 'user' ? (
