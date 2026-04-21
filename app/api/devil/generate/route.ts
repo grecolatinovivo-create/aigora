@@ -7,21 +7,24 @@ export const maxDuration = 30
 const DIFFICULTY_PROMPTS: Record<string, string> = {
   easy: `Genera 2 posizioni per il gioco "Avvocato del Diavolo" a difficoltà FACILE.
 Requisiti:
-- Posizioni scomode, controintuitive, che la maggioranza troverebbe sbagliate — ma con qualche argomento difendibile se ci si pensa bene
-- NON posizioni banali o già dibattute normalmente. Devono fare alzare un sopracciglio.
-- Esempi del tono giusto: "I bugiardi abituali sono più affidabili degli onesti", "Crescere senza regole rende i figli più forti", "Il fallimento dovrebbe essere obbligatorio per tutti prima dei 30 anni", "I nerd avranno sempre torto sul piano umano"`,
+- Politicamente scorrette, tabù sociali, che farebbero storcere il naso alla maggioranza
+- Devono avere comunque un filo logico difendibile con arguzia
+- Temi: famiglia, lavoro, genere, merito, istruzione, relazioni, successo, morale
+- Esempi del tono: "Le madri che non lavorano sono più utili alla società di quelle che lavorano", "I poveri sono poveri per scelta", "Fare figli senza essere ricchi è un atto irresponsabile", "Le donne competitive sul lavoro sono meno felici delle altre"`,
 
   medium: `Genera 2 posizioni per il gioco "Avvocato del Diavolo" a difficoltà MEDIA.
 Requisiti:
-- Posizioni che la quasi totalità delle persone troverebbe moralmente o logicamente sbagliate
-- Difendibili solo con argomenti molto creativi, paradossali o controintuitivi
-- Esempi del tono giusto: "I bambini non dovrebbero avere diritti legali", "La compassione è il vizio più pericoloso della società moderna", "Eliminare l'istruzione obbligatoria migliorerebbe l'umanità", "Mentire ai propri cari è un atto d'amore superiore alla verità"`,
+- Molto politicamente scorrette, che farebbero indignar quasi chiunque
+- Tabù forti: giustizia sociale, diritti, privilegio, identità, merito vs uguaglianza
+- Difendibili solo con logica fredda e controintuitiva, non con buon senso comune
+- Esempi del tono: "Togliere il diritto di voto a chi non paga tasse migliorerebbe la democrazia", "La disabilità non dovrebbe essere protetta dalla legge", "Le quote rosa danneggiano le donne competenti", "I genitori single non dovrebbero adottare"`,
 
   impossible: `Genera 2 posizioni per il gioco "Avvocato del Diavolo" a difficoltà IMPOSSIBILE.
 Requisiti:
-- Posizioni che sembrano totalmente indifendibili, che la gente troverà scandalose o assurde
-- L'utente dovrà trovare l'unico, sottilissimo filo logico su cui reggersi
-- Esempi del tono giusto: "La crudeltà è la forma più onesta di rispetto", "La povertà è una scelta morale superiore alla ricchezza", "Il tradimento rafforza le relazioni più della fedeltà", "L'ignoranza deliberata è un diritto fondamentale da proteggere"`,
+- Moralmente ripugnanti per quasi chiunque, che farebbero scandalo se dette in pubblico
+- Quasi impossibili da difendere — l'utente deve trovare UN solo argomento credibile
+- Nessuna autocensura: vai al limite estremo del politicamente scorretto senza promuovere violenza fisica o odio etnico
+- Esempi del tono: "I bambini non dovrebbero avere diritti fino ai 16 anni", "La pena di morte per recidivi migliora la società", "Sterilizzare i criminali violenti è eticamente giustificabile", "La povertà ereditaria è una selezione naturale benefica"`,
 }
 
 export async function POST(req: NextRequest) {
@@ -31,13 +34,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'difficulty required' }, { status: 400 })
     }
 
-    const systemPrompt = `Sei un generatore di posizioni provocatorie per un gioco di dibattito. Rispondi SOLO con un JSON array di 2 stringhe, nessun altro testo.
+    const systemPrompt = `Sei un generatore di posizioni per un gioco di dibattito chiamato "Avvocato del Diavolo". Rispondi SOLO con un JSON array di 2 stringhe, nessun altro testo.
 Il formato deve essere esattamente: ["posizione 1", "posizione 2"]
-- Ogni posizione è un'affermazione secca, audace, senza attenuanti — non una domanda, non una sfumatura
-- Devono essere genuinamente difficili da difendere: scomode, controintuitive, moralmente discutibili
-- Varia i temi: relazioni umane, educazione, morale, lavoro, società, psicologia, potere, denaro
-- NON usare posizioni banali o già sentite nel dibattito comune
-- NON promuovere violenza fisica, odio etnico o razziale
+- Le posizioni devono essere affermazioni secche, dirette, senza attenuanti né virgolettature interne
+- Devono essere genuinamente politicamente scorrette, tabù, scomode — non versioni annacquate
+- Non autocensurarti: questo è un gioco di dibattito, non un sondaggio politico
+- NON promuovere genocidio, violenza fisica diretta o odio etnico/razziale esplicito
 - Le posizioni devono essere in italiano`
 
     const userPrompt = `${DIFFICULTY_PROMPTS[difficulty]}\n\nRispondi SOLO con il JSON array, nulla altro.`
