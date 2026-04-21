@@ -31,8 +31,6 @@ prisma/*.db-journal
 # TypeScript build cache (si rigenera)
 tsconfig.tsbuildinfo
 
-# File audio grandi — tienili fuori dal repo
-public/*.mp3
 
 # Claude Code config
 .claude/

@@ -82,6 +82,15 @@ export default function DevilsAdvocateScreen({
   const headerColor = '#111118'
   const placeholder = PLACEHOLDERS[Math.min(session.round - 1, PLACEHOLDERS.length - 1)]
 
+  // Musica di sottofondo — parte quando inizia la sessione, si ferma all'uscita
+  useEffect(() => {
+    const audio = new Audio('/dust-at-high-noon.mp3')
+    audio.volume = 0.25
+    audio.loop = true
+    audio.play().catch(() => {}) // ignora errori autoplay (browser policy)
+    return () => { audio.pause(); audio.src = '' }
+  }, [])
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [session.messages])
