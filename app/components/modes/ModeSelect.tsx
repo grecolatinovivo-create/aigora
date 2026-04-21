@@ -62,7 +62,7 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
           style={{ border: '1.5px solid rgba(239,68,68,0.35)', boxShadow: '0 4px 20px rgba(239,68,68,0.15)', minHeight: 0 }}>
           {/* Immagine di sfondo */}
           <div className="absolute inset-0 z-0" style={{
-            backgroundImage: 'url(/devilsadv_img.png)',
+            backgroundImage: 'url(/devilsadv_img.webp)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }} />
