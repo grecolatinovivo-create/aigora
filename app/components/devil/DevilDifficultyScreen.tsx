@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { DevilDifficulty } from '@/app/types/aigora'
+import HellGridBg from './HellGridBg'
 
 const LEVELS: { id: DevilDifficulty; emoji: string; label: string; sub: string; color: string; bg: string }[] = [
   {
@@ -141,9 +142,10 @@ export default function DevilDifficultyScreen({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center px-6"
-      style={{ background: 'linear-gradient(180deg, #0d0005 0%, #1a0008 100%)' }}
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center px-6 overflow-hidden"
+      style={{ background: '#080004' }}
     >
+      <HellGridBg />
       {/* Back */}
       <button
         onClick={onBack}
@@ -155,7 +157,7 @@ export default function DevilDifficultyScreen({
         </svg>
       </button>
 
-      <div className="w-full max-w-sm flex flex-col items-center gap-7">
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-7">
         {/* Header */}
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="text-5xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.6))' }}>😈</div>

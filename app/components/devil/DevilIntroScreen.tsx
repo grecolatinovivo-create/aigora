@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { DevilDifficulty } from '@/app/types/aigora'
+import HellGridBg from './HellGridBg'
 
 const DIFFICULTY_LABELS: Record<DevilDifficulty, { emoji: string; label: string; color: string }> = {
   easy:       { emoji: '🟢', label: 'Facile',      color: '#4ade80' },
@@ -47,9 +48,10 @@ export default function DevilIntroScreen({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center px-6"
-      style={{ background: 'linear-gradient(180deg, #0d0005 0%, #1a0008 100%)' }}
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center px-6 overflow-hidden"
+      style={{ background: '#080004' }}
     >
+      <HellGridBg />
       {/* Stile flip card */}
       <style>{`
         .devil-card-wrap { perspective: 1000px; }
@@ -69,7 +71,7 @@ export default function DevilIntroScreen({
       {/* Back */}
       <button
         onClick={onBack}
-        className="absolute top-4 left-4 w-9 h-9 flex items-center justify-center rounded-full"
+        className="absolute top-4 left-4 z-10 w-9 h-9 flex items-center justify-center rounded-full"
         style={{ background: 'rgba(255,255,255,0.07)' }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
@@ -77,7 +79,7 @@ export default function DevilIntroScreen({
         </svg>
       </button>
 
-      <div className="w-full max-w-sm flex flex-col items-center gap-6">
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center gap-6">
         {/* Header */}
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="text-4xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.6))' }}>😈</div>

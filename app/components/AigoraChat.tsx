@@ -987,19 +987,23 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handleDevilDifficultySelect = async (difficulty: DevilDifficulty) => {
     setDevilLoading(true)
+    const delay = new Promise(r => setTimeout(r, 5000))
     try {
-      const res = await fetch('/api/devil/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ difficulty }),
-      })
+      const [res] = await Promise.all([
+        fetch('/api/devil/generate', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ difficulty }),
+        }),
+        delay,
+      ])
       if (!res.ok) throw new Error()
       const { positions } = await res.json()
       setDevilIntroData({ positions, difficulty })
       setShowDevilDifficulty(false)
     } catch {
-      // Fallback posizioni hardcoded
+      await delay
       setDevilIntroData({
-        positions: ['La globalizzazione ha fatto più danni che benefici', 'La privacy è ormai un concetto obsoleto nella società digitale'],
+        positions: ['I bugiardi abituali sono più affidabili degli onesti', 'La crudeltà è la forma più onesta di rispetto'],
         difficulty,
       })
       setShowDevilDifficulty(false)
