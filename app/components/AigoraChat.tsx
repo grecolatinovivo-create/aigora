@@ -1442,6 +1442,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTwoVsTwoLoading(false)
   }
 
+  // Musica Devil's Advocate — unica istanza, gestita qui per evitare duplicati
+  useEffect(() => {
+    if (!devilSession) return
+    const audio = new Audio('/dust-at-high-noon.mp3')
+    audio.volume = 0.25
+    audio.loop = true
+    audio.play().catch(() => {})
+    return () => { audio.pause(); audio.src = '' }
+  }, [!!devilSession])
+
   // Streaming helper per Devil's Advocate
   const streamDevilAI = async (aiId: string, systemPrompt: string, history: { name: string; content: string }[]): Promise<string> => {
     const res = await fetch('/api/chat', {
