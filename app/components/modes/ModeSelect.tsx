@@ -56,13 +56,24 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
             <div className="font-black uppercase" style={{ fontSize: 44, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.22)' }}>SOON</div>
           </div>
         </div>
-        {/* Card Devil's Advocate — soon */}
-        <div className="flex-1 flex flex-col rounded-3xl relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(255,255,255,0.10)', cursor: 'not-allowed', minHeight: 0 }}>
-          <div className="absolute top-4 left-5 text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Devil's Advocate</div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="font-black uppercase" style={{ fontSize: 44, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.22)' }}>SOON</div>
+        {/* Card Devil's Advocate — attiva */}
+        <button onClick={() => onSelect('devil')}
+          className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all"
+          style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(153,27,27,0.1) 100%)', border: '1.5px solid rgba(239,68,68,0.35)', boxShadow: '0 4px 20px rgba(239,68,68,0.15)', minHeight: 0 }}>
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>Devil's Advocate</div>
+              <div className="text-xl font-black text-white leading-tight">Difendi l'indifendibile</div>
+            </div>
+            <div className="text-2xl" style={{ filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.6))' }}>😈</div>
           </div>
-        </div>
+          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.</div>
+          <div className="flex items-center justify-end mt-3">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#dc2626,#991b1b)' }}>
+              Gioca <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* ── LAYOUT DESKTOP: 3 mock iPhone affiancati ── */}
@@ -157,18 +168,25 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
             <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(167,139,250,0.8)' }}>2 vs 2</div>
           </button>
 
-          {/* ── DEVIL'S ADVOCATE — grigio, SOON ── */}
-          <div className="flex flex-col items-center gap-4" style={{ opacity: 0.45, cursor: 'not-allowed' }}>
+          {/* ── DEVIL'S ADVOCATE — attivo ── */}
+          <button onClick={() => onSelect('devil')} className="flex flex-col items-center gap-4 transition-transform hover:scale-[1.02] active:scale-[0.98]">
             <div className="relative" style={{ width: 200, height: 410 }}>
-              <div className="absolute inset-0 rounded-[32px]" style={{ background: '#1c1c1e', boxShadow: '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.6)' }} />
-              <div className="absolute rounded-[26px] overflow-hidden flex flex-col items-center justify-center"
-                style={{ top: 6, left: 6, right: 6, bottom: 6, background: '#111' }}>
-                <div className="font-black uppercase text-center" style={{ fontSize: 36, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.25)' }}>SOON</div>
+              {/* Glow rosso */}
+              <div className="absolute inset-0 rounded-[32px]" style={{ boxShadow: '0 0 0 1.5px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.2)', borderRadius: 32 }} />
+              {/* Cornice */}
+              <div className="absolute inset-0 rounded-[32px]" style={{ background: '#1c1c1e', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }} />
+              {/* Schermo */}
+              <div className="absolute rounded-[26px] overflow-hidden flex flex-col items-center justify-center gap-3"
+                style={{ top: 6, left: 6, right: 6, bottom: 6, background: 'linear-gradient(180deg, #0d0005 0%, #1a0008 100%)' }}>
+                <div className="text-4xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.8))' }}>😈</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-center px-4" style={{ color: 'rgba(239,68,68,0.8)' }}>Difendi l'indifendibile</div>
+                <div className="px-3 py-1 rounded-full text-[9px] font-black" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>4 AI nemiche</div>
               </div>
+              {/* Notch */}
               <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 10, width: 60, height: 14, background: '#1c1c1e', zIndex: 10 }} />
             </div>
-            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Devil's Advocate</div>
-          </div>
+            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.7)' }}>Devil's Advocate</div>
+          </button>
 
         </div>
 
