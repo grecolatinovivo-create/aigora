@@ -82,6 +82,14 @@ export default function DevilsAdvocateScreen({
   const headerColor = '#111118'
   const placeholder = PLACEHOLDERS[Math.min(session.round - 1, PLACEHOLDERS.length - 1)]
 
+  const ATTACKER_IDS = ['claude', 'gpt', 'gemini', 'perplexity'] as const
+  const currentAttackerIdx = session.round % 4
+  const currentAttackerId = ATTACKER_IDS[currentAttackerIdx]
+  const nextAttackerIdx = (session.round + 1) % 4
+  const nextAttackerId = ATTACKER_IDS[nextAttackerIdx]
+  const nextAttackerName = AI_NAMES[nextAttackerId]
+  const nextAttackerColor = AI_COLOR[nextAttackerId]
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [session.messages])
@@ -393,10 +401,8 @@ export default function DevilsAdvocateScreen({
           </div>
         ))}
         {loading && (() => {
-          const attackerIds = ['claude', 'gpt', 'gemini', 'perplexity']
-          const attackerId = attackerIds[session.round % attackerIds.length]
-          const color = AI_COLOR[attackerId]
-          const initial = attackerId === 'gemini' ? 'Ge' : (AI_NAMES[attackerId] ?? 'C')[0]
+          const color = AI_COLOR[currentAttackerId]
+          const initial = currentAttackerId === 'gemini' ? 'Ge' : (AI_NAMES[currentAttackerId] ?? 'C')[0]
           return (
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold"
@@ -414,7 +420,47 @@ export default function DevilsAdvocateScreen({
       {/* Input + controlli */}
       <div className="flex-shrink-0 border-t relative z-10"
         style={{ background: 'rgba(10,0,3,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(239,68,68,0.2)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-        <div className="flex items-center gap-2 px-3 pt-2 pb-1">
+
+        {/* Progress track — chi ti sta attaccando */}
+        <div className="flex items-center justify-between px-4 pt-2 pb-1">
+          {ATTACKER_IDS.map((aiId, idx) => {
+            const isCurrent = idx === currentAttackerIdx
+            const isPast = idx < currentAttackerIdx
+            const color = AI_COLOR[aiId]
+            const initial = aiId === 'gemini' ? 'Ge' : (AI_NAMES[aiId] ?? 'A')[0]
+            return (
+              <div key={aiId} className="flex flex-col items-center gap-0.5 flex-1">
+                {/* connettore sinistro */}
+                {idx > 0 && (
+                  <div className="absolute" style={{ display: 'none' }} />
+                )}
+                <div className="relative flex flex-col items-center gap-0.5">
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold transition-all duration-300"
+                    style={{
+                      fontSize: isCurrent ? '9px' : '8px',
+                      backgroundColor: isCurrent ? color : isPast ? `${color}50` : 'rgba(255,255,255,0.06)',
+                      boxShadow: isCurrent ? `0 0 12px ${color}90, 0 0 4px ${color}60` : 'none',
+                      border: isCurrent ? `1.5px solid ${color}` : isPast ? `1px solid ${color}30` : '1px solid rgba(255,255,255,0.1)',
+                      transform: isCurrent ? 'scale(1.15)' : 'scale(1)',
+                    }}
+                  >
+                    {isPast ? '✓' : initial}
+                  </div>
+                  <div className="text-[8px] font-black transition-all duration-300"
+                    style={{ color: isCurrent ? color : 'transparent', minHeight: '10px' }}>
+                    {isCurrent ? AI_NAMES[aiId] : ''}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Linea connettore */}
+        <div className="mx-4 mb-1" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+
+        <div className="flex items-center gap-2 px-3 pt-1 pb-1">
           <input value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && input.trim() && !loading) { onMessage(input.trim()); setInput('') } }}
             placeholder={placeholder} disabled={loading}
@@ -431,8 +477,12 @@ export default function DevilsAdvocateScreen({
         <div className="flex gap-2 px-3 pb-1">
           <button onClick={onEndTurn} disabled={loading}
             className="flex-1 py-2 rounded-xl text-xs font-bold disabled:opacity-40 transition-all"
-            style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' }}>
-            Fine turno →
+            style={{
+              backgroundColor: `${nextAttackerColor}15`,
+              color: nextAttackerColor,
+              border: `1px solid ${nextAttackerColor}35`,
+            }}>
+            Passa a {nextAttackerName} →
           </button>
           <button onClick={onSurrender} disabled={loading}
             className="py-2 px-3 rounded-xl text-xs font-bold disabled:opacity-40 transition-all"
