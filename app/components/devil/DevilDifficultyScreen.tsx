@@ -82,13 +82,6 @@ function GrokLoadingScreen() {
       {/* Contenuto centrale */}
       <div className="relative z-10 flex flex-col items-center gap-6 text-center px-8">
 
-        {/* xAI badge */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full"
-          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)' }}>
-          <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em]" style={{ color: 'rgba(239,68,68,0.7)' }}>powered by xAI</span>
-        </div>
-
         {/* GROK — testo enorme */}
         <div style={{
           fontSize: 'clamp(5rem, 22vw, 9rem)',
