@@ -23,3 +23,13 @@ yarn-error.log*
 *.pem
 
 /app/generated/prisma
+
+# Database locale (non va in git)
+prisma/dev.db
+prisma/*.db-journal
+
+# TypeScript build cache (si rigenera)
+tsconfig.tsbuildinfo
+
+# File audio grandi — tienili fuori dal repo
+public/*.mp3
