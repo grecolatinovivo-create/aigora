@@ -56,6 +56,7 @@ export default function DevilsAdvocateScreen({
   onEndTurn,
   onSurrender,
   onStartVerdict,
+  onContinueToScore,
   onReply,
   onSkipReply,
   onBack,
@@ -66,6 +67,7 @@ export default function DevilsAdvocateScreen({
   onEndTurn: () => void
   onSurrender: () => void
   onStartVerdict: () => void
+  onContinueToScore: () => void
   onReply: (text: string) => void
   onSkipReply: () => void
   onBack: () => void
@@ -174,6 +176,16 @@ export default function DevilsAdvocateScreen({
           ))}
           <div ref={messagesEndRef} />
         </div>
+        {session.finalScore !== null && (
+          <div className="flex-shrink-0 border-t relative z-10 p-3"
+            style={{ backgroundColor: headerColor, borderColor: 'rgba(239,68,68,0.15)' }}>
+            <button onClick={onContinueToScore}
+              className="w-full py-3.5 rounded-2xl font-black text-white text-sm"
+              style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', boxShadow: '0 4px 20px rgba(220,38,38,0.3)' }}>
+              Continua →
+            </button>
+          </div>
+        )}
       </div>
     )
   }
@@ -212,7 +224,7 @@ export default function DevilsAdvocateScreen({
             <button onClick={onSkipReply}
               className="w-full py-3.5 rounded-2xl font-black text-white text-sm"
               style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', boxShadow: '0 4px 20px rgba(220,38,38,0.3)' }}>
-              Continua →
+              Hai qualcosa da dire? →
             </button>
             <button onClick={onBack}
               className="w-full py-2.5 rounded-2xl text-sm font-semibold"

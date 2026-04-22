@@ -1616,11 +1616,15 @@ Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con 
       await new Promise(r => setTimeout(r, 600))
     }
 
-    // Step 4: calcola media e passa a 'score'
+    // Step 4: calcola media e salva finalScore — NON cambia phase, aspetta l'utente
     const avg = scoreResults.reduce((s, v) => s + v.score, 0) / scoreResults.length
     const finalScore = Math.min(10, Math.max(0, parseFloat(avg.toFixed(1))))
-    setDevilSession(prev => prev ? { ...prev, phase: 'score', finalScore } : prev)
+    setDevilSession(prev => prev ? { ...prev, finalScore } : prev)
     setDevilLoading(false)
+  }
+
+  const handleDevilContinueToScore = () => {
+    setDevilSession(prev => prev ? { ...prev, phase: 'score' } : prev)
   }
 
   const handleDevilReply = async (text: string) => {
@@ -3077,6 +3081,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                 onEndTurn={handleDevilEndTurn}
                 onSurrender={handleDevilSurrender}
                 onStartVerdict={handleDevilStartVerdict}
+                onContinueToScore={handleDevilContinueToScore}
                 onReply={handleDevilReply}
                 onSkipReply={handleDevilSkipReply}
                 loading={devilLoading}
