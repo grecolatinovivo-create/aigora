@@ -208,11 +208,18 @@ export default function DevilsAdvocateScreen({
               {scoreLabel.label}
             </div>
           </div>
-          <button onClick={onSkipReply}
-            className="w-full py-3.5 rounded-2xl font-black text-white text-sm"
-            style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', boxShadow: '0 4px 20px rgba(220,38,38,0.3)' }}>
-            Hai qualcosa da dire? →
-          </button>
+          <div className="w-full flex flex-col gap-3">
+            <button onClick={onSkipReply}
+              className="w-full py-3.5 rounded-2xl font-black text-white text-sm"
+              style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', boxShadow: '0 4px 20px rgba(220,38,38,0.3)' }}>
+              Continua →
+            </button>
+            <button onClick={onBack}
+              className="w-full py-2.5 rounded-2xl text-sm font-semibold"
+              style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              ← Nuova partita
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -261,7 +268,7 @@ export default function DevilsAdvocateScreen({
         {!session.userReply && (
           <div className="flex-shrink-0 border-t relative z-10 p-3"
             style={{ backgroundColor: headerColor, borderColor: 'rgba(255,255,255,0.06)' }}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-2">
               <input value={replyInput} onChange={e => setReplyInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && replyInput.trim() && !loading) { onReply(replyInput.trim()); setReplyInput('') } }}
                 placeholder="Hai qualcosa da dire al verdetto?"
@@ -276,15 +283,25 @@ export default function DevilsAdvocateScreen({
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" /></svg>
               </button>
             </div>
+            <button onClick={onBack}
+              className="w-full py-2 rounded-xl text-xs font-semibold"
+              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              ← Nuova partita
+            </button>
           </div>
         )}
         {session.claudeClosing && (
-          <div className="flex-shrink-0 border-t relative z-10 p-3"
+          <div className="flex-shrink-0 border-t relative z-10 p-3 flex flex-col gap-2"
             style={{ backgroundColor: headerColor, borderColor: 'rgba(255,255,255,0.06)' }}>
             <button onClick={onSkipReply}
               className="w-full py-3 rounded-2xl text-sm font-black text-white"
               style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}>
               Chiudi sessione
+            </button>
+            <button onClick={onBack}
+              className="w-full py-2 rounded-xl text-xs font-semibold"
+              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              ← Nuova partita
             </button>
           </div>
         )}
