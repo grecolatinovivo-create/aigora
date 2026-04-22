@@ -1627,6 +1627,15 @@ Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con 
     setDevilSession(prev => prev ? { ...prev, phase: 'score' } : prev)
   }
 
+  const handleDevilNewGame = () => {
+    setDevilSession(null)
+    setDevilIntroData(null)
+    setDevilLoading(false)
+    devilVerdictRunningRef.current = false
+    setShowDevilDifficulty(true)
+    setPhase('start')
+  }
+
   const handleDevilReply = async (text: string) => {
     if (!devilSession) return
     setDevilLoading(true)
@@ -3085,7 +3094,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                 onReply={handleDevilReply}
                 onSkipReply={handleDevilSkipReply}
                 loading={devilLoading}
-                onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
+                onBack={handleDevilNewGame}
               />
             </div>
           )}
@@ -3179,7 +3188,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
               onReply={handleDevilReply}
               onSkipReply={handleDevilSkipReply}
               loading={devilLoading}
-              onBack={() => { setSelectedMode(null); setDevilSession(null); setPhase('start') }}
+              onBack={handleDevilNewGame}
             />
           </div>
         )}

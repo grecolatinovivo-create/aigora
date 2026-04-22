@@ -137,7 +137,7 @@ export default function DevilsAdvocateScreen({
   // ── VERDETTI ─────────────────────────────────────────────────────────────────
   if (session.phase === 'verdict') {
     return (
-      <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: bgColor }}>
+      <div className="flex flex-col h-full relative" style={{ backgroundColor: bgColor }}>
         <NoiseOverlay round={session.round} />
         <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b relative z-10"
           style={{ paddingTop: 'max(28px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: headerColor, borderColor: 'rgba(239,68,68,0.15)' }}>
