@@ -516,8 +516,10 @@ export default function DevilsAdvocateScreen({
             }}>
             Passa a {nextAttackerName} →
           </button>
-          <button onClick={onSurrender} disabled={loading}
-            className="py-2 px-3 rounded-xl text-xs font-bold disabled:opacity-40 transition-all"
+          <button
+            onClick={onSurrender}
+            disabled={loading || session.messages.filter(m => m.role === 'user').length === 0}
+            className="py-2 px-3 rounded-xl text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
             Mi arrendo
           </button>
