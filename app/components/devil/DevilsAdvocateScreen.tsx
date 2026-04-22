@@ -139,53 +139,56 @@ export default function DevilsAdvocateScreen({
     return (
       <div className="flex flex-col h-full relative" style={{ backgroundColor: bgColor }}>
         <NoiseOverlay round={session.round} />
+        {/* Header fisso */}
         <div className="flex-shrink-0 flex items-center gap-3 px-4 border-b relative z-10"
           style={{ paddingTop: 'max(28px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: headerColor, borderColor: 'rgba(239,68,68,0.15)' }}>
           <div className="text-base">⚖️</div>
           <div className="font-black text-sm text-white flex-1">Verdetto finale</div>
           <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{session.verdicts.length} / 4 giudici</div>
         </div>
-        <div className="flex-1 overflow-y-auto py-4 px-4 flex flex-col gap-4 relative z-10">
-          {session.verdicts.map((v, i) => (
-            <div key={i} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${AI_COLOR[v.aiId]}30` }}>
-              <div className="flex items-center gap-2 px-3 py-2" style={{ backgroundColor: `${AI_COLOR[v.aiId]}12` }}>
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
-                  style={{ backgroundColor: AI_COLOR[v.aiId] }}>
-                  {v.aiId === 'gemini' ? 'Ge' : (AI_NAMES[v.aiId] ?? 'A')[0]}
+        {/* min-h-0 è essenziale: senza, flex child non può shrinkare e overflow non si attiva su iOS */}
+        <div className="flex-1 min-h-0 overflow-y-scroll relative z-10" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+          <div className="py-4 px-4 flex flex-col gap-4">
+            {session.verdicts.map((v, i) => (
+              <div key={i} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${AI_COLOR[v.aiId]}30` }}>
+                <div className="flex items-center gap-2 px-3 py-2" style={{ backgroundColor: `${AI_COLOR[v.aiId]}12` }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black flex-shrink-0"
+                    style={{ backgroundColor: AI_COLOR[v.aiId] }}>
+                    {v.aiId === 'gemini' ? 'Ge' : (AI_NAMES[v.aiId] ?? 'A')[0]}
+                  </div>
+                  <span className="text-xs font-bold text-white">{AI_NAMES[v.aiId]}</span>
+                  <div className="flex-1" />
+                  <span className="text-base font-black" style={{ color: getScoreColor(v.score) }}>{v.score.toFixed(1)}</span>
+                  <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>/10</span>
                 </div>
-                <span className="text-xs font-bold text-white">{AI_NAMES[v.aiId]}</span>
-                <div className="flex-1" />
-                <span className="text-base font-black" style={{ color: getScoreColor(v.score) }}>{v.score.toFixed(1)}</span>
-                <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>/10</span>
+                <div className="px-3 py-2.5 text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                  {v.text || (
+                    <span className="flex gap-1 items-center">
+                      {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="px-3 py-2.5 text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                {v.text || (
-                  <span className="flex gap-1 items-center">
-                    {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
-                  </span>
-                )}
+            ))}
+            {Array.from({ length: 4 - session.verdicts.length }).map((_, i) => (
+              <div key={`p${i}`} className="rounded-2xl px-4 py-3 flex items-center gap-2"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="w-6 h-6 rounded-full bg-white/10 animate-pulse" />
+                <div className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>In attesa…</div>
               </div>
-            </div>
-          ))}
-          {Array.from({ length: 4 - session.verdicts.length }).map((_, i) => (
-            <div key={`p${i}`} className="rounded-2xl px-4 py-3 flex items-center gap-2"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="w-6 h-6 rounded-full bg-white/10 animate-pulse" />
-              <div className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>In attesa…</div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-        {session.finalScore !== null && (
-          <div className="flex-shrink-0 border-t relative z-10 p-3"
-            style={{ backgroundColor: headerColor, borderColor: 'rgba(239,68,68,0.15)' }}>
-            <button onClick={onContinueToScore}
-              className="w-full py-3.5 rounded-2xl font-black text-white text-sm"
-              style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', boxShadow: '0 4px 20px rgba(220,38,38,0.3)' }}>
-              Continua →
-            </button>
+            ))}
+            {session.finalScore !== null && (
+              <div className="pt-1 pb-2">
+                <button onClick={onContinueToScore}
+                  className="w-full py-3.5 rounded-2xl font-black text-white text-sm"
+                  style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', boxShadow: '0 4px 20px rgba(220,38,38,0.3)' }}>
+                  Continua →
+                </button>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
-        )}
+        </div>
       </div>
     )
   }

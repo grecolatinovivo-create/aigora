@@ -1574,8 +1574,6 @@ Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] do
 
     const aiOrder = ['claude', 'gpt', 'gemini', 'perplexity']
     const diffLabel = devilSession.difficulty === 'easy' ? 'Facile' : devilSession.difficulty === 'medium' ? 'Media' : 'Impossibile'
-    const roundCount = devilSession.round
-    const shortRounds = roundCount <= 2 ? ' L\'utente si è arreso dopo pochissimi round — sanzionalo esplicitamente.' : ''
     const history = devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
 
     const VERDICT_PROMPTS: Record<string, string> = Object.fromEntries(
@@ -1585,9 +1583,10 @@ Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] do
 Chi sei: ${profile.chi}
 Il tuo carattere: ${profile.carattere}
 
-L'utente ha difeso la posizione: "${devilSession.position}".${shortRounds}
-Esprimi il tuo verdetto con la tua voce autentica — rimani in personaggio.
-Cita argomenti specifici usati dall'utente. 2-3 frasi.
+L'utente ha difeso la posizione: "${devilSession.position}".
+Hai davanti a te la trascrizione completa del dibattito. Leggila attentamente.
+Esprimi un verdetto specifico basato ESCLUSIVAMENTE sugli argomenti che hai letto nella trascrizione.
+Cita le cose concrete che l'utente ha detto (o NON ha detto). 2-3 frasi, con la tua voce autentica.
 Considera la difficoltà: ${diffLabel}. A parità di argomenti, difficoltà Impossibile merita un voto più alto.
 Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.`]
       })
