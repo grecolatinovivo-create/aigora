@@ -1574,7 +1574,16 @@ Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] do
 
     const aiOrder = ['claude', 'gpt', 'gemini', 'perplexity']
     const diffLabel = devilSession.difficulty === 'easy' ? 'Facile' : devilSession.difficulty === 'medium' ? 'Media' : 'Impossibile'
-    const history = devilSession.messages.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
+    // Etichetta i messaggi AI con il nome specifico dell'attaccante, non solo 'AI'
+    const history = devilSession.messages.map(m => ({
+      name: m.role === 'user' ? 'Utente' : `Attacco di ${(AI_NAMES as Record<string, string>)[m.aiId ?? ''] ?? 'AI'}`,
+      content: m.content
+    }))
+    const userMessages = devilSession.messages.filter(m => m.role === 'user')
+    const noUserArgs = userMessages.length === 0
+    const noArgsNote = noUserArgs
+      ? '\nATTENZIONE: l\'utente non ha scritto nulla — non ha difeso la posizione in alcun modo. I messaggi che vedi nella trascrizione sono solo degli attaccanti AI. Commenta l\'assenza di difesa e assegna un voto molto basso (0.0–2.0).'
+      : '\nIMPORTANTE: solo i messaggi "Utente" sono le parole dell\'utente. I messaggi "Attacco di X" sono degli AI avversari — non confonderli con argomenti dell\'utente.'
 
     const VERDICT_PROMPTS: Record<string, string> = Object.fromEntries(
       aiOrder.map(aiId => {
@@ -1583,10 +1592,10 @@ Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] do
 Chi sei: ${profile.chi}
 Il tuo carattere: ${profile.carattere}
 
-L'utente ha difeso la posizione: "${devilSession.position}".
+L'utente doveva difendere la posizione: "${devilSession.position}".${noArgsNote}
 Hai davanti a te la trascrizione completa del dibattito. Leggila attentamente.
-Esprimi un verdetto specifico basato ESCLUSIVAMENTE sugli argomenti che hai letto nella trascrizione.
-Cita le cose concrete che l'utente ha detto (o NON ha detto). 2-3 frasi, con la tua voce autentica.
+Esprimi un verdetto specifico basato ESCLUSIVAMENTE su ciò che l'utente ha scritto (messaggi "Utente").
+Cita le cose concrete che l'utente ha detto (o NON ha detto se non ha scritto nulla). 2-3 frasi, con la tua voce autentica.
 Considera la difficoltà: ${diffLabel}. A parità di argomenti, difficoltà Impossibile merita un voto più alto.
 Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.`]
       })
