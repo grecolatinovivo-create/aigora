@@ -3175,6 +3175,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
               onEndTurn={handleDevilEndTurn}
               onSurrender={handleDevilSurrender}
               onStartVerdict={handleDevilStartVerdict}
+              onContinueToScore={handleDevilContinueToScore}
               onReply={handleDevilReply}
               onSkipReply={handleDevilSkipReply}
               loading={devilLoading}
