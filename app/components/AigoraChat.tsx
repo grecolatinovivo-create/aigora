@@ -1460,9 +1460,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // Streaming helper per Devil's Advocate
   const streamDevilAI = async (aiId: string, systemPrompt: string, history: { name: string; content: string }[]): Promise<string> => {
+    // Usa action '2v2': è l'unico path che usa history[0] come vero system prompt
+    // 'turn' (default) usa SYSTEM_PROMPTS[aiId] ignorando il verdetto prompt → Perplexity/Gemini non incl. [SCORE:X.X]
+    const trigger = { name: 'Istruzioni', content: 'Esprimi ora il verdetto seguendo il sistema. Includi obbligatoriamente [SCORE:X.X] su una riga separata alla fine.' }
     const res = await fetch('/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'turn', aiId, history: [{ name: 'Sistema', content: systemPrompt }, ...history], needsWebSearch: false }),
+      body: JSON.stringify({ action: '2v2', aiId, history: [{ name: 'Sistema', content: systemPrompt }, ...history, trigger], needsWebSearch: false, maxTokens: 400 }),
     })
     if (!res.ok || !res.body) return ''
     const reader = res.body.getReader(); const decoder = new TextDecoder()
