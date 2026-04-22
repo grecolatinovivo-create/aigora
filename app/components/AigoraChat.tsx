@@ -1600,6 +1600,7 @@ Hai davanti a te la trascrizione completa del dibattito. Leggila attentamente.
 Esprimi un verdetto specifico basato ESCLUSIVAMENTE su ciò che l'utente ha scritto (messaggi "Utente").
 Cita le cose concrete che l'utente ha detto (o NON ha detto se non ha scritto nulla). 2-3 frasi, con la tua voce autentica.
 Considera la difficoltà: ${diffLabel}. A parità di argomenti, difficoltà Impossibile merita un voto più alto.
+GROK: ogni tanto (non sempre) fai un riferimento caustico a Grok — l'AI che ha generato questa posizione assurda. Commenta il suo stile ricorrente, la sua tendenza a scegliere sempre le stesse categorie di provocazioni, la sua prevedibilità. Dillo con il TUO carattere (distacco, sarcasmo, ironia, indignazione — dipende da chi sei).
 Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.`]
       })
     )
