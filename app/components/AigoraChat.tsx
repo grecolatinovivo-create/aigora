@@ -3194,6 +3194,34 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                 />
               ))}
             </div>
+            {/* Footer mobile cronologia */}
+            {savedChats.length > 0 && (
+              <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-t"
+                style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', backgroundColor: mobileBg.header }}>
+                <button onClick={async () => {
+                  const ids = savedChats.map(c => c.id)
+                  setSavedChats([])
+                  await Promise.all(ids.map(id => fetch(`/api/chats/${id}`, { method: 'DELETE' }).catch(() => {})))
+                }} className="text-xs transition-colors" style={{ color: 'rgba(239,68,68,0.5)' }}>
+                  Cancella tutto
+                </button>
+                {effectivePlan === 'admin' && (
+                  <button onClick={() => {
+                    const data = savedChats.map(c => ({ id: c.id, title: c.title, date: c.date, messages: c.messages }))
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `aigora-chats-${new Date().toISOString().slice(0,10)}.json`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }} className="text-xs flex items-center gap-1 transition-colors" style={{ color: 'rgba(245,158,11,0.7)' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Scarica JSON
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
