@@ -118,6 +118,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [devilLoading, setDevilLoading] = useState(false)
   const [showDevilDifficulty, setShowDevilDifficulty] = useState(false)
   const devilVerdictRunningRef = useRef(false)
+  const saveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [devilIntroData, setDevilIntroData] = useState<{ positions: [string, string]; difficulty: DevilDifficulty } | null>(null)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
   const [closingAiProfile, setClosingAiProfile] = useState(false)
@@ -485,44 +486,48 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const currentChatIdRef = useRef(`chat-${Date.now()}`)
   const chatTitleRef = useRef<string>('')
 
-  const saveCurrentChat = useCallback(async () => {
-    if (isLoadingHistoryRef.current) return
-    if (messagesRef.current.length < 2) return
+  const saveCurrentChat = useCallback(() => {
+    // Debounce: durante lo streaming ogni chunk triggerebbe un POST — aspetta 2s di inattività
+    if (saveDebounceRef.current) clearTimeout(saveDebounceRef.current)
+    saveDebounceRef.current = setTimeout(async () => {
+      if (isLoadingHistoryRef.current) return
+      if (messagesRef.current.length < 2) return
 
-    // Genera titolo contestuale la prima volta (quando abbiamo almeno 1 msg AI)
-    const msgs = messagesRef.current
-    const userMsg = msgs.find(m => m.isUser)?.content ?? ''
-    const aiMsg = msgs.find(m => !m.isUser)?.content ?? ''
+      const msgs = messagesRef.current
+      const userMsg = msgs.find(m => m.isUser)?.content ?? ''
+      const aiMsg = msgs.find(m => !m.isUser)?.content ?? ''
 
-    if (!chatTitleRef.current && aiMsg) {
-      try {
-        const res = await fetch('/api/chats/title', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: userMsg, firstReply: aiMsg }),
-        })
-        const data = await res.json()
-        if (data.title) chatTitleRef.current = data.title
-      } catch {}
-    }
+      // Genera titolo contestuale la prima volta (quando abbiamo almeno 1 msg AI)
+      if (!chatTitleRef.current && aiMsg) {
+        try {
+          const res = await fetch('/api/chats/title', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: userMsg, firstReply: aiMsg }),
+          })
+          const data = await res.json()
+          if (data.title) chatTitleRef.current = data.title
+        } catch {}
+      }
 
-    const title = chatTitleRef.current || userMsg.slice(0, 60) || 'Chat'
-    const chat = {
-      id: currentChatIdRef.current,
-      title,
-      date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-      messages: msgs,
-      history: chatHistoryRef.current,
-    }
-    setSavedChats(prev => {
-      const filtered = prev.filter(c => c.id !== currentChatIdRef.current)
-      return [chat, ...filtered].slice(0, 50)
-    })
-    fetch('/api/chats', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: chat.id, title: chat.title, messages: chat.messages, history: chat.history }),
-    }).catch(() => {})
+      const title = chatTitleRef.current || userMsg.slice(0, 60) || 'Chat'
+      const chat = {
+        id: currentChatIdRef.current,
+        title,
+        date: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+        messages: msgs,
+        history: chatHistoryRef.current,
+      }
+      setSavedChats(prev => {
+        const filtered = prev.filter(c => c.id !== currentChatIdRef.current)
+        return [chat, ...filtered].slice(0, 50)
+      })
+      fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: chat.id, title: chat.title, messages: chat.messages, history: chat.history }),
+      }).catch(() => {})
+    }, 2000)
   }, [])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
