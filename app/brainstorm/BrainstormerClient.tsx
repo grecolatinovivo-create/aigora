@@ -83,6 +83,61 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const ideaRef2 = useRef('')
   ideaRef2.current = idea
 
+  // ── Audio ──
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const getAudioCtx = () => {
+    if (!audioCtxRef.current) audioCtxRef.current = new AudioContext()
+    return audioCtxRef.current
+  }
+
+  const playTypeKey = () => {
+    try {
+      const ctx = getAudioCtx()
+      // Rumore breve con decay esponenziale → suono meccanismo tasto
+      const len = Math.floor(ctx.sampleRate * 0.018)
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+      const d = buf.getChannelData(0)
+      for (let i = 0; i < len; i++) {
+        d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.2))
+      }
+      const src = ctx.createBufferSource()
+      src.buffer = buf
+      const hp = ctx.createBiquadFilter()
+      hp.type = 'highpass'
+      hp.frequency.value = 900
+      const gain = ctx.createGain()
+      gain.gain.value = 0.10
+      src.connect(hp); hp.connect(gain); gain.connect(ctx.destination)
+      src.start()
+    } catch {}
+  }
+
+  const playSelectClick = () => {
+    try {
+      const ctx = getAudioCtx()
+      // Click più pieno e soddisfacente per la selezione
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(520, ctx.currentTime)
+      osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.07)
+      gain.gain.setValueAtTime(0.18, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09)
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.start(); osc.stop(ctx.currentTime + 0.09)
+
+      // Layer rumore per corpo
+      const len = Math.floor(ctx.sampleRate * 0.025)
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+      const d = buf.getChannelData(0)
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.3))
+      const src = ctx.createBufferSource()
+      src.buffer = buf
+      const g2 = ctx.createGain(); g2.gain.value = 0.08
+      src.connect(g2); g2.connect(ctx.destination); src.start()
+    } catch {}
+  }
+
   // Typewriter per sezioni documento: buffer → display a 22ms/char
   const textQueueRef = useRef<Map<string, string>>(new Map())
   const sectionEndedRef = useRef<Set<string>>(new Set())
@@ -94,6 +149,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         const char = pending[0]
         textQueueRef.current.set(sectionId, pending.slice(1))
         setSections(prev => prev.map(s => s.id === sectionId ? { ...s, text: s.text + char } : s))
+        playTypeKey()
         // Se la coda è svuotata e la sezione è terminata → mark done
         if (pending.length === 1 && sectionEndedRef.current.has(sectionId)) {
           setSections(prev => prev.map(s =>
@@ -163,6 +219,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
   const handleAnswer = (answer: string) => {
     if (selected) return
+    playSelectClick()
     setSelected(answer)
     setTimeout(() => {
       const newAnswers = [...answersRef.current, { question: currentQ!.question, answer }]
