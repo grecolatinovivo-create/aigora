@@ -14,7 +14,7 @@ interface Props {
 }
 
 // Typewriter — testo che appare carattere per carattere
-function useTypewriter(text: string, speed = 20) {
+function useTypewriter(text: string, speed = 38) {
   const [displayed, setDisplayed] = useState('')
   const [done, setDone] = useState(false)
   useEffect(() => {
@@ -66,19 +66,32 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     setShowFree(false)
     setFreeInput('')
     try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 12000)
       const res = await fetch('/api/brainstorm/intake', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idea, answers: currentAnswers }),
+        signal: controller.signal,
       })
+      clearTimeout(timeout)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       if (data.done) {
         setPhase('building')
       } else {
         setCurrentQ(data)
       }
-    } catch {
-      setPhase('building')
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        // Timeout — riprova con domanda fallback
+        setCurrentQ({
+          question: 'Cosa cambierebbe nella vita di qualcuno se questa idea funzionasse?',
+          options: ['Il modo in cui lavora', 'Come passa il tempo libero', 'Le relazioni con gli altri', 'La sua autostima'],
+        })
+      } else {
+        setPhase('building')
+      }
     }
     setLoadingQ(false)
   }, [idea])
@@ -138,26 +151,87 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         }
       `}</style>
 
-      {/* Sfondo — tavolo */}
+      {/* Sfondo — tavolo di legno */}
       <div style={{
         position: 'fixed', inset: 0,
-        background: 'linear-gradient(160deg, #C9C4B8 0%, #B4AFA3 60%, #A8A296 100%)',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        background: '#8B6340',
+        backgroundImage: `
+          repeating-linear-gradient(
+            92deg,
+            transparent 0px, transparent 18px,
+            rgba(0,0,0,0.04) 18px, rgba(0,0,0,0.04) 19px,
+            transparent 19px, transparent 38px,
+            rgba(255,255,255,0.025) 38px, rgba(255,255,255,0.025) 39px
+          ),
+          repeating-linear-gradient(
+            178deg,
+            transparent 0px, transparent 60px,
+            rgba(0,0,0,0.03) 60px, rgba(0,0,0,0.03) 61px,
+            transparent 61px, transparent 140px,
+            rgba(0,0,0,0.02) 140px, rgba(0,0,0,0.02) 141px
+          ),
+          linear-gradient(175deg, #A0714F 0%, #8B5E38 30%, #7A5230 55%, #8E6240 75%, #9B6E48 100%)
+        `,
       }}>
-        {/* Texture tavolo — linee sottili */}
+        {/* Venatura scura trasversale */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,0,0,0.012) 40px, rgba(0,0,0,0.012) 41px)',
+          backgroundImage: `
+            repeating-linear-gradient(
+              87deg,
+              transparent 0px, transparent 80px,
+              rgba(60,30,10,0.06) 80px, rgba(60,30,10,0.06) 82px,
+              transparent 82px, transparent 200px,
+              rgba(60,30,10,0.04) 200px, rgba(60,30,10,0.04) 201px
+            )
+          `,
           pointerEvents: 'none',
         }} />
+
+        {/* Penna stilografica decorativa — angolo sinistro */}
+        <svg style={{ position: 'absolute', left: 'calc(50% - 460px)', bottom: '80px', opacity: 0.55, transform: 'rotate(-18deg)' }}
+          width="140" height="18" viewBox="0 0 140 18">
+          {/* Corpo penna */}
+          <rect x="10" y="6" width="100" height="7" rx="3.5" fill="#2C1A0E" />
+          <rect x="10" y="6" width="100" height="3.5" rx="2" fill="#3D2510" opacity="0.6" />
+          {/* Clip */}
+          <rect x="80" y="4" width="3" height="11" rx="1.5" fill="#1A0F06" />
+          {/* Pennino */}
+          <polygon points="110,9.5 140,8 140,11" fill="#8B7355" />
+          <polygon points="110,9.5 138,8.5 138,10.5" fill="#C4A882" opacity="0.7" />
+          {/* Tappo */}
+          <rect x="2" y="5" width="12" height="9" rx="3" fill="#1A0F06" />
+          <rect x="3" y="6" width="10" height="4" rx="2" fill="#2C1A0E" opacity="0.5" />
+        </svg>
+
+        {/* Taccuino piccolo — angolo destro */}
+        <div style={{
+          position: 'absolute', right: 'calc(50% - 450px)', bottom: '70px',
+          width: '72px', height: '90px',
+          background: 'linear-gradient(135deg, #1C2E1A 0%, #243422 100%)',
+          borderRadius: '3px 6px 6px 3px',
+          boxShadow: '2px 3px 12px rgba(0,0,0,0.4)',
+          transform: 'rotate(8deg)',
+          opacity: 0.6,
+        }}>
+          {/* Spirale */}
+          {[12,22,32,42,52,62,72].map(y => (
+            <div key={y} style={{ position: 'absolute', left: '-5px', top: `${y}px`, width: '10px', height: '7px', borderRadius: '50%', border: '1.5px solid rgba(180,160,120,0.6)', background: 'transparent' }} />
+          ))}
+          {/* Righe */}
+          {[18,28,38,48,58,68].map(y => (
+            <div key={y} style={{ position: 'absolute', left: '12px', right: '8px', top: `${y}px`, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+          ))}
+        </div>
 
         {/* Ombra profonda sotto il foglio */}
         <div style={{
           position: 'absolute', bottom: 0, left: '50%',
           transform: 'translateX(-50%)',
-          width: '720px', maxWidth: '100%',
-          height: '80px',
-          background: 'radial-gradient(ellipse at center bottom, rgba(0,0,0,0.22) 0%, transparent 70%)',
+          width: '860px', maxWidth: '100%',
+          height: '90px',
+          background: 'radial-gradient(ellipse at center bottom, rgba(0,0,0,0.35) 0%, transparent 70%)',
           pointerEvents: 'none',
           zIndex: 5,
         }} />
@@ -165,9 +239,9 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         {/* Bordo tavolo */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
-          height: '48px',
-          background: 'linear-gradient(180deg, #9A9488 0%, #8A8478 100%)',
-          boxShadow: 'inset 0 3px 10px rgba(0,0,0,0.25)',
+          height: '52px',
+          background: 'linear-gradient(180deg, #6B4A28 0%, #5A3D20 100%)',
+          boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.35)',
           zIndex: 4,
         }} />
       </div>
@@ -183,8 +257,8 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
           ? 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)'
           : 'none',
         width: '100%',
-        maxWidth: '720px',
-        minHeight: 'calc(100vh - 44px)',
+        maxWidth: '860px',
+        minHeight: 'calc(100vh - 48px)',
         background: '#FEFEFE',
         borderRadius: '14px 14px 0 0',
         boxShadow: '0 -6px 48px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.05)',
