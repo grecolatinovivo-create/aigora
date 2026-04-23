@@ -22,6 +22,14 @@ interface Props {
   userPlan: string
 }
 
+// Converte **testo** in <strong> senza librerie
+function renderBold(text: string): React.ReactNode[] {
+  const parts = text.split(/\*\*(.*?)\*\*/g)
+  return parts.map((part, i) =>
+    i % 2 === 1 ? <strong key={i} style={{ fontWeight: 700 }}>{part}</strong> : part
+  )
+}
+
 function useTypewriter(text: string, speed = 38) {
   const [displayed, setDisplayed] = useState('')
   const [done, setDone] = useState(false)
@@ -194,16 +202,23 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   }
 
   // Avvia generazione — voce unica del concilio
-  const startGeneration = useCallback(async () => {
+  const startGeneration = useCallback(async (note?: string, previousOutput?: string) => {
     setOutputText('')
     setOutputStreaming(true)
     setOutputDone(false)
+    setShowNote(false)
+    setOutputNote('')
 
     try {
       const res = await fetch('/api/brainstorm/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea: ideaRef2.current, answers: answersRef.current }),
+        body: JSON.stringify({
+          idea: ideaRef2.current,
+          answers: answersRef.current,
+          note: note ?? undefined,
+          previousOutput: previousOutput ?? undefined,
+        }),
       })
       if (!res.ok) { setOutputStreaming(false); return }
 
@@ -551,7 +566,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                   {outputText && (
                     <div style={{ animation: 'bs-q-enter 0.35s ease-out' }}>
                       <p style={{ fontSize: '16px', color: '#1A1A1A', lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>
-                        {outputText}
+                        {renderBold(outputText)}
                         {outputStreaming && (
                           <span style={{ display: 'inline-block', width: '2px', height: '16px', background: '#CCCCCC', marginLeft: '2px', verticalAlign: 'middle', animation: 'bs-dot-pulse 0.7s ease-in-out infinite' }} />
                         )}
@@ -606,7 +621,13 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                             autoFocus
                             value={outputNote}
                             onChange={e => setOutputNote(e.target.value)}
-                            placeholder="Aggiungi una nota, un'osservazione, un'integrazione…"
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && outputNote.trim()) {
+                                e.preventDefault()
+                                startGeneration(outputNote, outputText)
+                              }
+                            }}
+                            placeholder="Aggiungi un'osservazione, un'integrazione, una direzione diversa…"
                             rows={3}
                             style={{
                               width: '100%', padding: '12px 16px',
@@ -616,6 +637,19 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                               lineHeight: 1.6,
                             }}
                           />
+                          {outputNote.trim() && (
+                            <button
+                              onClick={() => startGeneration(outputNote, outputText)}
+                              style={{
+                                marginTop: '10px', padding: '9px 22px',
+                                background: '#1A1A1A', color: '#fff',
+                                border: 'none', borderRadius: '100px',
+                                fontSize: '13px', fontWeight: 600,
+                                cursor: 'pointer', fontFamily: 'inherit',
+                              }}>
+                              → Raffina
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -653,7 +687,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                         <span style={{ fontSize: '11px', color: '#AAAAAA' }}>— attacco finale</span>
                       </div>
                       <p style={{ fontSize: '16px', color: '#1A1A1A', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
-                        {grokText}
+                        {renderBold(grokText)}
                         {grokStreaming && (
                           <span style={{ display: 'inline-block', width: '2px', height: '16px', background: '#1A1A1A', marginLeft: '2px', verticalAlign: 'middle', animation: 'bs-dot-pulse 0.7s ease-in-out infinite' }} />
                         )}

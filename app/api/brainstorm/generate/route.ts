@@ -31,19 +31,23 @@ Regole formali:
 - Rivolgiti all'utente con "tu"
 - Max 450 parole`
 
-function buildContext(idea: string, answers: IntakeAnswer[]): string {
+function buildContext(idea: string, answers: IntakeAnswer[], note?: string, previousOutput?: string): string {
   const qa = answers.map(a => `- ${a.question}\n  → ${a.answer}`).join('\n')
-  return `Richiesta dell'utente: "${idea}"\n\nContesto rivelato dall'intake:\n${qa}`
+  let ctx = `Richiesta dell'utente: "${idea}"\n\nContesto rivelato dall'intake:\n${qa}`
+  if (previousOutput && note) {
+    ctx += `\n\n---\nHai già prodotto questa risposta:\n${previousOutput}\n\nL'utente vuole che tu la raffini con questa indicazione: "${note}"\nMantieni il formato e lo stile, ma incorpora l'indicazione dell'utente.`
+  }
+  return ctx
 }
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
 
-  const { idea, answers } = await req.json()
+  const { idea, answers, note, previousOutput } = await req.json()
   if (!idea) return NextResponse.json({ error: 'Idea mancante' }, { status: 400 })
 
-  const context = buildContext(idea, answers ?? [])
+  const context = buildContext(idea, answers ?? [], note, previousOutput)
   const encoder = new TextEncoder()
 
   const readable = new ReadableStream({
