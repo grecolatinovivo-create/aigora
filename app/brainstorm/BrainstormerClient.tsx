@@ -402,7 +402,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
           : 'none',
         width: '100%',
         maxWidth: '860px',
-        minHeight: 'calc(100vh - 48px)',
+        height: 'calc(100vh - 48px)',
         background: '#FEFEFE',
         borderRadius: '14px 14px 0 0',
         boxShadow: '0 -6px 48px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.05)',
