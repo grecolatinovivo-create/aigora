@@ -566,27 +566,19 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     <div key={section.id} style={{
                       marginBottom: '36px',
                       animation: 'bs-q-enter 0.35s ease-out',
-                      opacity: section.status === 'rejected' ? 0.35 : 1,
-                      transition: 'opacity 0.3s',
+                      opacity: section.status === 'rejected' ? 0.3 : 1,
+                      transition: 'opacity 0.4s',
                     }}>
-                      {/* AI label */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                        <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: AI_COLOR[section.ai], flexShrink: 0 }} />
-                        <span style={{ fontSize: '10px', color: '#AAAAAA', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>
-                          {AI_LABEL[section.ai]}
-                        </span>
-                      </div>
-
                       {/* Titolo sezione */}
-                      <p style={{ fontSize: '13px', color: '#666', fontWeight: 600, marginBottom: '10px', letterSpacing: '0.01em' }}>
+                      <p style={{ fontSize: '11px', color: '#BBBBBB', fontWeight: 600, marginBottom: '10px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                         {section.title}
                       </p>
 
                       {/* Testo streaming */}
-                      <p style={{ fontSize: '16px', color: '#1A1A1A', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
+                      <p style={{ fontSize: '16px', color: '#1A1A1A', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
                         {section.text}
                         {section.streaming && (
-                          <span style={{ display: 'inline-block', width: '2px', height: '16px', background: AI_COLOR[section.ai], marginLeft: '2px', verticalAlign: 'middle', animation: 'bs-dot-pulse 0.7s ease-in-out infinite' }} />
+                          <span style={{ display: 'inline-block', width: '2px', height: '16px', background: '#CCCCCC', marginLeft: '2px', verticalAlign: 'middle', animation: 'bs-dot-pulse 0.7s ease-in-out infinite' }} />
                         )}
                       </p>
 
