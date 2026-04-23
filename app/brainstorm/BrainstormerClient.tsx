@@ -83,6 +83,30 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const ideaRef2 = useRef('')
   ideaRef2.current = idea
 
+  // Typewriter per sezioni documento: buffer → display a 22ms/char
+  const textQueueRef = useRef<Map<string, string>>(new Map())
+  const sectionEndedRef = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      textQueueRef.current.forEach((pending, sectionId) => {
+        if (!pending) return
+        const char = pending[0]
+        textQueueRef.current.set(sectionId, pending.slice(1))
+        setSections(prev => prev.map(s => s.id === sectionId ? { ...s, text: s.text + char } : s))
+        // Se la coda è svuotata e la sezione è terminata → mark done
+        if (pending.length === 1 && sectionEndedRef.current.has(sectionId)) {
+          setSections(prev => prev.map(s =>
+            s.id === sectionId ? { ...s, streaming: false, done: true, status: s.status === 'regenerating' ? 'pending' : s.status } : s
+          ))
+          sectionEndedRef.current.delete(sectionId)
+          textQueueRef.current.delete(sectionId)
+        }
+      })
+    }, 22)
+    return () => clearInterval(id)
+  }, [])
+
   // Il foglio sale dal basso
   useEffect(() => {
     const t1 = setTimeout(() => setSheetUp(true), 120)
@@ -186,6 +210,8 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
       await parseSSE(res, (event) => {
         if (event.type === 'section_start') {
+          textQueueRef.current.set(event.id, '')
+          sectionEndedRef.current.delete(event.id)
           if (regenerateId) {
             setSections(prev => prev.map(s => s.id === regenerateId
               ? { ...s, text: '', streaming: true, done: false, status: 'regenerating' } : s))
@@ -197,10 +223,11 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
             }])
           }
         } else if (event.type === 'chunk') {
-          setSections(prev => prev.map(s => s.id === event.id ? { ...s, text: s.text + event.text } : s))
+          // Accoda nel buffer — il display loop svuota a 22ms/char
+          textQueueRef.current.set(event.id, (textQueueRef.current.get(event.id) ?? '') + event.text)
         } else if (event.type === 'section_end') {
-          setSections(prev => prev.map(s => s.id === event.id
-            ? { ...s, streaming: false, done: true, status: s.status === 'regenerating' ? 'pending' : s.status } : s))
+          // Segna che l'SSE è finito — il display loop farà il mark done quando la coda è vuota
+          sectionEndedRef.current.add(event.id)
         }
       }, () => {
         if (!regenerateId) setAllSectionsDone(true)
@@ -222,9 +249,26 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idea, document: doc }),
       })
+      const grokQueue = { text: '' }
+      const drainId = setInterval(() => {
+        if (!grokQueue.text) return
+        const char = grokQueue.text[0]
+        grokQueue.text = grokQueue.text.slice(1)
+        setGrokText(prev => prev + char)
+      }, 22)
       await parseSSE(res, (event) => {
-        if (event.text) setGrokText(prev => prev + event.text)
-      }, () => { setGrokDone(true); setGrokStreaming(false) })
+        if (event.text) grokQueue.text += event.text
+      }, () => {
+        // Aspetta che la coda sia svuotata prima di segnare done
+        const waitDrain = setInterval(() => {
+          if (!grokQueue.text) {
+            clearInterval(waitDrain)
+            clearInterval(drainId)
+            setGrokDone(true)
+            setGrokStreaming(false)
+          }
+        }, 50)
+      })
     } catch {
       setGrokStreaming(false)
     }
