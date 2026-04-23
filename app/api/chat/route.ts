@@ -256,10 +256,10 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
     }
     logUsage('perplexity', model, inputTokens, outputTokens, userId, actionType)
   } catch (err) {
-    // Sonar non disponibile o in errore: fallback silenzioso a Gemini-as-Perplexity
+    // Sonar non disponibile o in errore: fallback a Gemini con lo stesso system prompt passato
+    // NON usare streamGeminiAsPerplexity che ha sistema hardcoded → ignorerebbe il verdict prompt
     console.error('Perplexity sonar error, falling back to Gemini:', err)
-    const { today, year } = getDateStrings()
-    yield* streamGeminiAsPerplexity(historyText, today, year, userId).stream
+    yield* streamGemini(system, historyText, lastMessage, userId)
   }
 }
 

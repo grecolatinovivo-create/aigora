@@ -1519,7 +1519,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setDevilSession(prev => prev ? { ...prev, messages: updatedMsgs } : prev)
     try {
       const attackerIds = ['claude', 'gpt', 'gemini', 'perplexity']
-      const attackerId = attackerIds[devilSession.round % attackerIds.length]
+      const attackerId = attackerIds[(devilSession.round - 1) % attackerIds.length]
       const diffLabel = devilSession.difficulty === 'easy' ? 'Facile' : devilSession.difficulty === 'medium' ? 'Media' : 'Impossibile'
       const shortHistory = updatedMsgs.map(m => ({ name: m.role === 'user' ? 'Utente' : 'AI', content: m.content }))
       const profile = AI_PROFILES[attackerId]

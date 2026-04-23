@@ -85,9 +85,9 @@ export default function DevilsAdvocateScreen({
   const placeholder = PLACEHOLDERS[Math.min(session.round - 1, PLACEHOLDERS.length - 1)]
 
   const ATTACKER_IDS = ['claude', 'gpt', 'gemini', 'perplexity'] as const
-  const currentAttackerIdx = session.round % 4
+  const currentAttackerIdx = (session.round - 1) % 4   // round parte da 1: (1-1)%4=0=Claude primo
   const currentAttackerId = ATTACKER_IDS[currentAttackerIdx]
-  const nextAttackerIdx = (session.round + 1) % 4
+  const nextAttackerIdx = session.round % 4             // prossimo: (round)%4
   const nextAttackerId = ATTACKER_IDS[nextAttackerIdx]
   const nextAttackerName = AI_NAMES[nextAttackerId]
   const nextAttackerColor = AI_COLOR[nextAttackerId]
@@ -492,12 +492,15 @@ export default function DevilsAdvocateScreen({
         {/* Linea connettore */}
         <div className="mx-4 mb-1" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
 
-        <div className="flex items-center gap-2 px-3 pt-1 pb-1">
-          <input value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && input.trim() && !loading) { onMessage(input.trim()); setInput('') } }}
+        <div className="flex items-end gap-2 px-3 pt-1 pb-1">
+          <textarea
+            value={input}
+            onChange={e => { setInput(e.target.value); e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px' }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && input.trim() && !loading) { e.preventDefault(); onMessage(input.trim()); setInput(''); (e.target as HTMLTextAreaElement).style.height = 'auto' } }}
             placeholder={placeholder} disabled={loading}
-            className="flex-1 rounded-full px-3 py-2 text-[12px] outline-none"
-            style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f0f0' }}
+            rows={1}
+            className="flex-1 rounded-2xl px-3 py-2 text-[12px] outline-none resize-none overflow-hidden"
+            style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f0f0', lineHeight: '1.4' }}
           />
           <button onClick={() => { if (input.trim()) { onMessage(input.trim()); setInput('') } }}
             disabled={!input.trim() || loading}
