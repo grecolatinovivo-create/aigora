@@ -243,7 +243,9 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
     let outputText = ''
     let inputTokens = 0, outputTokens = 0
     for await (const chunk of stream) {
-      const text = chunk.choices[0]?.delta?.content
+      const raw = chunk.choices[0]?.delta?.content
+      // Sonar aggiunge [1][2][3] come citation markers nonostante il system prompt — strippali
+      const text = raw ? raw.replace(/\[\d+\]/g, '') : undefined
       if (text) { yield text; outputText += text }
       if ((chunk as any).usage) {
         inputTokens = (chunk as any).usage.prompt_tokens ?? 0
