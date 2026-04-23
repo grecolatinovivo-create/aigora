@@ -113,6 +113,13 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                     Crea dibattito
                   </button>
                   {userPlan === 'admin' && (
+                    <button onClick={() => { setShowProfileMenu(false); window.location.href = '/brainstorm' }}
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
+                      style={{ color: '#86EFAC' }}>
+                      ✦ Brainstormer
+                    </button>
+                  )}
+                  {userPlan === 'admin' && (
                     <button onClick={() => window.location.href = '/admin'}
                       className="w-full px-4 py-3 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                       Pannello Admin
