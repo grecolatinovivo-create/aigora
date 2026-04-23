@@ -311,6 +311,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
           0%, 100% { opacity: 0.3; }
           50%       { opacity: 1;  }
         }
+        .bs-idea-input::placeholder { color: rgba(245,237,214,0.35); }
       `}</style>
 
       {/* Sfondo — scrivania */}
@@ -340,7 +341,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         transition: sheetUp ? 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
         width: '100%',
         maxWidth: '860px',
-        height: 'calc(100vh - 48px)',
+        height: 'calc(100vh - 70px)',
         background: '#FEFEFE',
         borderRadius: '14px 14px 0 0',
         boxShadow: '0 -6px 48px rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.05)',
@@ -403,13 +404,14 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     }}
                     placeholder="Cosa hai in mente?"
                     rows={2}
+                    className="bs-idea-input"
                     style={{
                       width: '100%', border: 'none',
-                      borderBottom: '1.5px solid rgba(0,0,0,0.1)',
-                      outline: 'none', fontSize: '22px', color: '#1A1A1A',
+                      borderBottom: '1.5px solid rgba(245,237,214,0.2)',
+                      outline: 'none', fontSize: '22px', color: '#F5EDD6',
                       background: 'transparent', resize: 'none', overflow: 'hidden',
                       textAlign: 'center', lineHeight: 1.5, padding: '8px 0',
-                      fontFamily: 'inherit', caretColor: '#7C3AED',
+                      fontFamily: 'inherit', caretColor: '#A78BFA',
                     }}
                   />
                   <div style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
