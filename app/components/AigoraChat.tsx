@@ -2397,6 +2397,22 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                     <div className="text-white/80 text-xs font-medium truncate">{chat.title}</div>
                     <div className="text-white/30 text-[10px] mt-0.5">{chat.date}</div>
                   </button>
+                  {effectivePlan === 'admin' && (
+                    <button onClick={(e) => {
+                      e.stopPropagation()
+                      const blob = new Blob([JSON.stringify({ id: chat.id, title: chat.title, date: chat.date, messages: chat.messages }, null, 2)], { type: 'application/json' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `chat-${chat.id.slice(0,8)}.json`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                    className="flex-shrink-0 mr-1 w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ backgroundColor: 'rgba(245,158,11,0.7)' }}>
+                      <svg width="10" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                  )}
                   <button onClick={(e) => handleDeleteChat(chat.id, chat.title, e)}
                     className="flex-shrink-0 mr-3 w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ backgroundColor: '#ef4444' }}>
@@ -2414,26 +2430,6 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             }} className="text-red-400/60 hover:text-red-400 text-xs transition-colors">
               Cancella cronologia
             </button>
-            {effectivePlan === 'admin' && (
-              <button onClick={() => {
-                const data = savedChats.map(c => ({
-                  id: c.id,
-                  title: c.title,
-                  date: c.date,
-                  messages: c.messages,
-                }))
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = `aigora-chats-${new Date().toISOString().slice(0,10)}.json`
-                a.click()
-                URL.revokeObjectURL(url)
-              }} className="text-amber-400/60 hover:text-amber-400 text-xs transition-colors flex items-center gap-1">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Scarica JSON
-              </button>
-            )}
           </div>
         </div>
       </div>
