@@ -1467,7 +1467,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const streamDevilAI = async (aiId: string, systemPrompt: string, history: { name: string; content: string }[]): Promise<string> => {
     // Usa action '2v2': è l'unico path che usa history[0] come vero system prompt
     // 'turn' (default) usa SYSTEM_PROMPTS[aiId] ignorando il verdetto prompt → Perplexity/Gemini non incl. [SCORE:X.X]
-    const trigger = { name: 'Istruzioni', content: 'Esprimi ora il verdetto seguendo il sistema. Includi obbligatoriamente [SCORE:X.X] su una riga separata alla fine.' }
+    const trigger = { name: 'Istruzioni', content: 'Esprimi ora il verdetto seguendo il sistema. Termina con una riga che contiene SOLO: PUNTEGGIO:X.X (esempio: PUNTEGGIO:4.0). Nessuna parentesi quadra.' }
     const res = await fetch('/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: '2v2', aiId, history: [{ name: 'Sistema', content: systemPrompt }, ...history, trigger], needsWebSearch: false, maxTokens: 400 }),
@@ -1606,7 +1606,7 @@ Esprimi un verdetto specifico basato ESCLUSIVAMENTE su ciò che l'utente ha scri
 Cita le cose concrete che l'utente ha detto (o NON ha detto se non ha scritto nulla). 2-3 frasi, con la tua voce autentica.
 Considera la difficoltà: ${diffLabel}. A parità di argomenti, difficoltà Impossibile merita un voto più alto.
 GROK: ogni tanto (non sempre) fai un riferimento caustico a Grok — l'AI che ha generato questa posizione assurda. Commenta il suo stile ricorrente, la sua tendenza a scegliere sempre le stesse categorie di provocazioni, la sua prevedibilità. Dillo con il TUO carattere (distacco, sarcasmo, ironia, indignazione — dipende da chi sei).
-Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con il tuo voto 0-10.`]
+Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: PUNTEGGIO:X.X con il tuo voto da 0 a 10 (esempio: PUNTEGGIO:3.5). Nessuna parentesi, solo questo formato.`]
       })
     )
 
@@ -1615,9 +1615,9 @@ Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: [SCORE:X.X] con 
     await Promise.all(aiOrder.map(async (aiId) => {
       try {
         const raw = await streamDevilAI(aiId, VERDICT_PROMPTS[aiId], history)
-        const match = raw.match(/\[SCORE:(\d+\.?\d*)\]/i)
+        const match = raw.match(/PUNTEGGIO:\s*(\d+\.?\d*)/i)
         const score = match ? parseFloat(match[1]) : 5.0
-        const text = raw.replace(/\[SCORE:\d+\.?\d*\]/gi, '').trim()
+        const text = raw.replace(/PUNTEGGIO:\s*\d+\.?\d*/gi, '').trim()
         scoreResults.push({ aiId, score, text })
       } catch {
         scoreResults.push({ aiId, score: 5.0, text: 'Nessun verdetto disponibile.' })
