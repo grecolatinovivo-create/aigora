@@ -110,6 +110,11 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     } catch {}
   }
 
+  // Blocco mobile — redirect a home
+  useEffect(() => {
+    if (window.innerWidth < 1024) window.location.href = '/'
+  }, [])
+
   // Il foglio sale dal basso
   useEffect(() => {
     const t1 = setTimeout(() => setSheetUp(true), 120)

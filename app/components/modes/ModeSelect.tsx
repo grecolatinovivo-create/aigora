@@ -114,6 +114,7 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
             </div>
           </div>
         </button>
+
       </div>
 
       {/* ── LAYOUT DESKTOP: 3 mock iPhone affiancati ── */}
