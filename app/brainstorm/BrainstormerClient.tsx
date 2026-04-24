@@ -489,24 +489,24 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                         </div>
                       )}
 
-                      {qDone && !selected && (
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' }}>
+                      {qDone && !showFree && !selected && (
+                        <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                          <button onClick={() => setShowFree(true)} style={{ background: 'none', border: 'none', color: '#BBBBBB', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>
+                            + scrivi tu
+                          </button>
+                        </div>
+                      )}
+
+                      {showFree && !selected && (
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'center', animation: 'bs-q-enter 0.2s ease-out' }}>
                           <input
-                            value={freeInput}
+                            autoFocus value={freeInput}
                             onChange={e => setFreeInput(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && freeInput.trim()) handleFreeSubmit() }}
-                            placeholder="O scrivi la tua risposta…"
-                            style={{
-                              padding: '11px 18px', border: '1.5px solid rgba(0,0,0,0.13)',
-                              borderRadius: '100px', fontSize: '14px', outline: 'none',
-                              width: '300px', fontFamily: 'inherit',
-                              color: '#1A1A1A', background: '#ffffff',
-                              WebkitTextFillColor: '#1A1A1A', colorScheme: 'light',
-                            } as React.CSSProperties}
+                            placeholder="La tua risposta..."
+                            style={{ padding: '11px 18px', border: '1.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', fontSize: '14px', outline: 'none', width: '280px', fontFamily: 'inherit', color: '#1A1A1A', background: '#ffffff', WebkitTextFillColor: '#1A1A1A', colorScheme: 'light' } as React.CSSProperties}
                           />
-                          {freeInput.trim() && (
-                            <button onClick={handleFreeSubmit} style={{ padding: '11px 20px', background: '#1A1A1A', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>→</button>
-                          )}
+                          <button onClick={handleFreeSubmit} style={{ padding: '11px 20px', background: '#1A1A1A', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>→</button>
                         </div>
                       )}
                     </div>
