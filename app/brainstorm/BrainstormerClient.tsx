@@ -364,6 +364,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         display: 'flex',
         flexDirection: 'column',
         overflowY: 'auto',
+        colorScheme: 'light',
       }}>
         {contentVisible && (
           <div style={{ animation: 'bs-content-fade 0.4s ease-out', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -504,7 +505,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                             onChange={e => setFreeInput(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && freeInput.trim()) handleFreeSubmit() }}
                             placeholder="La tua risposta..."
-                            style={{ padding: '11px 18px', border: '1.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', fontSize: '14px', outline: 'none', width: '280px', fontFamily: 'inherit', color: '#1A1A1A', background: '#fff' }}
+                            style={{ padding: '11px 18px', border: '1.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', fontSize: '14px', outline: 'none', width: '280px', fontFamily: 'inherit', color: '#1A1A1A', background: '#ffffff', WebkitTextFillColor: '#1A1A1A', colorScheme: 'light' } as React.CSSProperties}
                           />
                           <button onClick={handleFreeSubmit} style={{ padding: '11px 20px', background: '#1A1A1A', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>→</button>
                         </div>
@@ -634,8 +635,8 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                               border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px',
                               fontSize: '14px', fontFamily: 'inherit', resize: 'none',
                               outline: 'none', color: '#333', background: '#FAFAFA',
-                              lineHeight: 1.6,
-                            }}
+                              lineHeight: 1.6, WebkitTextFillColor: '#333', colorScheme: 'light',
+                            } as React.CSSProperties}
                           />
                           {outputNote.trim() && (
                             <button
