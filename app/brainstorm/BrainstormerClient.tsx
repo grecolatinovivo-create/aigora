@@ -9,6 +9,16 @@ type Phase = 'entry' | 'initial' | 'intake' | 'building' | 'complete'
 interface IntakeAnswer { question: string; answer: string }
 interface IntakeQuestion { question: string; options: string[] }
 
+interface HistoryItem {
+  id: string
+  idea: string
+  answers: IntakeAnswer[]
+  output: string
+  grokOutput?: string | null
+  feedback?: string | null
+  createdAt: string
+}
+
 const AI_MEMBERS = [
   { id: 'claude',     label: 'Claude',      color: '#7C3AED' },
   { id: 'gemini',     label: 'Gemini',      color: '#1A73E8' },
@@ -74,6 +84,13 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const [grokStreaming, setGrokStreaming] = useState(false)
   const [grokDone, setGrokDone] = useState(false)
 
+  // Cronologia
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+  const [historyTabHover, setHistoryTabHover] = useState(false)
+
   const ideaRef = useRef<HTMLTextAreaElement>(null)
   const answersRef = useRef<IntakeAnswer[]>([])
   answersRef.current = answers
@@ -127,6 +144,77 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     if (phase === 'initial') setTimeout(() => ideaRef.current?.focus(), 100)
   }, [phase])
 
+  // ── Auto-salvataggio sessione quando output è completo ──
+  useEffect(() => {
+    if (outputDone && outputText && idea && !currentSessionId) {
+      fetch('/api/brainstorm/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idea, answers, output: outputText }),
+      })
+        .then(r => r.json())
+        .then(data => { if (data.id) setCurrentSessionId(data.id) })
+        .catch(() => {})
+    }
+  }, [outputDone]) // eslint-disable-line
+
+  // ── Aggiorna feedback nella sessione ──
+  useEffect(() => {
+    if (outputFeedback && currentSessionId) {
+      fetch('/api/brainstorm/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentSessionId, feedback: outputFeedback }),
+      }).catch(() => {})
+    }
+  }, [outputFeedback, currentSessionId])
+
+  // ── Aggiorna grokOutput nella sessione ──
+  useEffect(() => {
+    if (grokDone && grokText && currentSessionId) {
+      fetch('/api/brainstorm/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentSessionId, grokOutput: grokText }),
+      }).catch(() => {})
+    }
+  }, [grokDone]) // eslint-disable-line
+
+  // ── Carica cronologia ──
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true)
+    try {
+      const res = await fetch('/api/brainstorm/sessions')
+      if (res.ok) {
+        const data = await res.json()
+        setHistoryItems(data)
+      }
+    } catch {}
+    setHistoryLoading(false)
+  }, [])
+
+  useEffect(() => {
+    if (historyOpen) loadHistory()
+  }, [historyOpen, loadHistory])
+
+  // ── Carica sessione dal pannello cronologia ──
+  const loadSession = (item: HistoryItem) => {
+    setIdea(item.idea)
+    setAnswers(item.answers)
+    setOutputText(item.output)
+    setOutputStreaming(false)
+    setOutputDone(true)
+    setGrokText(item.grokOutput ?? '')
+    setGrokDone(!!item.grokOutput)
+    setGrokStreaming(false)
+    setCurrentSessionId(item.id)
+    setOutputFeedback((item.feedback as 'up' | 'down' | null) ?? null)
+    setPhase('building')
+    setShowNote(false)
+    setOutputNote('')
+    setHistoryOpen(false)
+  }
+
   const fetchNextQuestion = useCallback(async (currentAnswers: IntakeAnswer[]) => {
     setLoadingQ(true)
     setSelected(null)
@@ -164,6 +252,11 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
   const handleIdeaSubmit = () => {
     if (!idea.trim()) return
+    // Reset per nuovo brainstorm
+    setCurrentSessionId(null)
+    setOutputFeedback(null)
+    setGrokText('')
+    setGrokDone(false)
     setPhase('intake')
     fetchNextQuestion([])
   }
@@ -239,7 +332,6 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
       await parseSSE(res, (event) => {
         if (event.text) queue.text += event.text
       }, () => {
-        // Aspetta drain completo prima di segnare done
         const waitDrain = setInterval(() => {
           if (!queue.text) {
             clearInterval(waitDrain)
@@ -293,6 +385,16 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
   const { displayed: qDisplayed, done: qDone } = useTypewriter(currentQ?.question ?? '', 22)
 
+  // Formatta data per le card cronologia
+  const formatDate = (iso: string) => {
+    const d = new Date(iso)
+    const now = new Date()
+    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000)
+    if (diffDays === 0) return `Oggi, ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+    if (diffDays === 1) return `Ieri, ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+    return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }) + `, ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+  }
+
   return (
     <>
       <Navbar
@@ -331,7 +433,18 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
           0%, 100% { opacity: 0.3; }
           50%       { opacity: 1;  }
         }
+        @keyframes bs-panel-fade {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
         .bs-idea-input::placeholder { color: rgba(245,237,214,0.35); }
+        .bs-history-card:hover {
+          box-shadow: 0 4px 16px rgba(0,0,0,0.1) !important;
+          transform: translateY(-1px);
+        }
+        .bs-history-tab:hover .bs-tab-inner {
+          width: 44px !important;
+        }
       `}</style>
 
       {/* Sfondo — scrivania */}
@@ -352,6 +465,247 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
           pointerEvents: 'none', zIndex: 5,
         }} />
       </div>
+
+      {/* ── TAB CRONOLOGIA — sporgenza sinistra ── */}
+      {sheetUp && (
+        <div
+          className="bs-history-tab"
+          onClick={() => setHistoryOpen(h => !h)}
+          style={{
+            position: 'fixed',
+            left: 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 15,
+            cursor: 'pointer',
+          }}
+        >
+          <div
+            className="bs-tab-inner"
+            style={{
+              width: historyTabHover ? '44px' : '32px',
+              height: '108px',
+              background: '#F4F1EA',
+              borderRadius: '0 10px 10px 0',
+              boxShadow: '3px 0 12px rgba(0,0,0,0.1), inset -1px 0 0 rgba(0,0,0,0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              transition: 'width 0.2s ease, box-shadow 0.2s ease',
+              overflow: 'hidden',
+              colorScheme: 'light',
+            }}
+            onMouseEnter={() => setHistoryTabHover(true)}
+            onMouseLeave={() => setHistoryTabHover(false)}
+          >
+            {/* Icona orologio */}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            {/* Testo verticale */}
+            <span style={{
+              fontSize: '8px',
+              color: '#BBBBBB',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              writingMode: 'vertical-rl',
+              textOrientation: 'mixed',
+              transform: 'rotate(180deg)',
+              whiteSpace: 'nowrap',
+            }}>Storico</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── PANNELLO CRONOLOGIA ── */}
+      <div style={{
+        position: 'fixed',
+        left: historyOpen ? 0 : '-340px',
+        top: '56px',
+        height: 'calc(100vh - 56px)',
+        width: '300px',
+        background: '#FEFEFE',
+        borderRight: '1px solid rgba(0,0,0,0.07)',
+        boxShadow: historyOpen ? '6px 0 32px rgba(0,0,0,0.12)' : 'none',
+        transition: 'left 0.38s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.38s ease',
+        zIndex: 20,
+        display: 'flex',
+        flexDirection: 'column',
+        colorScheme: 'light',
+      }}>
+        {/* Header pannello */}
+        <div style={{
+          padding: '18px 18px 14px',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AAAAAA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1A1A1A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              Brainstormate
+            </span>
+          </div>
+          <button
+            onClick={() => setHistoryOpen(false)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: '#CCCCCC', fontSize: '18px', lineHeight: 1,
+              padding: '2px 4px', fontFamily: 'inherit',
+              transition: 'color 0.15s',
+            }}
+          >×</button>
+        </div>
+
+        {/* Nuovo brainstorm button */}
+        <div style={{ padding: '12px 16px 0' }}>
+          <button
+            onClick={() => {
+              setHistoryOpen(false)
+              setIdea('')
+              setAnswers([])
+              setOutputText('')
+              setOutputDone(false)
+              setOutputStreaming(false)
+              setGrokText('')
+              setGrokDone(false)
+              setCurrentSessionId(null)
+              setOutputFeedback(null)
+              setPhase('initial')
+              setTimeout(() => ideaRef.current?.focus(), 100)
+            }}
+            style={{
+              width: '100%',
+              padding: '9px 16px',
+              background: '#1A1A1A',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '100px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              letterSpacing: '0.04em',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            <span style={{ fontSize: '14px', lineHeight: 1 }}>+</span>
+            Nuovo brainstorm
+          </button>
+        </div>
+
+        {/* Lista foglietti */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '14px 16px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+        }}>
+          {historyLoading && (
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', padding: '40px 0' }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  width: '6px', height: '6px', borderRadius: '50%', background: '#DDD',
+                  animation: `bs-dot-pulse 1.1s ease-in-out infinite`,
+                  animationDelay: `${i * 0.18}s`,
+                }} />
+              ))}
+            </div>
+          )}
+
+          {!historyLoading && historyItems.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '48px 16px' }}>
+              <div style={{ fontSize: '28px', marginBottom: '12px', opacity: 0.3 }}>📋</div>
+              <p style={{ fontSize: '13px', color: '#CCCCCC', lineHeight: 1.5 }}>
+                Nessuna brainstorming salvata ancora.
+              </p>
+            </div>
+          )}
+
+          {!historyLoading && historyItems.map(item => {
+            const isActive = item.id === currentSessionId
+            const feedbackColor = item.feedback === 'up' ? '#10A37F' : item.feedback === 'down' ? '#EF4444' : 'rgba(167,139,250,0.4)'
+            return (
+              <div
+                key={item.id}
+                className="bs-history-card"
+                onClick={() => loadSession(item)}
+                style={{
+                  background: '#FFFFFF',
+                  borderRadius: '2px 8px 8px 2px',
+                  border: isActive
+                    ? '1.5px solid rgba(167,139,250,0.5)'
+                    : '1px solid rgba(0,0,0,0.07)',
+                  boxShadow: isActive
+                    ? '0 2px 12px rgba(124,58,237,0.08)'
+                    : '0 2px 6px rgba(0,0,0,0.05)',
+                  padding: '11px 13px 10px 15px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  position: 'relative',
+                  borderLeft: `3px solid ${feedbackColor}`,
+                }}
+              >
+                {/* Idea text */}
+                <p style={{
+                  fontSize: '13px',
+                  color: '#1A1A1A',
+                  fontWeight: 500,
+                  lineHeight: 1.45,
+                  margin: '0 0 6px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                } as React.CSSProperties}>
+                  {item.idea}
+                </p>
+
+                {/* Footer card */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '10px', color: '#CCCCCC' }}>
+                    {formatDate(item.createdAt)}
+                  </span>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    {item.grokOutput && (
+                      <span style={{
+                        fontSize: '9px', color: '#A78BFA', fontWeight: 700,
+                        letterSpacing: '0.06em', textTransform: 'uppercase',
+                      }}>Grok</span>
+                    )}
+                    {item.feedback === 'up' && <span style={{ fontSize: '10px' }}>👍</span>}
+                    {item.feedback === 'down' && <span style={{ fontSize: '10px' }}>👎</span>}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Backdrop trasparente per chiudere il pannello */}
+      {historyOpen && (
+        <div
+          onClick={() => setHistoryOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 19,
+            background: 'transparent',
+          }}
+        />
+      )}
 
       {/* Il Foglio */}
       <div style={{
@@ -376,7 +730,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
             {/* Header decorativo */}
             <div style={{ padding: '28px 56px 0', display: 'flex', justifyContent: 'center', opacity: 0.12 }}>
-              {[0,1,2].map(i => <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#000', margin: '0 3px' }} />)}
+              {[0, 1, 2].map(i => <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#000', margin: '0 3px' }} />)}
             </div>
 
             {/* Tracce risposte */}
@@ -580,7 +934,6 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                       {/* Azioni — solo quando done */}
                       {outputDone && (
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '20px', flexWrap: 'wrap' }}>
-                          {/* Pollice su */}
                           <button onClick={() => setOutputFeedback(f => f === 'up' ? null : 'up')}
                             title="Utile"
                             style={{
@@ -591,7 +944,6 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                             }}>
                             👍
                           </button>
-                          {/* Pollice giù */}
                           <button onClick={() => setOutputFeedback(f => f === 'down' ? null : 'down')}
                             title="Da migliorare"
                             style={{
@@ -602,14 +954,12 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                             }}>
                             👎
                           </button>
-                          {/* Riscrivi — solo se non si è già nel flow Grok */}
                           {!grokStreaming && !grokDone && (
-                            <button onClick={() => { setOutputText(''); setOutputDone(false); setShowNote(false); setOutputNote(''); setOutputFeedback(null); startGeneration() }}
+                            <button onClick={() => { setOutputText(''); setOutputDone(false); setShowNote(false); setOutputNote(''); setOutputFeedback(null); setCurrentSessionId(null); startGeneration() }}
                               style={{ padding: '7px 18px', border: '1px solid rgba(0,0,0,0.12)', borderRadius: '100px', background: 'transparent', color: '#999', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
                               ↺ Riscrivi
                             </button>
                           )}
-                          {/* Nota */}
                           {!showNote && (
                             <button onClick={() => setShowNote(true)}
                               style={{ padding: '7px 0', border: 'none', background: 'transparent', color: '#BBBBBB', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>

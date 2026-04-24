@@ -28,7 +28,8 @@ model User {
   sessions Session[]
   chats    Chat[]
 
-  activeSessions ActiveSession[]
+  activeSessions     ActiveSession[]
+  brainstormSessions BrainstormSession[]
   hostedRooms   Room[]            @relation("RoomHost")
   roomParticipations RoomParticipant[]
   followers     Follow[]          @relation("Following")
@@ -169,6 +170,21 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BrainstormSession {
+  id         String   @id @default(cuid())
+  userId     String
+  idea       String
+  answers    Json
+  output     String
+  grokOutput String?
+  feedback   String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {

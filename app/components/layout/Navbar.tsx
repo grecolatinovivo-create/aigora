@@ -112,9 +112,9 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                     style={{ color: 'rgba(255,255,255,0.7)' }}>
                     Crea dibattito
                   </button>
-                  {userPlan === 'admin' && (
+                  {(userPlan === 'admin' || isBeta) && (
                     <button onClick={() => { setShowProfileMenu(false); window.location.href = '/brainstorm' }}
-                      className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
+                      className="hidden lg:block w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                       style={{ color: '#86EFAC' }}>
                       ✦ Brainstormer
                     </button>
