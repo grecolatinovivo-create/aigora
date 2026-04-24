@@ -1,7 +1,8 @@
 'use client'
 
-export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta, show2v2Label, twoVsTwoTopic }: {
+export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta, show2v2Label, twoVsTwoTopic, hideCronologia }: {
   onCronologia: () => void
+  hideCronologia?: boolean
   onFeed?: () => void
   onCrea?: () => void
   onNewChat?: () => void
@@ -23,14 +24,18 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
       style={{ backgroundColor: 'rgba(7,7,15,0.4)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
 
       {/* Sinistra — Cronologia */}
-      <button onClick={onCronologia}
-        className="flex items-center gap-2 text-sm font-medium transition-all hover:text-white"
-        style={{ color: 'rgba(255,255,255,0.45)' }}>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z"/><path d="M12 7v5l3 3"/>
-        </svg>
-        Cronologia
-      </button>
+      {!hideCronologia ? (
+        <button onClick={onCronologia}
+          className="flex items-center gap-2 text-sm font-medium transition-all hover:text-white"
+          style={{ color: 'rgba(255,255,255,0.45)' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z"/><path d="M12 7v5l3 3"/>
+          </svg>
+          Cronologia
+        </button>
+      ) : (
+        <div style={{ width: '100px' }} />
+      )}
 
       {/* Centro — Logo sempre */}
       <button onClick={onNewChat}

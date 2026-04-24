@@ -22,7 +22,7 @@ interface HistoryItem {
 const AI_MEMBERS = [
   { id: 'claude',     label: 'Claude',      color: '#7C3AED' },
   { id: 'gemini',     label: 'Gemini',      color: '#1A73E8' },
-  { id: 'gpt',        label: 'GPT-4',       color: '#10A37F' },
+  { id: 'gpt',        label: 'GPT',         color: '#10A37F' },
   { id: 'perplexity', label: 'Perplexity',  color: '#FF6B2B' },
 ]
 
@@ -96,6 +96,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   answersRef.current = answers
   const ideaRef2 = useRef('')
   ideaRef2.current = idea
+  const skipGenerationRef = useRef(false) // true quando si carica dallo storico
 
   // ── Audio click selezione ──
   const audioCtxRef = useRef<AudioContext | null>(null)
@@ -209,6 +210,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     setGrokStreaming(false)
     setCurrentSessionId(item.id)
     setOutputFeedback((item.feedback as 'up' | 'down' | null) ?? null)
+    skipGenerationRef.current = true
     setPhase('building')
     setShowNote(false)
     setOutputNote('')
@@ -380,7 +382,10 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   }, [outputText, idea])
 
   useEffect(() => {
-    if (phase === 'building') startGeneration()
+    if (phase === 'building') {
+      if (skipGenerationRef.current) { skipGenerationRef.current = false; return }
+      startGeneration()
+    }
   }, [phase]) // eslint-disable-line
 
   const { displayed: qDisplayed, done: qDone } = useTypewriter(currentQ?.question ?? '', 22)
@@ -406,6 +411,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         onCronologia={() => { window.location.href = '/' }}
         onNewChat={() => { window.location.href = '/' }}
         onSignOut={() => signOut({ callbackUrl: '/login' })}
+        hideCronologia
       />
 
       <style>{`
@@ -551,7 +557,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
               <polyline points="12 6 12 12 16 14"/>
             </svg>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#1A1A1A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Brainstormate
+              Brainstormer
             </span>
           </div>
           <button
