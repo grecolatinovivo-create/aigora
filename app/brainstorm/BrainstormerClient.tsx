@@ -420,14 +420,13 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     }}
                     placeholder="Cosa hai in mente?"
                     rows={2}
-                    className="bs-idea-input"
                     style={{
                       width: '100%', border: 'none',
-                      borderBottom: '1.5px solid rgba(245,237,214,0.2)',
-                      outline: 'none', fontSize: '22px', color: '#F5EDD6',
+                      borderBottom: '1.5px solid rgba(0,0,0,0.1)',
+                      outline: 'none', fontSize: '22px', color: '#1A1A1A',
                       background: 'transparent', resize: 'none', overflow: 'hidden',
                       textAlign: 'center', lineHeight: 1.5, padding: '8px 0',
-                      fontFamily: 'inherit', caretColor: '#A78BFA',
+                      fontFamily: 'inherit', caretColor: '#7C3AED',
                     }}
                   />
                   <div style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -490,24 +489,24 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                         </div>
                       )}
 
-                      {qDone && !showFree && !selected && (
-                        <div style={{ textAlign: 'center', marginTop: '12px' }}>
-                          <button onClick={() => setShowFree(true)} style={{ background: 'none', border: 'none', color: '#BBBBBB', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>
-                            + scrivi tu
-                          </button>
-                        </div>
-                      )}
-
-                      {showFree && !selected && (
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'center', animation: 'bs-q-enter 0.2s ease-out' }}>
+                      {qDone && !selected && (
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' }}>
                           <input
-                            autoFocus value={freeInput}
+                            value={freeInput}
                             onChange={e => setFreeInput(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && freeInput.trim()) handleFreeSubmit() }}
-                            placeholder="La tua risposta..."
-                            style={{ padding: '11px 18px', border: '1.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', fontSize: '14px', outline: 'none', width: '280px', fontFamily: 'inherit', color: '#1A1A1A', background: '#ffffff', WebkitTextFillColor: '#1A1A1A', colorScheme: 'light' } as React.CSSProperties}
+                            placeholder="O scrivi la tua risposta…"
+                            style={{
+                              padding: '11px 18px', border: '1.5px solid rgba(0,0,0,0.13)',
+                              borderRadius: '100px', fontSize: '14px', outline: 'none',
+                              width: '300px', fontFamily: 'inherit',
+                              color: '#1A1A1A', background: '#ffffff',
+                              WebkitTextFillColor: '#1A1A1A', colorScheme: 'light',
+                            } as React.CSSProperties}
                           />
-                          <button onClick={handleFreeSubmit} style={{ padding: '11px 20px', background: '#1A1A1A', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>→</button>
+                          {freeInput.trim() && (
+                            <button onClick={handleFreeSubmit} style={{ padding: '11px 20px', background: '#1A1A1A', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>→</button>
+                          )}
                         </div>
                       )}
                     </div>
