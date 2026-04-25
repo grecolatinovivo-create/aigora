@@ -432,7 +432,10 @@ export default function DevilsAdvocateScreen({
             )}
           </div>
         ))}
-        {loading && (() => {
+        {(() => {
+          const lastMsg = session.messages[session.messages.length - 1]
+          const showTyping = loading && (!lastMsg || lastMsg.role === 'user' || !lastMsg.content)
+          if (!showTyping) return null
           const color = AI_COLOR[currentAttackerId]
           const initial = currentAttackerId === 'gemini' ? 'Ge' : (AI_NAMES[currentAttackerId] ?? 'C')[0]
           return (
