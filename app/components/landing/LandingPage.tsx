@@ -190,7 +190,6 @@ function ModeSection({
     }}>
       {/* Desktop */}
       <div style={{
-        display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 64,
@@ -219,7 +218,7 @@ function ModeSection({
       </div>
 
       {/* Mobile */}
-      <div className="lg:hidden" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
+      <div className="lg:hidden" style={{ flexDirection: 'column', alignItems: 'center', gap: 32 }}>
         <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>{phone}</div>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: accent, marginBottom: 10 }}>{tag}</div>
