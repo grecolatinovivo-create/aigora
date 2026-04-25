@@ -1,17 +1,18 @@
 'use client'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-// Solo i modi effettivamente selezionabili da ModeSelect
-type SelectableMode = '2v2' | 'devil'
+export type SelectableMode = '2v2' | 'devil' | 'brainstorm'
 
 const MODE_LABELS: Record<SelectableMode, string> = {
   '2v2': '2 vs 2',
   'devil': "Devil's Advocate",
+  'brainstorm': 'Brainstormer',
 }
 
 const MODE_MESSAGES: Record<SelectableMode, string> = {
   '2v2': 'Per entrare nel 2 vs 2 serve un account. Ci vogliono 30 secondi.',
   'devil': "Per sfidare le AI in Devil's Advocate, crea un account gratuito.",
+  'brainstorm': 'Per usare il Brainstormer completo, crea un account gratuito.',
 }
 
 function EyeIcon({ show }: { show: boolean }) {
@@ -73,7 +74,7 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const callbackUrl = `/?mode=${mode}`
+  const callbackUrl = mode === 'brainstorm' ? '/brainstorm' : `/?mode=${mode}`
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
