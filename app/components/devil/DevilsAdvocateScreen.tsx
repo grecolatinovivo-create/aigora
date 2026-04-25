@@ -399,7 +399,7 @@ export default function DevilsAdvocateScreen({
             </div>
           </div>
         )}
-        {session.messages.map((msg, i) => (
+        {session.messages.filter(msg => msg.role === 'user' || msg.content).map((msg, i) => (
           <div key={i}>
             {msg.role === 'user' ? (
               <div className="flex justify-end">
