@@ -368,7 +368,7 @@ export default function ArenaPublic() {
         </div>
 
         {/* ── DESKTOP: 4 iPhone mock + descrizione ── */}
-        <div className="hidden lg:flex flex-1 flex-col items-center justify-center gap-6 px-8 py-4 overflow-hidden">
+        <div className="hidden lg:flex flex-1 flex-col items-center justify-center gap-8 px-8 py-4 overflow-hidden">
 
           {/* Titolo */}
           <div className="text-center">
