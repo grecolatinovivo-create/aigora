@@ -1,15 +1,17 @@
 'use client'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-export type SelectableMode = '2v2' | 'devil' | 'brainstorm'
+export type SelectableMode = 'chat' | '2v2' | 'devil' | 'brainstorm'
 
 const MODE_LABELS: Record<SelectableMode, string> = {
+  'chat': 'Dibattito',
   '2v2': '2 vs 2',
   'devil': "Devil's Advocate",
   'brainstorm': 'Brainstormer',
 }
 
 const MODE_MESSAGES: Record<SelectableMode, string> = {
+  'chat': 'Per avviare il dibattito con le 4 AI, crea un account gratuito.',
   '2v2': 'Per entrare nel 2 vs 2 serve un account. Ci vogliono 30 secondi.',
   'devil': "Per sfidare le AI in Devil's Advocate, crea un account gratuito.",
   'brainstorm': 'Per usare il Brainstormer completo, crea un account gratuito.',
@@ -74,7 +76,7 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const callbackUrl = mode === 'brainstorm' ? '/brainstorm' : `/?mode=${mode}`
+  const callbackUrl = mode === 'brainstorm' ? '/brainstorm' : '/'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
