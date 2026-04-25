@@ -13,6 +13,7 @@ interface HistoryItem {
   id: string
   idea: string
   answers: IntakeAnswer[]
+  thread: { userNote: string; text: string }[]
   output: string
   grokOutput?: string | null
   feedback?: string | null
@@ -72,6 +73,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   // Output unico del concilio
+  const [outputThread, setOutputThread] = useState<{userNote: string; text: string}[]>([])
   const [outputText, setOutputText] = useState('')
   const [outputStreaming, setOutputStreaming] = useState(false)
   const [outputDone, setOutputDone] = useState(false)
@@ -145,17 +147,26 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     if (phase === 'initial') setTimeout(() => ideaRef.current?.focus(), 100)
   }, [phase])
 
-  // ── Auto-salvataggio sessione quando output è completo ──
+  // ── Auto-salvataggio sessione quando output è completo (crea o aggiorna) ──
   useEffect(() => {
-    if (outputDone && outputText && idea && !currentSessionId) {
+    if (!outputDone || !outputText || !idea) return
+    if (!currentSessionId) {
+      // Prima generazione: crea sessione
       fetch('/api/brainstorm/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea, answers, output: outputText }),
+        body: JSON.stringify({ idea, answers, thread: outputThread, output: outputText }),
       })
         .then(r => r.json())
         .then(data => { if (data.id) setCurrentSessionId(data.id) })
         .catch(() => {})
+    } else {
+      // Raffinamento: aggiorna output e thread nella sessione esistente
+      fetch('/api/brainstorm/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentSessionId, thread: outputThread, output: outputText }),
+      }).catch(() => {})
     }
   }, [outputDone]) // eslint-disable-line
 
@@ -202,6 +213,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const loadSession = (item: HistoryItem) => {
     setIdea(item.idea)
     setAnswers(item.answers)
+    setOutputThread(item.thread ?? [])
     setOutputText(item.output)
     setOutputStreaming(false)
     setOutputDone(true)
@@ -257,6 +269,8 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     // Reset per nuovo brainstorm
     setCurrentSessionId(null)
     setOutputFeedback(null)
+    setOutputThread([])
+    setOutputText('')
     setGrokText('')
     setGrokDone(false)
     setPhase('intake')
@@ -303,6 +317,10 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
   // Avvia generazione — voce unica del concilio
   const startGeneration = useCallback(async (note?: string, previousOutput?: string) => {
+    // Se è un raffinamento, salva la risposta precedente nel thread (non cancellarla!)
+    if (note && previousOutput) {
+      setOutputThread(prev => [...prev, { userNote: note, text: previousOutput }])
+    }
     setOutputText('')
     setOutputStreaming(true)
     setOutputDone(false)
@@ -918,6 +936,23 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     ))}
                   </div>
 
+                  {/* Thread — risposte precedenti accumulate */}
+                  {outputThread.map((entry, i) => (
+                    <div key={i} style={{ marginBottom: '36px' }}>
+                      <p style={{ fontSize: '16px', color: '#1A1A1A', lineHeight: 1.85, whiteSpace: 'pre-wrap', opacity: 0.45 }}>
+                        {renderBold(entry.text)}
+                      </p>
+                      {/* Nota dell'utente */}
+                      <div style={{ marginTop: '18px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                        <div style={{ width: '2px', minHeight: '20px', background: 'rgba(167,139,250,0.4)', borderRadius: '2px', flexShrink: 0, marginTop: '2px' }} />
+                        <p style={{ fontSize: '13px', color: '#A78BFA', fontStyle: 'italic', lineHeight: 1.55, margin: 0 }}>
+                          "{entry.userNote}"
+                        </p>
+                      </div>
+                      <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', marginTop: '24px' }} />
+                    </div>
+                  ))}
+
                   {/* Loading iniziale */}
                   {!outputText && outputStreaming && (
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '20px 0' }}>
@@ -961,7 +996,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                             👎
                           </button>
                           {!grokStreaming && !grokDone && (
-                            <button onClick={() => { setOutputText(''); setOutputDone(false); setShowNote(false); setOutputNote(''); setOutputFeedback(null); setCurrentSessionId(null); startGeneration() }}
+                            <button onClick={() => { setOutputThread([]); setOutputText(''); setOutputDone(false); setShowNote(false); setOutputNote(''); setOutputFeedback(null); setCurrentSessionId(null); startGeneration() }}
                               style={{ padding: '7px 18px', border: '1px solid rgba(0,0,0,0.12)', borderRadius: '100px', background: 'transparent', color: '#999', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
                               ↺ Riscrivi
                             </button>

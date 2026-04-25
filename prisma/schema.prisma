@@ -177,6 +177,7 @@ model BrainstormSession {
   userId     String
   idea       String
   answers    Json
+  thread     Json     @default("[]")
   output     String
   grokOutput String?
   feedback   String?

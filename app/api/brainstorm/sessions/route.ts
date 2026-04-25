@@ -17,13 +17,13 @@ export async function GET() {
     where: { userId: user.id },
     orderBy: { createdAt: 'desc' },
     take: 50,
-    select: { id: true, idea: true, answers: true, output: true, grokOutput: true, feedback: true, createdAt: true },
+    select: { id: true, idea: true, answers: true, thread: true, output: true, grokOutput: true, feedback: true, createdAt: true },
   })
 
   return NextResponse.json(items)
 }
 
-// POST — crea nuova sessione o aggiorna una esistente (grokOutput, feedback)
+// POST — crea nuova sessione o aggiorna una esistente
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
   const body = await req.json()
-  const { id, idea, answers, output, grokOutput, feedback } = body
+  const { id, idea, answers, thread, output, grokOutput, feedback } = body
 
   // Update esistente
   if (id) {
@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
     const updated = await prisma.brainstormSession.update({
       where: { id },
       data: {
+        ...(output !== undefined && { output }),
+        ...(thread !== undefined && { thread }),
         ...(grokOutput !== undefined && { grokOutput }),
         ...(feedback !== undefined && { feedback }),
       },
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       idea,
       answers: answers ?? [],
+      thread: thread ?? [],
       output,
     },
   })
