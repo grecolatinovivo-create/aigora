@@ -84,8 +84,9 @@ function BrainstormScreen() {
             <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: '#A78BFA', opacity: 0.7, animation: `dot-bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
           ))}
         </div>
-        <div style={{ width: '100%', padding: '6px 8px', borderRadius: 8, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(167,139,250,0.15)' }}>
-          <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>Il modello freemium ha trasformato il SaaS: riduce l'attrito e massimizza la retention nel lungo periodo…</div>
+        <div style={{ width: '100%', padding: '8px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(167,139,250,0.18)' }}>
+          <div style={{ fontSize: 8, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>Il concilio ha deciso:</div>
+          <div style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55, marginTop: 2 }}>Parti dal prodotto, non dal mercato.</div>
         </div>
       </div>
       <div style={{ padding: '5px 7px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
@@ -111,7 +112,7 @@ const MODE_INFO: Record<PhoneMode, { title: string; desc: string; cta: string; s
   },
   'devil': {
     title: 'Devil\'s Advocate',
-    desc: 'Ricevi una posizione scomoda e difendila contro 4 AI che ti attaccheranno senza pietà. Più resisti, più sali di punteggio.',
+    desc: 'Grok ti assegna una posizione scomoda da difendere. Claude, GPT, Gemini e Perplexity ti attaccheranno senza pietà. Più reggi, più sali.',
     cta: 'Inizia la sfida →',
   },
   'brainstorm': {
@@ -255,12 +256,16 @@ function TwoVsTwoScreen() {
 // ── Schermo Devil's Advocate ──────────────────────────────────────────────────
 function DevilScreen() {
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#080004', position: 'relative', padding: 12 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#080004', position: 'relative' }}>
       <HellGridBg />
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12 }}>
         <div style={{ fontSize: 42, filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.8))' }}>😈</div>
         <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(239,68,68,0.85)', textAlign: 'center' }}>Difendi l'indifendibile</div>
         <div style={{ padding: '3px 10px', borderRadius: 999, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', fontSize: 8, fontWeight: 900, color: '#ef4444' }}>4 AI nemiche</div>
+      </div>
+      {/* Powered by Grok */}
+      <div style={{ position: 'relative', zIndex: 1, padding: '6px 10px', borderTop: '1px solid rgba(239,68,68,0.15)', background: 'rgba(0,0,0,0.4)', textAlign: 'center' }}>
+        <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(239,68,68,0.45)' }}>Powered by GROK</div>
       </div>
     </div>
   )
