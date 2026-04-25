@@ -77,6 +77,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const [outputText, setOutputText] = useState('')
   const [outputStreaming, setOutputStreaming] = useState(false)
   const [outputDone, setOutputDone] = useState(false)
+  const [concilioPhase, setConcilioPhase] = useState<'round1' | 'round2' | 'synthesis' | null>(null)
   const [outputNote, setOutputNote] = useState('')
   const [showNote, setShowNote] = useState(false)
   const [outputFeedback, setOutputFeedback] = useState<'up' | 'down' | null>(null)
@@ -324,6 +325,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     setOutputText('')
     setOutputStreaming(true)
     setOutputDone(false)
+    setConcilioPhase(note ? 'synthesis' : 'round1')
     setShowNote(false)
     setOutputNote('')
 
@@ -350,6 +352,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
       }, 22)
 
       await parseSSE(res, (event) => {
+        if (event.phase) setConcilioPhase(event.phase)
         if (event.text) queue.text += event.text
       }, () => {
         const waitDrain = setInterval(() => {
@@ -357,12 +360,14 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
             clearInterval(waitDrain)
             clearInterval(drainId)
             setOutputStreaming(false)
+            setConcilioPhase(null)
             setOutputDone(true)
           }
         }, 50)
       })
     } catch {
       setOutputStreaming(false)
+      setConcilioPhase(null)
     }
   }, [])
 
@@ -917,23 +922,40 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     <p style={{ fontSize: '18px', color: '#222', fontWeight: 500, lineHeight: 1.5 }}>{idea}</p>
                   </div>
 
-                  {/* 4 AI indicators */}
-                  <div style={{ display: 'flex', gap: '16px', marginBottom: '36px', alignItems: 'center' }}>
-                    {AI_MEMBERS.map((ai, i) => (
-                      <div key={ai.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <div style={{
-                          width: '7px', height: '7px', borderRadius: '50%',
-                          backgroundColor: ai.color,
-                          animation: outputStreaming ? `bs-ai-pulse 1.4s ease-in-out infinite` : 'none',
-                          animationDelay: `${i * 0.2}s`,
-                          opacity: outputStreaming ? 1 : 0.35,
-                          transition: 'opacity 0.5s',
-                        }} />
-                        <span style={{ fontSize: '11px', color: outputStreaming ? '#888' : '#CCCCCC', letterSpacing: '0.04em', transition: 'color 0.5s' }}>
-                          {ai.label}
-                        </span>
-                      </div>
-                    ))}
+                  {/* 4 AI indicators + label fase */}
+                  <div style={{ marginBottom: '36px' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '8px' }}>
+                      {AI_MEMBERS.map((ai, i) => {
+                        const active = concilioPhase === 'round1' || concilioPhase === 'round2'
+                        const synth = concilioPhase === 'synthesis'
+                        const idle = !outputStreaming
+                        return (
+                          <div key={ai.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{
+                              width: '7px', height: '7px', borderRadius: '50%',
+                              backgroundColor: ai.color,
+                              animation: active
+                                ? `bs-ai-pulse 0.8s ease-in-out infinite`
+                                : synth ? `bs-ai-pulse 1.8s ease-in-out infinite` : 'none',
+                              animationDelay: `${i * (active ? 0.1 : 0.25)}s`,
+                              opacity: idle ? 0.25 : synth ? 0.4 : 1,
+                              transition: 'opacity 0.4s',
+                            }} />
+                            <span style={{ fontSize: '11px', color: active ? '#555' : synth ? '#BBBBBB' : '#DDDDDD', letterSpacing: '0.04em', transition: 'color 0.4s' }}>
+                              {ai.label}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {/* Label fase */}
+                    {concilioPhase && (
+                      <p style={{ fontSize: '10px', color: '#BBBBBB', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0, animation: 'bs-q-enter 0.3s ease-out' }}>
+                        {concilioPhase === 'round1' && '● Deliberazione in corso…'}
+                        {concilioPhase === 'round2' && '● Il concilio si confronta…'}
+                        {concilioPhase === 'synthesis' && '● Sintesi in arrivo…'}
+                      </p>
+                    )}
                   </div>
 
                   {/* Thread — risposte precedenti accumulate */}

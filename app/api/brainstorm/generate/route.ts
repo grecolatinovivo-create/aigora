@@ -7,36 +7,68 @@ export const maxDuration = 60
 
 interface IntakeAnswer { question: string; answer: string }
 
-// ── Prompt per la deliberazione individuale di ogni AI ─────────────────────
-const DELIBERATION: Record<string, string> = {
+interface Round1 {
+  claude: string
+  gpt: string
+  gemini: string
+  perplexity: string
+}
+
+// ── Round 1 — prospettiva individuale ─────────────────────────────────────
+const R1: Record<string, string> = {
   claude: `Sei Claude, parte di un concilio di brainstorming.
 Analizza questa idea con la tua prospettiva: riflessiva, attenta ai valori, all'etica e all'impatto umano.
 Cosa ti colpisce? Dove vedi potenziale autentico o rischi nascosti?
-Max 80 parole. Scrivi in italiano. Diretto, senza preamboli.`,
+Max 80 parole. In italiano. Diretto, senza preamboli.`,
 
   gpt: `Sei GPT, parte di un concilio di brainstorming.
 Analizza questa idea con la tua prospettiva: pratica, concreta, orientata all'esecuzione.
 Cosa funziona davvero? Cosa manca? Come si fa?
-Max 80 parole. Scrivi in italiano. Diretto, senza preamboli.`,
+Max 80 parole. In italiano. Diretto, senza preamboli.`,
 
   gemini: `Sei Gemini, parte di un concilio di brainstorming.
 Analizza questa idea con la tua prospettiva: analitica, strutturata, orientata ai pattern e ai dati.
 Quali dinamiche vedi? Quali analogie con casi simili? Quali metriche contano?
-Max 80 parole. Scrivi in italiano. Diretto, senza preamboli.`,
+Max 80 parole. In italiano. Diretto, senza preamboli.`,
 
   perplexity: `Sei Perplexity, parte di un concilio di brainstorming.
-Analizza questa idea con la tua prospettiva: trend attuali, mercato reale, esempi concreti di successo o fallimento simili.
+Analizza questa idea con la tua prospettiva: trend attuali, mercato reale, esempi concreti.
 Cosa sta succedendo nel mondo che è rilevante per questa idea?
-Max 80 parole. Scrivi in italiano. Diretto, senza preamboli.`,
+Max 80 parole. In italiano. Diretto, senza preamboli.`,
 
   perplexity_gemini: `Sei Perplexity. Hai una conoscenza profonda di mercati, trend e case study.
 Analizza questa idea: trend recenti del settore, esempi concreti di casi simili, dinamiche di mercato.
 Non inventare dati, ragiona su ciò che conosci. Max 80 parole. In italiano. Diretto.`,
 }
 
-// ── Prompt di sintesi finale ───────────────────────────────────────────────
+// ── Round 2 — reazione alle prospettive degli altri ───────────────────────
+const R2: Record<string, string> = {
+  claude: `Sei Claude in un concilio di brainstorming. Gli altri hanno appena condiviso le loro prospettive.
+Reagisci in modo specifico: cosa condividi, cosa ti preoccupa, cosa aggiungeresti che manca?
+Puoi concordare o dissentire, ma porta qualcosa di nuovo. Non ripetere quello che hai già detto.
+Max 70 parole. In italiano. Diretto.`,
+
+  gpt: `Sei GPT in un concilio di brainstorming. Gli altri hanno appena condiviso le loro prospettive.
+Reagisci in modo pratico: cosa funziona di quello che hanno detto, cosa manca, cosa è sbagliato?
+Sii diretto, puoi essere critico. Max 70 parole. In italiano.`,
+
+  gemini: `Sei Gemini in un concilio di brainstorming. Gli altri hanno appena condiviso le loro prospettive.
+Reagisci analiticamente: ci sono pattern, contraddizioni o dati che mancano in quello che hanno detto?
+Porta struttura al ragionamento collettivo. Max 70 parole. In italiano. Diretto.`,
+
+  perplexity: `Sei Perplexity in un concilio di brainstorming. Gli altri hanno appena condiviso le loro prospettive.
+Reagisci con dati e contesto: quello che dicono è supportato dalla realtà attuale del mercato?
+Cosa aggiunge o corregge, basandoti su ciò che sai. Max 70 parole. In italiano. Diretto.`,
+
+  perplexity_gemini: `Sei Perplexity in un concilio di brainstorming. Gli altri hanno appena condiviso le loro prospettive.
+Reagisci con contesto di mercato: quello che dicono è allineato ai trend reali? Aggiungi o correggi.
+Max 70 parole. In italiano. Diretto.`,
+}
+
+// ── Sintesi finale ────────────────────────────────────────────────────────
 const SYNTHESIS_SYSTEM = `Sei la voce unificata di un concilio di quattro AI: Claude, Gemini, GPT, Perplexity.
-Hai già deliberato internamente. Conosci le 4 prospettive. Ora parli con una voce sola, diretta, autorevole.
+Hanno deliberato in due round: prima le prospettive individuali, poi le reazioni reciproche.
+Hai letto tutto. Ora parli con una voce sola, diretta, autorevole.
 
 REGOLA ASSOLUTA: Non citare mai le singole AI. Non dire "Claude pensa", "GPT suggerisce", "secondo Gemini". Non elencare prospettive. Non fare sintesi numerata. Il concilio ha già deciso — tu sei la sua voce finale.
 
@@ -44,43 +76,35 @@ Prima di tutto, determina se la richiesta è PRATICA o STRATEGICA.
 
 PRATICA — l'utente vuole un output concreto: una mail, un testo, uno script, un piano, un documento da usare subito:
 → Produci direttamente il deliverable. Non spiegare come farlo. Fallo.
-→ La profondità del brainstorming entra nella qualità dell'output, non come premessa separata.
 
 STRATEGICA — l'utente ha un'idea da sviluppare, un problema da risolvere, una direzione da trovare:
 → Dai una risposta strategica, coerente, orientata all'azione.
-→ Scegli una direzione chiara e difendila. Niente pro/contro, niente "da un lato... dall'altro".
-→ Parla come un consulente di fiducia che ti conosce già. Sii concreto: cosa fare, come, perché.
+→ Scegli una direzione chiara e difendila. Niente pro/contro.
+→ Parla come un consulente di fiducia. Sii concreto: cosa fare, come, perché.
 
 Regole formali:
-- Inizia direttamente con il contenuto — nessun preambolo tipo "Certo!" o "Ecco la mia analisi"
+- Inizia direttamente con il contenuto — nessun preambolo
 - Nessun titolo, nessuna sezione etichettata, nessun header
-- Nessuna lista a punti, a meno che non sia la forma più utile per il deliverable (es. un piano settimanale)
-- Tono diretto, caldo, preciso
-- Scrivi in italiano
-- Rivolgiti all'utente con "tu"
+- Nessuna lista a punti, a meno che non sia la forma più utile per il deliverable
+- Tono diretto, caldo, preciso — scrivi in italiano — rivolgiti con "tu"
 - Max 450 parole`
 
 // ── Helper: Promise con timeout ────────────────────────────────────────────
-async function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
-  let timer: ReturnType<typeof setTimeout>
-  const race = await Promise.race([
-    promise,
-    new Promise<T>(resolve => { timer = setTimeout(() => resolve(fallback), ms) }),
-  ])
-  clearTimeout(timer!)
-  return race
+async function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let t: ReturnType<typeof setTimeout>
+  const r = await Promise.race([p, new Promise<T>(res => { t = setTimeout(() => res(fallback), ms) })])
+  clearTimeout(t!)
+  return r
 }
 
-// ── Chiamate non-streaming ai singoli modelli ──────────────────────────────
+// ── Chiamate non-streaming ─────────────────────────────────────────────────
 async function askClaude(system: string, content: string): Promise<string> {
   try {
     const Anthropic = (await import('@anthropic-ai/sdk')).default
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const res = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 250,
-      system,
-      messages: [{ role: 'user', content }],
+      model: 'claude-haiku-4-5-20251001', max_tokens: 250,
+      system, messages: [{ role: 'user', content }],
     })
     return (res.content[0] as { type: string; text: string }).text ?? ''
   } catch { return '' }
@@ -92,12 +116,8 @@ async function askGPT(system: string, content: string): Promise<string> {
     const OpenAI = (await import('openai')).default
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
     const res = await client.chat.completions.create({
-      model: 'gpt-4.1-mini',
-      max_tokens: 250,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content },
-      ],
+      model: 'gpt-4.1-mini', max_tokens: 250,
+      messages: [{ role: 'system', content: system }, { role: 'user', content }],
     })
     return res.choices[0]?.message?.content ?? ''
   } catch { return '' }
@@ -115,62 +135,63 @@ async function askGemini(system: string, content: string): Promise<string> {
     })
     const result = await model.generateContent(content)
     return result.response.text() ?? ''
-  } catch (e) {
-    console.error('Gemini brainstorm deliberation error:', e)
-    return askClaude(system, content)
-  }
+  } catch { return askClaude(system, content) }
 }
 
 async function askPerplexity(system: string, content: string): Promise<string> {
   if (!process.env.PERPLEXITY_API_KEY) return ''
   try {
     const OpenAI = (await import('openai')).default
-    const client = new OpenAI({
-      apiKey: process.env.PERPLEXITY_API_KEY,
-      baseURL: 'https://api.perplexity.ai',
-    })
+    const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res = await (client.chat.completions.create as any)({
-      model: 'sonar',
-      max_tokens: 250,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content },
-      ],
+      model: 'sonar', max_tokens: 250,
+      messages: [{ role: 'system', content: system }, { role: 'user', content }],
     })
-    const raw: string = res.choices[0]?.message?.content ?? ''
-    return raw.replace(/\[\d+\]/g, '') // strip citation markers [1][2]
-  } catch (e) {
-    console.error('Perplexity brainstorm deliberation error:', e)
-    return ''
-  }
+    return (res.choices[0]?.message?.content ?? '').replace(/\[\d+\]/g, '')
+  } catch { return '' }
 }
 
-// ── Costruisce il contesto utente ──────────────────────────────────────────
-function buildUserContext(idea: string, answers: IntakeAnswer[]): string {
-  const qa = answers.map(a => `- ${a.question}\n  → ${a.answer}`).join('\n')
-  return `Idea dell'utente: "${idea}"${qa ? `\n\nContesto rivelato:\n${qa}` : ''}`
+// ── Contesto round 2: tutti vedono le prospettive del round 1 ─────────────
+function buildRound2Content(userContext: string, r1: Round1): string {
+  const perspectives = [
+    r1.claude     && `[CLAUDE]\n${r1.claude}`,
+    r1.gpt        && `[GPT]\n${r1.gpt}`,
+    r1.gemini     && `[GEMINI]\n${r1.gemini}`,
+    r1.perplexity && `[PERPLEXITY]\n${r1.perplexity}`,
+  ].filter(Boolean).join('\n\n')
+
+  return `${userContext}\n\n---\nLe prospettive del primo round:\n\n${perspectives}\n\n---\nOra reagisci a quello che hai letto.`
 }
 
-// ── Costruisce il prompt per la sintesi ───────────────────────────────────
+// ── Prompt sintesi finale con entrambi i round ─────────────────────────────
 function buildSynthesisPrompt(
   userContext: string,
-  p: { claude: string; gpt: string; gemini: string; perplexity: string },
+  r1: Round1,
+  r2: Round1,
   note?: string,
   previousOutput?: string,
 ): string {
-  const sections = [
-    p.claude     && `[CLAUDE]\n${p.claude}`,
-    p.gpt        && `[GPT]\n${p.gpt}`,
-    p.gemini     && `[GEMINI]\n${p.gemini}`,
-    p.perplexity && `[PERPLEXITY]\n${p.perplexity}`,
-  ].filter(Boolean).join('\n\n')
+  const fmt = (label: string, r1text: string, r2text: string) =>
+    `[${label}]\nRound 1: ${r1text || '—'}\nRound 2: ${r2text || '—'}`
+
+  const council = [
+    fmt('CLAUDE', r1.claude, r2.claude),
+    fmt('GPT', r1.gpt, r2.gpt),
+    fmt('GEMINI', r1.gemini, r2.gemini),
+    fmt('PERPLEXITY', r1.perplexity, r2.perplexity),
+  ].join('\n\n')
 
   if (previousOutput && note) {
-    return `${userContext}\n\n---\nVersione precedente:\n${previousOutput}\n\nIndicazione dell'utente: "${note}"\n\n---\nPerspettive aggiornate del concilio:\n\n${sections}\n\n---\nRaffina la risposta precedente incorporando l'indicazione. Mantieni formato e stile.`
+    return `${userContext}\n\n---\nVersione precedente:\n${previousOutput}\n\nIndicazione dell'utente: "${note}"\n\n---\nIl concilio ha discusso (2 round):\n\n${council}\n\n---\nRaffina la risposta precedente incorporando l'indicazione.`
   }
 
-  return `${userContext}\n\n---\nLe prospettive del concilio:\n\n${sections}\n\n---\nProduci la risposta finale unificata.`
+  return `${userContext}\n\n---\nIl concilio ha discusso in due round:\n\n${council}\n\n---\nProduci la risposta finale unificata.`
+}
+
+function buildUserContext(idea: string, answers: IntakeAnswer[]): string {
+  const qa = answers.map(a => `- ${a.question}\n  → ${a.answer}`).join('\n')
+  return `Idea dell'utente: "${idea}"${qa ? `\n\nContesto rivelato:\n${qa}` : ''}`
 }
 
 export async function POST(req: NextRequest) {
@@ -180,7 +201,7 @@ export async function POST(req: NextRequest) {
   const { idea, answers, note, previousOutput } = await req.json()
   if (!idea) return NextResponse.json({ error: 'Idea mancante' }, { status: 400 })
 
-  // ── Controlla flag forceGeminiPerp (utente + admin) ───────────────────
+  // ── Flag forceGeminiPerp ───────────────────────────────────────────────
   let useGeminiAsPerplexity = !process.env.PERPLEXITY_API_KEY
   if (!useGeminiAsPerplexity) {
     try {
@@ -195,38 +216,66 @@ export async function POST(req: NextRequest) {
     } catch {}
   }
 
+  const perpR1Key = useGeminiAsPerplexity ? 'perplexity_gemini' : 'perplexity'
+  const perpR2Key = useGeminiAsPerplexity ? 'perplexity_gemini' : 'perplexity'
   const userContext = buildUserContext(idea, answers ?? [])
   const isRefinement = !!(note && previousOutput)
 
-  let perspectives = { claude: '', gpt: '', gemini: '', perplexity: '' }
-
-  if (!isRefinement) {
-    // ── Deliberazione parallela: tutti e 4 in parallelo, timeout 9s ──────
-    const [claudeRes, gptRes, geminiRes, perplexityRes] = await Promise.all([
-      withTimeout(askClaude(DELIBERATION.claude, userContext), 9000, ''),
-      withTimeout(askGPT(DELIBERATION.gpt, userContext), 9000, ''),
-      withTimeout(askGemini(DELIBERATION.gemini, userContext), 9000, ''),
-      withTimeout(
-        useGeminiAsPerplexity
-          ? askGemini(DELIBERATION.perplexity_gemini, userContext)
-          : askPerplexity(DELIBERATION.perplexity, userContext),
-        9000,
-        '',
-      ),
-    ])
-    perspectives = { claude: claudeRes, gpt: gptRes, gemini: geminiRes, perplexity: perplexityRes }
-  }
-
-  // ── Sintesi streaming con Claude ─────────────────────────────────────
-  const synthesisPrompt = buildSynthesisPrompt(userContext, perspectives, note, previousOutput)
   const encoder = new TextEncoder()
+  const sendPhase = (controller: ReadableStreamDefaultController, phase: string) => {
+    try { controller.enqueue(encoder.encode(`data: ${JSON.stringify({ phase })}\n\n`)) } catch {}
+  }
+  const sendText = (controller: ReadableStreamDefaultController, text: string) => {
+    try { controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)) } catch {}
+  }
 
   const readable = new ReadableStream({
     async start(controller) {
       const keepalive = setInterval(() => {
         try { controller.enqueue(encoder.encode(': keepalive\n\n')) } catch {}
       }, 5000)
+
+      let r1: Round1 = { claude: '', gpt: '', gemini: '', perplexity: '' }
+      let r2: Round1 = { claude: '', gpt: '', gemini: '', perplexity: '' }
+
       try {
+        if (!isRefinement) {
+          // ── Round 1: tutti e 4 in parallelo ────────────────────────────
+          sendPhase(controller, 'round1')
+          const [c1, g1, ge1, p1] = await Promise.all([
+            withTimeout(askClaude(R1.claude, userContext), 9000, ''),
+            withTimeout(askGPT(R1.gpt, userContext), 9000, ''),
+            withTimeout(askGemini(R1.gemini, userContext), 9000, ''),
+            withTimeout(
+              useGeminiAsPerplexity
+                ? askGemini(R1[perpR1Key], userContext)
+                : askPerplexity(R1[perpR1Key], userContext),
+              9000, ''
+            ),
+          ])
+          r1 = { claude: c1, gpt: g1, gemini: ge1, perplexity: p1 }
+
+          // ── Round 2: tutti e 4 leggono i round 1 e reagiscono ──────────
+          sendPhase(controller, 'round2')
+          const r2Content = buildRound2Content(userContext, r1)
+          const [c2, g2, ge2, p2] = await Promise.all([
+            withTimeout(askClaude(R2.claude, r2Content), 9000, ''),
+            withTimeout(askGPT(R2.gpt, r2Content), 9000, ''),
+            withTimeout(askGemini(R2.gemini, r2Content), 9000, ''),
+            withTimeout(
+              useGeminiAsPerplexity
+                ? askGemini(R2[perpR2Key], r2Content)
+                : askPerplexity(R2[perpR2Key], r2Content),
+              9000, ''
+            ),
+          ])
+          r2 = { claude: c2, gpt: g2, gemini: ge2, perplexity: p2 }
+        }
+
+        // ── Sintesi streaming ───────────────────────────────────────────
+        sendPhase(controller, 'synthesis')
+        const synthesisPrompt = buildSynthesisPrompt(userContext, r1, r2, note, previousOutput)
+
         const Anthropic = (await import('@anthropic-ai/sdk')).default
         const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
         const stream = await client.messages.stream({
@@ -237,11 +286,11 @@ export async function POST(req: NextRequest) {
         })
         for await (const chunk of stream) {
           if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`))
+            sendText(controller, chunk.delta.text)
           }
         }
       } catch (e) {
-        console.error('Brainstorm synthesis error:', e)
+        console.error('Brainstorm generate error:', e)
       } finally {
         clearInterval(keepalive)
         try {
