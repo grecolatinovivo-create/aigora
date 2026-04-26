@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import LoginModal, { type SelectableMode } from '@/app/components/landing/LoginModal'
+import TopicPickerModal from '@/app/components/landing/TopicPickerModal'
 
 // ── Hell grid per Devil ───────────────────────────────────────────────────────
 function HellGridBg() {
@@ -250,6 +251,7 @@ function ModeSection({
 export default function LandingPage() {
   const router = useRouter()
   const [pendingMode, setPendingMode] = useState<SelectableMode | null>(null)
+  const [showTopicPicker, setShowTopicPicker] = useState(false)
 
   const scrollToModes = () => {
     document.getElementById('modalita')?.scrollIntoView({ behavior: 'smooth' })
@@ -329,7 +331,7 @@ export default function LandingPage() {
           title="Fai una domanda, guarda 4 AI confrontarsi."
           body="Claude, GPT, Gemini e Perplexity rispondono in sequenza, si leggono a vicenda e costruiscono un ragionamento collettivo. Tu puoi intervenire in qualsiasi momento e cambiare le carte in tavola."
           cta="Avvia il dibattito →"
-          onCta={() => setPendingMode('chat')}
+          onCta={() => setShowTopicPicker(true)}
           btnGradient="linear-gradient(135deg,#7C3AED,#5B21B6)"
           btnShadow="0 4px 24px rgba(124,58,237,0.45)"
           bgFade="#07070f"
@@ -423,7 +425,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Login modal */}
+      {/* Topic picker modal (Dibattito demo) */}
+      {showTopicPicker && <TopicPickerModal onClose={() => setShowTopicPicker(false)} />}
+
+      {/* Login modal (2v2, Devil's, Brainstormer) */}
       {pendingMode && <LoginModal mode={pendingMode} onClose={() => setPendingMode(null)} />}
     </div>
   )
