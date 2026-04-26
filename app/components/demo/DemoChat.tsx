@@ -8,18 +8,15 @@ import ThinkingBubble from '@/app/components/chat/ThinkingBubble'
 import PhoneAvatarBar from '@/app/components/layout/PhoneAvatarBar'
 import { AI_NAMES } from '@/app/lib/aiProfiles'
 
-// ── Config AI (ordine dibattito) ──────────────────────────────────────────────
+// ── Costanti ──────────────────────────────────────────────────────────────────
 const AI_ORDER = ['claude', 'gpt', 'gemini', 'perplexity']
+const TYPEWRITER_DELAY = 48 // ms per carattere — identico ad AigoraChat
 
 type Phase = 'round1' | 'between' | 'round2' | 'locked'
 type HistoryEntry = { role: string; content: string }
 
-// ── Streaming helper ──────────────────────────────────────────────────────────
-async function streamDemoAI(
-  aiId: string,
-  history: HistoryEntry[],
-  onChunk: (text: string) => void,
-): Promise<string> {
+// ── Fetch testo completo (nessun aggiornamento UI durante il download) ─────────
+async function fetchDemoAI(aiId: string, history: HistoryEntry[]): Promise<string> {
   const res = await fetch('/api/demo/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -43,7 +40,7 @@ async function streamDemoAI(
       if (d === '[DONE]') return fullText
       try {
         const parsed = JSON.parse(d)
-        if (parsed.text) { fullText += parsed.text; onChunk(parsed.text) }
+        if (parsed.text) fullText += parsed.text
       } catch {}
     }
     if (done) break
@@ -55,7 +52,7 @@ async function streamDemoAI(
 export default function DemoChat({ topic }: { topic: string }) {
   const router = useRouter()
 
-  // La domanda dell'utente appare subito come bubble verde
+  // La domanda dell'utente appare subito come bubble verde (identico alla chat vera)
   const [messages, setMessages] = useState<Message[]>([
     { id: 'user-topic', aiId: 'user', name: 'Tu', content: topic, isUser: true },
   ])
@@ -64,8 +61,8 @@ export default function DemoChat({ topic }: { topic: string }) {
   const [history, setHistory] = useState<HistoryEntry[]>([{ role: 'utente', content: topic }])
   const [showLogin, setShowLogin] = useState(false)
   const [phoneScale, setPhoneScale] = useState(1)
-  const [activeAi, setActiveAi] = useState<string | null>(null)
-  const [thinkingAi, setThinkingAi] = useState<string | null>(null)
+  const [activeAi, setActiveAi] = useState<string | null>(null)   // usato da header + PhoneAvatarBar
+  const [thinkingAi, setThinkingAi] = useState<string | null>(null) // mostra ThinkingBubble
   const [currentTime, setCurrentTime] = useState(() => {
     const now = new Date()
     return `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
@@ -73,6 +70,7 @@ export default function DemoChat({ topic }: { topic: string }) {
 
   const started = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Orologio
   useEffect(() => {
@@ -101,55 +99,71 @@ export default function DemoChat({ topic }: { topic: string }) {
     if (phase === 'between') setTimeout(() => inputRef.current?.focus(), 100)
   }, [phase])
 
-  const runRound = useCallback(async (startHistory: HistoryEntry[]): Promise<HistoryEntry[]> => {
-    let currentHistory = [...startHistory]
+  // Scroll in fondo quando arrivano nuovi messaggi
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
 
-    for (const aiId of AI_ORDER) {
-      const msgId = `${aiId}-${Date.now()}-${Math.random()}`
+  // ── Typewriter identico ad AigoraChat ────────────────────────────────────
+  const typewriteText = useCallback((msgId: string, text: string): Promise<void> => {
+    return new Promise(resolve => {
+      let i = 0
+      const iv = setInterval(() => {
+        if (i >= text.length) { clearInterval(iv); resolve(); return }
+        i++
+        setMessages(prev => prev.map(m => m.id === msgId ? { ...m, content: text.slice(0, i) } : m))
+        if (i % 14 === 0) scrollToBottom()
+      }, TYPEWRITER_DELAY)
+    })
+  }, [scrollToBottom])
 
-      // 1. Mostra ThinkingBubble (~600ms prima di iniziare a streammare)
-      setThinkingAi(aiId)
-      setActiveAi(null)
-      await new Promise(r => setTimeout(r, 600))
+  // ── Una risposta AI: thinking → fetch → typewrite ─────────────────────────
+  const runOneAi = useCallback(async (aiId: string, currentHistory: HistoryEntry[]): Promise<string> => {
+    // 1. ThinkingBubble + avatar glow (identico: activeAi E thinkingAi entrambi settati)
+    setThinkingAi(aiId)
+    setActiveAi(aiId)
 
-      // 2. Aggiunge bubble vuota e inizia streaming
-      setThinkingAi(null)
-      setActiveAi(aiId)
-      setMessages(prev => [...prev, {
-        id: msgId,
-        aiId,
-        name: AI_NAMES[aiId],
-        content: '',
-        isStreaming: true,
-      }])
-
-      let fullText = ''
-      try {
-        await streamDemoAI(aiId, currentHistory, (chunk) => {
-          fullText += chunk
-          setMessages(prev => prev.map(m =>
-            m.id === msgId ? { ...m, content: fullText } : m
-          ))
-        })
-      } catch (err) {
-        console.error(`Demo error for ${aiId}:`, err)
-        track('demo_ai_error', { aiId })
-        fullText = '(errore di connessione — riprova)'
-        setMessages(prev => prev.map(m =>
-          m.id === msgId ? { ...m, content: fullText } : m
-        ))
-      }
-
-      // 3. Fine streaming
-      setMessages(prev => prev.map(m =>
-        m.id === msgId ? { ...m, isStreaming: false } : m
-      ))
-      setActiveAi(null)
-      currentHistory = [...currentHistory, { role: AI_NAMES[aiId], content: fullText }]
+    let fullText = ''
+    try {
+      // 2. Download completo in background (nessun update UI)
+      fullText = await fetchDemoAI(aiId, currentHistory)
+    } catch (err) {
+      console.error(`Demo error for ${aiId}:`, err)
+      track('demo_ai_error', { aiId })
+      fullText = '(errore di connessione — riprova)'
     }
 
+    // 3. Fine thinking — aggiunge bubble vuota e inizia typewriter
+    setThinkingAi(null)
+    const msgId = `${aiId}-${Date.now()}`
+    setMessages(prev => [...prev, {
+      id: msgId,
+      aiId,
+      name: AI_NAMES[aiId],
+      content: '',
+      isStreaming: true,
+    }])
+    scrollToBottom()
+
+    // 4. Typewriter carattere per carattere a 48ms
+    await typewriteText(msgId, fullText)
+
+    // 5. Fine typewriter
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isStreaming: false, content: fullText } : m))
+    setActiveAi(null)
+
+    return fullText
+  }, [typewriteText, scrollToBottom])
+
+  // ── Round completo: tutte le 4 AI in sequenza ─────────────────────────────
+  const runRound = useCallback(async (startHistory: HistoryEntry[]): Promise<HistoryEntry[]> => {
+    let currentHistory = [...startHistory]
+    for (const aiId of AI_ORDER) {
+      const fullText = await runOneAi(aiId, currentHistory)
+      currentHistory = [...currentHistory, { role: AI_NAMES[aiId], content: fullText }]
+    }
     return currentHistory
-  }, [])
+  }, [runOneAi])
 
   // Avvia round 1 al mount
   useEffect(() => {
@@ -168,11 +182,12 @@ export default function DemoChat({ topic }: { topic: string }) {
     setFollowUp('')
     setPhase('round2')
 
-    // Aggiunge messaggio utente
-    const userMsgId = `user-${Date.now()}`
+    // Aggiunge bubble utente
     setMessages(prev => [...prev, {
-      id: userMsgId, aiId: 'user', name: 'Tu', content: text, isUser: true,
+      id: `user-${Date.now()}`,
+      aiId: 'user', name: 'Tu', content: text, isUser: true,
     }])
+    scrollToBottom()
 
     const newHistory = [...history, { role: 'utente', content: text }]
     const finalHistory = await runRound(newHistory)
@@ -181,24 +196,28 @@ export default function DemoChat({ topic }: { topic: string }) {
     try { localStorage.setItem('aigora_demo_used', '1') } catch {}
   }
 
-  // Sottotitolo header dinamico
-  const headerSubtitle = (activeAi || thinkingAi)
-    ? `${AI_NAMES[activeAi ?? thinkingAi!]} sta scrivendo…`
+  // Sottotitolo header — identico alla chat vera
+  const headerSubtitle = activeAi
+    ? `${AI_NAMES[activeAi]} sta scrivendo…`
     : phase === 'locked'
       ? 'Dibattito concluso'
       : '4 AI · Dibattito'
 
-  // ── Contenuto schermo condiviso (desktop + mobile) ────────────────────────
+  // ── Contenuto schermo condiviso desktop + mobile ──────────────────────────
   const screenContent = (
     <>
-      {/* Chat header */}
+      {/* ── Chat header ── */}
       <div className="flex-shrink-0 flex items-center gap-2.5 px-3 py-2"
         style={{ backgroundColor: '#0d0d14', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex -space-x-2 flex-shrink-0">
           {AI_ORDER.map(id => (
             <div key={id}
               className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold ring-1"
-              style={{ fontSize: 8, backgroundColor: id === 'claude' ? '#7C3AED' : id === 'gpt' ? '#10A37F' : id === 'gemini' ? '#1A73E8' : '#FF6B2B', ['--tw-ring-color' as string]: '#0d0d14' }}>
+              style={{
+                fontSize: 8,
+                backgroundColor: id === 'claude' ? '#7C3AED' : id === 'gpt' ? '#10A37F' : id === 'gemini' ? '#1A73E8' : '#FF6B2B',
+                ['--tw-ring-color' as string]: '#0d0d14',
+              }}>
               {id === 'gemini' ? 'Ge' : AI_NAMES[id][0]}
             </div>
           ))}
@@ -216,35 +235,33 @@ export default function DemoChat({ topic }: { topic: string }) {
         </div>
       </div>
 
-      {/* Avatar bar — identica alla chat vera */}
+      {/* ── Avatar bar identica alla chat vera ── */}
       <PhoneAvatarBar
-        activeAi={activeAi ?? thinkingAi}
+        activeAi={activeAi}
         bgColor="#0d0d14"
         isDark={true}
         aiOrder={AI_ORDER}
       />
 
-      {/* Messaggi — flex-col-reverse come la chat vera */}
+      {/* ── Messaggi ── */}
       <div
-        className="flex-1 overflow-y-auto py-2 pb-4 flex flex-col-reverse gap-1 relative"
+        className="flex-1 overflow-y-auto py-2 pb-2 flex flex-col gap-1 relative"
         style={{ backgroundColor: '#07070f', overflowX: 'hidden', minHeight: 0 }}
       >
-        {/* ThinkingBubble in cima (visivamente: in fondo alla lista) */}
-        {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={true} />}
-
-        {/* Messaggi in ordine inverso */}
-        {[...messages].reverse().map(msg => (
+        {messages.map(msg => (
           <MessageBubble key={msg.id} message={msg} bgTheme="white" />
         ))}
+
+        {/* ThinkingBubble — appare mentre l'AI scarica il testo */}
+        {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={true} />}
+
+        <div ref={messagesEndRef} style={{ height: 8 }} />
       </div>
 
-      {/* Input — fase: between */}
+      {/* ── Input (phase: between) ── */}
       {phase === 'between' && (
         <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5"
           style={{ backgroundColor: '#0d0d14', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="text-[9px] sr-only">
-            1 messaggio disponibile
-          </div>
           <input
             ref={inputRef}
             type="text"
@@ -277,7 +294,7 @@ export default function DemoChat({ topic }: { topic: string }) {
         </div>
       )}
 
-      {/* Loading round 2 */}
+      {/* ── Round 2 loading ── */}
       {phase === 'round2' && (
         <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5"
           style={{ backgroundColor: '#0d0d14', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
@@ -285,15 +302,26 @@ export default function DemoChat({ topic }: { topic: string }) {
             disabled
             placeholder="Le AI stanno reagendo…"
             className="flex-1 px-3.5 py-2 text-[12px] outline-none"
-            style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)', borderRadius: 9999, lineHeight: '1.4' }}
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              color: 'rgba(255,255,255,0.3)',
+              borderRadius: 9999,
+              lineHeight: '1.4',
+            }}
           />
         </div>
       )}
 
-      {/* Login wall */}
+      {/* ── Login wall (phase: locked) ── */}
       {phase === 'locked' && (
         <div className="flex-shrink-0 px-4 py-5"
-          style={{ borderTop: '1px solid rgba(167,139,250,0.2)', background: 'linear-gradient(180deg, rgba(14,9,25,0.0) 0%, rgba(14,9,25,0.98) 20%)', backdropFilter: 'blur(16px)', textAlign: 'center' }}>
+          style={{
+            borderTop: '1px solid rgba(167,139,250,0.2)',
+            background: 'rgba(14,9,25,0.97)',
+            backdropFilter: 'blur(16px)',
+            textAlign: 'center',
+          }}>
           <div style={{ fontSize: 18, marginBottom: 6 }}>🔒</div>
           <div style={{ fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 6, letterSpacing: '-0.01em' }}>
             Hai visto come funziona.
@@ -318,7 +346,7 @@ export default function DemoChat({ topic }: { topic: string }) {
         </div>
       )}
 
-      {/* Home indicator — identico alla chat vera */}
+      {/* ── Home indicator ── */}
       <div className="flex-shrink-0 flex justify-center py-2" style={{ backgroundColor: '#0d0d14' }}>
         <div className="w-28 h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
       </div>
@@ -327,7 +355,7 @@ export default function DemoChat({ topic }: { topic: string }) {
 
   return (
     <>
-      {/* ── Desktop: sfondo animato + mock iPhone ─────────────────────────── */}
+      {/* ═══════════════════ DESKTOP — mock iPhone ═══════════════════════════ */}
       <div className="desktop-bg min-h-screen flex items-center justify-center p-6 chat-layout relative">
 
         {/* Navbar fixed */}
@@ -338,27 +366,21 @@ export default function DemoChat({ topic }: { topic: string }) {
           background: 'rgba(7,7,15,0.85)', backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(255,255,255,0.05)',
         }}>
-          <button
-            onClick={() => router.push('/')}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-          >
+          <button onClick={() => router.push('/')}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
             Home
           </button>
-          <button
-            onClick={() => setShowLogin(true)}
-            style={{ padding: '7px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-          >
+          <button onClick={() => setShowLogin(true)}
+            style={{ padding: '7px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             Accedi
           </button>
         </nav>
 
-        {/* Wrapper scala */}
+        {/* Wrapper che scala il telefono */}
         <div className="relative flex-shrink-0 mt-14" style={{ borderRadius: 50 * phoneScale }}>
-          <div
-            className="phone-shell scale-in"
-            style={{ width: 390, height: 790, zoom: phoneScale, position: 'relative' }}
-          >
+          <div className="phone-shell scale-in" style={{ width: 390, height: 790, zoom: phoneScale, position: 'relative' }}>
+
             {/* Cornice */}
             <div className="absolute inset-0 rounded-[50px] bg-[#1c1c1e]"
               style={{ boxShadow: '0 0 0 1.5px #3a3a3c, 0 40px 100px rgba(0,0,0,0.8), 0 0 0 0.5px #555 inset' }} />
@@ -372,7 +394,9 @@ export default function DemoChat({ topic }: { topic: string }) {
               {/* Status bar */}
               <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-1.5"
                 style={{ backgroundColor: '#0d0d14' }}>
-                <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.6)' }}>{currentTime}</span>
+                <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  {currentTime}
+                </span>
                 <div className="w-[72px] h-[18px] bg-[#1c1c1e] rounded-full absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
                   <div className="w-1.5 h-1.5 bg-[#333] rounded-full" />
                 </div>
@@ -403,21 +427,19 @@ export default function DemoChat({ topic }: { topic: string }) {
         </div>
       </div>
 
-      {/* ── Mobile: schermo intero ─────────────────────────────────────────── */}
+      {/* ═══════════════════ MOBILE — schermo intero ══════════════════════════ */}
       <div className="phone-screen-mobile hidden flex-col" style={{ backgroundColor: '#07070f' }}>
-        {/* Status bar mobile */}
         <div className="flex-shrink-0 flex items-center justify-between px-5 pb-1.5"
           style={{ backgroundColor: '#0d0d14', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
-          <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.6)' }}>{currentTime}</span>
-          <button
-            onClick={() => router.push('/')}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 11 }}
-          >
+          <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            {currentTime}
+          </span>
+          <button onClick={() => router.push('/')}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 11 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
             Home
           </button>
         </div>
-
         {screenContent}
       </div>
 
