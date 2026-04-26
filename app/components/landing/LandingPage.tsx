@@ -167,7 +167,7 @@ function IPhone({ children, glow }: { children: React.ReactNode; glow: string })
 
 // ── Sezione modalità ──────────────────────────────────────────────────────────
 function ModeSection({
-  reverse, accent, tag, title, body, cta, onCta, phone,
+  reverse, accent, tag, title, body, cta, onCta, phone, btnGradient, btnShadow, bgFade,
 }: {
   reverse?: boolean
   accent: string
@@ -177,6 +177,9 @@ function ModeSection({
   cta: string
   onCta: () => void
   phone: React.ReactNode
+  btnGradient: string
+  btnShadow: string
+  bgFade: string   // colore di fade del crop mobile (es. '#07070f')
 }) {
   return (
     <section style={{
@@ -208,9 +211,9 @@ function ModeSection({
             onClick={onCta}
             style={{
               padding: '13px 28px', borderRadius: 13, border: 'none', cursor: 'pointer',
-              background: tag === "Devil's Advocate" ? 'linear-gradient(135deg,#dc2626,#991b1b)' : 'linear-gradient(135deg,#7C3AED,#5B21B6)',
+              background: btnGradient,
               color: '#fff', fontSize: 15, fontWeight: 700,
-              boxShadow: tag === "Devil's Advocate" ? '0 4px 24px rgba(220,38,38,0.4)' : '0 4px 24px rgba(124,58,237,0.4)',
+              boxShadow: btnShadow,
               letterSpacing: '-0.01em',
             }}
           >{cta}</button>
@@ -218,8 +221,12 @@ function ModeSection({
       </div>
 
       {/* Mobile */}
-      <div className="lg:hidden" style={{ flexDirection: 'column', alignItems: 'center', gap: 32 }}>
-        <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>{phone}</div>
+      <div className="lg:hidden" style={{ flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+        {/* Mock tagliato + fade in basso */}
+        <div style={{ position: 'relative', height: 220, overflow: 'hidden', width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ flexShrink: 0, transform: 'scale(0.85)', transformOrigin: 'top center' }}>{phone}</div>
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 70, background: `linear-gradient(to bottom, transparent, ${bgFade})`, pointerEvents: 'none' }} />
+        </div>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: accent, marginBottom: 10 }}>{tag}</div>
           <h2 style={{ fontWeight: 900, fontSize: '1.9rem', color: '#fff', lineHeight: 1.15, marginBottom: 12, letterSpacing: '-0.02em' }}>{title}</h2>
@@ -228,8 +235,9 @@ function ModeSection({
             onClick={onCta}
             style={{
               padding: '13px 28px', borderRadius: 13, border: 'none', cursor: 'pointer',
-              background: tag === "Devil's Advocate" ? 'linear-gradient(135deg,#dc2626,#991b1b)' : 'linear-gradient(135deg,#7C3AED,#5B21B6)',
+              background: btnGradient,
               color: '#fff', fontSize: 15, fontWeight: 700,
+              boxShadow: btnShadow,
             }}
           >{cta}</button>
         </div>
@@ -313,7 +321,7 @@ export default function LandingPage() {
         {/* Divisore */}
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.2), transparent)' }} />
 
-        {/* 1 — Dibattito */}
+        {/* 1 — Dibattito — viola */}
         <ModeSection
           reverse={false}
           accent="#A78BFA"
@@ -322,62 +330,74 @@ export default function LandingPage() {
           body="Claude, GPT, Gemini e Perplexity rispondono in sequenza, si leggono a vicenda e costruiscono un ragionamento collettivo. Tu puoi intervenire in qualsiasi momento e cambiare le carte in tavola."
           cta="Avvia il dibattito →"
           onCta={() => setPendingMode('chat')}
+          btnGradient="linear-gradient(135deg,#7C3AED,#5B21B6)"
+          btnShadow="0 4px 24px rgba(124,58,237,0.45)"
+          bgFade="#07070f"
           phone={
-            <IPhone glow="0 0 0 1.5px rgba(167,139,250,0.35), 0 0 50px rgba(124,58,237,0.25)">
+            <IPhone glow="0 0 0 1.5px rgba(167,139,250,0.4), 0 0 55px rgba(124,58,237,0.3)">
               <ChatScreen />
             </IPhone>
           }
         />
 
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)' }} />
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(56,189,248,0.15), transparent)' }} />
 
-        {/* 2 — 2 vs 2 */}
+        {/* 2 — 2 vs 2 — celeste */}
         <ModeSection
           reverse={true}
-          accent="#A78BFA"
+          accent="#38BDF8"
           tag="2 vs 2"
           title="Tu e una AI contro un altro umano con la sua AI."
           body="Due squadre, due tesi opposte. Ogni squadra ha un umano e un'AI alleata. Un'AI arbitro valuta ogni round e assegna i punti. Vincono i più convincenti, non i più rumorosi."
           cta="Scegli le squadre →"
           onCta={() => setPendingMode('2v2')}
+          btnGradient="linear-gradient(135deg,#0EA5E9,#0369A1)"
+          btnShadow="0 4px 24px rgba(14,165,233,0.45)"
+          bgFade="#07070f"
           phone={
-            <IPhone glow="0 0 0 2px rgba(167,139,250,0.5), 0 0 60px rgba(124,58,237,0.3)">
+            <IPhone glow="0 0 0 2px rgba(56,189,248,0.5), 0 0 60px rgba(14,165,233,0.3)">
               <TwoVsTwoScreen />
             </IPhone>
           }
         />
 
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)' }} />
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(239,68,68,0.15), transparent)' }} />
 
-        {/* 3 — Devil's Advocate */}
+        {/* 3 — Devil's Advocate — rosso */}
         <ModeSection
           reverse={false}
-          accent="#ef4444"
+          accent="#f87171"
           tag="Devil's Advocate"
           title="Difendi una tesi scomoda contro gli attacchi delle altre AI."
           body="Grok ti assegna una posizione difficile da sostenere. Claude, GPT, Gemini e Perplexity ti attaccheranno senza pietà, round dopo round. Più reggi, più sali di punteggio."
           cta="Inizia la sfida →"
           onCta={() => setPendingMode('devil')}
+          btnGradient="linear-gradient(135deg,#dc2626,#991b1b)"
+          btnShadow="0 4px 24px rgba(220,38,38,0.45)"
+          bgFade="#07070f"
           phone={
-            <IPhone glow="0 0 0 2px rgba(239,68,68,0.55), 0 0 60px rgba(239,68,68,0.25)">
+            <IPhone glow="0 0 0 2px rgba(239,68,68,0.6), 0 0 60px rgba(239,68,68,0.3)">
               <DevilScreenContent />
             </IPhone>
           }
         />
 
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)' }} />
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(245,158,11,0.15), transparent)' }} />
 
-        {/* 4 — Brainstormer */}
+        {/* 4 — Brainstormer — ambra */}
         <ModeSection
           reverse={true}
-          accent="#A78BFA"
+          accent="#FCD34D"
           tag="Brainstormer"
           title="Lanci un'idea, le AI discutono tra loro e ti restituiscono una sintesi più solida."
           body="Descrivi la tua idea in due parole o duemila. Le 4 AI deliberano in due round — prima in modo indipendente, poi reagendo l'una all'altra — e ti restituiscono una risposta unificata e ragionata."
           cta="Avvia il concilio →"
           onCta={() => setPendingMode('brainstorm')}
+          btnGradient="linear-gradient(135deg,#F59E0B,#B45309)"
+          btnShadow="0 4px 24px rgba(245,158,11,0.45)"
+          bgFade="#07070f"
           phone={
-            <IPhone glow="0 0 0 1.5px rgba(167,139,250,0.3), 0 0 50px rgba(124,58,237,0.2)">
+            <IPhone glow="0 0 0 1.5px rgba(245,158,11,0.4), 0 0 55px rgba(245,158,11,0.2)">
               <BrainstormScreenContent />
             </IPhone>
           }
