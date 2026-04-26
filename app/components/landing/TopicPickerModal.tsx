@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { track } from '@vercel/analytics'
 
 const PRESET_TOPICS = [
   "L'intelligenza artificiale renderà le persone più libere o più controllate?",
@@ -21,6 +22,10 @@ export default function TopicPickerModal({ onClose }: TopicPickerModalProps) {
 
   const handleStart = () => {
     if (!activeTopic) return
+    track('demo_topic_selected', {
+      topicType: custom.trim() ? 'custom' : 'preset',
+      topicIndex: custom.trim() ? -1 : selected,
+    })
     router.push(`/demo?topic=${encodeURIComponent(activeTopic)}`)
   }
 

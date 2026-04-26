@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { track } from '@vercel/analytics'
 import LoginModal, { type SelectableMode } from '@/app/components/landing/LoginModal'
 import TopicPickerModal from '@/app/components/landing/TopicPickerModal'
 
@@ -331,7 +332,7 @@ export default function LandingPage() {
           title="Fai una domanda, guarda 4 AI confrontarsi."
           body="Claude, GPT, Gemini e Perplexity rispondono in sequenza, si leggono a vicenda e costruiscono un ragionamento collettivo. Tu puoi intervenire in qualsiasi momento e cambiare le carte in tavola."
           cta="Avvia il dibattito →"
-          onCta={() => setShowTopicPicker(true)}
+          onCta={() => { track('demo_cta_click'); setShowTopicPicker(true) }}
           btnGradient="linear-gradient(135deg,#7C3AED,#5B21B6)"
           btnShadow="0 4px 24px rgba(124,58,237,0.45)"
           bgFade="#07070f"

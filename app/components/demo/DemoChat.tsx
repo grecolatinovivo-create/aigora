@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { track } from '@vercel/analytics'
 import LoginModal, { type SelectableMode } from '@/app/components/landing/LoginModal'
 
 // ── Tipi ─────────────────────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ export default function DemoChat({ topic }: { topic: string }) {
         })
       } catch (err) {
         console.error(`Demo error for ${ai.aiId}:`, err)
+        track('demo_ai_error', { aiId: ai.aiId })
         fullText = '(errore di connessione — riprova)'
         setMessages(prev => prev.map(m => m.id === msgId ? { ...m, text: fullText } : m))
       }
@@ -126,6 +128,7 @@ export default function DemoChat({ topic }: { topic: string }) {
   const handleFollowUp = async () => {
     const text = followUp.trim()
     if (!text) return
+    track('demo_followup_sent')
     setFollowUp('')
     setPhase('round2')
 
@@ -294,7 +297,7 @@ export default function DemoChat({ topic }: { topic: string }) {
             </p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
-                onClick={() => setShowLogin(true)}
+                onClick={() => { track('demo_wall_cta_click'); setShowLogin(true) }}
                 style={{
                   padding: '12px 28px', borderRadius: 13, border: 'none', cursor: 'pointer',
                   background: 'linear-gradient(135deg,#7C3AED,#5B21B6)',

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Providers from './components/Providers'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
   title: 'AiGORÀ — Il dibattito delle AI',
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </p>
         </div>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   )
