@@ -242,9 +242,12 @@ export default function LandingPage() {
         <span style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-0.01em' }}>
           <span style={{ color: '#fff' }}>Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={scrollToModes} style={{ padding: '7px 16px', borderRadius: 9, background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button onClick={scrollToModes} style={{ padding: '7px 14px', borderRadius: 9, background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {tNav('discoverFormats')}
+          </button>
+          <button onClick={() => router.push('/pricing')} style={{ padding: '7px 14px', borderRadius: 9, background: 'transparent', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            Prezzi
           </button>
           <button onClick={() => router.push('/login')} style={{ padding: '8px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {tNav('signIn')}

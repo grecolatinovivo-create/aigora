@@ -3,7 +3,7 @@
 
 import { rateLimit } from './rateLimit'
 
-export type Tier = 'free' | 'pro' | 'premium' | 'admin'
+export type Tier = 'free' | 'pro' | 'premium' | 'admin' | 'freemium'
 export type AppMode = 'chat' | 'brainstorm' | 'devil' | '2v2'
 
 export type LimitType =
@@ -68,18 +68,25 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     modes: ['chat', 'brainstorm', 'devil', '2v2'],
     hasHistory: true,
   },
+  freemium: {
+    label: 'Freemium',
+    color: '#22D3EE',
+    modes: ['chat', 'brainstorm', 'devil', '2v2'],
+    hasHistory: true,
+  },
 }
 
 /** Normalizza il valore raw del DB (inclusi legacy) verso un Tier valido */
 export function normalizePlan(dbPlan: string | null | undefined): Tier {
   switch (dbPlan) {
-    case 'admin':   return 'admin'
-    case 'premium': return 'premium'
-    case 'max':     return 'premium'
-    case 'pro':     return 'pro'
-    case 'free':    return 'free'
-    case 'starter': return 'free'
-    default:        return 'free'
+    case 'admin':    return 'admin'
+    case 'freemium': return 'freemium'
+    case 'premium':  return 'premium'
+    case 'max':      return 'premium'
+    case 'pro':      return 'pro'
+    case 'free':     return 'free'
+    case 'starter':  return 'free'
+    default:         return 'free'
   }
 }
 
@@ -103,7 +110,7 @@ const WEEK_MS =  7 * DAY_MS
 export function checkDebateLimit(userId: string, tier: Tier): LimitResult {
   const cfg = TIER_CONFIG[tier]
 
-  if (tier === 'premium' || tier === 'admin') return { ok: true }
+  if (tier === 'premium' || tier === 'admin' || tier === 'freemium') return { ok: true }
 
   if (tier === 'free' && cfg.weeklyDebates) {
     const rl = rateLimit(`debates-weekly:${userId}`, cfg.weeklyDebates, WEEK_MS)
@@ -122,7 +129,7 @@ export function checkDebateLimit(userId: string, tier: Tier): LimitResult {
  * Controlla il limite settimanale del Brainstormer (Pro: 2/sett, altri: illimitato).
  */
 export function checkBrainstormerLimit(userId: string, tier: Tier): LimitResult {
-  if (tier === 'premium' || tier === 'admin') return { ok: true }
+  if (tier === 'premium' || tier === 'admin' || tier === 'freemium') return { ok: true }
 
   const cfg = TIER_CONFIG[tier]
   if (tier === 'pro' && cfg.weeklyBrainstormer) {

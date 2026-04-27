@@ -7,7 +7,9 @@ import GlobalToggle from './GlobalToggle'
 
 const PLAN_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   admin:      { color: '#F59E0B', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.35)'  },
+  freemium:   { color: '#22D3EE', bg: 'rgba(34,211,238,0.15)',  border: 'rgba(34,211,238,0.35)'  },
   max:        { color: '#FF6B2B', bg: 'rgba(255,107,43,0.15)',  border: 'rgba(255,107,43,0.35)'  },
+  premium:    { color: '#FF6B2B', bg: 'rgba(255,107,43,0.15)',  border: 'rgba(255,107,43,0.35)'  },
   pro:        { color: '#A78BFA', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.35)' },
   starter:    { color: '#1A73E8', bg: 'rgba(26,115,232,0.15)',  border: 'rgba(26,115,232,0.35)'  },
   free:       { color: '#10A37F', bg: 'rgba(16,163,127,0.15)',  border: 'rgba(16,163,127,0.35)'  },
@@ -218,7 +220,7 @@ export default async function AdminPage() {
                         )
                       })()}
                       {user.email !== adminEmail && (
-                        <UserActions userId={user.id} blocked={user.blocked ?? false} beta={user.beta ?? false} forceGeminiPerp={user.forceGeminiPerp ?? false} />
+                        <UserActions userId={user.id} blocked={user.blocked ?? false} beta={user.beta ?? false} forceGeminiPerp={user.forceGeminiPerp ?? false} plan={effectivePlan} />
                       )}
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
                     </div>

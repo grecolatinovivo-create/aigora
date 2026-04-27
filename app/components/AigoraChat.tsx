@@ -3288,7 +3288,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             isDark={isDark}
             onBack={() => setPhase(messages.length > 0 ? 'running' : 'start')}
             onSignOut={() => signOut({ callbackUrl: '/login' })}
-            onMultiplayer={(effectivePlan === 'admin' || isBeta) ? () => { setPhase(messages.length > 0 ? 'running' : 'start'); setShowModeSelect(true) } : undefined}
+            onMultiplayer={(['pro', 'premium', 'admin', 'freemium', 'max'].includes(effectivePlan) || isBeta) ? () => { setPhase(messages.length > 0 ? 'running' : 'start'); setShowModeSelect(true) } : undefined}
             userImage={userImage}
             onImageChange={setUserImage}
             dbUserName={dbUserName}

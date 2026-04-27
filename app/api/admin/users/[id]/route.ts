@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!admin) return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 })
 
   const { action } = await req.json()
-  if (!['block', 'unblock', 'beta', 'unbeta', 'forcegeminiperp', 'unforcegeminiperp'].includes(action)) {
+  if (!['block', 'unblock', 'beta', 'unbeta', 'forcegeminiperp', 'unforcegeminiperp', 'freemium', 'unfreemium'].includes(action)) {
     return NextResponse.json({ error: 'Azione non valida' }, { status: 400 })
   }
 
@@ -31,6 +31,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (action === 'block' || action === 'unblock') data.blocked = action === 'block'
   if (action === 'beta' || action === 'unbeta') data.beta = action === 'beta'
   if (action === 'forcegeminiperp' || action === 'unforcegeminiperp') data.forceGeminiPerp = action === 'forcegeminiperp'
+  if (action === 'freemium') data.plan = 'freemium'
+  if (action === 'unfreemium') data.plan = 'free'
 
   const updated = await prisma.user.update({ where: { id: params.id }, data })
 
@@ -38,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     await prisma.activeSession.deleteMany({ where: { userId: params.id } }).catch(() => {})
   }
 
-  return NextResponse.json({ ok: true, blocked: updated.blocked, beta: updated.beta, forceGeminiPerp: updated.forceGeminiPerp })
+  return NextResponse.json({ ok: true, blocked: updated.blocked, beta: updated.beta, forceGeminiPerp: updated.forceGeminiPerp, plan: updated.plan })
 }
 
 // DELETE — elimina utente e tutti i suoi dati

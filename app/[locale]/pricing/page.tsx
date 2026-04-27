@@ -86,11 +86,7 @@ export default function PricingPage() {
 
   const handleAction = async (plan: typeof PLANS[0]) => {
     if (plan.ctaAction === 'register') {
-      if (session) {
-        router.push('/arena')
-      } else {
-        router.push('/register')
-      }
+      router.push(session ? '/' : '/login')
       return
     }
 

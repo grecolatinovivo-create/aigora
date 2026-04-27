@@ -2,16 +2,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function UserActions({ userId, blocked, beta, forceGeminiPerp }: {
+export default function UserActions({ userId, blocked, beta, forceGeminiPerp, plan }: {
   userId: string
   blocked: boolean
   beta: boolean
   forceGeminiPerp: boolean
+  plan: string
 }) {
   const [loading, setLoading] = useState(false)
   const [isBlocked, setIsBlocked] = useState(blocked)
   const [isBeta, setIsBeta] = useState(beta)
   const [isForceGemini, setIsForceGemini] = useState(forceGeminiPerp)
+  const [currentPlan, setCurrentPlan] = useState(plan)
   const router = useRouter()
 
   const handleAction = async (action: string) => {
@@ -22,12 +24,14 @@ export default function UserActions({ userId, blocked, beta, forceGeminiPerp }: 
       body: JSON.stringify({ action }),
     })
     if (res.ok) {
+      const data = await res.json()
       if (action === 'block') setIsBlocked(true)
       if (action === 'unblock') setIsBlocked(false)
       if (action === 'beta') setIsBeta(true)
       if (action === 'unbeta') setIsBeta(false)
       if (action === 'forcegeminiperp') setIsForceGemini(true)
       if (action === 'unforcegeminiperp') setIsForceGemini(false)
+      if (action === 'freemium' || action === 'unfreemium') setCurrentPlan(data.plan ?? (action === 'freemium' ? 'freemium' : 'free'))
     }
     setLoading(false)
   }
@@ -40,8 +44,21 @@ export default function UserActions({ userId, blocked, beta, forceGeminiPerp }: 
     setLoading(false)
   }
 
+  const isFreemium = currentPlan === 'freemium'
+
   return (
     <div className="flex items-center gap-2 flex-shrink-0">
+      {/* Freemium toggle */}
+      <button onClick={() => handleAction(isFreemium ? 'unfreemium' : 'freemium')} disabled={loading}
+        title={isFreemium ? 'Revoca Freemium (torna a Free)' : 'Attiva accesso Freemium (tutto gratis)'}
+        className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
+        style={{
+          backgroundColor: isFreemium ? 'rgba(34,211,238,0.2)' : 'rgba(255,255,255,0.06)',
+          color: isFreemium ? '#22D3EE' : 'rgba(255,255,255,0.4)',
+          border: `1px solid ${isFreemium ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.1)'}`,
+        }}>
+        {isFreemium ? '◈ Free+' : '◈'}
+      </button>
       {/* Gemini-as-Perplexity per utente */}
       <button onClick={() => handleAction(isForceGemini ? 'unforcegeminiperp' : 'forcegeminiperp')} disabled={loading}
         title={isForceGemini ? 'Disattiva: usa Sonar reale' : 'Attiva: forza Gemini al posto di Sonar'}
