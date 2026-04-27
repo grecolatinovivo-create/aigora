@@ -4,19 +4,10 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 const AI_COLOR: Record<string, string> = {
-  claude: '#7C3AED', gpt: '#10A37F', gemini: '#1A73E8', perplexity: '#FF6B2B'
+  claude: '#7C3AED', gpt: '#10A37F', gemini: '#1A73E8', perplexity: '#FF6B2B', grok: '#1DA1F2'
 }
 const AI_NAMES: Record<string, string> = {
-  claude: 'Claude', gpt: 'GPT-4.1', gemini: 'Gemini', perplexity: 'Perplexity'
-}
-
-const FEATURES = {
-  chat: 'Dibattiti tra 4 AI',
-  brainstorm: 'Brainstormer (concilio AI)',
-  devil: 'Avvocato del Diavolo',
-  multiplayer: 'Multiplayer 2v2',
-  history: 'Cronologia dibattiti',
-  allAis: '4 AI (Claude · GPT · Gemini · Perplexity)',
+  claude: 'Claude', gpt: 'GPT-4.1', gemini: 'Gemini', perplexity: 'Perplexity', grok: 'Grok'
 }
 
 const PLANS = [
@@ -28,13 +19,15 @@ const PLANS = [
     badge: null,
     ais: ['claude', 'gpt', 'gemini', 'perplexity'],
     features: [
-      { text: FEATURES.allAis, ok: true },
-      { text: FEATURES.chat, ok: true },
-      { text: '5 dibattiti al giorno', ok: true },
-      { text: FEATURES.brainstorm, ok: false },
-      { text: FEATURES.devil, ok: false },
-      { text: FEATURES.multiplayer, ok: false },
-      { text: FEATURES.history, ok: false },
+      { text: '4 AI (Claude · GPT · Gemini · Perplexity)', ok: true },
+      { text: 'Dibattiti tra 4 AI', ok: true },
+      { text: '3 dibattiti a settimana', ok: true },
+      { text: 'Max 100 risposte per dibattito', ok: true },
+      { text: 'Brainstormer (concilio AI)', ok: false },
+      { text: 'Avvocato del Diavolo', ok: false },
+      { text: 'Multiplayer 2v2', ok: false },
+      { text: 'Upload documenti', ok: false },
+      { text: 'Cronologia dibattiti', ok: false },
     ],
     cta: 'Inizia gratis',
     ctaAction: 'register',
@@ -45,14 +38,15 @@ const PLANS = [
     price: '9,99',
     color: '#A78BFA',
     badge: 'PIÙ POPOLARE',
-    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
+    ais: ['claude', 'gpt', 'gemini', 'perplexity', 'grok'],
     features: [
-      { text: FEATURES.allAis, ok: true },
-      { text: FEATURES.chat, ok: true },
-      { text: '30 dibattiti al giorno', ok: true },
-      { text: FEATURES.brainstorm, ok: true },
-      { text: FEATURES.devil, ok: true },
-      { text: FEATURES.multiplayer, ok: true },
+      { text: '5 AI (+ Grok)', ok: true },
+      { text: 'Dibattiti tra 5 AI', ok: true },
+      { text: '10 dibattiti al giorno', ok: true },
+      { text: 'Brainstormer (2 a settimana)', ok: true },
+      { text: 'Avvocato del Diavolo', ok: true },
+      { text: 'Multiplayer 2v2', ok: true },
+      { text: 'Upload documenti (limitati)', ok: true },
       { text: 'Cronologia ultimi 30 giorni', ok: true },
     ],
     cta: 'Inizia con Pro',
@@ -64,14 +58,15 @@ const PLANS = [
     price: '19,99',
     color: '#FF6B2B',
     badge: null,
-    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
+    ais: ['claude', 'gpt', 'gemini', 'perplexity', 'grok'],
     features: [
-      { text: FEATURES.allAis, ok: true },
-      { text: FEATURES.chat, ok: true },
+      { text: '5 AI (+ Grok)', ok: true },
+      { text: 'Dibattiti tra 5 AI', ok: true },
       { text: 'Dibattiti illimitati', ok: true },
-      { text: FEATURES.brainstorm, ok: true },
-      { text: FEATURES.devil, ok: true },
-      { text: FEATURES.multiplayer, ok: true },
+      { text: 'Brainstormer illimitati', ok: true },
+      { text: 'Avvocato del Diavolo', ok: true },
+      { text: 'Multiplayer 2v2', ok: true },
+      { text: 'Upload documenti illimitati', ok: true },
       { text: 'Cronologia completa illimitata', ok: true },
     ],
     cta: 'Inizia con Premium',
@@ -122,7 +117,7 @@ export default function PricingPage() {
         </button>
         <h1 className="text-4xl font-black text-white mb-3">Scegli il tuo piano</h1>
         <p className="text-white/50 text-base max-w-md mx-auto">
-          Tutti i piani includono le 4 AI. Il piano Pro sblocca le modalità avanzate.
+          Free include 4 AI. Pro e Premium sbloccano Grok, le modalità avanzate e l'upload documenti.
         </p>
       </div>
 
@@ -243,11 +238,13 @@ export default function PricingPage() {
           style={{ border: '1px solid rgba(255,255,255,0.08)' }}
         >
           {[
-            { feature: '4 AI (Claude, GPT, Gemini, Perplexity)', free: true, pro: true, premium: true },
-            { feature: 'Dibattiti AI', free: '5/giorno', pro: '30/giorno', premium: 'Illimitati' },
-            { feature: 'Brainstormer (concilio AI)', free: false, pro: true, premium: true },
+            { feature: 'AI disponibili', free: '4 AI', pro: '5 AI (+ Grok)', premium: '5 AI (+ Grok)' },
+            { feature: 'Dibattiti', free: '3/settimana', pro: '10/giorno', premium: 'Illimitati' },
+            { feature: 'Max risposte per dibattito', free: '100', pro: 'Illimitate', premium: 'Illimitate' },
+            { feature: 'Brainstormer (concilio AI)', free: false, pro: '2/settimana', premium: 'Illimitati' },
             { feature: 'Avvocato del Diavolo', free: false, pro: true, premium: true },
             { feature: 'Multiplayer 2v2', free: false, pro: true, premium: true },
+            { feature: 'Upload documenti', free: false, pro: 'Limitati', premium: 'Illimitati' },
             { feature: 'Cronologia dibattiti', free: false, pro: '30 giorni', premium: 'Illimitata' },
           ].map((row, i) => (
             <div
