@@ -2928,7 +2928,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
           }}>
             {/* Chip allegato mobile */}
-            {canAttach && pendingAttachment && (
+            {pendingAttachment && (
               <div className="px-1">
                 <AttachmentButton
                   attachment={pendingAttachment}
@@ -2936,19 +2936,19 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                   onRemove={() => setPendingAttachment(null)}
                   isDark={isDark}
                   size="sm"
+                  locked={!canAttach}
                 />
               </div>
             )}
             <div className="flex items-center gap-2">
-              {canAttach && (
               <AttachmentButton
                 attachment={null}
                 onAttachment={setPendingAttachment}
                 onRemove={() => setPendingAttachment(null)}
                 isDark={isDark}
                 size="sm"
+                locked={!canAttach}
               />
-              )}
               <textarea
                 ref={inputRef}
                 value={inputText}
@@ -3545,20 +3545,22 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           }}>
             {/* Chip allegato desktop */}
-            {canAttach && pendingAttachment && phase !== 'new' && (
+            {pendingAttachment && phase !== 'new' && (
               <AttachmentButton
                 attachment={pendingAttachment}
                 onAttachment={setPendingAttachment}
                 onRemove={() => setPendingAttachment(null)}
                 isDark={isDark}
+                locked={!canAttach}
               />
             )}
-            {canAttach && phase !== 'new' && (
+            {phase !== 'new' && (
               <AttachmentButton
                 attachment={null}
                 onAttachment={setPendingAttachment}
                 onRemove={() => setPendingAttachment(null)}
                 isDark={isDark}
+                locked={!canAttach}
               />
             )}
             <textarea
