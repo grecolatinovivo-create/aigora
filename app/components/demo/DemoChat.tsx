@@ -201,16 +201,10 @@ export default function DemoChat({ topic }: { topic: string }) {
         <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginBottom: 12 }}>
           Crea un account gratuito per continuare e accedere a tutti i formati.
         </p>
-        <div className="flex flex-col gap-1.5">
-          <button onClick={() => { track('demo_wall_cta_click'); setShowLogin(true) }}
-            style={{ padding: '9px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: '#fff', fontSize: 12, fontWeight: 700, boxShadow: '0 4px 16px rgba(124,58,237,0.45)' }}>
-            Crea account gratuito →
-          </button>
-          <button onClick={() => router.push('/')}
-            style={{ padding: '8px 16px', borderRadius: 11, cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 600 }}>
-            Esplora i formati
-          </button>
-        </div>
+        <button onClick={() => { track('demo_wall_cta_click'); setShowLogin(true) }}
+          style={{ width: '100%', padding: '10px 16px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: '#fff', fontSize: 12, fontWeight: 700, boxShadow: '0 4px 16px rgba(124,58,237,0.45)' }}>
+          Crea account gratuito →
+        </button>
       </div>
     )
     // round1 / round2: input placeholder disabilitato

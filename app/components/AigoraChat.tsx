@@ -353,6 +353,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // Piano effettivo — usa quello dal DB se disponibile
   const effectivePlan = resolvedPlan ?? userPlan ?? 'free'
+  // Allegati disponibili solo per Pro, Premium e Admin
+  const canAttach = effectivePlan === 'pro' || effectivePlan === 'premium' || effectivePlan === 'admin'
 
   // Carica rooms e notifiche (solo admin)
   useEffect(() => {
@@ -2926,7 +2928,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
           }}>
             {/* Chip allegato mobile */}
-            {pendingAttachment && (
+            {canAttach && pendingAttachment && (
               <div className="px-1">
                 <AttachmentButton
                   attachment={pendingAttachment}
@@ -2938,6 +2940,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
               </div>
             )}
             <div className="flex items-center gap-2">
+              {canAttach && (
               <AttachmentButton
                 attachment={null}
                 onAttachment={setPendingAttachment}
@@ -2945,6 +2948,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                 isDark={isDark}
                 size="sm"
               />
+              )}
               <textarea
                 ref={inputRef}
                 value={inputText}
@@ -3541,7 +3545,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           }}>
             {/* Chip allegato desktop */}
-            {pendingAttachment && phase !== 'new' && (
+            {canAttach && pendingAttachment && phase !== 'new' && (
               <AttachmentButton
                 attachment={pendingAttachment}
                 onAttachment={setPendingAttachment}
@@ -3549,7 +3553,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                 isDark={isDark}
               />
             )}
-            {phase !== 'new' && (
+            {canAttach && phase !== 'new' && (
               <AttachmentButton
                 attachment={null}
                 onAttachment={setPendingAttachment}
