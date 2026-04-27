@@ -222,6 +222,7 @@ export default function LandingPage() {
   const router = useRouter()
   const t = useTranslations('landing')
   const tNav = useTranslations('nav')
+  const tPricing = useTranslations('pricing')
 
   const [pendingMode, setPendingMode] = useState<SelectableMode | null>(null)
   const [showTopicPicker, setShowTopicPicker] = useState(false)
@@ -380,22 +381,89 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* ── CTA FINALE ── */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '100px 24px', textAlign: 'center', borderTop: '1px solid rgba(167,139,250,0.1)' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 400, background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#fff', letterSpacing: '-0.02em', marginBottom: 16, lineHeight: 1.1 }}>
-            {t('ctaFinalTitle')}
-          </h2>
-          <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.4)', maxWidth: 420, margin: '0 auto 40px', lineHeight: 1.65 }}>
-            {t('ctaFinalBody')}
-          </p>
-          <button
-            onClick={scrollToModes}
-            style={{ padding: '16px 40px', borderRadius: 14, background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', border: 'none', color: '#fff', fontSize: 17, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 36px rgba(124,58,237,0.5)', letterSpacing: '-0.01em' }}
-          >
-            {t('ctaFinalBtn')}
-          </button>
+      {/* ── PRICING ── */}
+      <section style={{ position: 'relative', zIndex: 1, padding: '100px 24px 120px', borderTop: '1px solid rgba(167,139,250,0.1)' }}>
+        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 700, height: 500, background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 960, margin: '0 auto' }}>
+          {/* Heading */}
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.9rem, 4vw, 3rem)', color: '#fff', letterSpacing: '-0.02em', marginBottom: 12, lineHeight: 1.1 }}>
+              {tPricing('title')}
+            </h2>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.38)', lineHeight: 1.6 }}>
+              {tPricing('subtitle')}
+            </p>
+          </div>
+
+          {/* Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+
+            {/* Free */}
+            <div style={{ borderRadius: 20, padding: '32px 28px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B7280', marginBottom: 4 }}>Free</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>{tPricing('free')}</span>
+              </div>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55, marginBottom: 8 }}>
+                {tPricing.raw('features.free') as string}
+              </p>
+              <button
+                onClick={() => router.push('/login')}
+                style={{ marginTop: 'auto', padding: '12px 0', borderRadius: 11, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%' }}
+              >
+                {tPricing('cta.free')}
+              </button>
+            </div>
+
+            {/* Pro — highlighted */}
+            <div style={{ borderRadius: 20, padding: '32px 28px', background: 'rgba(124,58,237,0.12)', border: '1.5px solid rgba(167,139,250,0.35)', display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', boxShadow: '0 0 40px rgba(124,58,237,0.18)' }}>
+              <div style={{ position: 'absolute', top: -11, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', borderRadius: 999, padding: '3px 12px', fontSize: 10, fontWeight: 800, color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                {tPricing('mostPopular')}
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#A78BFA', marginBottom: 4 }}>Pro</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>9,99€</span>
+                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tPricing('perMonth')}</span>
+              </div>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.55, marginBottom: 8 }}>
+                {tPricing.raw('features.pro') as string}
+              </p>
+              <button
+                onClick={() => router.push('/pricing')}
+                style={{ marginTop: 'auto', padding: '12px 0', borderRadius: 11, background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}
+              >
+                {tPricing('cta.pro')}
+              </button>
+            </div>
+
+            {/* Premium */}
+            <div style={{ borderRadius: 20, padding: '32px 28px', background: 'rgba(255,107,43,0.06)', border: '1px solid rgba(255,107,43,0.2)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#FF6B2B', marginBottom: 4 }}>Premium</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>19,99€</span>
+                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tPricing('perMonth')}</span>
+              </div>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55, marginBottom: 8 }}>
+                {tPricing.raw('features.premium') as string}
+              </p>
+              <button
+                onClick={() => router.push('/pricing')}
+                style={{ marginTop: 'auto', padding: '12px 0', borderRadius: 11, background: 'rgba(255,107,43,0.15)', border: '1px solid rgba(255,107,43,0.3)', color: '#FF6B2B', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%' }}
+              >
+                {tPricing('cta.premium')}
+              </button>
+            </div>
+          </div>
+
+          {/* Link to full pricing page */}
+          <div style={{ textAlign: 'center', marginTop: 32 }}>
+            <button
+              onClick={() => router.push('/pricing')}
+              style={{ background: 'none', border: 'none', color: 'rgba(167,139,250,0.5)', fontSize: 13, cursor: 'pointer', fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 3 }}
+            >
+              {tPricing('comparison.title')} →
+            </button>
+          </div>
         </div>
       </section>
 

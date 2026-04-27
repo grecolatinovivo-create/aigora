@@ -39,7 +39,7 @@
     "badge": "4 AIs · One arena",
     "heroTitle": "4 AIs. One debate.",
     "heroSubtitle": "Ask a question, watch the AIs clash in real time.\nOr step into the arena yourself.",
-    "heroCta": "Choose how to debate →",
+    "heroCta": "Try the demo →",
     "heroModes": ["Debate", "2 vs 2", "Devil's Advocate", "Brainstormer"],
     "ctaFinalTitle": "Enter the arena.",
     "ctaFinalBody": "Pick a format and start now. It takes 30 seconds.",
@@ -82,6 +82,11 @@
       "pro": "Upgrade to Pro →",
       "premium": "Upgrade to Premium →",
       "current": "Current plan"
+    },
+    "features": {
+      "free": "3 debates per week · Claude, GPT, Gemini, Perplexity",
+      "pro": "Unlimited daily debates · all modes · Grok included",
+      "premium": "Everything in Pro · priority access to new features · document uploads"
     },
     "comparison": {
       "title": "Full comparison",

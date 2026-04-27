@@ -39,7 +39,7 @@
     "badge": "4 AI · Un'unica arena",
     "heroTitle": "4 AI. Un solo dibattito.",
     "heroSubtitle": "Fai una domanda, guarda le AI confrontarsi in tempo reale.\nOppure entra tu nell'arena.",
-    "heroCta": "Scegli come dibattere →",
+    "heroCta": "Prova la demo →",
     "heroModes": ["Dibattito", "2 vs 2", "Devil's Advocate", "Brainstormer"],
     "ctaFinalTitle": "Entra nell'arena.",
     "ctaFinalBody": "Scegli il formato che fa per te e inizia subito. Ci vogliono 30 secondi.",
@@ -82,6 +82,11 @@
       "pro": "Passa a Pro →",
       "premium": "Passa a Premium →",
       "current": "Piano attuale"
+    },
+    "features": {
+      "free": "3 dibattiti a settimana · Claude, GPT, Gemini, Perplexity",
+      "pro": "Dibattiti illimitati al giorno · tutte le modalità · Grok incluso",
+      "premium": "Tutto di Pro · accesso prioritario alle novità · upload documenti"
     },
     "comparison": {
       "title": "Confronto completo",
