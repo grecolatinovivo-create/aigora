@@ -6,8 +6,8 @@ import { useEffect, Suspense } from 'react'
 const PLAN_AIS: Record<string, string[]> = {
   starter: ['Claude', 'Gemini'],
   pro:     ['Claude', 'Gemini', 'Perplexity'],
-  max:     ['Claude', 'Gemini', 'Perplexity', 'GPT-4.1'],
-  admin:   ['Claude', 'Gemini', 'Perplexity', 'GPT-4.1'],
+  max:     ['Claude', 'Gemini', 'Perplexity', 'GPT'],
+  admin:   ['Claude', 'Gemini', 'Perplexity', 'GPT'],
 }
 const PLAN_COLORS: Record<string, string> = { starter: '#1A73E8', pro: '#7C3AED', max: '#FF6B2B', admin: '#FFD700' }
 

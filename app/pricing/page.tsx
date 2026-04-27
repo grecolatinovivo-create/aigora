@@ -7,7 +7,7 @@ const AI_COLOR: Record<string, string> = {
   claude: '#7C3AED', gpt: '#10A37F', gemini: '#1A73E8', perplexity: '#FF6B2B', grok: '#1DA1F2'
 }
 const AI_NAMES: Record<string, string> = {
-  claude: 'Claude', gpt: 'GPT-4.1', gemini: 'Gemini', perplexity: 'Perplexity', grok: 'Grok'
+  claude: 'Claude', gpt: 'GPT', gemini: 'Gemini', perplexity: 'Perplexity', grok: 'Grok'
 }
 
 const PLANS = [
@@ -39,9 +39,10 @@ const PLANS = [
     price: '9,99',
     color: '#A78BFA',
     badge: 'PIÙ POPOLARE',
-    ais: ['claude', 'gpt', 'gemini', 'perplexity', 'grok'],
+    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
     features: [
-      { text: '5 AI, inclusa Grok', ok: true },
+      { text: '4 AI nei dibattiti', ok: true },
+      { text: 'Grok disponibile in Brainstormer e 2v2', ok: true },
       { text: '10 dibattiti al giorno', ok: true },
       { text: 'Risposte estese per dibattito', ok: true },
       { text: 'Brainstormer: 2 sessioni/settimana', ok: true },
@@ -60,9 +61,10 @@ const PLANS = [
     price: '19,99',
     color: '#FF6B2B',
     badge: null,
-    ais: ['claude', 'gpt', 'gemini', 'perplexity', 'grok'],
+    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
     features: [
-      { text: '5 AI, inclusa Grok', ok: true },
+      { text: '4 AI nei dibattiti', ok: true },
+      { text: 'Grok disponibile in Brainstormer e 2v2', ok: true },
       { text: 'Dibattiti illimitati', ok: true },
       { text: 'Risposte illimitate', ok: true },
       { text: 'Brainstormer illimitato', ok: true },
@@ -246,7 +248,8 @@ export default function PricingPage() {
           style={{ border: '1px solid rgba(255,255,255,0.08)' }}
         >
           {[
-            { feature: 'AI disponibili', free: '4 AI', pro: '5 AI (+ Grok)', premium: '5 AI (+ Grok)' },
+            { feature: 'AI nei dibattiti', free: '4 AI', pro: '4 AI', premium: '4 AI' },
+            { feature: 'Grok (Brainstormer e 2v2)', free: false, pro: true, premium: true },
             { feature: 'Dibattiti', free: '3/settimana', pro: '10/giorno', premium: 'Illimitati' },
             { feature: 'Risposte per dibattito', free: 'Fino a 100', pro: 'Estese', premium: 'Illimitate' },
             { feature: 'Brainstormer', free: false, pro: '2 sessioni/settimana', premium: 'Illimitato' },
