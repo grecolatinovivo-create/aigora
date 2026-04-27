@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { rateLimit } from '@/lib/rateLimit'
-import { normalizePlan, checkDailyDebateLimit } from '@/lib/plans'
+import { normalizePlan, checkDebateLimit } from '@/lib/plans'
 
 // ── Tipo allegato condiviso ───────────────────────────────────────────────────
 export interface ChatAttachment {
@@ -443,14 +443,17 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Limite giornaliero dibattiti: si conta una volta per dibattito (action === 'route')
+      // Limite dibattiti: si conta una volta per dibattito (action === 'route')
       if (!isAdmin && action === 'route' && currentUserId) {
-        const dailyRl = checkDailyDebateLimit(currentUserId, tier)
-        if (!dailyRl.ok) {
+        const limitResult = checkDebateLimit(currentUserId, tier)
+        if (!limitResult.ok) {
           return new Response(JSON.stringify({
-            error: 'Hai raggiunto il limite giornaliero di dibattiti. Aggiorna il piano per continuare.',
-            limitReached: true,
+            error: 'limit_reached',
+            limitType: limitResult.limitType,
+            retryAfter: limitResult.retryAfter,
+            limit: limitResult.limit,
             tier,
+            requiredTier: limitResult.requiredTier,
           }), {
             status: 429, headers: { 'Content-Type': 'application/json' }
           })

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { normalizePlan, canUseMode, checkDailyDebateLimit } from '@/lib/plans'
+import { normalizePlan, canUseMode, checkBrainstormerLimit } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -285,14 +285,17 @@ export async function POST(req: NextRequest) {
     }, { status: 403 })
   }
 
-  // ── Limite giornaliero (solo per i raffinamenti iniziali, non per le note) ─
+  // ── Limite settimanale Brainstormer (solo Pro: 2/sett; Premium/Admin illimitato) ─
   if (!note && !isAdmin && dbUserPlan?.id) {
-    const dailyRl = checkDailyDebateLimit(dbUserPlan.id, tier)
-    if (!dailyRl.ok) {
+    const limitResult = checkBrainstormerLimit(dbUserPlan.id, tier)
+    if (!limitResult.ok) {
       return NextResponse.json({
-        error: 'Hai raggiunto il limite giornaliero. Aggiorna il piano per continuare.',
-        limitReached: true,
+        error: 'limit_reached',
+        limitType: limitResult.limitType,
+        retryAfter: limitResult.retryAfter,
+        limit: limitResult.limit,
         tier,
+        requiredTier: limitResult.requiredTier,
       }, { status: 429 })
     }
   }

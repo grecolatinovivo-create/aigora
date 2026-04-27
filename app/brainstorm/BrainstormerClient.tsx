@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { signOut } from 'next-auth/react'
 import Navbar from '@/app/components/layout/Navbar'
 import AttachmentButton, { type ChatAttachment } from '@/app/components/chat/AttachmentButton'
+import LimitWall from '@/app/components/ui/LimitWall'
 
 type Phase = 'entry' | 'initial' | 'intake' | 'building' | 'complete'
 
@@ -65,6 +66,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const [idea, setIdea] = useState('')
   const [answers, setAnswers] = useState<IntakeAnswer[]>([])
   const [ideaAttachment, setIdeaAttachment] = useState<ChatAttachment | null>(null)
+  const [brainstormLimitInfo, setBrainstormLimitInfo] = useState<import('@/app/components/ui/LimitWall').LimitInfo | null>(null)
   const [currentQ, setCurrentQ] = useState<IntakeQuestion | null>(null)
   const [loadingQ, setLoadingQ] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
@@ -343,6 +345,15 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
           attachment: note ? undefined : ideaAttachment,   // allegato solo alla prima generazione
         }),
       })
+      if (res.status === 429) {
+        const data = await res.json()
+        if (data.error === 'limit_reached') {
+          setBrainstormLimitInfo(data)
+          setOutputStreaming(false)
+          setConcilioPhase(null)
+          return
+        }
+      }
       if (!res.ok) { setOutputStreaming(false); return }
 
       // Typewriter queue: SSE rapido → display a 22ms/char
@@ -930,8 +941,21 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                 </div>
               )}
 
+              {/* FASE: limit wall — limite Brainstormer raggiunto */}
+              {brainstormLimitInfo && (
+                <div style={{ width: '100%', maxWidth: '480px' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.97)', borderRadius: '20px', border: '1px solid rgba(124,58,237,0.15)', boxShadow: '0 4px 32px rgba(0,0,0,0.08)' }}>
+                    <LimitWall
+                      limitInfo={brainstormLimitInfo}
+                      isDark={false}
+                      onDismiss={() => setBrainstormLimitInfo(null)}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* FASE: building — output unico del concilio */}
-              {phase === 'building' && (
+              {phase === 'building' && !brainstormLimitInfo && (
                 <div style={{ width: '100%', maxWidth: '600px' }}>
 
                   {/* Header idea */}

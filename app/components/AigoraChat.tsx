@@ -14,6 +14,7 @@ import {
 import { SFX } from '@/app/lib/audioEngine'
 import ThinkingBubble from '@/app/components/chat/ThinkingBubble'
 import AttachmentButton, { type ChatAttachment } from '@/app/components/chat/AttachmentButton'
+import LimitWall, { type LimitInfo } from '@/app/components/ui/LimitWall'
 import UserTurnPrompt from '@/app/components/chat/UserTurnPrompt'
 import RotatingTopics from '@/app/components/shared/RotatingTopics'
 import PhoneAvatarBar from '@/app/components/layout/PhoneAvatarBar'
@@ -73,6 +74,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [nameInput, setNameInput] = useState('')
   const [inputText, setInputText] = useState('')
   const [pendingAttachment, setPendingAttachment] = useState<ChatAttachment | null>(null)
+  const [limitInfo, setLimitInfo] = useState<LimitInfo | null>(null)
   // Ref che tiene l'allegato corrente per il round in corso (si azzera dopo il round)
   const currentRoundAttachmentRef = useRef<ChatAttachment | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -915,6 +917,29 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const q = (overrideQuestion ?? question).trim()
     if (!q) return
     if (overrideQuestion) setQuestion(overrideQuestion)
+
+    // Routing + controllo limite — prima di mostrare qualsiasi cosa all'utente
+    let mode: 'debate' | 'focused' = 'debate'
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'route', question: q, availableAis: AI_ORDER, history: [] }),
+      })
+      if (res.status === 429) {
+        const data = await res.json()
+        if (data.error === 'limit_reached') {
+          setLimitInfo(data as LimitInfo)
+          return  // blocca il dibattito, mostra LimitWall
+        }
+      }
+      const data = await res.json()
+      if (data.mode === 'focused') mode = 'focused'
+      needsWebSearchRef.current = !!data.needsWebSearch
+    } catch {}
+
+    // Limite non raggiunto — procedi normalmente
+    setLimitInfo(null)
     currentChatIdRef.current = `chat-${Date.now()}`
     chatTitleRef.current = ''
     chatHistoryRef.current = [{ name: historyName, content: q }]
@@ -926,22 +951,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTurnCount(0)
     setPhase('running')
 
-    // AI iniziale: completamente random tra quelle disponibili
     const startAi = AI_ORDER[Math.floor(Math.random() * AI_ORDER.length)]
-
-    // Routing intelligente solo per modalità e web search (in background)
-    let mode: 'debate' | 'focused' = 'debate'
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'route', question: q, availableAis: AI_ORDER, history: [] }),
-      })
-      const data = await res.json()
-      if (data.mode === 'focused') mode = 'focused'
-      needsWebSearchRef.current = !!data.needsWebSearch
-    } catch {}
-
     runDebate(startAi, mode)
   }
 
@@ -2027,7 +2037,16 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
               ))}
             </div>
 
-            {/* ── Form domanda ── */}
+            {/* ── Form domanda o LimitWall ── */}
+            {limitInfo ? (
+              <div className="glass rounded-3xl overflow-hidden">
+                <LimitWall
+                  limitInfo={limitInfo}
+                  isDark={true}
+                  onDismiss={() => setLimitInfo(null)}
+                />
+              </div>
+            ) : (
             <div className="glass rounded-3xl" style={{ padding: '12px' }}>
               <textarea
                 value={question}
@@ -2054,6 +2073,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                 Avvia il dibattito →
               </button>
             </div>
+            )}
 
             {/* ── TAB FEED ── */}
             {(effectivePlan === 'admin' || isBeta) && socialTab === 'feed' && (

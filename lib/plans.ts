@@ -6,22 +6,40 @@ import { rateLimit } from './rateLimit'
 export type Tier = 'free' | 'pro' | 'premium' | 'admin'
 export type AppMode = 'chat' | 'brainstorm' | 'devil' | '2v2'
 
+export type LimitType =
+  | 'weekly_debates'       // Free: 3/settimana
+  | 'daily_debates'        // Pro: 10/giorno
+  | 'weekly_brainstormer'  // Pro: 2/settimana
+
+export interface LimitReached {
+  ok: false
+  limitType: LimitType
+  retryAfter: number   // secondi
+  limit: number
+  requiredTier: 'pro' | 'premium'
+}
+export type LimitResult = { ok: true } | LimitReached
+
 export interface TierConfig {
   label: string
-  price?: number          // undefined = gratuito
-  priceId?: string        // Stripe price ID (da env var)
+  price?: number
+  priceId?: string
   color: string
-  dailyDebates: number    // -1 = illimitati
+  // Limiti dibattiti
+  weeklyDebates?: number    // Free: 3/sett — undefined = nessun limite settimanale
+  dailyDebates?: number     // Pro: 10/giorno — undefined = nessun limite giornaliero
+  // Limiti brainstormer
+  weeklyBrainstormer?: number  // Pro: 2/sett — undefined = illimitato
   modes: AppMode[]
   hasHistory: boolean
-  historyDays?: number    // undefined = illimitata
+  historyDays?: number
 }
 
 export const TIER_CONFIG: Record<Tier, TierConfig> = {
   free: {
     label: 'Free',
     color: '#10A37F',
-    dailyDebates: 5,
+    weeklyDebates: 3,
     modes: ['chat'],
     hasHistory: false,
   },
@@ -30,7 +48,8 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     price: 9.99,
     priceId: process.env.STRIPE_PRICE_PRO ?? '',
     color: '#A78BFA',
-    dailyDebates: 30,
+    dailyDebates: 10,
+    weeklyBrainstormer: 2,
     modes: ['chat', 'brainstorm', 'devil', '2v2'],
     hasHistory: true,
     historyDays: 30,
@@ -40,14 +59,12 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     price: 19.99,
     priceId: process.env.STRIPE_PRICE_MAX ?? '',
     color: '#FF6B2B',
-    dailyDebates: -1,
     modes: ['chat', 'brainstorm', 'devil', '2v2'],
     hasHistory: true,
   },
   admin: {
     label: 'Admin',
     color: '#F59E0B',
-    dailyDebates: -1,
     modes: ['chat', 'brainstorm', 'devil', '2v2'],
     hasHistory: true,
   },
@@ -58,39 +75,66 @@ export function normalizePlan(dbPlan: string | null | undefined): Tier {
   switch (dbPlan) {
     case 'admin':   return 'admin'
     case 'premium': return 'premium'
-    case 'max':     return 'premium'  // legacy DB value
+    case 'max':     return 'premium'
     case 'pro':     return 'pro'
     case 'free':    return 'free'
-    case 'starter': return 'free'     // legacy DB value
-    default:        return 'free'     // 'none' o qualsiasi altro valore
+    case 'starter': return 'free'
+    default:        return 'free'
   }
 }
 
-/** True se il tier può usare la modalità specificata */
 export function canUseMode(tier: Tier, mode: AppMode): boolean {
   return TIER_CONFIG[tier].modes.includes(mode)
 }
 
-/** Limite giornaliero dibattiti del tier (-1 = illimitato) */
-export function getDailyLimit(tier: Tier): number {
-  return TIER_CONFIG[tier].dailyDebates
-}
-
-/** True se il tier ha accesso alla cronologia delle chat */
 export function hasChatHistory(tier: Tier): boolean {
   return TIER_CONFIG[tier].hasHistory
 }
 
-// ── Daily debate limiter ─────────────────────────────────────────────────────
+// ── Limiters ─────────────────────────────────────────────────────────────────
 
-const DAY_MS = 24 * 60 * 60 * 1000
+const DAY_MS  = 24 * 60 * 60 * 1000
+const WEEK_MS =  7 * DAY_MS
 
 /**
- * Controlla e incrementa il contatore giornaliero di dibattiti per un utente.
- * Restituisce { ok: true } se il dibattito è permesso, { ok: false, retryAfter? } altrimenti.
+ * Controlla il limite dibattiti per tier.
+ * Free → settimanale (3/sett) · Pro → giornaliero (10/giorno) · Premium/Admin → illimitato
  */
+export function checkDebateLimit(userId: string, tier: Tier): LimitResult {
+  const cfg = TIER_CONFIG[tier]
+
+  if (tier === 'premium' || tier === 'admin') return { ok: true }
+
+  if (tier === 'free' && cfg.weeklyDebates) {
+    const rl = rateLimit(`debates-weekly:${userId}`, cfg.weeklyDebates, WEEK_MS)
+    if (!rl.ok) return { ok: false, limitType: 'weekly_debates', retryAfter: rl.retryAfter!, limit: cfg.weeklyDebates, requiredTier: 'pro' }
+  }
+
+  if (tier === 'pro' && cfg.dailyDebates) {
+    const rl = rateLimit(`debates-daily:${userId}`, cfg.dailyDebates, DAY_MS)
+    if (!rl.ok) return { ok: false, limitType: 'daily_debates', retryAfter: rl.retryAfter!, limit: cfg.dailyDebates, requiredTier: 'premium' }
+  }
+
+  return { ok: true }
+}
+
+/**
+ * Controlla il limite settimanale del Brainstormer (Pro: 2/sett, altri: illimitato).
+ */
+export function checkBrainstormerLimit(userId: string, tier: Tier): LimitResult {
+  if (tier === 'premium' || tier === 'admin') return { ok: true }
+
+  const cfg = TIER_CONFIG[tier]
+  if (tier === 'pro' && cfg.weeklyBrainstormer) {
+    const rl = rateLimit(`brainstormer-weekly:${userId}`, cfg.weeklyBrainstormer, WEEK_MS)
+    if (!rl.ok) return { ok: false, limitType: 'weekly_brainstormer', retryAfter: rl.retryAfter!, limit: cfg.weeklyBrainstormer, requiredTier: 'premium' }
+  }
+
+  return { ok: true }
+}
+
+/** @deprecated usa checkDebateLimit */
 export function checkDailyDebateLimit(userId: string, tier: Tier): { ok: boolean; retryAfter?: number } {
-  const limit = getDailyLimit(tier)
-  if (limit === -1) return { ok: true }   // illimitato (premium / admin)
-  return rateLimit(`debates-daily:${userId}`, limit, DAY_MS)
+  const result = checkDebateLimit(userId, tier)
+  return result.ok ? { ok: true } : { ok: false, retryAfter: result.retryAfter }
 }
