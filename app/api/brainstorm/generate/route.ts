@@ -253,9 +253,10 @@ function buildSynthesisPrompt(
   return `${userContext}\n\n---\nIl concilio ha discusso in due round:\n\n${council}\n\n---\nProduci la risposta finale unificata.`
 }
 
-function buildUserContext(idea: string, answers: IntakeAnswer[]): string {
+function buildUserContext(idea: string, answers: IntakeAnswer[], attachmentNote?: string): string {
   const qa = answers.map(a => `- ${a.question}\n  → ${a.answer}`).join('\n')
-  return `Idea dell'utente: "${idea}"${qa ? `\n\nContesto rivelato:\n${qa}` : ''}`
+  const attCtx = attachmentNote ? `\n\nDocumento allegato dall'utente:\n${attachmentNote}` : ''
+  return `Idea dell'utente: "${idea}"${qa ? `\n\nContesto rivelato:\n${qa}` : ''}${attCtx}`
 }
 
 // ── Contesto per raffinamento: include idea + risposte + nota + output prev ─
@@ -268,7 +269,7 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
 
-  const { idea, answers, note, previousOutput } = await req.json()
+  const { idea, answers, note, previousOutput, attachment } = await req.json()
   if (!idea) return NextResponse.json({ error: 'Idea mancante' }, { status: 400 })
 
   // ── Verifica piano: Brainstormer richiede Pro o superiore ─────────────
@@ -312,7 +313,30 @@ export async function POST(req: NextRequest) {
   }
 
   const perpKey = useGeminiAsPerplexity ? 'perplexity_gemini' : 'perplexity'
-  const userContext = buildUserContext(idea, answers ?? [])
+
+  // ── Prepara contesto allegato se presente ────────────────────────────────
+  let attachmentNote: string | undefined
+  if (attachment && !note) {  // allegato solo alla prima generazione
+    const { type, mimeType, data, name } = attachment
+    if (type === 'text') {
+      attachmentNote = `[File: ${name}]\n${data.slice(0, 3000)}${data.length > 3000 ? '…' : ''}`
+    } else if (type === 'image' || type === 'pdf') {
+      // Genera descrizione testuale tramite Claude (Anthropic)
+      try {
+        const Anthropic = (await import('@anthropic-ai/sdk')).default
+        const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+        const content: any[] = type === 'image'
+          ? [{ type: 'image', source: { type: 'base64', media_type: mimeType, data } }, { type: 'text', text: `Descrivi brevemente il contenuto di questo ${type === 'image' ? 'immagine' : 'documento'} (max 200 parole) come contesto per un concilio di AI.` }]
+          : [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data } }, { type: 'text', text: 'Riassumi i punti chiave di questo documento (max 200 parole) come contesto per un concilio di AI.' }]
+        const resp = await client.messages.create({ model: 'claude-haiku-4-5-20251001', max_tokens: 400, messages: [{ role: 'user', content }] })
+        attachmentNote = `[${name}]\n${(resp.content[0] as any).text}`
+      } catch {
+        attachmentNote = `[Allegato: ${name} — non leggibile]`
+      }
+    }
+  }
+
+  const userContext = buildUserContext(idea, answers ?? [], attachmentNote)
   const isRefinement = !!(note && previousOutput)
 
   const encoder = new TextEncoder()

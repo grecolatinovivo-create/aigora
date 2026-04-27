@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { signOut } from 'next-auth/react'
 import Navbar from '@/app/components/layout/Navbar'
+import AttachmentButton, { type ChatAttachment } from '@/app/components/chat/AttachmentButton'
 
 type Phase = 'entry' | 'initial' | 'intake' | 'building' | 'complete'
 
@@ -63,6 +64,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const [phase, setPhase] = useState<Phase>('entry')
   const [idea, setIdea] = useState('')
   const [answers, setAnswers] = useState<IntakeAnswer[]>([])
+  const [ideaAttachment, setIdeaAttachment] = useState<ChatAttachment | null>(null)
   const [currentQ, setCurrentQ] = useState<IntakeQuestion | null>(null)
   const [loadingQ, setLoadingQ] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
@@ -338,6 +340,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
           answers: answersRef.current,
           note: note ?? undefined,
           previousOutput: previousOutput ?? undefined,
+          attachment: note ? undefined : ideaAttachment,   // allegato solo alla prima generazione
         }),
       })
       if (!res.ok) { setOutputStreaming(false); return }
@@ -817,8 +820,23 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                       fontFamily: 'inherit', caretColor: '#7C3AED',
                     }}
                   />
+                  {/* Allegato Brainstormer */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 8, marginBottom: 4 }}>
+                    <AttachmentButton
+                      attachment={ideaAttachment}
+                      onAttachment={setIdeaAttachment}
+                      onRemove={() => setIdeaAttachment(null)}
+                      isDark={false}
+                      size="sm"
+                    />
+                    {ideaAttachment && (
+                      <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+                        Il concilio analizzerà anche il documento allegato
+                      </span>
+                    )}
+                  </div>
                   <div style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {idea.trim() && (
+                    {(idea.trim() || ideaAttachment) && (
                       <button onClick={handleIdeaSubmit} style={{
                         padding: '11px 32px', background: '#1A1A1A', color: '#fff',
                         border: 'none', borderRadius: '100px', fontSize: '13px',

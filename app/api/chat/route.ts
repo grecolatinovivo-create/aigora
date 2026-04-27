@@ -4,6 +4,43 @@ import { authOptions } from '@/lib/auth'
 import { rateLimit } from '@/lib/rateLimit'
 import { normalizePlan, checkDailyDebateLimit } from '@/lib/plans'
 
+// ── Tipo allegato condiviso ───────────────────────────────────────────────────
+export interface ChatAttachment {
+  type: 'image' | 'pdf' | 'text'
+  mimeType: string
+  data: string      // base64 per image/pdf, testo raw per text
+  name: string
+  size: number
+}
+
+// ── Helper: descrizione testuale per AI senza vision (Perplexity, GPT+PDF) ──
+async function describeAttachment(attachment: ChatAttachment, userId?: string): Promise<string> {
+  try {
+    const Anthropic = (await import('@anthropic-ai/sdk')).default
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const content: any[] = []
+
+    if (attachment.type === 'image') {
+      content.push({ type: 'image', source: { type: 'base64', media_type: attachment.mimeType, data: attachment.data } })
+      content.push({ type: 'text', text: 'Descrivi questo contenuto visivo in modo conciso (max 150 parole) per fornire contesto a un\'altra AI che non può vedere l\'immagine. Includi: soggetto principale, contesto, testo visibile se presente.' })
+    } else if (attachment.type === 'pdf') {
+      content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attachment.data } } as any)
+      content.push({ type: 'text', text: 'Riassumi i punti chiave di questo documento in max 200 parole, in modo da dare contesto a un\'altra AI che non può leggerlo direttamente.' })
+    } else {
+      return `[Documento testo allegato: ${attachment.name}]\n${attachment.data.slice(0, 1500)}${attachment.data.length > 1500 ? '…' : ''}`
+    }
+
+    const resp = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      messages: [{ role: 'user', content }],
+    })
+    return `[Allegato: ${attachment.name}]\n${(resp.content[0] as any).text}`
+  } catch {
+    return `[Allegato non leggibile: ${attachment.name}]`
+  }
+}
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -134,7 +171,7 @@ function sseStream(gen: AsyncIterable<string>, model?: string): Response {
   })
 }
 
-async function* streamClaude(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350): AsyncIterable<string> {
+async function* streamClaude(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350, attachment?: ChatAttachment): AsyncIterable<string> {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const userContent: any[] = []
@@ -144,6 +181,17 @@ async function* streamClaude(system: string, historyText: string, lastMessage: s
       text: `Conversazione fino ad ora:\n\n${historyText}\n\n`,
       cache_control: { type: 'ephemeral' },
     })
+  }
+  // ── Allegato ──────────────────────────────────────────────────────────────
+  if (attachment) {
+    if (attachment.type === 'image') {
+      userContent.push({ type: 'image', source: { type: 'base64', media_type: attachment.mimeType, data: attachment.data } })
+    } else if (attachment.type === 'pdf') {
+      userContent.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: attachment.data } } as any)
+    } else {
+      // Testo: inline nel contenuto
+      userContent.push({ type: 'text', text: `[Documento allegato: ${attachment.name}]\n${attachment.data}` })
+    }
   }
   userContent.push({ type: 'text', text: lastMessage })
   const stream = await client.messages.stream({
@@ -159,7 +207,7 @@ async function* streamClaude(system: string, historyText: string, lastMessage: s
   logUsage('anthropic', 'claude-haiku-4-5-20251001', usage.input_tokens, usage.output_tokens, userId, actionType)
 }
 
-async function* streamGPT(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350): AsyncIterable<string> {
+async function* streamGPT(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350, attachment?: ChatAttachment): AsyncIterable<string> {
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const messages: any[] = [{ role: 'system', content: system }]
@@ -167,7 +215,23 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
     messages.push({ role: 'user', content: `Conversazione fino ad ora:\n\n${historyText}` })
     messages.push({ role: 'assistant', content: 'Ho letto la conversazione. Procedo con il mio turno.' })
   }
-  messages.push({ role: 'user', content: lastMessage })
+  // ── Allegato ──────────────────────────────────────────────────────────────
+  let lastUserContent: any = lastMessage
+  if (attachment) {
+    if (attachment.type === 'image') {
+      lastUserContent = [
+        { type: 'image_url', image_url: { url: `data:${attachment.mimeType};base64,${attachment.data}`, detail: 'auto' } },
+        { type: 'text', text: lastMessage },
+      ]
+    } else if (attachment.type === 'text') {
+      lastUserContent = `[Documento allegato: ${attachment.name}]\n${attachment.data}\n\n${lastMessage}`
+    } else {
+      // PDF: GPT non supporta PDF nativi — usa descrizione generata da Claude
+      const desc = await describeAttachment(attachment, userId)
+      lastUserContent = `${desc}\n\n${lastMessage}`
+    }
+  }
+  messages.push({ role: 'user', content: lastUserContent })
   const stream = await client.chat.completions.create({ model: 'gpt-4.1-mini', max_tokens: maxTok, stream: true, stream_options: { include_usage: true }, messages })
   let inputTokens = 0, outputTokens = 0
   for await (const chunk of stream) {
@@ -178,21 +242,32 @@ async function* streamGPT(system: string, historyText: string, lastMessage: stri
   logUsage('openai', 'gpt-4.1-mini', inputTokens, outputTokens, userId, actionType)
 }
 
-function streamGeminiWithModel(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350): { stream: AsyncIterable<string>; model: string } {
+function streamGeminiWithModel(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350, attachment?: ChatAttachment): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.GEMINI_API_KEY) {
-    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType, maxTok), model: 'Claude' }
+    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType, maxTok, attachment), model: 'Claude' }
   }
-  return { stream: streamGemini(system, historyText, lastMessage, userId, actionType, maxTok), model: 'Gemini' }
+  return { stream: streamGemini(system, historyText, lastMessage, userId, actionType, maxTok, attachment), model: 'Gemini' }
 }
 
-async function* streamGemini(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350): AsyncIterable<string> {
-  if (!process.env.GEMINI_API_KEY) { yield* streamClaude(system, historyText, lastMessage); return }
+async function* streamGemini(system: string, historyText: string, lastMessage: string, userId?: string, actionType = 'risposta', maxTok = 350, attachment?: ChatAttachment): AsyncIterable<string> {
+  if (!process.env.GEMINI_API_KEY) { yield* streamClaude(system, historyText, lastMessage, userId, actionType, maxTok, attachment); return }
   try {
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
     const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     const fullSystem = historyText ? `${system}\n\nConversazione fino ad ora:\n\n${historyText}` : system
     const model = client.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: fullSystem, generationConfig: { maxOutputTokens: maxTok } })
-    const result = await model.generateContentStream(lastMessage)
+
+    // ── Allegato ────────────────────────────────────────────────────────────
+    let promptParts: any[] = []
+    if (attachment) {
+      if (attachment.type === 'image' || attachment.type === 'pdf') {
+        promptParts.push({ inlineData: { mimeType: attachment.mimeType, data: attachment.data } })
+      } else {
+        promptParts.push(`[Documento allegato: ${attachment.name}]\n${attachment.data}\n\n`)
+      }
+    }
+    promptParts.push(lastMessage)
+    const result = await model.generateContentStream(promptParts)
     for await (const chunk of result.stream) {
       const text = chunk.text()
       if (text) yield text
@@ -223,18 +298,30 @@ Scrivi come parla un essere umano vero, non come un paper accademico.`
   return { stream, model: 'Gemini (as Perplexity)' }
 }
 
-function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta', maxTok = 350): { stream: AsyncIterable<string>; model: string } {
+function streamPerplexityWithModel(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta', maxTok = 350, attachment?: ChatAttachment): { stream: AsyncIterable<string>; model: string } {
   if (!process.env.PERPLEXITY_API_KEY) {
-    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType, maxTok), model: 'Claude' }
+    return { stream: streamClaude(system, historyText, lastMessage, userId, actionType, maxTok, attachment), model: 'Claude' }
   }
-  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch, userId, actionType, maxTok), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
+  return { stream: streamPerplexity(system, historyText, lastMessage, needsWebSearch, userId, actionType, maxTok, attachment), model: needsWebSearch ? 'Perplexity Pro' : 'Perplexity' }
 }
 
-async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta', maxTok = 350): AsyncIterable<string> {
-  if (!process.env.PERPLEXITY_API_KEY) { yield* streamGemini(system, historyText, lastMessage, userId); return }
+async function* streamPerplexity(system: string, historyText: string, lastMessage: string, needsWebSearch = false, userId?: string, actionType = 'risposta', maxTok = 350, attachment?: ChatAttachment): AsyncIterable<string> {
+  if (!process.env.PERPLEXITY_API_KEY) { yield* streamGemini(system, historyText, lastMessage, userId, actionType, maxTok, attachment); return }
   const OpenAI = (await import('openai')).default
   const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
-  const userMessage = historyText ? `Conversazione:\n\n${historyText}\n\n${lastMessage}` : lastMessage
+
+  // Perplexity non supporta vision — aggiungi descrizione testuale se c'è un allegato
+  let attachmentContext = ''
+  if (attachment) {
+    if (attachment.type === 'text') {
+      attachmentContext = `[Documento allegato: ${attachment.name}]\n${attachment.data.slice(0, 2000)}\n\n`
+    } else {
+      attachmentContext = (await describeAttachment(attachment, userId)) + '\n\n'
+    }
+  }
+  const userMessage = historyText
+    ? `Conversazione:\n\n${historyText}\n\n${attachmentContext}${lastMessage}`
+    : `${attachmentContext}${lastMessage}`
   const model = needsWebSearch ? 'sonar-pro' : 'sonar'
   try {
     const stream = await client.chat.completions.create({
@@ -323,7 +410,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch, perplexityTurnCount, overrideSystemPrompt, maxTokens } = await req.json()
+    const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch, perplexityTurnCount, overrideSystemPrompt, maxTokens, attachment } = await req.json()
 
     // ── Auth + piano utente ────────────────────────────────────────────────────
     const session = await getServerSession(authOptions)
@@ -440,9 +527,11 @@ export async function POST(req: NextRequest) {
       : ''
     const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`
 
-    if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage, currentUserId), 'Claude')
-    if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage, currentUserId), 'GPT')
-    if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage, currentUserId); return sseStream(g.stream, g.model) }
+    const att: ChatAttachment | undefined = attachment ?? undefined
+
+    if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage, currentUserId, 'risposta', 350, att), 'Claude')
+    if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage, currentUserId, 'risposta', 350, att), 'GPT')
+    if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage, currentUserId, 'risposta', 350, att); return sseStream(g.stream, g.model) }
     if (aiId === 'perplexity') {
       // Se il flag forceGeminiPerp è attivo (per-utente o globale), sempre Gemini-as-Perplexity
       const forceGemini = (req as any)._forceGeminiPerp ?? false
@@ -455,7 +544,7 @@ export async function POST(req: NextRequest) {
       // Turno 11+ (count%10===0): torna Sonar Pro
       const isRealPerplexity = (perplexityTurnCount ?? 0) % 10 === 0
       if (isRealPerplexity) {
-        const p = streamPerplexityWithModel(system, historyText, lastMessage, true, currentUserId)
+        const p = streamPerplexityWithModel(system, historyText, lastMessage, true, currentUserId, 'risposta', 350, att)
         return sseStream(p.stream, 'Perplexity')
       } else {
         const g = streamGeminiAsPerplexity(historyText, today, year, currentUserId)

@@ -1,4 +1,8 @@
 'use client'
+import { AttachmentChip } from './chat/AttachmentButton'
+import type { ChatAttachment } from './chat/AttachmentButton'
+
+export type { ChatAttachment }
 
 export interface Message {
   id: string
@@ -9,6 +13,7 @@ export interface Message {
   isUser?: boolean
   isSynthesis?: boolean
   realModel?: string
+  attachment?: ChatAttachment
 }
 
 const AI_BUBBLE_LIGHT: Record<string, { bg: string; nameColor: string; textColor: string }> = {
@@ -58,6 +63,7 @@ export default function MessageBubble({ message, bgTheme = 'black', fontSize = 1
     return (
       <div className="flex justify-end px-3 mb-1 message-enter">
         <div style={{ maxWidth: '78%', minWidth: 0 }}>
+          {message.attachment && <AttachmentChip attachment={message.attachment} />}
           <div className="rounded-2xl rounded-br-sm px-3 py-2 leading-relaxed text-white"
             style={{
               backgroundColor: '#005c4b',

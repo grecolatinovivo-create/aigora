@@ -65,21 +65,23 @@ function TwoVsTwoScreen() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0d0d14' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(0,0,0,0.5)', borderBottom: '1px solid rgba(255,80,0,0.2)' }}>
-        <div style={{ fontSize: 8, fontWeight: 900, padding: '2px 7px', borderRadius: 4, color: '#3b82f6', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>SQUADRA A</div>
+        <div style={{ fontSize: 8, fontWeight: 900, padding: '2px 7px', borderRadius: 4, color: '#3b82f6', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>TU + AI</div>
         <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>2 — 1</div>
-        <div style={{ fontSize: 8, fontWeight: 900, padding: '2px 7px', borderRadius: 4, color: '#ef4444', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>SQUADRA B</div>
+        <div style={{ fontSize: 8, fontWeight: 900, padding: '2px 7px', borderRadius: 4, color: '#ef4444', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>AI vs AI</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        {/* Team A: 1 umano + 1 AI */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {[['#F59E0B','Giampiero'],['#7C3AED','Claude']].map(([c,n]) => (
+          {[['#F59E0B','Tu 👤'],['#7C3AED','Claude']].map(([c,n]) => (
             <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
               <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)' }}>{n}</span>
             </div>
           ))}
         </div>
+        {/* Team B: 2 AI */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>
-          {[['#10B981','Marco'],['#10A37F','GPT']].map(([c,n]) => (
+          {[['#10A37F','GPT'],['#1A73E8','Gemini']].map(([c,n]) => (
             <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)' }}>{n}</span>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
@@ -349,9 +351,9 @@ export default function LandingPage() {
         <ModeSection
           reverse={true}
           accent="#38BDF8"
-          tag="2 vs 2"
-          title="Tu e una AI contro un altro umano con la sua AI."
-          body="Due squadre, due tesi opposte. Ogni squadra ha un umano e un'AI alleata. Un'AI arbitro valuta ogni round e assegna i punti. Vincono i più convincenti, non i più rumorosi."
+          tag="Multiplayer 2 vs 2"
+          title="Tu e una AI contro due AI avversarie."
+          body="Scegli la tua AI alleata e difendi la tua tesi insieme. Dall'altra parte ti aspettano due AI pronte ad attaccarti round dopo round. Un'AI arbitro valuta gli argomenti e assegna il verdetto finale."
           cta="Scegli le squadre →"
           onCta={() => setPendingMode('2v2')}
           btnGradient="linear-gradient(135deg,#0EA5E9,#0369A1)"

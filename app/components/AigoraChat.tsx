@@ -13,6 +13,7 @@ import {
 } from '@/app/lib/aiProfiles'
 import { SFX } from '@/app/lib/audioEngine'
 import ThinkingBubble from '@/app/components/chat/ThinkingBubble'
+import AttachmentButton, { type ChatAttachment } from '@/app/components/chat/AttachmentButton'
 import UserTurnPrompt from '@/app/components/chat/UserTurnPrompt'
 import RotatingTopics from '@/app/components/shared/RotatingTopics'
 import PhoneAvatarBar from '@/app/components/layout/PhoneAvatarBar'
@@ -71,6 +72,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [nameConfirmed, setNameConfirmed] = useState(!!(propUserName?.trim()))
   const [nameInput, setNameInput] = useState('')
   const [inputText, setInputText] = useState('')
+  const [pendingAttachment, setPendingAttachment] = useState<ChatAttachment | null>(null)
+  // Ref che tiene l'allegato corrente per il round in corso (si azzera dopo il round)
+  const currentRoundAttachmentRef = useRef<ChatAttachment | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const inputRefDesktop = useRef<HTMLTextAreaElement>(null)
   // Auto-resize textarea
@@ -696,7 +700,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn', needsWebSearch: needsWebSearchRef.current, perplexityTurnCount: perplexityTurnCountRef.current }),
+        body: JSON.stringify({ history: chatHistoryRef.current, aiId, action: isSynthesis ? 'synthesize' : 'turn', needsWebSearch: needsWebSearchRef.current, perplexityTurnCount: perplexityTurnCountRef.current, attachment: currentRoundAttachmentRef.current }),
         signal: controller.signal,
       })
 
@@ -883,6 +887,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           }
         }
         // Aspetta sempre l'utente dopo ogni turno
+        currentRoundAttachmentRef.current = null   // allegato consumato per questo round
         waitingForUserRef.current = true
         setWaitingForUser(true)
         stopRequestedRef.current = true
@@ -892,6 +897,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         const nextAi = getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
 
         if (aiTurnCountRef.current % 4 === 0) {
+          currentRoundAttachmentRef.current = null   // allegato consumato per questo round
           waitingForUserRef.current = true
           setWaitingForUser(true)
           stopRequestedRef.current = true
@@ -938,12 +944,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   }
 
   const handleSendMessage = () => {
-    if (!inputText.trim()) return
+    if (!inputText.trim() && !pendingAttachment) return
     const text = inputText.trim()
+    const att = pendingAttachment   // cattura prima del reset
     setInputText('')
+    setPendingAttachment(null)
+    // Salva allegato nel ref per il round corrente (si azzera dopo runDebate)
+    currentRoundAttachmentRef.current = att
     const messageId = `user-${Date.now()}`
-    const userMsg: Message = { id: messageId, aiId: 'user', name: displayName, content: text, isUser: true }
-    chatHistoryRef.current.push({ name: historyName, content: text })
+    const userMsg: Message = { id: messageId, aiId: 'user', name: displayName, content: text || '📎', isUser: true, attachment: att ?? undefined }
+    chatHistoryRef.current.push({ name: historyName, content: text || `[allegato: ${att?.name ?? 'file'}]` })
     setMessages(prev => [...prev, userMsg])
 
     // Pubblica su Ably se siamo in una room multiplayer
@@ -2911,42 +2921,63 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
               </div>
             )
           })() : (
-          <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2.5" style={{
+          <div className="flex-shrink-0 flex flex-col gap-1.5 px-3 py-2.5" style={{
             backgroundColor: mobileBg.header,
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
           }}>
-            <textarea
-              ref={inputRef}
-              value={inputText}
-              rows={1}
-              onChange={e => setInputText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage() } }}
-              placeholder='Scrivi un messaggio…'
-              className={`flex-1 px-3.5 py-2 text-[12px] outline-none transition-all resize-none overflow-hidden${waitingForUser ? ' input-waiting' : ''}`}
-              style={{
-                backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-                color: isDark ? '#f0f0f0' : '#111',
-                borderRadius: inputText.includes('\n') || inputText.length > 40 ? '16px' : '9999px',
-                boxShadow: waitingForUser ? (isDark ? '0 0 0 2px rgba(196,181,253,0.15)' : '0 0 0 2px rgba(109,40,217,0.1)') : undefined,
-                lineHeight: '1.4',
-              }}
-            />
-            <button onClick={isListening ? stopListening : startListening}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-              style={{ backgroundColor: isListening ? '#ef4444' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'), boxShadow: isListening ? '0 0 10px rgba(239,68,68,0.5)' : undefined }}>
-              <svg width="12" height="14" viewBox="0 0 24 28" fill={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')}>
-                <rect x="8" y="0" width="8" height="16" rx="4"/>
-                <path d="M4 12a8 8 0 0 0 16 0" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2" fill="none"/>
-                <line x1="12" y1="20" x2="12" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
-                <line x1="8" y1="24" x2="16" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
-              </svg>
-            </button>
-            <button onClick={handleSendMessage} disabled={!inputText.trim()}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 hover:scale-105 active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: inputText.trim() ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-            </button>
+            {/* Chip allegato mobile */}
+            {pendingAttachment && (
+              <div className="px-1">
+                <AttachmentButton
+                  attachment={pendingAttachment}
+                  onAttachment={setPendingAttachment}
+                  onRemove={() => setPendingAttachment(null)}
+                  isDark={isDark}
+                  size="sm"
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <AttachmentButton
+                attachment={null}
+                onAttachment={setPendingAttachment}
+                onRemove={() => setPendingAttachment(null)}
+                isDark={isDark}
+                size="sm"
+              />
+              <textarea
+                ref={inputRef}
+                value={inputText}
+                rows={1}
+                onChange={e => setInputText(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage() } }}
+                placeholder='Scrivi un messaggio…'
+                className={`flex-1 px-3.5 py-2 text-[12px] outline-none transition-all resize-none overflow-hidden${waitingForUser ? ' input-waiting' : ''}`}
+                style={{
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                  color: isDark ? '#f0f0f0' : '#111',
+                  borderRadius: inputText.includes('\n') || inputText.length > 40 ? '16px' : '9999px',
+                  boxShadow: waitingForUser ? (isDark ? '0 0 0 2px rgba(196,181,253,0.15)' : '0 0 0 2px rgba(109,40,217,0.1)') : undefined,
+                  lineHeight: '1.4',
+                }}
+              />
+              <button onClick={isListening ? stopListening : startListening}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                style={{ backgroundColor: isListening ? '#ef4444' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'), boxShadow: isListening ? '0 0 10px rgba(239,68,68,0.5)' : undefined }}>
+                <svg width="12" height="14" viewBox="0 0 24 28" fill={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')}>
+                  <rect x="8" y="0" width="8" height="16" rx="4"/>
+                  <path d="M4 12a8 8 0 0 0 16 0" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2" fill="none"/>
+                  <line x1="12" y1="20" x2="12" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
+                  <line x1="8" y1="24" x2="16" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
+                </svg>
+              </button>
+              <button onClick={handleSendMessage} disabled={!inputText.trim() && !pendingAttachment}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 hover:scale-105 active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: (inputText.trim() || pendingAttachment) ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+              </button>
+            </div>
           </div>
           )}
 
@@ -3509,6 +3540,23 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           }}>
+            {/* Chip allegato desktop */}
+            {pendingAttachment && phase !== 'new' && (
+              <AttachmentButton
+                attachment={pendingAttachment}
+                onAttachment={setPendingAttachment}
+                onRemove={() => setPendingAttachment(null)}
+                isDark={isDark}
+              />
+            )}
+            {phase !== 'new' && (
+              <AttachmentButton
+                attachment={null}
+                onAttachment={setPendingAttachment}
+                onRemove={() => setPendingAttachment(null)}
+                isDark={isDark}
+              />
+            )}
             <textarea
               ref={inputRefDesktop}
               value={inputText}
@@ -3535,9 +3583,9 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                 <line x1="8" y1="24" x2="16" y2="24" stroke={isListening ? 'white' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)')} strokeWidth="2"/>
               </svg>
             </button>
-            <button onClick={() => { if (phase === 'new') { if (inputText.trim()) handleStart(inputText) } else { handleSendMessage() } }} disabled={!inputText.trim()}
+            <button onClick={() => { if (phase === 'new') { if (inputText.trim()) handleStart(inputText) } else { handleSendMessage() } }} disabled={!inputText.trim() && !pendingAttachment}
               className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: inputText.trim() ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
+              style={{ background: 'linear-gradient(135deg, #10A37F, #0d8c6d)', boxShadow: (inputText.trim() || pendingAttachment) ? '0 2px 10px rgba(16,163,127,0.4)' : undefined }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
             </button>
           </div>
