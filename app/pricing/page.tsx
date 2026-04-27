@@ -14,16 +14,16 @@ const PLANS = [
   {
     key: null,
     label: 'Free',
+    subtitle: null,
     price: null,
     color: '#10A37F',
     badge: null,
     ais: ['claude', 'gpt', 'gemini', 'perplexity'],
     features: [
-      { text: '4 AI (Claude · GPT · Gemini · Perplexity)', ok: true },
-      { text: 'Dibattiti tra 4 AI', ok: true },
+      { text: '4 AI (Claude, GPT, Gemini, Perplexity)', ok: true },
       { text: '3 dibattiti a settimana', ok: true },
-      { text: 'Max 100 risposte per dibattito', ok: true },
-      { text: 'Brainstormer (concilio AI)', ok: false },
+      { text: 'Fino a 100 risposte per dibattito', ok: true },
+      { text: 'Brainstormer', ok: false },
       { text: 'Avvocato del Diavolo', ok: false },
       { text: 'Multiplayer 2v2', ok: false },
       { text: 'Upload documenti', ok: false },
@@ -35,19 +35,20 @@ const PLANS = [
   {
     key: 'pro',
     label: 'Pro',
+    subtitle: 'Per uso frequente e completo',
     price: '9,99',
     color: '#A78BFA',
     badge: 'PIÙ POPOLARE',
     ais: ['claude', 'gpt', 'gemini', 'perplexity', 'grok'],
     features: [
-      { text: '5 AI (+ Grok)', ok: true },
-      { text: 'Dibattiti tra 5 AI', ok: true },
+      { text: '5 AI, inclusa Grok', ok: true },
       { text: '10 dibattiti al giorno', ok: true },
-      { text: 'Brainstormer (2 a settimana)', ok: true },
+      { text: 'Risposte estese per dibattito', ok: true },
+      { text: 'Brainstormer: 2 sessioni/settimana', ok: true },
       { text: 'Avvocato del Diavolo', ok: true },
       { text: 'Multiplayer 2v2', ok: true },
-      { text: 'Upload documenti (limitati)', ok: true },
-      { text: 'Cronologia ultimi 30 giorni', ok: true },
+      { text: 'Upload documenti: fino a 20/mese', ok: true },
+      { text: 'Cronologia dibattiti: 30 giorni', ok: true },
     ],
     cta: 'Inizia con Pro',
     ctaAction: 'stripe',
@@ -55,19 +56,21 @@ const PLANS = [
   {
     key: 'premium',
     label: 'Premium',
+    subtitle: 'Per uso intensivo e avanzato',
     price: '19,99',
     color: '#FF6B2B',
     badge: null,
     ais: ['claude', 'gpt', 'gemini', 'perplexity', 'grok'],
     features: [
-      { text: '5 AI (+ Grok)', ok: true },
-      { text: 'Dibattiti tra 5 AI', ok: true },
+      { text: '5 AI, inclusa Grok', ok: true },
       { text: 'Dibattiti illimitati', ok: true },
-      { text: 'Brainstormer illimitati', ok: true },
+      { text: 'Risposte illimitate', ok: true },
+      { text: 'Brainstormer illimitato', ok: true },
       { text: 'Avvocato del Diavolo', ok: true },
       { text: 'Multiplayer 2v2', ok: true },
-      { text: 'Upload documenti illimitati', ok: true },
-      { text: 'Cronologia completa illimitata', ok: true },
+      { text: 'Upload documenti: fino a 200/mese', ok: true },
+      { text: 'Accesso prioritario alle nuove funzionalità', ok: true },
+      { text: 'Cronologia completa', ok: true },
     ],
     cta: 'Inizia con Premium',
     ctaAction: 'stripe',
@@ -173,6 +176,11 @@ export default function PricingPage() {
                   <span className="text-4xl font-black text-white">Gratis</span>
                 )}
               </div>
+              {plan.subtitle && (
+                <p className="text-[11px] mt-1.5" style={{ color: plan.color, fontWeight: 600, opacity: 0.8 }}>
+                  {plan.subtitle}
+                </p>
+              )}
             </div>
 
             {/* AI badges */}
@@ -240,12 +248,13 @@ export default function PricingPage() {
           {[
             { feature: 'AI disponibili', free: '4 AI', pro: '5 AI (+ Grok)', premium: '5 AI (+ Grok)' },
             { feature: 'Dibattiti', free: '3/settimana', pro: '10/giorno', premium: 'Illimitati' },
-            { feature: 'Max risposte per dibattito', free: '100', pro: 'Illimitate', premium: 'Illimitate' },
-            { feature: 'Brainstormer (concilio AI)', free: false, pro: '2/settimana', premium: 'Illimitati' },
+            { feature: 'Risposte per dibattito', free: 'Fino a 100', pro: 'Estese', premium: 'Illimitate' },
+            { feature: 'Brainstormer', free: false, pro: '2 sessioni/settimana', premium: 'Illimitato' },
             { feature: 'Avvocato del Diavolo', free: false, pro: true, premium: true },
             { feature: 'Multiplayer 2v2', free: false, pro: true, premium: true },
-            { feature: 'Upload documenti', free: false, pro: 'Limitati', premium: 'Illimitati' },
-            { feature: 'Cronologia dibattiti', free: false, pro: '30 giorni', premium: 'Illimitata' },
+            { feature: 'Upload documenti', free: false, pro: '20/mese', premium: '200/mese' },
+            { feature: 'Cronologia dibattiti', free: false, pro: '30 giorni', premium: 'Completa' },
+            { feature: 'Accesso prioritario novità', free: false, pro: false, premium: true },
           ].map((row, i) => (
             <div
               key={row.feature}
