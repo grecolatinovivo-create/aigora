@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { track } from '@vercel/analytics'
+import { useTranslations } from 'next-intl'
 import LoginModal, { type SelectableMode } from '@/app/components/landing/LoginModal'
 import TopicPickerModal from '@/app/components/landing/TopicPickerModal'
 
@@ -25,7 +26,7 @@ function HellGridBg() {
 }
 
 // ── Mock screen components ────────────────────────────────────────────────────
-function ChatScreen() {
+function ChatScreen({ debateLabel, replyLabel }: { debateLabel: string; replyLabel: string }) {
   const msgs = [
     { id: 'C', color: '#7C3AED', name: 'Claude',     text: 'La democrazia diretta è superiore perché elimina gli intermediari tra cittadino e decisione.' },
     { id: 'G', color: '#10A37F', name: 'GPT',        text: 'In larga scala diventa impraticabile. Richiede un\'informazione diffusa che storicamente non esiste.' },
@@ -38,7 +39,7 @@ function ChatScreen() {
         {[['#7C3AED','C'],['#10A37F','G'],['#1A73E8','Ge'],['#20B2AA','P']].map(([c,l]) => (
           <div key={l} style={{ width: 20, height: 20, borderRadius: '50%', background: c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 900, color: '#fff' }}>{l}</div>
         ))}
-        <div style={{ fontSize: 8, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginLeft: 2 }}>dibattito in corso</div>
+        <div style={{ fontSize: 8, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginLeft: 2 }}>{debateLabel}</div>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 7, padding: '8px 10px' }}>
         {msgs.map(m => (
@@ -52,7 +53,7 @@ function ChatScreen() {
         ))}
       </div>
       <div style={{ padding: '7px 10px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.4)', display: 'flex', gap: 6 }}>
-        <div style={{ flex: 1, padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 7, color: 'rgba(255,255,255,0.25)' }}>Rispondi al dibattito…</div>
+        <div style={{ flex: 1, padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 7, color: 'rgba(255,255,255,0.25)' }}>{replyLabel}</div>
         <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
         </div>
@@ -61,7 +62,7 @@ function ChatScreen() {
   )
 }
 
-function TwoVsTwoScreen() {
+function TwoVsTwoScreen({ yourArgLabel }: { yourArgLabel: string }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0d0d14' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(0,0,0,0.5)', borderBottom: '1px solid rgba(255,80,0,0.2)' }}>
@@ -70,7 +71,6 @@ function TwoVsTwoScreen() {
         <div style={{ fontSize: 8, fontWeight: 900, padding: '2px 7px', borderRadius: 4, color: '#ef4444', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>AI vs AI</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        {/* Team A: 1 umano + 1 AI */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {[['#F59E0B','Tu 👤'],['#7C3AED','Claude']].map(([c,n]) => (
             <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -79,7 +79,6 @@ function TwoVsTwoScreen() {
             </div>
           ))}
         </div>
-        {/* Team B: 2 AI */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>
           {[['#10A37F','GPT'],['#1A73E8','Gemini']].map(([c,n]) => (
             <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -90,14 +89,14 @@ function TwoVsTwoScreen() {
         </div>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 6, padding: '8px 10px' }}>
-        <div style={{ alignSelf: 'flex-start', maxWidth: '78%', padding: '5px 9px', borderRadius: '9px 9px 9px 2px', fontSize: 8, lineHeight: 1.45, background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>L'IA amplifica la creatività, non la sostituisce.</div>
+        <div style={{ alignSelf: 'flex-start', maxWidth: '78%', padding: '5px 9px', borderRadius: '9px 9px 9px 2px', fontSize: 8, lineHeight: 1.45, background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>L&apos;IA amplifica la creatività, non la sostituisce.</div>
         <div style={{ alignSelf: 'flex-end', maxWidth: '78%', padding: '5px 9px', borderRadius: '9px 9px 2px 9px', fontSize: 8, lineHeight: 1.45, background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>Romantico. I budget spariscono nel mondo reale.</div>
         <div style={{ padding: '6px 9px', borderRadius: 8, fontSize: 7.5, lineHeight: 1.45, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'rgba(251,191,36,0.9)' }}>
           <span style={{ fontWeight: 900 }}>🏆 GEMINI — ARBITRO</span><br/>Squadra A più solida sul piano storico.
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ flex: 1, padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 7, color: 'rgba(255,255,255,0.25)' }}>Il tuo argomento…</div>
+        <div style={{ flex: 1, padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 7, color: 'rgba(255,255,255,0.25)' }}>{yourArgLabel}</div>
         <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
         </div>
@@ -112,7 +111,7 @@ function DevilScreenContent() {
       <HellGridBg />
       <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 16 }}>
         <div style={{ fontSize: 52, filter: 'drop-shadow(0 0 24px rgba(239,68,68,0.9))' }}>😈</div>
-        <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(239,68,68,0.9)', textAlign: 'center' }}>Difendi l'indifendibile</div>
+        <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(239,68,68,0.9)', textAlign: 'center' }}>Difendi l&apos;indifendibile</div>
         <div style={{ padding: '4px 12px', borderRadius: 999, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', fontSize: 9, fontWeight: 900, color: '#ef4444' }}>4 AI nemiche</div>
       </div>
       <div style={{ position: 'relative', zIndex: 1, padding: '7px 12px', borderTop: '1px solid rgba(239,68,68,0.15)', background: 'rgba(0,0,0,0.4)', textAlign: 'center' }}>
@@ -122,12 +121,12 @@ function DevilScreenContent() {
   )
 }
 
-function BrainstormScreenContent() {
+function BrainstormScreenContent({ councilLabel, ideaLabel }: { councilLabel: string; ideaLabel: string }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#09060f' }}>
       <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(167,139,250,0.15)', background: 'rgba(0,0,0,0.4)' }}>
         <div style={{ fontSize: 8, fontWeight: 900, color: '#A78BFA', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Brainstormer</div>
-        <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>Il concilio sta deliberando…</div>
+        <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{councilLabel}</div>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '12px 10px' }}>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
@@ -149,7 +148,7 @@ function BrainstormScreenContent() {
         </div>
       </div>
       <div style={{ padding: '7px 10px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
-        <div style={{ padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 7, color: 'rgba(255,255,255,0.25)' }}>La tua idea…</div>
+        <div style={{ padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 7, color: 'rgba(255,255,255,0.25)' }}>{ideaLabel}</div>
       </div>
     </div>
   )
@@ -183,50 +182,26 @@ function ModeSection({
   phone: React.ReactNode
   btnGradient: string
   btnShadow: string
-  bgFade: string   // colore di fade del crop mobile (es. '#07070f')
+  bgFade: string
 }) {
   return (
-    <section style={{
-      width: '100%',
-      maxWidth: 1100,
-      margin: '0 auto',
-      padding: '80px 40px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 60,
-    }}>
+    <section style={{ width: '100%', maxWidth: 1100, margin: '0 auto', padding: '80px 40px', display: 'flex', flexDirection: 'column', gap: 60 }}>
       {/* Desktop */}
-      <div style={{
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 64,
-        flexDirection: reverse ? 'row-reverse' : 'row',
-      }}
+      <div
+        style={{ alignItems: 'center', justifyContent: 'space-between', gap: 64, flexDirection: reverse ? 'row-reverse' : 'row' }}
         className="hidden lg:flex"
       >
-        {/* Phone */}
         <div style={{ flexShrink: 0 }}>{phone}</div>
-        {/* Text */}
         <div style={{ flex: 1, maxWidth: 480 }}>
           <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: accent, marginBottom: 12 }}>{tag}</div>
           <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.8rem, 3vw, 2.6rem)', color: '#fff', lineHeight: 1.1, marginBottom: 14, letterSpacing: '-0.02em' }}>{title}</h2>
           <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, marginBottom: 32 }}>{body}</p>
-          <button
-            onClick={onCta}
-            style={{
-              padding: '13px 28px', borderRadius: 13, border: 'none', cursor: 'pointer',
-              background: btnGradient,
-              color: '#fff', fontSize: 15, fontWeight: 700,
-              boxShadow: btnShadow,
-              letterSpacing: '-0.01em',
-            }}
-          >{cta}</button>
+          <button onClick={onCta} style={{ padding: '13px 28px', borderRadius: 13, border: 'none', cursor: 'pointer', background: btnGradient, color: '#fff', fontSize: 15, fontWeight: 700, boxShadow: btnShadow, letterSpacing: '-0.01em' }}>{cta}</button>
         </div>
       </div>
 
       {/* Mobile */}
       <div className="lg:hidden" style={{ flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-        {/* Mock tagliato + fade in basso */}
         <div style={{ position: 'relative', height: 220, overflow: 'hidden', width: '100%', display: 'flex', justifyContent: 'center' }}>
           <div style={{ flexShrink: 0, transform: 'scale(0.85)', transformOrigin: 'top center' }}>{phone}</div>
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 70, background: `linear-gradient(to bottom, transparent, ${bgFade})`, pointerEvents: 'none' }} />
@@ -235,15 +210,7 @@ function ModeSection({
           <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase', color: accent, marginBottom: 10 }}>{tag}</div>
           <h2 style={{ fontWeight: 900, fontSize: '1.9rem', color: '#fff', lineHeight: 1.15, marginBottom: 12, letterSpacing: '-0.02em' }}>{title}</h2>
           <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, marginBottom: 28, maxWidth: 380, margin: '0 auto 28px' }}>{body}</p>
-          <button
-            onClick={onCta}
-            style={{
-              padding: '13px 28px', borderRadius: 13, border: 'none', cursor: 'pointer',
-              background: btnGradient,
-              color: '#fff', fontSize: 15, fontWeight: 700,
-              boxShadow: btnShadow,
-            }}
-          >{cta}</button>
+          <button onClick={onCta} style={{ padding: '13px 28px', borderRadius: 13, border: 'none', cursor: 'pointer', background: btnGradient, color: '#fff', fontSize: 15, fontWeight: 700, boxShadow: btnShadow }}>{cta}</button>
         </div>
       </div>
     </section>
@@ -253,6 +220,9 @@ function ModeSection({
 // ── Componente principale ─────────────────────────────────────────────────────
 export default function LandingPage() {
   const router = useRouter()
+  const t = useTranslations('landing')
+  const tNav = useTranslations('nav')
+
   const [pendingMode, setPendingMode] = useState<SelectableMode | null>(null)
   const [showTopicPicker, setShowTopicPicker] = useState(false)
 
@@ -273,10 +243,10 @@ export default function LandingPage() {
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={scrollToModes} style={{ padding: '7px 16px', borderRadius: 9, background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Scopri i formati
+            {tNav('discoverFormats')}
           </button>
           <button onClick={() => router.push('/login')} style={{ padding: '8px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Accedi
+            {tNav('signIn')}
           </button>
         </div>
       </nav>
@@ -285,15 +255,17 @@ export default function LandingPage() {
       <section style={{ position: 'relative', zIndex: 1, minHeight: '88vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 24px 80px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 999, marginBottom: 22, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(167,139,250,0.25)', fontSize: 12, fontWeight: 600, color: 'rgba(167,139,250,0.9)' }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#A78BFA', display: 'inline-block' }} />
-          4 AI · Un'unica arena
+          {t('badge')}
         </div>
 
         <h1 style={{ fontWeight: 900, fontSize: 'clamp(2.4rem, 7vw, 5rem)', lineHeight: 1.04, color: '#fff', letterSpacing: '-0.03em', marginBottom: 20, maxWidth: 800 }}>
-          4 AI. Un solo dibattito.
+          {t('heroTitle')}
         </h1>
 
         <p style={{ fontSize: 'clamp(15px, 2vw, 19px)', color: 'rgba(255,255,255,0.45)', maxWidth: 520, lineHeight: 1.65, marginBottom: 40 }}>
-          Fai una domanda, guarda le AI confrontarsi in tempo reale.<br />Oppure entra tu nell'arena.
+          {t('heroSubtitle').split('\n').map((line: string, i: number) => (
+            <span key={i}>{line}{i === 0 && <br />}</span>
+          ))}
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 48 }}>
@@ -301,12 +273,12 @@ export default function LandingPage() {
             onClick={scrollToModes}
             style={{ padding: '15px 36px', borderRadius: 14, background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', border: 'none', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 32px rgba(124,58,237,0.5)', letterSpacing: '-0.01em' }}
           >
-            Scegli come dibattere →
+            {t('heroCta')}
           </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(255,255,255,0.2)', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {['Dibattito', '2 vs 2', "Devil's Advocate", 'Brainstormer'].map((item, i) => (
+          {(t.raw('heroModes') as string[]).map((item: string, i: number) => (
             <span key={item} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {i > 0 && <span>·</span>}
               {item}
@@ -323,59 +295,58 @@ export default function LandingPage() {
       {/* ── SEZIONI MODALITÀ ── */}
       <div id="modalita" style={{ position: 'relative', zIndex: 1 }}>
 
-        {/* Divisore */}
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.2), transparent)' }} />
 
-        {/* 1 — Dibattito — viola */}
+        {/* 1 — Dibattito */}
         <ModeSection
           reverse={false}
           accent="#A78BFA"
-          tag="Dibattito"
-          title="Fai una domanda, guarda 4 AI confrontarsi."
-          body="Claude, GPT, Gemini e Perplexity rispondono in sequenza, si leggono a vicenda e costruiscono un ragionamento collettivo. Tu puoi intervenire in qualsiasi momento e cambiare le carte in tavola."
-          cta="Avvia il dibattito →"
+          tag={t('modes.debate.tag')}
+          title={t('modes.debate.title')}
+          body={t('modes.debate.body')}
+          cta={t('modes.debate.cta')}
           onCta={() => { track('demo_cta_click'); setShowTopicPicker(true) }}
           btnGradient="linear-gradient(135deg,#7C3AED,#5B21B6)"
           btnShadow="0 4px 24px rgba(124,58,237,0.45)"
           bgFade="#07070f"
           phone={
             <IPhone glow="0 0 0 1.5px rgba(167,139,250,0.4), 0 0 55px rgba(124,58,237,0.3)">
-              <ChatScreen />
+              <ChatScreen debateLabel="debate in progress" replyLabel="Reply to the debate…" />
             </IPhone>
           }
         />
 
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(56,189,248,0.15), transparent)' }} />
 
-        {/* 2 — 2 vs 2 — celeste */}
+        {/* 2 — 2 vs 2 */}
         <ModeSection
           reverse={true}
           accent="#38BDF8"
-          tag="Multiplayer 2 vs 2"
-          title="Tu e una AI contro due AI avversarie."
-          body="Scegli la tua AI alleata e difendi la tua tesi insieme. Dall'altra parte ti aspettano due AI pronte ad attaccarti round dopo round. Un'AI arbitro valuta gli argomenti e assegna il verdetto finale."
-          cta="Scegli le squadre →"
+          tag={t('modes.twoVsTwo.tag')}
+          title={t('modes.twoVsTwo.title')}
+          body={t('modes.twoVsTwo.body')}
+          cta={t('modes.twoVsTwo.cta')}
           onCta={() => setPendingMode('2v2')}
           btnGradient="linear-gradient(135deg,#0EA5E9,#0369A1)"
           btnShadow="0 4px 24px rgba(14,165,233,0.45)"
           bgFade="#07070f"
           phone={
             <IPhone glow="0 0 0 2px rgba(56,189,248,0.5), 0 0 60px rgba(14,165,233,0.3)">
-              <TwoVsTwoScreen />
+              <TwoVsTwoScreen yourArgLabel="Your argument…" />
             </IPhone>
           }
         />
 
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(239,68,68,0.15), transparent)' }} />
 
-        {/* 3 — Devil's Advocate — rosso */}
+        {/* 3 — Devil's Advocate */}
         <ModeSection
           reverse={false}
           accent="#f87171"
-          tag="Devil's Advocate"
-          title="Difendi una tesi scomoda contro gli attacchi delle altre AI."
-          body="Grok ti assegna una posizione difficile da sostenere. Claude, GPT, Gemini e Perplexity ti attaccheranno senza pietà, round dopo round. Più reggi, più sali di punteggio."
-          cta="Inizia la sfida →"
+          tag={t('modes.devil.tag')}
+          title={t('modes.devil.title')}
+          body={t('modes.devil.body')}
+          cta={t('modes.devil.cta')}
           onCta={() => setPendingMode('devil')}
           btnGradient="linear-gradient(135deg,#dc2626,#991b1b)"
           btnShadow="0 4px 24px rgba(220,38,38,0.45)"
@@ -389,21 +360,21 @@ export default function LandingPage() {
 
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(245,158,11,0.15), transparent)' }} />
 
-        {/* 4 — Brainstormer — ambra */}
+        {/* 4 — Brainstormer */}
         <ModeSection
           reverse={true}
           accent="#FCD34D"
-          tag="Brainstormer"
-          title="Lanci un'idea, le AI discutono tra loro e ti restituiscono una sintesi più solida."
-          body="Descrivi la tua idea in due parole o duemila. Le 4 AI deliberano in due round — prima in modo indipendente, poi reagendo l'una all'altra — e ti restituiscono una risposta unificata e ragionata."
-          cta="Avvia il concilio →"
+          tag={t('modes.brainstorm.tag')}
+          title={t('modes.brainstorm.title')}
+          body={t('modes.brainstorm.body')}
+          cta={t('modes.brainstorm.cta')}
           onCta={() => setPendingMode('brainstorm')}
           btnGradient="linear-gradient(135deg,#F59E0B,#B45309)"
           btnShadow="0 4px 24px rgba(245,158,11,0.45)"
           bgFade="#07070f"
           phone={
             <IPhone glow="0 0 0 1.5px rgba(245,158,11,0.4), 0 0 55px rgba(245,158,11,0.2)">
-              <BrainstormScreenContent />
+              <BrainstormScreenContent councilLabel="The council is deliberating…" ideaLabel="Your idea…" />
             </IPhone>
           }
         />
@@ -414,24 +385,21 @@ export default function LandingPage() {
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 400, background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <h2 style={{ fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 3.2rem)', color: '#fff', letterSpacing: '-0.02em', marginBottom: 16, lineHeight: 1.1 }}>
-            Entra nell'arena.
+            {t('ctaFinalTitle')}
           </h2>
           <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.4)', maxWidth: 420, margin: '0 auto 40px', lineHeight: 1.65 }}>
-            Scegli il formato che fa per te e inizia subito. Ci vogliono 30 secondi.
+            {t('ctaFinalBody')}
           </p>
           <button
             onClick={scrollToModes}
             style={{ padding: '16px 40px', borderRadius: 14, background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', border: 'none', color: '#fff', fontSize: 17, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 36px rgba(124,58,237,0.5)', letterSpacing: '-0.01em' }}
           >
-            Scegli come iniziare →
+            {t('ctaFinalBtn')}
           </button>
         </div>
       </section>
 
-      {/* Topic picker modal (Dibattito demo) */}
       {showTopicPicker && <TopicPickerModal onClose={() => setShowTopicPicker(false)} />}
-
-      {/* Login modal (2v2, Devil's, Brainstormer) */}
       {pendingMode && <LoginModal mode={pendingMode} onClose={() => setPendingMode(null)} />}
     </div>
   )

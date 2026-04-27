@@ -1,0 +1,256 @@
+{
+  "meta": {
+    "title": "AiGORÀ — The AI Debate Arena",
+    "description": "Ask a question and watch 4 leading AI models debate each other in real time."
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Error",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "close": "Close",
+    "back": "Go back",
+    "next": "Next",
+    "retry": "Try again",
+    "undo": "Undo",
+    "accept": "Accept",
+    "reject": "Decline",
+    "yes": "Yes",
+    "no": "No",
+    "new": "+ New",
+    "online": "online",
+    "participant": "Participant",
+    "spectator": "Spectator"
+  },
+  "nav": {
+    "discoverFormats": "Explore formats",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "manageSub": "⚙️ Manage subscription",
+    "upgradePro": "✨ Upgrade to Pro",
+    "launchDebate": "Start debate →",
+    "choosePlan": "Choose a plan →",
+    "history": "History",
+    "noChats": "No saved chats.",
+    "noDebates": "No debates yet."
+  },
+  "landing": {
+    "badge": "4 AIs · One arena",
+    "heroTitle": "4 AIs. One debate.",
+    "heroSubtitle": "Ask a question, watch the AIs clash in real time.\nOr step into the arena yourself.",
+    "heroCta": "Choose how to debate →",
+    "heroModes": ["Debate", "2 vs 2", "Devil's Advocate", "Brainstormer"],
+    "ctaFinalTitle": "Enter the arena.",
+    "ctaFinalBody": "Pick a format and start now. It takes 30 seconds.",
+    "ctaFinalBtn": "Choose how to start →",
+    "modes": {
+      "debate": {
+        "tag": "Debate",
+        "title": "Ask a question, watch 4 AIs clash.",
+        "body": "Claude, GPT, Gemini and Perplexity respond in sequence, read each other's answers and build a collective argument. You can jump in at any time and shake things up.",
+        "cta": "Start the debate →"
+      },
+      "twoVsTwo": {
+        "tag": "Multiplayer 2 vs 2",
+        "title": "You and an AI against two opposing AIs.",
+        "body": "Pick your AI ally and defend your thesis together. On the other side, two AIs are ready to attack you round after round. An AI referee evaluates the arguments and delivers the final verdict.",
+        "cta": "Choose your teams →"
+      },
+      "devil": {
+        "tag": "Devil's Advocate",
+        "title": "Defend an uncomfortable thesis against the other AIs.",
+        "body": "Grok assigns you a difficult position to defend. Claude, GPT, Gemini and Perplexity will attack relentlessly, round after round. The longer you hold, the higher your score.",
+        "cta": "Start the challenge →"
+      },
+      "brainstorm": {
+        "tag": "Brainstormer",
+        "title": "Pitch an idea, the AIs deliberate and return a sharper synthesis.",
+        "body": "Describe your idea in two words or two thousand. The 4 AIs deliberate in two rounds — independently first, then reacting to each other — and return a unified, reasoned response.",
+        "cta": "Convene the council →"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Choose your plan",
+    "subtitle": "Start free, scale when you're ready.",
+    "perMonth": "/month",
+    "free": "Free",
+    "mostPopular": "Most popular",
+    "cta": {
+      "free": "Start for free →",
+      "pro": "Upgrade to Pro →",
+      "premium": "Upgrade to Premium →",
+      "current": "Current plan"
+    },
+    "comparison": {
+      "title": "Full comparison",
+      "feature": "Feature",
+      "debatesPerWeek": "Debates / week",
+      "debatesPerDay": "Debates / day",
+      "aiInDebates": "AIs in debates",
+      "grok": "Grok (Brainstormer & 2v2)",
+      "twoVsTwo": "2 vs 2 mode",
+      "devil": "Devil's Advocate",
+      "brainstormer": "Brainstormer",
+      "uploadDocs": "Document uploads",
+      "priorityAccess": "Priority access to new features",
+      "unlimited": "Unlimited",
+      "notAvailable": "Not available"
+    }
+  },
+  "auth": {
+    "subtitle": "The AI debate arena",
+    "signIn": "Sign in",
+    "register": "Register",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "passwordMinPlaceholder": "Password (min. 8 characters)",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "namePlaceholder": "Name (optional)",
+    "signingIn": "Signing in…",
+    "signingInBtn": "Sign in →",
+    "creatingAccount": "Creating account…",
+    "createAccountBtn": "Create account →",
+    "terms": "By continuing you accept AiGORÀ's Terms of Service and Privacy Policy",
+    "termsRegister": "By registering you accept AiGORÀ's Terms of Service and Privacy Policy",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "errors": {
+      "fillAllFields": "Please fill in all fields.",
+      "passwordTooShort": "Password must be at least 8 characters.",
+      "passwordsNoMatch": "Passwords do not match.",
+      "invalidCredentials": "Incorrect email or password.",
+      "registrationError": "Error during registration.",
+      "networkError": "Network error. Please try again.",
+      "accessError": "Sign-in error. Please try again."
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "plan": "Plan",
+    "yourAIs": "Your AIs:",
+    "launchDebate": "Start debate →",
+    "noPlan": "You don't have an active plan yet.",
+    "choosePlan": "Choose a plan →",
+    "signOut": "Sign out",
+    "manageSub": "⚙️ Manage subscription",
+    "upgradePro": "✨ Upgrade to Pro",
+    "managingLoading": "Loading…",
+    "subscriptionActivated": "🎉 Subscription activated! Happy debating."
+  },
+  "chat": {
+    "namePage": {
+      "emoji": "👋",
+      "title": "What's your name?",
+      "subtitle": "Your name will appear in the AI debate",
+      "placeholder": "Your name…",
+      "cta": "Enter the debate →"
+    },
+    "start": {
+      "badge": "4 artificial intelligences · real-time debate",
+      "subtitle": "Ask a question and watch a real-time debate between the four leading artificial intelligences",
+      "placeholder": "Ask the AIs a question…",
+      "launchBtn": "Start the debate →"
+    },
+    "running": {
+      "reply": "Write a message…",
+      "thinking": "is typing…",
+      "yourTurn": "Your turn",
+      "waitTurn": "Wait for your turn…",
+      "debateTopic": "Debate topic",
+      "topicPlaceholder": "E.g. Will AI replace creative jobs?",
+      "searchName": "Search by name…",
+      "launching": "Creating…",
+      "launchRoom": "Launch debate →",
+      "noneYet": "No debates yet.",
+      "debateLabel": "debate in progress",
+      "yourArgument": "Your argument…"
+    },
+    "actions": {
+      "newDebate": "New debate",
+      "synthesis": "Summary",
+      "synthesizing": "Summarising…",
+      "savePortfolio": "Save to portfolio",
+      "savedPortfolio": "Saved ✓",
+      "sharePublic": "Make public",
+      "changeBackground": "Change background",
+      "undo": "Undo",
+      "deleted": "deleted · removed within 30 days"
+    },
+    "twoVsTwo": {
+      "teamLabel": "YOU + AI",
+      "enemyLabel": "AI vs AI",
+      "yourTurn": "Your turn",
+      "teamTurn": "Team",
+      "yourArgPlaceholder": "Your argument…",
+      "waitPlaceholder": "Wait for your turn…"
+    },
+    "ai": {
+      "chiSono": "Who I am",
+      "carattere": "How I behave",
+      "relazioni": "With the other AIs"
+    }
+  },
+  "brainstorm": {
+    "title": "Brainstormer",
+    "subtitle": "The council is deliberating…",
+    "decided": "The council has decided:",
+    "ideaPlaceholder": "Your idea…",
+    "startBtn": "Convene the council →",
+    "newSession": "New session",
+    "history": "Previous sessions",
+    "noHistory": "No saved sessions.",
+    "building": {
+      "thinking": "The AIs are deliberating…",
+      "round1": "Round 1 — Independent analysis",
+      "round2": "Round 2 — Discussion and synthesis",
+      "finalizing": "Writing the final response…"
+    }
+  },
+  "limitWall": {
+    "weeklyDebates": {
+      "icon": "🗓",
+      "badge": "Weekly limit",
+      "title": "You've used all your debates this week",
+      "body": "The Free plan includes {limit} debates per week. The counter resets {reset}."
+    },
+    "dailyDebates": {
+      "icon": "⏱",
+      "badge": "Daily limit",
+      "title": "You've reached your debate limit for today",
+      "body": "The Pro plan includes {limit} debates per day. The counter resets {reset}."
+    },
+    "weeklyBrainstormer": {
+      "icon": "💡",
+      "badge": "Weekly limit",
+      "title": "You've used all your Brainstormer sessions this week",
+      "body": "The Pro plan includes {limit} Brainstormer sessions per week. The counter resets {reset}."
+    },
+    "renewsIn": "Resets",
+    "pro": {
+      "label": "Upgrade to Pro",
+      "price": "€9.99/month"
+    },
+    "premium": {
+      "label": "Upgrade to Premium",
+      "price": "€19.99/month"
+    },
+    "retry": {
+      "minutes": "in {n} minute{s}",
+      "minuteOne": "",
+      "minuteMany": "s",
+      "hourOne": "in about an hour",
+      "hours": "in about {n} hours",
+      "tomorrow": "tomorrow",
+      "days": "in {n} days"
+    }
+  },
+  "arena": {
+    "title": "Public arena",
+    "subtitle": "Watch live debates"
+  },
+  "admin": {
+    "title": "Admin Panel"
+  }
+}

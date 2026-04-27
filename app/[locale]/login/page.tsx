@@ -2,6 +2,7 @@
 import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 function EyeIcon({ show }: { show: boolean }) {
   return show ? (
@@ -37,6 +38,7 @@ function PasswordInput({ placeholder, value, onChange }: { placeholder: string; 
 }
 
 function AuthCard() {
+  const t = useTranslations('auth')
   const [tab, setTab] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,26 +49,26 @@ function AuthCard() {
   const searchParams = useSearchParams()
   const urlError = searchParams?.get('error')
 
-  const switchTab = (t: 'login' | 'register') => {
-    setTab(t); setError(''); setPassword(''); setConfirm('')
+  const switchTab = (t2: 'login' | 'register') => {
+    setTab(t2); setError(''); setPassword(''); setConfirm('')
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!email.trim() || !password.trim()) { setError('Compila tutti i campi.'); return }
+    if (!email.trim() || !password.trim()) { setError(t('errors.fillAllFields')); return }
     setLoading(true)
     const result = await signIn('credentials', { email, password, callbackUrl: '/', redirect: false })
-    if (result?.error) { setError('Email o password non corretti.'); setLoading(false) }
+    if (result?.error) { setError(t('errors.invalidCredentials')); setLoading(false) }
     else if (result?.url) { window.location.href = result.url }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!email.trim() || !password.trim()) { setError('Compila tutti i campi.'); return }
-    if (password.length < 8) { setError('Password di almeno 8 caratteri.'); return }
-    if (password !== confirm) { setError('Le password non coincidono.'); return }
+    if (!email.trim() || !password.trim()) { setError(t('errors.fillAllFields')); return }
+    if (password.length < 8) { setError(t('errors.passwordTooShort')); return }
+    if (password !== confirm) { setError(t('errors.passwordsNoMatch')); return }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/register', {
@@ -75,10 +77,10 @@ function AuthCard() {
         body: JSON.stringify({ email, password, name }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Errore durante la registrazione.'); setLoading(false); return }
+      if (!res.ok) { setError(data.error ?? t('errors.registrationError')); setLoading(false); return }
       const result = await signIn('credentials', { email, password, callbackUrl: '/', redirect: false })
       if (result?.url) window.location.href = result.url
-    } catch { setError('Errore di rete. Riprova.') }
+    } catch { setError(t('errors.networkError')) }
     setLoading(false)
   }
 
@@ -87,53 +89,57 @@ function AuthCard() {
   return (
     <div className="glass rounded-3xl p-8 w-full max-w-sm scale-in relative z-10">
       <div className="text-center mb-6">
-        <h1 className="text-4xl font-black mb-1"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></h1>
-        <p className="text-white/40 text-xs">Il dibattito delle intelligenze artificiali</p>
+        <h1 className="text-4xl font-black mb-1">
+          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
+        </h1>
+        <p className="text-white/40 text-xs">{t('subtitle')}</p>
       </div>
 
       <div className="flex rounded-xl overflow-hidden mb-6 p-1" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
         <button onClick={() => switchTab('login')}
           className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
           style={{ backgroundColor: tab === 'login' ? 'rgba(124,58,237,0.7)' : 'transparent', color: tab === 'login' ? '#fff' : 'rgba(255,255,255,0.4)' }}>
-          Accedi
+          {t('signIn')}
         </button>
         <button onClick={() => switchTab('register')}
           className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
           style={{ backgroundColor: tab === 'register' ? 'rgba(124,58,237,0.7)' : 'transparent', color: tab === 'register' ? '#fff' : 'rgba(255,255,255,0.4)' }}>
-          Iscriviti
+          {t('register')}
         </button>
       </div>
 
       {tab === 'login' && (
         <form onSubmit={handleLogin} className="space-y-3">
-          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className={inputCls} />
-          <PasswordInput placeholder="Password" value={password} onChange={setPassword} />
-          {(error || urlError) && <p className="text-red-400 text-xs text-center">{error || 'Errore di accesso. Riprova.'}</p>}
+          <input type="email" placeholder={t('emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required className={inputCls} />
+          <PasswordInput placeholder={t('passwordPlaceholder')} value={password} onChange={setPassword} />
+          {(error || urlError) && (
+            <p className="text-red-400 text-xs text-center">{error || t('errors.accessError')}</p>
+          )}
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, #7C3AED, #A78BFA)' }}>
-            {loading ? 'Accesso in corso...' : 'Accedi →'}
+            {loading ? t('signingIn') : t('signingInBtn')}
           </button>
         </form>
       )}
 
       {tab === 'register' && (
         <form onSubmit={handleRegister} className="space-y-3">
-          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required className={inputCls} />
-          <input type="text" placeholder="Nome (opzionale)" value={name} onChange={e => setName(e.target.value)} className={inputCls} />
-          <PasswordInput placeholder="Password (min. 8 caratteri)" value={password} onChange={setPassword} />
-          <PasswordInput placeholder="Conferma password" value={confirm} onChange={setConfirm} />
+          <input type="email" placeholder={t('emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required className={inputCls} />
+          <input type="text" placeholder={t('namePlaceholder')} value={name} onChange={e => setName(e.target.value)} className={inputCls} />
+          <PasswordInput placeholder={t('passwordMinPlaceholder')} value={password} onChange={setPassword} />
+          <PasswordInput placeholder={t('confirmPasswordPlaceholder')} value={confirm} onChange={setConfirm} />
           {error && <p className="text-red-400 text-xs text-center">{error}</p>}
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, #7C3AED, #A78BFA)' }}>
-            {loading ? 'Creazione account...' : 'Crea account →'}
+            {loading ? t('creatingAccount') : t('createAccountBtn')}
           </button>
         </form>
       )}
 
       <p className="text-white/20 text-[10px] text-center mt-5 leading-relaxed">
-        Continuando accetti i Termini di Servizio e la Privacy Policy di AiGORÀ
+        {t('terms')}
       </p>
     </div>
   )
