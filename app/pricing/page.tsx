@@ -3,16 +3,80 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-const AI_COLOR: Record<string, string> = { claude: '#7C3AED', gpt: '#10A37F', gemini: '#1A73E8', perplexity: '#FF6B2B' }
-const AI_NAMES: Record<string, string> = { claude: 'Claude', gpt: 'GPT-4.1', gemini: 'Gemini', perplexity: 'Perplexity' }
+const AI_COLOR: Record<string, string> = {
+  claude: '#7C3AED', gpt: '#10A37F', gemini: '#1A73E8', perplexity: '#FF6B2B'
+}
+const AI_NAMES: Record<string, string> = {
+  claude: 'Claude', gpt: 'GPT-4.1', gemini: 'Gemini', perplexity: 'Perplexity'
+}
+
+const FEATURES = {
+  chat: 'Dibattiti tra 4 AI',
+  brainstorm: 'Brainstormer (concilio AI)',
+  devil: 'Avvocato del Diavolo',
+  multiplayer: 'Multiplayer 2v2',
+  history: 'Cronologia dibattiti',
+  allAis: '4 AI (Claude · GPT · Gemini · Perplexity)',
+}
 
 const PLANS = [
-  { key: 'starter', label: 'Starter', price: '6,99', color: '#1A73E8', ais: ['claude', 'gemini'],
-    features: ['2 intelligenze artificiali', 'Claude (Anthropic)', 'Gemini (Google)', 'Dibattiti illimitati'] },
-  { key: 'pro', label: 'Pro', price: '8,99', color: '#7C3AED', popular: true, ais: ['claude', 'gemini', 'perplexity'],
-    features: ['3 intelligenze artificiali', 'Claude (Anthropic)', 'Gemini (Google)', 'Perplexity (aggiornato al web)', 'Dibattiti illimitati'] },
-  { key: 'max', label: 'Max', price: '9,99', color: '#FF6B2B', ais: ['claude', 'gemini', 'perplexity', 'gpt'],
-    features: ['4 intelligenze artificiali', 'Claude (Anthropic)', 'Gemini (Google)', 'Perplexity (aggiornato al web)', 'GPT-4.1 (OpenAI)', 'Dibattiti illimitati'] },
+  {
+    key: null,
+    label: 'Free',
+    price: null,
+    color: '#10A37F',
+    badge: null,
+    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
+    features: [
+      { text: FEATURES.allAis, ok: true },
+      { text: FEATURES.chat, ok: true },
+      { text: '5 dibattiti al giorno', ok: true },
+      { text: FEATURES.brainstorm, ok: false },
+      { text: FEATURES.devil, ok: false },
+      { text: FEATURES.multiplayer, ok: false },
+      { text: FEATURES.history, ok: false },
+    ],
+    cta: 'Inizia gratis',
+    ctaAction: 'register',
+  },
+  {
+    key: 'pro',
+    label: 'Pro',
+    price: '9,99',
+    color: '#A78BFA',
+    badge: 'PIÙ POPOLARE',
+    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
+    features: [
+      { text: FEATURES.allAis, ok: true },
+      { text: FEATURES.chat, ok: true },
+      { text: '30 dibattiti al giorno', ok: true },
+      { text: FEATURES.brainstorm, ok: true },
+      { text: FEATURES.devil, ok: true },
+      { text: FEATURES.multiplayer, ok: true },
+      { text: 'Cronologia ultimi 30 giorni', ok: true },
+    ],
+    cta: 'Inizia con Pro',
+    ctaAction: 'stripe',
+  },
+  {
+    key: 'premium',
+    label: 'Premium',
+    price: '19,99',
+    color: '#FF6B2B',
+    badge: null,
+    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
+    features: [
+      { text: FEATURES.allAis, ok: true },
+      { text: FEATURES.chat, ok: true },
+      { text: 'Dibattiti illimitati', ok: true },
+      { text: FEATURES.brainstorm, ok: true },
+      { text: FEATURES.devil, ok: true },
+      { text: FEATURES.multiplayer, ok: true },
+      { text: 'Cronologia completa illimitata', ok: true },
+    ],
+    cta: 'Inizia con Premium',
+    ctaAction: 'stripe',
+  },
 ]
 
 export default function PricingPage() {
@@ -20,65 +84,207 @@ export default function PricingPage() {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
-  const handleSubscribe = async (planKey: string) => {
+  const handleAction = async (plan: typeof PLANS[0]) => {
+    if (plan.ctaAction === 'register') {
+      if (session) {
+        router.push('/arena')
+      } else {
+        router.push('/register')
+      }
+      return
+    }
+
     if (!session) { router.push('/login'); return }
-    setLoading(planKey)
+
+    if (!plan.key) return
+    setLoading(plan.key)
     const res = await fetch('/api/stripe/checkout', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: planKey }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: plan.key }),
     })
-    const { url } = await res.json()
-    if (url) window.location.href = url
-    else setLoading(null)
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
+    } else {
+      setLoading(null)
+    }
   }
 
   return (
     <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-16">
-      <div className="text-center mb-12">
-        <h1 className="text-5xl font-black mb-3"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></h1>
-        <p className="text-white/50 text-base">Scegli il piano e inizia il dibattito</p>
+
+      {/* Header */}
+      <div className="text-center mb-4">
+        <button onClick={() => router.push('/')} className="font-black text-2xl tracking-tight mb-6 inline-block hover:opacity-80 transition-opacity">
+          <span className="text-white">Ai</span>
+          <span style={{ color: '#A78BFA' }}>GORÀ</span>
+        </button>
+        <h1 className="text-4xl font-black text-white mb-3">Scegli il tuo piano</h1>
+        <p className="text-white/50 text-base max-w-md mx-auto">
+          Tutti i piani includono le 4 AI. Il piano Pro sblocca le modalità avanzate.
+        </p>
       </div>
+
+      {/* Demo pill */}
+      <div
+        className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium mb-10"
+        style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+        Prova senza account su{' '}
+        <button onClick={() => router.push('/demo')} className="text-white/80 underline underline-offset-2 hover:text-white transition-colors">
+          /demo
+        </button>
+      </div>
+
+      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-4xl">
         {PLANS.map((plan, i) => (
-          <div key={plan.key} className="relative glass rounded-3xl p-6 flex flex-col"
-            style={{ animationDelay: `${i * 80}ms`, border: plan.popular ? `1px solid ${plan.color}55` : undefined, boxShadow: plan.popular ? `0 0 40px ${plan.color}22` : undefined }}>
-            {plan.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-bold text-white" style={{ background: plan.color }}>
-                PIÙ POPOLARE
+          <div
+            key={plan.label}
+            className="relative glass rounded-3xl p-6 flex flex-col"
+            style={{
+              animationDelay: `${i * 80}ms`,
+              border: plan.badge ? `1px solid ${plan.color}55` : undefined,
+              boxShadow: plan.badge ? `0 0 50px ${plan.color}1a` : undefined,
+            }}
+          >
+            {plan.badge && (
+              <div
+                className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-bold text-white"
+                style={{ background: plan.color }}
+              >
+                {plan.badge}
               </div>
             )}
+
+            {/* Header piano */}
             <div className="mb-5">
-              <div className="text-white font-bold text-lg mb-1">{plan.label}</div>
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: plan.color }}
+                />
+                <span className="text-white font-bold text-lg">{plan.label}</span>
+              </div>
               <div className="flex items-end gap-1">
-                <span className="text-4xl font-black text-white">{plan.price}€</span>
-                <span className="text-white/40 text-sm mb-1">/mese</span>
+                {plan.price ? (
+                  <>
+                    <span className="text-4xl font-black text-white">{plan.price}€</span>
+                    <span className="text-white/40 text-sm mb-1">/mese</span>
+                  </>
+                ) : (
+                  <span className="text-4xl font-black text-white">Gratis</span>
+                )}
               </div>
             </div>
+
+            {/* AI badges */}
             <div className="flex flex-wrap gap-1.5 mb-5">
               {plan.ais.map(ai => (
-                <div key={ai} className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium text-white"
-                  style={{ backgroundColor: AI_COLOR[ai] + '30', border: `1px solid ${AI_COLOR[ai]}50` }}>
+                <div
+                  key={ai}
+                  className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium text-white"
+                  style={{ backgroundColor: AI_COLOR[ai] + '25', border: `1px solid ${AI_COLOR[ai]}45` }}
+                >
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: AI_COLOR[ai] }} />
                   {AI_NAMES[ai]}
                 </div>
               ))}
             </div>
+
+            {/* Feature list */}
             <ul className="space-y-2 flex-1 mb-6">
               {plan.features.map(f => (
-                <li key={f} className="flex items-center gap-2 text-[13px] text-white/70">
-                  <span style={{ color: plan.color }}>✓</span>{f}
+                <li key={f.text} className="flex items-center gap-2 text-[13px]">
+                  {f.ok ? (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={plan.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  ) : (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  )}
+                  <span style={{ color: f.ok ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.25)' }}>
+                    {f.text}
+                  </span>
                 </li>
               ))}
             </ul>
-            <button onClick={() => handleSubscribe(plan.key)} disabled={loading === plan.key}
+
+            {/* CTA */}
+            <button
+              onClick={() => handleAction(plan)}
+              disabled={loading === plan.key}
               className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-              style={{ background: `linear-gradient(135deg, ${plan.color}, ${plan.color}cc)`, boxShadow: `0 4px 20px ${plan.color}44` }}>
-              {loading === plan.key ? '...' : `Inizia con ${plan.label} →`}
+              style={{
+                background: plan.price
+                  ? `linear-gradient(135deg, ${plan.color}, ${plan.color}cc)`
+                  : `rgba(255,255,255,0.08)`,
+                boxShadow: plan.price ? `0 4px 20px ${plan.color}44` : undefined,
+                border: !plan.price ? '1px solid rgba(255,255,255,0.12)' : undefined,
+              }}
+            >
+              {loading === plan.key ? '...' : plan.cta}
             </button>
           </div>
         ))}
       </div>
-      <p className="text-white/20 text-xs mt-8">Pagamento sicuro tramite Stripe · Cancella quando vuoi</p>
+
+      {/* Comparison table — mobile hidden */}
+      <div className="hidden md:block w-full max-w-4xl mt-14">
+        <h2 className="text-white/40 text-xs font-semibold uppercase tracking-widest text-center mb-6">
+          Confronto dettagliato
+        </h2>
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          {[
+            { feature: '4 AI (Claude, GPT, Gemini, Perplexity)', free: true, pro: true, premium: true },
+            { feature: 'Dibattiti AI', free: '5/giorno', pro: '30/giorno', premium: 'Illimitati' },
+            { feature: 'Brainstormer (concilio AI)', free: false, pro: true, premium: true },
+            { feature: 'Avvocato del Diavolo', free: false, pro: true, premium: true },
+            { feature: 'Multiplayer 2v2', free: false, pro: true, premium: true },
+            { feature: 'Cronologia dibattiti', free: false, pro: '30 giorni', premium: 'Illimitata' },
+          ].map((row, i) => (
+            <div
+              key={row.feature}
+              className="grid grid-cols-4 items-center"
+              style={{
+                padding: '12px 20px',
+                borderTop: i > 0 ? '1px solid rgba(255,255,255,0.06)' : undefined,
+                backgroundColor: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : undefined,
+              }}
+            >
+              <span className="text-white/60 text-sm col-span-1">{row.feature}</span>
+              {[row.free, row.pro, row.premium].map((val, j) => (
+                <div key={j} className="flex justify-center">
+                  {typeof val === 'boolean' ? (
+                    val ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={['#10A37F','#A78BFA','#FF6B2B'][j]} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    )
+                  ) : (
+                    <span className="text-xs font-medium" style={{ color: ['#10A37F','#A78BFA','#FF6B2B'][j] }}>{val}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-white/20 text-xs mt-10">
+        Pagamento sicuro tramite Stripe · Solo fatturazione mensile · Cancella quando vuoi
+      </p>
     </div>
   )
 }

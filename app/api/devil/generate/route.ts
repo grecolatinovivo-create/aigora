@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { normalizePlan, canUseMode } from '@/lib/plans'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -61,6 +64,24 @@ const DIFFICULTY_PROPERTIES: Record<string, { domains: string[]; properties: str
 
 export async function POST(req: NextRequest) {
   try {
+    // ── Verifica piano: Avvocato del Diavolo richiede Pro o superiore ─────
+    const session = await getServerSession(authOptions)
+    if (session?.user?.email) {
+      const { prisma } = await import('@/lib/prisma')
+      const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
+      const isAdmin = dbUser?.email === process.env.ADMIN_EMAIL
+      const tier = isAdmin ? 'admin' : normalizePlan(dbUser?.plan)
+      if (!canUseMode(tier, 'devil')) {
+        return NextResponse.json({
+          error: 'L\'Avvocato del Diavolo è disponibile dal piano Pro. Aggiorna il piano per accedere.',
+          upgradeRequired: true,
+          requiredTier: 'pro',
+        }, { status: 403 })
+      }
+    } else {
+      return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
+    }
+
     const { difficulty } = await req.json()
     if (!difficulty || !DIFFICULTY_PROPERTIES[difficulty]) {
       return NextResponse.json({ error: 'difficulty required' }, { status: 400 })

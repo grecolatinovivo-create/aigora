@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { rateLimit } from '@/lib/rateLimit'
+import { normalizePlan, checkDailyDebateLimit } from '@/lib/plans'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -324,24 +325,18 @@ export async function POST(req: NextRequest) {
 
     const { history, aiId, action, interruptorId, speakerName, availableAis, question, needsWebSearch, perplexityTurnCount, overrideSystemPrompt, maxTokens } = await req.json()
 
-    // Verifica piano — l'utente può usare solo le AI del suo piano
+    // ── Auth + piano utente ────────────────────────────────────────────────────
     const session = await getServerSession(authOptions)
     let currentUserId: string | undefined = undefined
-    if (session?.user?.email && aiId && action !== 'route' && action !== 'synthesize' && action !== 'factcheck') {
-      // Rate limit per account: max 50 turni/ora (admin esente)
-      if (session.user.email !== process.env.ADMIN_EMAIL) {
-        const accountRl = rateLimit(`chat-account:${session.user.email}`, 50, 60 * 60_000)
-        if (!accountRl.ok) {
-          return new Response(JSON.stringify({ error: 'Hai raggiunto il limite orario. Riprova tra ' + accountRl.retryAfter + ' secondi.' }), {
-            status: 429, headers: { 'Content-Type': 'application/json' }
-          })
-        }
-      }
 
+    if (session?.user?.email) {
       const { prisma } = await import('@/lib/prisma')
       const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
       currentUserId = dbUser?.id
-      const plan = dbUser?.email === process.env.ADMIN_EMAIL ? 'admin' : (dbUser?.plan ?? 'none')
+
+      const isAdmin = dbUser?.email === process.env.ADMIN_EMAIL
+      const tier = isAdmin ? 'admin' : normalizePlan(dbUser?.plan)
+
       // Flag forceGeminiPerp: per-utente o globale (flag dell'admin)
       const userForceGemini = dbUser?.forceGeminiPerp ?? false
       if (!userForceGemini && process.env.ADMIN_EMAIL) {
@@ -350,20 +345,29 @@ export async function POST(req: NextRequest) {
       } else {
         ;(req as any)._forceGeminiPerp = userForceGemini
       }
-      const PLAN_AIS: Record<string, string[]> = {
-        free:    ['claude', 'gemini', 'perplexity', 'gpt'],
-        starter: ['claude', 'gemini'],
-        pro:     ['claude', 'gemini', 'perplexity'],
-        max:     ['claude', 'gemini', 'perplexity', 'gpt'],
-        admin:   ['claude', 'gemini', 'perplexity', 'gpt'],
-        none:    [],
+
+      // Rate limit orario per account (evita abusi): max 80 turni/ora — admin esente
+      if (!isAdmin && aiId && action !== 'route' && action !== 'synthesize' && action !== 'factcheck') {
+        const accountRl = rateLimit(`chat-account:${session.user.email}`, 80, 60 * 60_000)
+        if (!accountRl.ok) {
+          return new Response(JSON.stringify({ error: 'Hai raggiunto il limite orario. Riprova tra ' + accountRl.retryAfter + ' secondi.' }), {
+            status: 429, headers: { 'Content-Type': 'application/json' }
+          })
+        }
       }
-      // 'none' e 'free' hanno accesso a tutte le AI (piano free è il default)
-      const allowed = PLAN_AIS[plan] ?? PLAN_AIS['free']
-      if (allowed.length > 0 && !allowed.includes(aiId)) {
-        return new Response(JSON.stringify({ error: 'AI non inclusa nel tuo piano.' }), {
-          status: 403, headers: { 'Content-Type': 'application/json' }
-        })
+
+      // Limite giornaliero dibattiti: si conta una volta per dibattito (action === 'route')
+      if (!isAdmin && action === 'route' && currentUserId) {
+        const dailyRl = checkDailyDebateLimit(currentUserId, tier)
+        if (!dailyRl.ok) {
+          return new Response(JSON.stringify({
+            error: 'Hai raggiunto il limite giornaliero di dibattiti. Aggiorna il piano per continuare.',
+            limitReached: true,
+            tier,
+          }), {
+            status: 429, headers: { 'Content-Type': 'application/json' }
+          })
+        }
       }
     }
 

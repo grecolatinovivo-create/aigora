@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
   const { plan } = await req.json()
   const planData = PLANS[plan as keyof typeof PLANS]
   if (!planData) return NextResponse.json({ error: 'Piano non valido' }, { status: 400 })
+  if (!planData.priceId) return NextResponse.json({ error: 'Stripe price ID non configurato' }, { status: 500 })
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
@@ -27,11 +28,16 @@ export async function POST(req: NextRequest) {
   }
 
   const checkoutSession = await stripe.checkout.sessions.create({
-    customer: customerId, mode: 'subscription', payment_method_types: ['card'],
+    customer: customerId,
+    mode: 'subscription',
+    payment_method_types: ['card'],
     line_items: [{ price: planData.priceId, quantity: 1 }],
+    // Forza solo fatturazione mensile (no annual toggle)
+    subscription_data: { metadata: { userId: user.id, plan } },
     success_url: `${process.env.NEXTAUTH_URL}/dashboard?success=1`,
     cancel_url: `${process.env.NEXTAUTH_URL}/pricing`,
     metadata: { userId: user.id, plan },
   })
+
   return NextResponse.json({ url: checkoutSession.url })
 }

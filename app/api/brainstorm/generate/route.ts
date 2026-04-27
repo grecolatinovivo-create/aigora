@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { normalizePlan, canUseMode, checkDailyDebateLimit } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -269,6 +270,31 @@ export async function POST(req: NextRequest) {
 
   const { idea, answers, note, previousOutput } = await req.json()
   if (!idea) return NextResponse.json({ error: 'Idea mancante' }, { status: 400 })
+
+  // ── Verifica piano: Brainstormer richiede Pro o superiore ─────────────
+  const { prisma: prismaPlan } = await import('@/lib/prisma')
+  const dbUserPlan = await prismaPlan.user.findUnique({ where: { email: session.user.email } })
+  const isAdmin = dbUserPlan?.email === process.env.ADMIN_EMAIL
+  const tier = isAdmin ? 'admin' : normalizePlan(dbUserPlan?.plan)
+  if (!canUseMode(tier, 'brainstorm')) {
+    return NextResponse.json({
+      error: 'Il Brainstormer è disponibile dal piano Pro. Aggiorna il piano per accedere.',
+      upgradeRequired: true,
+      requiredTier: 'pro',
+    }, { status: 403 })
+  }
+
+  // ── Limite giornaliero (solo per i raffinamenti iniziali, non per le note) ─
+  if (!note && !isAdmin && dbUserPlan?.id) {
+    const dailyRl = checkDailyDebateLimit(dbUserPlan.id, tier)
+    if (!dailyRl.ok) {
+      return NextResponse.json({
+        error: 'Hai raggiunto il limite giornaliero. Aggiorna il piano per continuare.',
+        limitReached: true,
+        tier,
+      }, { status: 429 })
+    }
+  }
 
   // ── Flag forceGeminiPerp ───────────────────────────────────────────────
   let useGeminiAsPerplexity = !process.env.PERPLEXITY_API_KEY
