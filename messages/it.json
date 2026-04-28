@@ -108,6 +108,7 @@
     "footer": "Pagamento sicuro tramite Stripe · Solo fatturazione mensile · Cancella quando vuoi",
     "plans": {
       "free": {
+        "subtitle": "4 AI, dibattiti, 2v2 — senza carta di credito",
         "cta": "Inizia gratis",
         "features": [
           "4 AI (Claude, GPT, Gemini, Perplexity)",

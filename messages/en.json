@@ -108,6 +108,7 @@
     "footer": "Secure payment via Stripe · Monthly billing only · Cancel anytime",
     "plans": {
       "free": {
+        "subtitle": "4 AIs, debates, 2v2 — no credit card needed",
         "cta": "Get started free",
         "features": [
           "4 AIs (Claude, GPT, Gemini, Perplexity)",

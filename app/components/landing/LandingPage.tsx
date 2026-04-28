@@ -422,16 +422,16 @@ export default function LandingPage() {
             <div style={{ borderRadius: 20, padding: '32px 28px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B7280', marginBottom: 4 }}>Free</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>{tPricing('free')}</span>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>{tPricing('freePlanLabel')}</span>
               </div>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55, marginBottom: 8 }}>
-                {tPricing.raw('features.free') as string}
+                {tPricing('plans.free.subtitle')}
               </p>
               <button
                 onClick={() => router.push('/login')}
                 style={{ marginTop: 'auto', padding: '12px 0', borderRadius: 11, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%' }}
               >
-                {tPricing('cta.free')}
+                {tPricing('plans.free.cta')}
               </button>
             </div>
 
@@ -446,13 +446,13 @@ export default function LandingPage() {
                 <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tPricing('perMonth')}</span>
               </div>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.55, marginBottom: 8 }}>
-                {tPricing.raw('features.pro') as string}
+                {tPricing('plans.pro.subtitle')}
               </p>
               <button
                 onClick={() => router.push('/pricing')}
                 style={{ marginTop: 'auto', padding: '12px 0', borderRadius: 11, background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}
               >
-                {tPricing('cta.pro')}
+                {tPricing('plans.pro.cta')}
               </button>
             </div>
 
@@ -464,13 +464,13 @@ export default function LandingPage() {
                 <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tPricing('perMonth')}</span>
               </div>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55, marginBottom: 8 }}>
-                {tPricing.raw('features.premium') as string}
+                {tPricing('plans.premium.subtitle')}
               </p>
               <button
                 onClick={() => router.push('/pricing')}
                 style={{ marginTop: 'auto', padding: '12px 0', borderRadius: 11, background: 'rgba(255,107,43,0.15)', border: '1px solid rgba(255,107,43,0.3)', color: '#FF6B2B', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%' }}
               >
-                {tPricing('cta.premium')}
+                {tPricing('plans.premium.cta')}
               </button>
             </div>
           </div>
@@ -481,7 +481,7 @@ export default function LandingPage() {
               onClick={() => router.push('/pricing')}
               style={{ background: 'none', border: 'none', color: 'rgba(167,139,250,0.5)', fontSize: 13, cursor: 'pointer', fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 3 }}
             >
-              {tPricing('comparison.title')} →
+              {tPricing('comparisonTitle')} →
             </button>
           </div>
         </div>
