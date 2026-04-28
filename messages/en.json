@@ -33,7 +33,13 @@
     "choosePlan": "Choose a plan →",
     "history": "History",
     "noChats": "No saved chats.",
-    "noDebates": "No debates yet."
+    "noDebates": "No debates yet.",
+    "feedDebates": "Debate feed",
+    "createDebate": "Create debate",
+    "myPublicProfile": "My public profile",
+    "adminPanel": "Admin Panel",
+    "plans": "Plans",
+    "debateMode": "Debate"
   },
   "landing": {
     "badge": "4 AIs · One arena",
@@ -272,5 +278,96 @@
   },
   "admin": {
     "title": "Admin Panel"
+  },
+  "topicPicker": {
+    "badge": "Debate",
+    "title": "Pick a starting point",
+    "subtitle": "4 AIs will start debating your topic in real time.",
+    "customPlaceholder": "Or write your own question…",
+    "startBtn": "Start the debate →",
+    "noAccount": "No account required for the demo",
+    "presets": [
+      "Will AI make people more free or more controlled?",
+      "Have social media done more good or harm to democracy?",
+      "Is capitalism still the best system to reduce poverty?"
+    ]
+  },
+  "loginModal": {
+    "modeLabels": {
+      "chat": "Debate",
+      "2v2": "2 vs 2",
+      "devil": "Devil's Advocate",
+      "brainstorm": "Brainstormer"
+    },
+    "modeMessages": {
+      "chat": "To start the debate with the 4 AIs, create a free account.",
+      "2v2": "To join the 2 vs 2 you need an account. It takes 30 seconds.",
+      "devil": "To challenge AIs in Devil's Advocate, create a free account.",
+      "brainstorm": "To use the full Brainstormer, create a free account."
+    },
+    "tabLogin": "Sign in",
+    "tabRegister": "Register",
+    "signingIn": "Signing in…",
+    "creatingAccount": "Creating account…",
+    "signInBtn": "Sign in →",
+    "createBtn": "Create account →",
+    "terms": "By continuing you accept AiGORÀ's Terms of Service and Privacy Policy",
+    "errors": {
+      "fillAllFields": "Please fill in all fields.",
+      "passwordTooShort": "Password must be at least 8 characters.",
+      "passwordsNoMatch": "Passwords do not match.",
+      "invalidCredentials": "Incorrect email or password.",
+      "registrationError": "Error during registration.",
+      "networkError": "Network error. Please try again."
+    }
+  },
+  "modeSelect": {
+    "headerTitle": "How do you want to debate?",
+    "headerSubtitle": "Choose the format",
+    "badge": "Choose your debate format",
+    "title": "How do you want to debate?",
+    "subtitle": "Three different formats, one arena. Click the one that's right for you.",
+    "twoVsTwo": {
+      "tag": "2 vs 2",
+      "title": "Team challenge",
+      "body": "You + AI vs another human + AI. The referee scores each round.",
+      "cta": "Play"
+    },
+    "classic": {
+      "tag": "Classic",
+      "soon": "SOON"
+    },
+    "devil": {
+      "tag": "Devil's Advocate",
+      "title": "Defend the indefensible",
+      "body": "Defend an uncomfortable position against 4 AIs attacking you relentlessly.",
+      "cta": "Play",
+      "poweredBy": "Powered by GROK"
+    },
+    "descTitle": "2 vs 2",
+    "descBody": "Two teams face off. Each team has a human and an AI ally. An AI referee delivers the final verdict.",
+    "chooseTeams": "Choose teams →",
+    "yourArgument": "Your argument…"
+  },
+  "twoVsTwo": {
+    "joinPage": {
+      "badge": "2 vs 2",
+      "challenged": "You've been challenged!",
+      "invitedBy": "{name} has invited you to a duel.",
+      "invitedSuffix": "has invited you to a duel.",
+      "topic": "Topic",
+      "teamA": "Team A",
+      "teamB": "Team B",
+      "occupied": "Taken",
+      "youLabel": "You →",
+      "namePlaceholder": "What's your name?",
+      "nameLabel": "Your in-game name",
+      "joinBtn": "⚔️ Join as Team B",
+      "joining": "Joining the duel…",
+      "teamBFull": "Team B is already taken.",
+      "roomCode": "Room code",
+      "errorTitle": "Oops",
+      "backHome": "Back to home"
+    }
   }
 }

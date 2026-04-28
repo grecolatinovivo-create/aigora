@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { track } from '@vercel/analytics'
 import LoginModal, { type SelectableMode } from '@/app/components/landing/LoginModal'
 import MessageBubble, { type Message } from '@/app/components/MessageBubble'
@@ -45,6 +46,7 @@ const AI_COLORS: Record<string, string> = {
 
 export default function DemoChat({ topic }: { topic: string }) {
   const router = useRouter()
+  const t = useTranslations('nav')
   const [messages, setMessages] = useState<Message[]>([
     { id: 'user-topic', aiId: 'user', name: 'Tu', content: topic, isUser: true },
   ])
@@ -280,7 +282,7 @@ export default function DemoChat({ topic }: { topic: string }) {
           <button onClick={() => setShowLogin(true)}
             className="flex items-center gap-2 text-sm font-medium transition-all hover:text-white"
             style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Accedi
+            {t('signIn')}
           </button>
         </div>
 

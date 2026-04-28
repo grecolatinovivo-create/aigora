@@ -2,11 +2,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 
 export default function JoinTwoVsTwo() {
   const { code } = useParams<{ code: string }>()
   const { data: session, status } = useSession()
   const router = useRouter()
+  const t = useTranslations('twoVsTwo.joinPage')
 
   const [roomInfo, setRoomInfo] = useState<any>(null)
   const [error, setError] = useState('')
@@ -68,11 +70,11 @@ export default function JoinTwoVsTwo() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#07070f' }}>
         <div className="text-4xl mb-4">⚠️</div>
-        <div className="text-white font-bold text-lg mb-2">Ops</div>
+        <div className="text-white font-bold text-lg mb-2">{t('errorTitle')}</div>
         <div className="text-white/50 text-sm text-center mb-8">{error}</div>
         <button onClick={() => router.push('/')} className="px-6 py-3 rounded-2xl font-bold text-white text-sm"
           style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)' }}>
-          Torna alla home
+          {t('backHome')}
         </button>
       </div>
     )
@@ -104,47 +106,47 @@ export default function JoinTwoVsTwo() {
         {/* Badge 2v2 */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-6 text-[11px] font-bold"
           style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa' }}>
-          ⚔️ 2 vs 2
+          ⚔️ {t('badge')}
         </div>
 
-        <div className="text-white font-black text-xl mb-1">Sei stato sfidato!</div>
+        <div className="text-white font-black text-xl mb-1">{t('challenged')}</div>
         <div className="text-white/40 text-sm mb-6">
-          <span className="text-white/70 font-semibold">{gs?.teamA?.humanName || roomInfo.room?.host?.name}</span> ti ha invitato a un duello.
+          <span className="text-white/70 font-semibold">{gs?.teamA?.humanName || roomInfo.room?.host?.name}</span>{' '}{t('invitedSuffix')}
         </div>
 
         {/* Topic */}
         <div className="rounded-2xl p-4 mb-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">Argomento</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">{t('topic')}</div>
           <div className="text-white font-semibold text-sm">"{roomInfo.room?.topic}"</div>
         </div>
 
         {/* Squadre */}
         <div className="flex gap-3 mb-6">
           <div className="flex-1 rounded-2xl p-3" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
-            <div className="text-[9px] font-black uppercase tracking-wide mb-1" style={{ color: '#60a5fa' }}>🔵 Squadra A</div>
+            <div className="text-[9px] font-black uppercase tracking-wide mb-1" style={{ color: '#60a5fa' }}>🔵 {t('teamA')}</div>
             <div className="text-xs text-white/70 font-medium">{gs?.teamA?.humanName}</div>
             <div className="text-[10px] text-white/30">+ {gs?.teamA?.aiId}</div>
           </div>
           <div className="flex-1 rounded-2xl p-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-            <div className="text-[9px] font-black uppercase tracking-wide mb-1" style={{ color: '#f87171' }}>🔴 Squadra B</div>
+            <div className="text-[9px] font-black uppercase tracking-wide mb-1" style={{ color: '#f87171' }}>🔴 {t('teamB')}</div>
             <div className="text-xs font-medium" style={{ color: isFull ? 'rgba(255,255,255,0.4)' : '#f87171' }}>
-              {isFull ? 'Occupata' : 'Tu →'}
+              {isFull ? t('occupied') : t('youLabel')}
             </div>
             <div className="text-[10px] text-white/30">+ {gs?.teamB?.aiId}</div>
           </div>
         </div>
 
         {isFull ? (
-          <div className="text-center text-white/40 text-sm">La squadra B è già occupata.</div>
+          <div className="text-center text-white/40 text-sm">{t('teamBFull')}</div>
         ) : (
           <>
             <div className="mb-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 block mb-2">Il tuo nome in partita</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 block mb-2">{t('nameLabel')}</label>
               <input
                 value={playerName}
                 onChange={e => setPlayerName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                placeholder="Come ti chiami?"
+                placeholder={t('namePlaceholder')}
                 className="w-full rounded-2xl px-4 py-3 text-sm text-white outline-none"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
                 autoFocus
@@ -155,14 +157,14 @@ export default function JoinTwoVsTwo() {
               disabled={!playerName.trim() || joining}
               className="w-full py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-40 transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #ef4444, #b91c1c)', boxShadow: '0 4px 20px rgba(239,68,68,0.35)' }}>
-              {joining ? 'Entro nel duello…' : '⚔️ Entra come Squadra B'}
+              {joining ? t('joining') : t('joinBtn')}
             </button>
           </>
         )}
       </div>
 
       {/* Codice room */}
-      <div className="mt-6 text-white/20 text-xs">Codice: {code}</div>
+      <div className="mt-6 text-white/20 text-xs">{t('roomCode')}: {code}</div>
     </div>
   )
 }

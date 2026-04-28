@@ -1,6 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 // ── Tipo condiviso con i client ───────────────────────────────────────────────
 export interface LimitInfo {
@@ -9,62 +10,6 @@ export interface LimitInfo {
   limit: number
   tier: string
   requiredTier: 'pro' | 'premium'
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatRetryAfter(seconds: number): string {
-  if (seconds < 3600) {
-    const m = Math.ceil(seconds / 60)
-    return `tra ${m} minut${m === 1 ? 'o' : 'i'}`
-  }
-  if (seconds < 86400) {
-    const h = Math.ceil(seconds / 3600)
-    return h === 1 ? 'tra circa un\'ora' : `tra circa ${h} ore`
-  }
-  const d = Math.ceil(seconds / 86400)
-  return d === 1 ? 'domani' : `tra ${d} giorni`
-}
-
-const LIMIT_COPY: Record<LimitInfo['limitType'], {
-  icon: string
-  badge: string
-  title: string
-  body: (limit: number, reset: string) => string
-}> = {
-  weekly_debates: {
-    icon: '🗓',
-    badge: 'Limite settimanale',
-    title: 'Hai esaurito i tuoi dibattiti questa settimana',
-    body: (limit, reset) =>
-      `Il piano Free include ${limit} dibattiti a settimana. Il contatore si rinnova ${reset}.`,
-  },
-  daily_debates: {
-    icon: '⏱',
-    badge: 'Limite giornaliero',
-    title: 'Hai raggiunto i tuoi dibattiti di oggi',
-    body: (limit, reset) =>
-      `Il piano Pro include ${limit} dibattiti al giorno. Il contatore si rinnova ${reset}.`,
-  },
-  weekly_brainstormer: {
-    icon: '💡',
-    badge: 'Limite settimanale',
-    title: 'Hai esaurito le sessioni Brainstormer di questa settimana',
-    body: (limit, reset) =>
-      `Il piano Pro include ${limit} sessioni Brainstormer a settimana. Il contatore si rinnova ${reset}.`,
-  },
-  replies_per_debate: {
-    icon: '💬',
-    badge: 'Limite dibattito',
-    title: 'Hai raggiunto il limite di risposte per questo dibattito',
-    body: (limit) =>
-      `Il piano Free include fino a ${limit} risposte per dibattito. Passa a Pro per dibattiti illimitati.`,
-  },
-}
-
-const PLAN_CTA: Record<'pro' | 'premium', { label: string; price: string; color: string; gradient: string }> = {
-  pro:     { label: 'Passa a Pro',     price: '9,99€/mese',  color: '#A78BFA', gradient: 'linear-gradient(135deg,#7C3AED,#5B21B6)' },
-  premium: { label: 'Passa a Premium', price: '19,99€/mese', color: '#FF6B2B', gradient: 'linear-gradient(135deg,#FF6B2B,#DC2626)' },
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -77,6 +22,8 @@ interface LimitWallProps {
 // ── Componente principale ─────────────────────────────────────────────────────
 export default function LimitWall({ limitInfo, isDark = true, onDismiss }: LimitWallProps) {
   const router = useRouter()
+  const t = useTranslations('limitWall')
+  const tCommon = useTranslations('common')
   const [secondsLeft, setSecondsLeft] = useState(limitInfo.retryAfter ?? 0)
 
   // Countdown live
@@ -86,9 +33,45 @@ export default function LimitWall({ limitInfo, isDark = true, onDismiss }: Limit
     return () => clearInterval(id)
   }, [])
 
-  const copy   = LIMIT_COPY[limitInfo.limitType]
-  const cta    = PLAN_CTA[limitInfo.requiredTier]
-  const reset  = formatRetryAfter(secondsLeft)
+  // ── Formatta il tempo di reset usando le chiavi i18n ──────────────────────
+  function formatRetryAfter(seconds: number): string {
+    if (seconds < 3600) {
+      const m = Math.ceil(seconds / 60)
+      return t('retry.minutes', { n: m, s: m === 1 ? t('retry.minuteOne') : t('retry.minuteMany') })
+    }
+    if (seconds < 86400) {
+      const h = Math.ceil(seconds / 3600)
+      return h === 1 ? t('retry.hourOne') : t('retry.hours', { n: h })
+    }
+    const d = Math.ceil(seconds / 86400)
+    return d === 1 ? t('retry.tomorrow') : t('retry.days', { n: d })
+  }
+
+  // ── Dati per limitType ────────────────────────────────────────────────────
+  type LimitKey = 'weeklyDebates' | 'dailyDebates' | 'weeklyBrainstormer'
+  const limitKeyMap: Record<LimitInfo['limitType'], LimitKey | null> = {
+    weekly_debates: 'weeklyDebates',
+    daily_debates: 'dailyDebates',
+    weekly_brainstormer: 'weeklyBrainstormer',
+    replies_per_debate: null,
+  }
+  const limitKey = limitKeyMap[limitInfo.limitType]
+
+  const icon  = limitKey ? t(`${limitKey}.icon`)  : '💬'
+  const badge = limitKey ? t(`${limitKey}.badge`) : t('dailyDebates.badge')
+  const title = limitKey ? t(`${limitKey}.title`) : t('weeklyDebates.title')
+
+  const reset = formatRetryAfter(secondsLeft)
+  const body  = limitKey
+    ? t(`${limitKey}.body`, { limit: limitInfo.limit, reset })
+    : t('weeklyDebates.body', { limit: limitInfo.limit, reset })
+
+  const ctaLabel = t(`${limitInfo.requiredTier}.label`)
+  const ctaPrice = t(`${limitInfo.requiredTier}.price`)
+  const ctaColor    = limitInfo.requiredTier === 'pro' ? '#A78BFA' : '#FF6B2B'
+  const ctaGradient = limitInfo.requiredTier === 'pro'
+    ? 'linear-gradient(135deg,#7C3AED,#5B21B6)'
+    : 'linear-gradient(135deg,#FF6B2B,#DC2626)'
 
   const bg     = isDark ? 'rgba(14,9,25,0.96)' : 'rgba(255,255,255,0.97)'
   const border = isDark ? 'rgba(167,139,250,0.15)' : 'rgba(124,58,237,0.12)'
@@ -113,7 +96,7 @@ export default function LimitWall({ limitInfo, isDark = true, onDismiss }: Limit
           fontSize: 30,
         }}
       >
-        {copy.icon}
+        {icon}
       </div>
 
       {/* Badge */}
@@ -121,7 +104,7 @@ export default function LimitWall({ limitInfo, isDark = true, onDismiss }: Limit
         className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest mb-3"
         style={{ backgroundColor: badgeBg, color: badgeColor, letterSpacing: '0.1em' }}
       >
-        {copy.badge}
+        {badge}
       </div>
 
       {/* Titolo */}
@@ -129,7 +112,7 @@ export default function LimitWall({ limitInfo, isDark = true, onDismiss }: Limit
         className="font-black text-[17px] leading-snug mb-2.5 max-w-xs"
         style={{ color: textPrimary }}
       >
-        {copy.title}
+        {title}
       </h3>
 
       {/* Body */}
@@ -137,7 +120,7 @@ export default function LimitWall({ limitInfo, isDark = true, onDismiss }: Limit
         className="text-[13px] leading-relaxed mb-6 max-w-[260px]"
         style={{ color: textSecondary }}
       >
-        {copy.body(limitInfo.limit, reset)}
+        {body}
       </p>
 
       {/* CTA principale — upgrade */}
@@ -145,12 +128,12 @@ export default function LimitWall({ limitInfo, isDark = true, onDismiss }: Limit
         onClick={() => router.push('/pricing')}
         className="w-full max-w-[260px] py-3.5 rounded-xl font-bold text-[14px] text-white transition-all hover:scale-[1.02] active:scale-[0.98] mb-3"
         style={{
-          background: cta.gradient,
-          boxShadow: `0 4px 20px ${cta.color}44`,
+          background: ctaGradient,
+          boxShadow: `0 4px 20px ${ctaColor}44`,
         }}
       >
-        {cta.label}
-        <span className="ml-2 opacity-75 text-[12px] font-normal">{cta.price}</span>
+        {ctaLabel}
+        <span className="ml-2 opacity-75 text-[12px] font-normal">{ctaPrice}</span>
       </button>
 
       {/* Countdown timer — solo se < 24h */}
@@ -162,7 +145,7 @@ export default function LimitWall({ limitInfo, isDark = true, onDismiss }: Limit
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
-          Rinnovo {formatRetryAfter(secondsLeft)}
+          {t('renewsIn')} {formatRetryAfter(secondsLeft)}
         </div>
       )}
 
@@ -173,7 +156,7 @@ export default function LimitWall({ limitInfo, isDark = true, onDismiss }: Limit
           className="text-[12px] transition-opacity hover:opacity-70"
           style={{ color: dismissColor }}
         >
-          Torna indietro
+          {tCommon('back')}
         </button>
       )}
 

@@ -22,7 +22,6 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
   twoVsTwoTopic?: string
 }) {
   const t = useTranslations('nav')
-  const tChat = useTranslations('chat')
   const router = useRouter()
 
   const planColors: Record<string, string> = {
@@ -115,7 +114,7 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 <button onClick={() => { onNewChat?.(); close() }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                   style={{ color: 'rgba(255,255,255,0.75)' }}>
-                  Dibattito
+                  {t('debateMode')}
                 </button>
 
                 <button
@@ -146,14 +145,14 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   <button onClick={() => { close(); router.push('/pricing') }}
                     className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                     style={{ color: '#A78BFA' }}>
-                    Upgrade to Pro →
+                    {t('upgradePro')}
                   </button>
                 )}
 
                 <button onClick={() => { close(); router.push('/pricing') }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                   style={{ color: 'rgba(255,255,255,0.45)' }}>
-                  Plans
+                  {t('plans')}
                 </button>
 
                 {/* ── Funzioni social — admin/beta ── */}
@@ -161,12 +160,12 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   <>
                     <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
                       className="w-full px-4 py-2.5 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
-                      {tChat('ai.chiSono').includes('Who') ? 'My public profile' : 'Il mio profilo pubblico'}
+                      {t('myPublicProfile')}
                     </a>
                     <button onClick={() => { onFeed?.(); close() }}
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                       style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      Feed dibattiti
+                      {t('feedDebates')}
                       {(unreadCount ?? 0) > 0 && (
                         <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white" style={{ backgroundColor: '#7C3AED' }}>{unreadCount}</span>
                       )}
@@ -174,7 +173,7 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                     <button onClick={() => { onCrea?.(); close() }}
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                       style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      Crea dibattito
+                      {t('createDebate')}
                     </button>
                   </>
                 )}
@@ -183,14 +182,14 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 {userPlan === 'admin' && (
                   <button onClick={() => { close(); window.location.href = '/admin' }}
                     className="w-full px-4 py-2.5 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
-                    Pannello Admin
+                    {t('adminPanel')}
                   </button>
                 )}
 
                 {/* ── Sign out ── */}
                 <button onClick={onSignOut}
                   className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium">
-                  Esci dall'account
+                  {t('signOut')}
                 </button>
               </div>
             </>

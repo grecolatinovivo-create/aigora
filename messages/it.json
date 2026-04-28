@@ -33,7 +33,13 @@
     "choosePlan": "Scegli un piano →",
     "history": "Cronologia",
     "noChats": "Nessuna chat salvata.",
-    "noDebates": "Nessun dibattito ancora."
+    "noDebates": "Nessun dibattito ancora.",
+    "feedDebates": "Feed dibattiti",
+    "createDebate": "Crea dibattito",
+    "myPublicProfile": "Il mio profilo pubblico",
+    "adminPanel": "Pannello Admin",
+    "plans": "Piani",
+    "debateMode": "Dibattito"
   },
   "landing": {
     "badge": "4 AI · Un'unica arena",
@@ -272,5 +278,96 @@
   },
   "admin": {
     "title": "Pannello Admin"
+  },
+  "topicPicker": {
+    "badge": "Dibattito",
+    "title": "Scegli da cosa partire",
+    "subtitle": "4 AI inizieranno a confrontarsi in tempo reale sul tema che scegli.",
+    "customPlaceholder": "Oppure scrivi la tua domanda…",
+    "startBtn": "Inizia il dibattito →",
+    "noAccount": "Nessun account richiesto per la demo",
+    "presets": [
+      "L'intelligenza artificiale renderà le persone più libere o più controllate?",
+      "I social media hanno fatto più bene o più male alla democrazia?",
+      "Il capitalismo è ancora il sistema migliore per ridurre la povertà?"
+    ]
+  },
+  "loginModal": {
+    "modeLabels": {
+      "chat": "Dibattito",
+      "2v2": "2 vs 2",
+      "devil": "Devil's Advocate",
+      "brainstorm": "Brainstormer"
+    },
+    "modeMessages": {
+      "chat": "Per avviare il dibattito con le 4 AI, crea un account gratuito.",
+      "2v2": "Per entrare nel 2 vs 2 serve un account. Ci vogliono 30 secondi.",
+      "devil": "Per sfidare le AI in Devil's Advocate, crea un account gratuito.",
+      "brainstorm": "Per usare il Brainstormer completo, crea un account gratuito."
+    },
+    "tabLogin": "Accedi",
+    "tabRegister": "Iscriviti",
+    "signingIn": "Accesso in corso…",
+    "creatingAccount": "Creazione account…",
+    "signInBtn": "Accedi →",
+    "createBtn": "Crea account →",
+    "terms": "Continuando accetti i Termini di Servizio e la Privacy Policy di AiGORÀ",
+    "errors": {
+      "fillAllFields": "Compila tutti i campi.",
+      "passwordTooShort": "Password di almeno 8 caratteri.",
+      "passwordsNoMatch": "Le password non coincidono.",
+      "invalidCredentials": "Email o password non corretti.",
+      "registrationError": "Errore durante la registrazione.",
+      "networkError": "Errore di rete. Riprova."
+    }
+  },
+  "modeSelect": {
+    "headerTitle": "Come vuoi dibattere?",
+    "headerSubtitle": "Scegli il formato",
+    "badge": "Scegli il formato del dibattito",
+    "title": "Come vuoi dibattere?",
+    "subtitle": "Tre formati diversi, un'unica arena. Clicca quello che fa per te.",
+    "twoVsTwo": {
+      "tag": "2 vs 2",
+      "title": "Sfida a squadre",
+      "body": "Tu + AI vs un altro umano + AI. L'arbitro assegna i punti a ogni round.",
+      "cta": "Gioca"
+    },
+    "classic": {
+      "tag": "Classico",
+      "soon": "SOON"
+    },
+    "devil": {
+      "tag": "Devil's Advocate",
+      "title": "Difendi l'indifendibile",
+      "body": "Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.",
+      "cta": "Gioca",
+      "poweredBy": "Powered by GROK"
+    },
+    "descTitle": "2 vs 2",
+    "descBody": "Due squadre si sfidano. Ogni squadra ha un umano e un'AI alleata. Un'AI arbitro pronuncia il verdetto finale.",
+    "chooseTeams": "Scegli le squadre →",
+    "yourArgument": "Il tuo argomento…"
+  },
+  "twoVsTwo": {
+    "joinPage": {
+      "badge": "2 vs 2",
+      "challenged": "Sei stato sfidato!",
+      "invitedBy": "{name} ti ha invitato a un duello.",
+      "invitedSuffix": "ti ha invitato a un duello.",
+      "topic": "Argomento",
+      "teamA": "Squadra A",
+      "teamB": "Squadra B",
+      "occupied": "Occupata",
+      "youLabel": "Tu →",
+      "namePlaceholder": "Come ti chiami?",
+      "nameLabel": "Il tuo nome in partita",
+      "joinBtn": "⚔️ Entra come Squadra B",
+      "joining": "Entro nel duello…",
+      "teamBFull": "La squadra B è già occupata.",
+      "roomCode": "Codice",
+      "errorTitle": "Ops",
+      "backHome": "Torna alla home"
+    }
   }
 }

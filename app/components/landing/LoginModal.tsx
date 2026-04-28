@@ -1,21 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 export type SelectableMode = 'chat' | '2v2' | 'devil' | 'brainstorm'
-
-const MODE_LABELS: Record<SelectableMode, string> = {
-  'chat': 'Dibattito',
-  '2v2': '2 vs 2',
-  'devil': "Devil's Advocate",
-  'brainstorm': 'Brainstormer',
-}
-
-const MODE_MESSAGES: Record<SelectableMode, string> = {
-  'chat': 'Per avviare il dibattito con le 4 AI, crea un account gratuito.',
-  '2v2': 'Per entrare nel 2 vs 2 serve un account. Ci vogliono 30 secondi.',
-  'devil': "Per sfidare le AI in Devil's Advocate, crea un account gratuito.",
-  'brainstorm': 'Per usare il Brainstormer completo, crea un account gratuito.',
-}
 
 function EyeIcon({ show }: { show: boolean }) {
   return show ? (
@@ -68,6 +55,9 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ mode, onClose }: LoginModalProps) {
+  const t = useTranslations('loginModal')
+  const tAuth = useTranslations('auth')
+
   const [tab, setTab] = useState<'login' | 'register'>('register')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -76,24 +66,25 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const callbackUrl = mode === 'brainstorm' ? '/brainstorm' : '/'
+  // Brainstormer richiede piano Pro — nuovi utenti vanno su /pricing dopo la registrazione
+  const callbackUrl = mode === 'brainstorm' ? '/pricing' : '/'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!email.trim() || !password.trim()) { setError('Compila tutti i campi.'); return }
+    if (!email.trim() || !password.trim()) { setError(t('errors.fillAllFields')); return }
     setLoading(true)
     const result = await signIn('credentials', { email, password, callbackUrl, redirect: false })
-    if (result?.error) { setError('Email o password non corretti.'); setLoading(false) }
+    if (result?.error) { setError(t('errors.invalidCredentials')); setLoading(false) }
     else if (result?.url) { window.location.href = result.url }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!email.trim() || !password.trim()) { setError('Compila tutti i campi.'); return }
-    if (password.length < 8) { setError('Password di almeno 8 caratteri.'); return }
-    if (password !== confirm) { setError('Le password non coincidono.'); return }
+    if (!email.trim() || !password.trim()) { setError(t('errors.fillAllFields')); return }
+    if (password.length < 8) { setError(t('errors.passwordTooShort')); return }
+    if (password !== confirm) { setError(t('errors.passwordsNoMatch')); return }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/register', {
@@ -102,10 +93,10 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
         body: JSON.stringify({ email, password, name }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Errore durante la registrazione.'); setLoading(false); return }
+      if (!res.ok) { setError(data.error ?? t('errors.registrationError')); setLoading(false); return }
       const result = await signIn('credentials', { email, password, callbackUrl, redirect: false })
       if (result?.url) window.location.href = result.url
-    } catch { setError('Errore di rete. Riprova.') }
+    } catch { setError(t('errors.networkError')) }
     setLoading(false)
   }
 
@@ -160,10 +151,10 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
             marginBottom: 20,
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#A78BFA', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              {MODE_LABELS[mode]}
+              {t(`modeLabels.${mode}`)}
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.4 }}>
-              {MODE_MESSAGES[mode]}
+              {t(`modeMessages.${mode}`)}
             </div>
           </div>
 
@@ -173,18 +164,18 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
             marginBottom: 18, padding: 4,
             background: 'rgba(255,255,255,0.05)',
           }}>
-            {(['register', 'login'] as const).map(t => (
+            {(['register', 'login'] as const).map(tabId => (
               <button
-                key={t}
-                onClick={() => { setTab(t); setError(''); setPassword(''); setConfirm('') }}
+                key={tabId}
+                onClick={() => { setTab(tabId); setError(''); setPassword(''); setConfirm('') }}
                 style={{
                   flex: 1, padding: '8px 0', borderRadius: 9, border: 'none', cursor: 'pointer',
                   fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
-                  background: tab === t ? 'rgba(124,58,237,0.7)' : 'transparent',
-                  color: tab === t ? '#fff' : 'rgba(255,255,255,0.4)',
+                  background: tab === tabId ? 'rgba(124,58,237,0.7)' : 'transparent',
+                  color: tab === tabId ? '#fff' : 'rgba(255,255,255,0.4)',
                 }}
               >
-                {t === 'login' ? 'Accedi' : 'Iscriviti'}
+                {tabId === 'login' ? t('tabLogin') : t('tabRegister')}
               </button>
             ))}
           </div>
@@ -192,8 +183,8 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
           {/* Forms */}
           {tab === 'login' && (
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
-              <PasswordInput placeholder="Password" value={password} onChange={setPassword} />
+              <input type="email" placeholder={tAuth('emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
+              <PasswordInput placeholder={tAuth('passwordPlaceholder')} value={password} onChange={setPassword} />
               {error && <p style={{ color: '#f87171', fontSize: 12, textAlign: 'center', margin: 0 }}>{error}</p>}
               <button type="submit" disabled={loading} style={{
                 padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -201,17 +192,17 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
                 color: '#fff', fontSize: 14, fontWeight: 700, marginTop: 2,
                 opacity: loading ? 0.6 : 1, transition: 'all 0.15s',
               }}>
-                {loading ? 'Accesso…' : 'Accedi →'}
+                {loading ? t('signingIn') : t('signInBtn')}
               </button>
             </form>
           )}
 
           {tab === 'register' && (
             <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
-              <input type="text" placeholder="Nome (opzionale)" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
-              <PasswordInput placeholder="Password (min. 8 caratteri)" value={password} onChange={setPassword} />
-              <PasswordInput placeholder="Conferma password" value={confirm} onChange={setConfirm} />
+              <input type="email" placeholder={tAuth('emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
+              <input type="text" placeholder={tAuth('namePlaceholder')} value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+              <PasswordInput placeholder={tAuth('passwordMinPlaceholder')} value={password} onChange={setPassword} />
+              <PasswordInput placeholder={tAuth('confirmPasswordPlaceholder')} value={confirm} onChange={setConfirm} />
               {error && <p style={{ color: '#f87171', fontSize: 12, textAlign: 'center', margin: 0 }}>{error}</p>}
               <button type="submit" disabled={loading} style={{
                 padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -219,13 +210,13 @@ export default function LoginModal({ mode, onClose }: LoginModalProps) {
                 color: '#fff', fontSize: 14, fontWeight: 700, marginTop: 2,
                 opacity: loading ? 0.6 : 1, transition: 'all 0.15s',
               }}>
-                {loading ? 'Creazione account…' : 'Crea account →'}
+                {loading ? t('creatingAccount') : t('createBtn')}
               </button>
             </form>
           )}
 
           <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, textAlign: 'center', marginTop: 16, lineHeight: 1.5 }}>
-            Continuando accetti i Termini di Servizio e la Privacy Policy di AiGORÀ
+            {t('terms')}
           </p>
         </div>
       </div>

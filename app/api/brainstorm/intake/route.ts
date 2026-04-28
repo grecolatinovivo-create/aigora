@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { normalizePlan, canUseMode } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +37,10 @@ Se le domande precedenti sono 9 o più, rispondi con:
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
+
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
+  const tier = user?.email === process.env.ADMIN_EMAIL ? 'admin' as const : normalizePlan(user?.plan)
+  if (!canUseMode(tier, 'brainstorm')) return NextResponse.json({ error: 'Piano non sufficiente' }, { status: 403 })
 
   const { idea, answers } = await req.json()
   if (!idea) return NextResponse.json({ error: 'Idea mancante' }, { status: 400 })

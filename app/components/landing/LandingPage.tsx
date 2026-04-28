@@ -5,6 +5,7 @@ import { track } from '@vercel/analytics'
 import { useTranslations } from 'next-intl'
 import LoginModal, { type SelectableMode } from '@/app/components/landing/LoginModal'
 import TopicPickerModal from '@/app/components/landing/TopicPickerModal'
+import { TIER_CONFIG } from '@/lib/plans'
 
 // ── Hell grid per Devil ───────────────────────────────────────────────────────
 function HellGridBg() {
@@ -441,7 +442,7 @@ export default function LandingPage() {
               </div>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#A78BFA', marginBottom: 4 }}>Pro</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>9,99€</span>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>{TIER_CONFIG.pro.price?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}€</span>
                 <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tPricing('perMonth')}</span>
               </div>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.55, marginBottom: 8 }}>
@@ -459,7 +460,7 @@ export default function LandingPage() {
             <div style={{ borderRadius: 20, padding: '32px 28px', background: 'rgba(255,107,43,0.06)', border: '1px solid rgba(255,107,43,0.2)', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#FF6B2B', marginBottom: 4 }}>Premium</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>19,99€</span>
+                <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>{TIER_CONFIG.premium.price?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}€</span>
                 <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tPricing('perMonth')}</span>
               </div>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55, marginBottom: 8 }}>

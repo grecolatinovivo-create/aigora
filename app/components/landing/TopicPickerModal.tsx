@@ -1,24 +1,21 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { track } from '@vercel/analytics'
-
-const PRESET_TOPICS = [
-  "L'intelligenza artificiale renderà le persone più libere o più controllate?",
-  "I social media hanno fatto più bene o più male alla democrazia?",
-  "Il capitalismo è ancora il sistema migliore per ridurre la povertà?",
-]
 
 interface TopicPickerModalProps {
   onClose: () => void
 }
 
 export default function TopicPickerModal({ onClose }: TopicPickerModalProps) {
+  const t = useTranslations('topicPicker')
   const router = useRouter()
   const [selected, setSelected] = useState<number>(0)
   const [custom, setCustom] = useState('')
 
-  const activeTopic = custom.trim() || PRESET_TOPICS[selected]
+  const presets = t.raw('presets') as string[]
+  const activeTopic = custom.trim() || presets[selected]
 
   const handleStart = () => {
     if (!activeTopic) return
@@ -74,18 +71,18 @@ export default function TopicPickerModal({ onClose }: TopicPickerModalProps) {
 
           {/* Header */}
           <div style={{ fontSize: 11, fontWeight: 900, color: '#A78BFA', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>
-            Dibattito
+            {t('badge')}
           </div>
           <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 6, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-            Scegli da cosa partire
+            {t('title')}
           </h2>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', marginBottom: 22, lineHeight: 1.5 }}>
-            4 AI inizieranno a confrontarsi in tempo reale sul tema che scegli.
+            {t('subtitle')}
           </p>
 
           {/* Preset topics */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
-            {PRESET_TOPICS.map((topic, i) => {
+            {presets.map((topic, i) => {
               const isActive = selected === i && !custom.trim()
               return (
                 <button
@@ -126,7 +123,7 @@ export default function TopicPickerModal({ onClose }: TopicPickerModalProps) {
           <div style={{ marginBottom: 20, position: 'relative' }}>
             <input
               type="text"
-              placeholder="Oppure scrivi la tua domanda…"
+              placeholder={t('customPlaceholder')}
               value={custom}
               onChange={e => setCustom(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && activeTopic) handleStart() }}
@@ -163,11 +160,11 @@ export default function TopicPickerModal({ onClose }: TopicPickerModalProps) {
               transition: 'opacity 0.15s',
             }}
           >
-            Inizia il dibattito →
+            {t('startBtn')}
           </button>
 
           <p style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10, textAlign: 'center', marginTop: 14, lineHeight: 1.5 }}>
-            Nessun account richiesto per la demo
+            {t('noAccount')}
           </p>
         </div>
       </div>

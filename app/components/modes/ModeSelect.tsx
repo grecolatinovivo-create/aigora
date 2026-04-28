@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { GameMode } from '@/app/types/aigora'
 
 function HellGridBg() {
@@ -38,6 +39,8 @@ function HellGridBg() {
 const PAID_TIERS = ['pro', 'premium', 'admin', 'freemium', 'max']
 
 export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: (mode: GameMode) => void; onClose: () => void; userPlan?: string }) {
+  const t = useTranslations('modeSelect')
+  const tLanding = useTranslations('landing')
   const [selected, setSelected] = useState<GameMode>('2v2')
   const isPaid = PAID_TIERS.includes(userPlan ?? '')
 
@@ -63,8 +66,8 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <div className="flex-1 text-center">
-          <div className="font-black text-base text-white">Come vuoi dibattere?</div>
-          <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Scegli il formato</div>
+          <div className="font-black text-base text-white">{t('headerTitle')}</div>
+          <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('headerSubtitle')}</div>
         </div>
         <div className="w-9" />
       </div>
@@ -77,8 +80,8 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
           style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(91,33,182,0.1) 100%)', border: '1.5px solid rgba(167,139,250,0.35)', boxShadow: '0 4px 20px rgba(124,58,237,0.15)', minHeight: 0 }}>
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>2 vs 2</div>
-              <div className="text-xl font-black text-white leading-tight">Sfida a squadre</div>
+              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>{t('twoVsTwo.tag')}</div>
+              <div className="text-xl font-black text-white leading-tight">{t('twoVsTwo.title')}</div>
             </div>
             <div className="flex gap-1">
               {[['#7C3AED','C'],['#10A37F','G']].map(([c,l]) => (
@@ -86,18 +89,18 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
               ))}
             </div>
           </div>
-          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Tu + AI vs un altro umano + AI. L'arbitro assegna i punti a ogni round.</div>
+          <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('twoVsTwo.body')}</div>
           <div className="flex items-center justify-end mt-3">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
-              Gioca <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+              {t('twoVsTwo.cta')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </div>
           </div>
         </button>
         {/* Card Classico — soon */}
         <div className="flex-1 flex flex-col rounded-3xl relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(255,255,255,0.10)', cursor: 'not-allowed', minHeight: 0 }}>
-          <div className="absolute top-4 left-5 text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Classico</div>
+          <div className="absolute top-4 left-5 text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>{t('classic.tag')}</div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="font-black uppercase" style={{ fontSize: 44, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.22)' }}>SOON</div>
+            <div className="font-black uppercase" style={{ fontSize: 44, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.22)' }}>{t('classic.soon')}</div>
           </div>
         </div>
         {/* Card Devil's Advocate — attiva */}
@@ -112,16 +115,16 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
           <HellGridBg />
           <div className="relative z-10 flex items-start justify-between">
             <div>
-              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>Devil's Advocate</div>
-              <div className="text-xl font-black text-white leading-tight">Difendi l'indifendibile</div>
+              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>{t('devil.tag')}</div>
+              <div className="text-xl font-black text-white leading-tight">{t('devil.title')}</div>
             </div>
             <div className="text-2xl" style={{ filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.6))' }}>😈</div>
           </div>
-          <div className="relative z-10 text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.</div>
+          <div className="relative z-10 text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>{t('devil.body')}</div>
           <div className="relative z-10 flex items-center justify-between mt-3">
-            <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.5)' }}>Powered by GROK</div>
+            <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.5)' }}>{t('devil.poweredBy')}</div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#dc2626,#991b1b)' }}>
-              Gioca <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+              {t('devil.cta')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </div>
           </div>
         </button>
@@ -135,10 +138,10 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 text-[11px] font-medium text-purple-300 border border-purple-500/30"
             style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>
             <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
-            Scegli il formato del dibattito
+            {t('badge')}
           </div>
-          <h1 className="font-black text-white" style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', lineHeight: 1.1, marginBottom: 12 }}>Come vuoi dibattere?</h1>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 16 }}>Tre formati diversi, un'unica arena. Clicca quello che fa per te.</p>
+          <h1 className="font-black text-white" style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', lineHeight: 1.1, marginBottom: 12 }}>{t('title')}</h1>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 16 }}>{t('subtitle')}</p>
         </div>
 
         {/* 3 mock iPhone */}
@@ -152,12 +155,12 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
               {/* Schermo */}
               <div className="absolute rounded-[26px] overflow-hidden flex flex-col items-center justify-center"
                 style={{ top: 6, left: 6, right: 6, bottom: 6, background: '#111' }}>
-                <div className="font-black uppercase text-center" style={{ fontSize: 36, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.25)' }}>SOON</div>
+                <div className="font-black uppercase text-center" style={{ fontSize: 36, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.25)' }}>{t('classic.soon')}</div>
               </div>
               {/* Notch */}
               <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 10, width: 60, height: 14, background: '#1c1c1e', zIndex: 10 }} />
             </div>
-            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Classico</div>
+            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>{t('classic.tag')}</div>
           </div>
 
           {/* ── 2 VS 2 — attivo, più grande, selezionato ── */}
@@ -179,7 +182,7 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
                 {/* Membri */}
                 <div className="flex items-center justify-between px-3 py-1.5" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <div className="flex flex-col gap-0.5">
-                    {[['#F59E0B','Giampiero'],['#7C3AED','Claude']].map(([c,n]) => (
+                    {[['#F59E0B','Alex'],['#7C3AED','Claude']].map(([c,n]) => (
                       <div key={n} className="flex items-center gap-1">
                         <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: c }} />
                         <span className="text-[8px] text-white/70">{n}</span>
@@ -197,18 +200,18 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
                 </div>
                 {/* Messaggi */}
                 <div className="flex-1 flex flex-col justify-end gap-1 px-2 py-2">
-                  <div className="self-start max-w-[75%] px-2.5 py-1.5 rounded-2xl rounded-tl-sm text-[8px] leading-relaxed" style={{ background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>L'IA amplifica la creatività umana, non la sostituisce.</div>
-                  <div className="self-end max-w-[75%] px-2.5 py-1.5 rounded-2xl rounded-tr-sm text-[8px] leading-relaxed" style={{ background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>Romantico. Nel mondo reale i budget spariscono.</div>
-                  <div className="self-start max-w-[75%] px-2.5 py-1.5 rounded-2xl rounded-tl-sm text-[8px] italic leading-relaxed" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}>Claude: Anche la fotografia "uccise" la pittura — eppure…</div>
-                  <div className="self-end max-w-[75%] px-2.5 py-1.5 rounded-2xl rounded-tr-sm text-[8px] italic leading-relaxed" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}>GPT: La fotografia non generava contenuti autonomamente.</div>
+                  <div className="self-start max-w-[75%] px-2.5 py-1.5 rounded-2xl rounded-tl-sm text-[8px] leading-relaxed" style={{ background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>{tLanding('mock.twoMsg1')}</div>
+                  <div className="self-end max-w-[75%] px-2.5 py-1.5 rounded-2xl rounded-tr-sm text-[8px] leading-relaxed" style={{ background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>{tLanding('mock.twoMsg2')}</div>
+                  <div className="self-start max-w-[75%] px-2.5 py-1.5 rounded-2xl rounded-tl-sm text-[8px] italic leading-relaxed" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}>Claude: …</div>
+                  <div className="self-end max-w-[75%] px-2.5 py-1.5 rounded-2xl rounded-tr-sm text-[8px] italic leading-relaxed" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}>GPT: …</div>
                   {/* Arbitro */}
                   <div className="mt-1 px-2.5 py-2 rounded-2xl text-[7px] leading-relaxed" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'rgba(251,191,36,0.9)' }}>
-                    <span className="font-black">🏆 GEMINI — ARBITRO</span><br/>Squadra A più solida sul piano storico. Squadra B più concreta sui dati.
+                    <span className="font-black">🏆 {tLanding('mock.judgeLabel')}</span><br/>{tLanding('mock.twoJudge')}
                   </div>
                 </div>
                 {/* Input */}
                 <div className="flex items-center gap-1.5 px-2 py-2" style={{ background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="flex-1 px-3 py-1.5 rounded-full text-[8px]" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)' }}>Il tuo argomento…</div>
+                  <div className="flex-1 px-3 py-1.5 rounded-full text-[8px]" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)' }}>{t('yourArgument')}</div>
                   <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
                     <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
                   </div>
@@ -217,7 +220,7 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
               {/* Notch */}
               <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 12, width: 72, height: 16, background: '#1c1c1e', zIndex: 10 }} />
             </div>
-            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(167,139,250,0.8)' }}>2 vs 2</div>
+            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(167,139,250,0.8)' }}>{t('twoVsTwo.tag')}</div>
           </button>
 
           {/* ── DEVIL'S ADVOCATE — attivo ── */}
@@ -233,16 +236,16 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
                 <HellGridBg />
                 <div className="relative z-10 flex flex-col items-center gap-3">
                   <div className="text-4xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.8))' }}>😈</div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-center px-4" style={{ color: 'rgba(239,68,68,0.8)' }}>Difendi l'indifendibile</div>
-                  <div className="px-3 py-1 rounded-full text-[9px] font-black" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>4 AI nemiche</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-center px-4" style={{ color: 'rgba(239,68,68,0.8)' }}>{t('devil.title')}</div>
+                  <div className="px-3 py-1 rounded-full text-[9px] font-black" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}>{tLanding('mock.devilEnemies')}</div>
                 </div>
               </div>
               {/* Notch */}
               <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 10, width: 60, height: 14, background: '#1c1c1e', zIndex: 10 }} />
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.7)' }}>Devil's Advocate</div>
-              <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.4)' }}>Powered by GROK</div>
+              <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.7)' }}>{t('devil.tag')}</div>
+              <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.4)' }}>{t('devil.poweredBy')}</div>
             </div>
           </button>
 
@@ -251,15 +254,15 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
         {/* Descrizione + CTA */}
         <div className="flex flex-col items-center gap-4">
           <div className="text-center">
-            <div className="font-black text-white text-2xl mb-2">2 vs 2</div>
+            <div className="font-black text-white text-2xl mb-2">{t('descTitle')}</div>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, maxWidth: 480, lineHeight: 1.6 }}>
-              Due squadre si sfidano. Ogni squadra ha un umano e un'AI alleata.<br/>Un'AI arbitro pronuncia il verdetto finale.
+              {t('descBody')}
             </p>
           </div>
           <button onClick={() => handleSelect('2v2')}
             className="px-10 py-4 rounded-2xl font-black text-white text-base transition-all hover:scale-[1.03] active:scale-[0.97]"
             style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', boxShadow: '0 6px 30px rgba(124,58,237,0.5)', fontSize: 16 }}>
-            Scegli le squadre →
+            {t('chooseTeams')}
           </button>
         </div>
       </div>

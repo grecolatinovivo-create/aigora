@@ -234,12 +234,6 @@ export default async function AdminPage() {
                 {/* Costi token per AI */}
                 {(() => {
                   const userUsage = usageByUser[user.id]
-                  const providers = [
-                    { key: 'anthropic', label: 'Claude',     color: '#7C3AED' },
-                    { key: 'openai',    label: 'GPT',        color: '#10A37F' },
-                    { key: 'google',    label: 'Gemini',     color: '#1A73E8' },
-                    { key: 'perplexity',label: 'Perplexity', color: '#FF6B2B' },
-                  ]
                   const userTotal = userUsage ? Object.values(userUsage).reduce((acc, v) => acc + v.cost, 0) : 0
                   return (
                     <div className="border-t border-white/8 px-5 py-3">

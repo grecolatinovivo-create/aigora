@@ -12,6 +12,9 @@ export default async function BrainstormPage() {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   const plan = user?.email === process.env.ADMIN_EMAIL ? 'admin' : normalizePlan(user?.plan)
 
+  // Solo utenti con piano a pagamento possono usare il Brainstormer
+  if (!['pro', 'premium', 'admin', 'freemium'].includes(plan)) redirect('/pricing')
+
   return (
     <BrainstormerClient
       userEmail={session.user.email}

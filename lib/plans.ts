@@ -32,7 +32,7 @@ export interface TierConfig {
   // Token per risposta AI nel dibattito
   maxTokensPerReply?: number   // Free: 220, Pro: 420 — undefined = illimitato (Premium)
   // Limite upload mensili (silenzioso — nessuna LimitWall, allegato ignorato)
-  maxUploadsPerMonth?: number  // Pro: 100, Premium: 200 — undefined = illimitato
+  maxUploadsPerMonth?: number  // Pro: 20, Premium: 100 — undefined = illimitato
   // Limiti brainstormer
   weeklyBrainstormer?: number  // Pro: 2/sett — undefined = illimitato
   modes: AppMode[]

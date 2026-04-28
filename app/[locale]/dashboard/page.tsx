@@ -50,7 +50,7 @@ function DashboardContent() {
     </div>
   )
 
-  const plan = (session?.user as any)?.plan ?? 'none'
+  const plan = (session?.user as any)?.plan ?? 'free'
   const ais = PLAN_AIS[plan] ?? []
   const color = PLAN_COLORS[plan] ?? '#6B7280'
   const label = PLAN_LABELS[plan] ?? plan
@@ -89,7 +89,6 @@ function DashboardContent() {
           </div>
         )}
 
-        {plan !== 'none' ? (
           <>
             {/* Badge piano */}
             <div
@@ -145,21 +144,6 @@ function DashboardContent() {
               </button>
             )}
           </>
-        ) : (
-          <>
-            <p className="text-white/50 text-sm mb-5">{t('noPlan')}</p>
-            <button
-              onClick={() => router.push('/pricing')}
-              className="w-full py-3 rounded-xl text-sm font-bold text-white mb-3 transition-all hover:scale-[1.02]"
-              style={{
-                background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
-                boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
-              }}
-            >
-              {t('choosePlan')}
-            </button>
-          </>
-        )}
 
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
