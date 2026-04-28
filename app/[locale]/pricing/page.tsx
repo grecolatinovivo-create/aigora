@@ -2,6 +2,8 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { TIER_CONFIG } from '@/lib/plans'
 
 const AI_COLOR: Record<string, string> = {
   claude: '#7C3AED', gpt: '#10A37F', gemini: '#1A73E8', perplexity: '#FF6B2B', grok: '#1DA1F2'
@@ -10,79 +12,54 @@ const AI_NAMES: Record<string, string> = {
   claude: 'Claude', gpt: 'GPT', gemini: 'Gemini', perplexity: 'Perplexity', grok: 'Grok'
 }
 
-const PLANS = [
-  {
-    key: null,
-    label: 'Free',
-    subtitle: null,
-    price: null,
-    color: '#10A37F',
-    badge: null,
-    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
-    features: [
-      { text: '4 AI (Claude, GPT, Gemini, Perplexity)', ok: true },
-      { text: '3 dibattiti a settimana', ok: true },
-      { text: 'Fino a 20 risposte per dibattito', ok: true },
-      { text: 'Brainstormer', ok: false },
-      { text: 'Avvocato del Diavolo', ok: false },
-      { text: 'Multiplayer 2v2', ok: false },
-      { text: 'Upload documenti', ok: false },
-      { text: 'Cronologia dibattiti', ok: false },
-    ],
-    cta: 'Inizia gratis',
-    ctaAction: 'register',
-  },
-  {
-    key: 'pro',
-    label: 'Pro',
-    subtitle: 'Per uso frequente e completo',
-    price: '9,99',
-    color: '#A78BFA',
-    badge: 'PIÙ POPOLARE',
-    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
-    features: [
-      { text: '4 AI nei dibattiti', ok: true },
-      { text: 'Grok disponibile in Brainstormer e 2v2', ok: true },
-      { text: '10 dibattiti al giorno', ok: true },
-      { text: 'Risposte più dettagliate (2× Free)', ok: true },
-      { text: 'Brainstormer: 2 sessioni/settimana', ok: true },
-      { text: 'Avvocato del Diavolo', ok: true },
-      { text: 'Multiplayer 2v2', ok: true },
-      { text: 'Upload documenti e immagini: fino a 20/mese', ok: true },
-      { text: 'Cronologia dibattiti: 30 giorni', ok: true },
-    ],
-    cta: 'Inizia con Pro',
-    ctaAction: 'stripe',
-  },
-  {
-    key: 'premium',
-    label: 'Premium',
-    subtitle: 'Per uso intensivo e avanzato',
-    price: '19,99',
-    color: '#FF6B2B',
-    badge: null,
-    ais: ['claude', 'gpt', 'gemini', 'perplexity'],
-    features: [
-      { text: '4 AI nei dibattiti', ok: true },
-      { text: 'Grok disponibile in Brainstormer e 2v2', ok: true },
-      { text: 'Dibattiti illimitati', ok: true },
-      { text: 'Risposte complete senza limiti', ok: true },
-      { text: 'Brainstormer illimitato', ok: true },
-      { text: 'Avvocato del Diavolo', ok: true },
-      { text: 'Multiplayer 2v2', ok: true },
-      { text: 'Upload documenti e immagini: fino a 100/mese', ok: true },
-      { text: 'Accesso beta alle nuove funzionalità', ok: true },
-      { text: 'Cronologia completa', ok: true },
-    ],
-    cta: 'Inizia con Premium',
-    ctaAction: 'stripe',
-  },
-]
-
 export default function PricingPage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const t = useTranslations('pricing')
   const [loading, setLoading] = useState<string | null>(null)
+
+  const freeFeatures = t.raw('plans.free.features') as string[]
+  const proFeatures  = t.raw('plans.pro.features')  as string[]
+  const premFeatures = t.raw('plans.premium.features') as string[]
+
+  const PLANS = [
+    {
+      key: null,
+      label: 'Free',
+      subtitle: null,
+      price: null,
+      color: '#10A37F',
+      badge: null,
+      ais: ['claude', 'gpt', 'gemini', 'perplexity'],
+      features: freeFeatures.map((text, i) => ({ text, ok: i < 3 })),
+      cta: t('plans.free.cta'),
+      ctaAction: 'register' as const,
+    },
+    {
+      key: 'pro',
+      label: 'Pro',
+      subtitle: t('plans.pro.subtitle'),
+      price: TIER_CONFIG.pro.price?.toLocaleString('it-IT', { minimumFractionDigits: 2 }),
+      color: '#A78BFA',
+      badge: t('plans.pro.badge'),
+      ais: ['claude', 'gpt', 'gemini', 'perplexity'],
+      features: proFeatures.map(text => ({ text, ok: true })),
+      cta: t('plans.pro.cta'),
+      ctaAction: 'stripe' as const,
+    },
+    {
+      key: 'premium',
+      label: 'Premium',
+      subtitle: t('plans.premium.subtitle'),
+      price: TIER_CONFIG.premium.price?.toLocaleString('it-IT', { minimumFractionDigits: 2 }),
+      color: '#FF6B2B',
+      badge: null,
+      ais: ['claude', 'gpt', 'gemini', 'perplexity'],
+      features: premFeatures.map(text => ({ text, ok: true })),
+      cta: t('plans.premium.cta'),
+      ctaAction: 'stripe' as const,
+    },
+  ]
 
   const handleAction = async (plan: typeof PLANS[0]) => {
     if (plan.ctaAction === 'register') {
@@ -107,6 +84,19 @@ export default function PricingPage() {
     }
   }
 
+  const tableRows: { key: string; free: string | boolean; pro: string | boolean; premium: string | boolean }[] = [
+    { key: 'aiDebates',        free: t('table.ai4'),       pro: t('table.ai4'),           premium: t('table.ai4') },
+    { key: 'grok',             free: false,                 pro: true,                     premium: true },
+    { key: 'debates',          free: t('table.weekly3'),   pro: t('table.daily10'),       premium: t('table.unlimited') },
+    { key: 'responsesPerDebate', free: t('table.upTo20'), pro: t('table.extended'),       premium: t('table.unlimitedResponses') },
+    { key: 'brainstormer',     free: false,                 pro: t('table.sessions2'),     premium: t('table.unlimitedBrainstorm') },
+    { key: 'devilsAdvocate',   free: false,                 pro: true,                     premium: true },
+    { key: 'multiplayer',      free: false,                 pro: true,                     premium: true },
+    { key: 'upload',           free: false,                 pro: t('table.upTo20mo'),      premium: t('table.upTo100mo') },
+    { key: 'history',          free: false,                 pro: t('table.days30'),        premium: t('table.full') },
+    { key: 'betaAccess',       free: false,                 pro: false,                    premium: true },
+  ]
+
   return (
     <div className="desktop-bg min-h-dvh flex flex-col items-center justify-start px-4 py-16">
 
@@ -116,9 +106,9 @@ export default function PricingPage() {
           <span className="text-white">Ai</span>
           <span style={{ color: '#A78BFA' }}>GORÀ</span>
         </button>
-        <h1 className="text-4xl font-black text-white mb-3">Scegli il tuo piano</h1>
+        <h1 className="text-4xl font-black text-white mb-3">{t('title')}</h1>
         <p className="text-white/50 text-base max-w-md mx-auto">
-          Free include 4 AI. Pro e Premium sbloccano Grok, le modalità avanzate e l'upload documenti.
+          {t('subtitle')}
         </p>
       </div>
 
@@ -128,7 +118,7 @@ export default function PricingPage() {
         style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-        Prova senza account su{' '}
+        {t('tryDemo')}{' '}
         <button onClick={() => router.push('/demo')} className="text-white/80 underline underline-offset-2 hover:text-white transition-colors">
           /demo
         </button>
@@ -165,10 +155,10 @@ export default function PricingPage() {
                 {plan.price ? (
                   <>
                     <span className="text-4xl font-black text-white">{plan.price}€</span>
-                    <span className="text-white/40 text-sm mb-1">/mese</span>
+                    <span className="text-white/40 text-sm mb-1">{t('perMonth')}</span>
                   </>
                 ) : (
-                  <span className="text-4xl font-black text-white">Gratis</span>
+                  <span className="text-4xl font-black text-white">{t('freePlanLabel')}</span>
                 )}
               </div>
               {plan.subtitle && (
@@ -234,26 +224,15 @@ export default function PricingPage() {
       {/* Comparison table — mobile hidden */}
       <div className="hidden md:block w-full max-w-4xl mt-14">
         <h2 className="text-white/40 text-xs font-semibold uppercase tracking-widest text-center mb-6">
-          Confronto dettagliato
+          {t('comparisonTitle')}
         </h2>
         <div
           className="rounded-2xl overflow-hidden"
           style={{ border: '1px solid rgba(255,255,255,0.08)' }}
         >
-          {[
-            { feature: 'AI nei dibattiti', free: '4 AI', pro: '4 AI', premium: '4 AI' },
-            { feature: 'Grok (Brainstormer e 2v2)', free: false, pro: true, premium: true },
-            { feature: 'Dibattiti', free: '3/settimana', pro: '10/giorno', premium: 'Illimitati' },
-            { feature: 'Risposte per dibattito', free: 'Fino a 20', pro: 'Estese', premium: 'Illimitate' },
-            { feature: 'Brainstormer', free: false, pro: '2 sessioni/settimana', premium: 'Illimitato' },
-            { feature: 'Avvocato del Diavolo', free: false, pro: true, premium: true },
-            { feature: 'Multiplayer 2v2', free: false, pro: true, premium: true },
-            { feature: 'Upload documenti e immagini', free: false, pro: 'fino a 20/mese', premium: 'fino a 100/mese' },
-            { feature: 'Cronologia dibattiti', free: false, pro: '30 giorni', premium: 'Completa' },
-            { feature: 'Accesso beta nuove funzionalità', free: false, pro: false, premium: true },
-          ].map((row, i) => (
+          {tableRows.map((row, i) => (
             <div
-              key={row.feature}
+              key={row.key}
               className="grid grid-cols-4 items-center"
               style={{
                 padding: '12px 20px',
@@ -261,7 +240,7 @@ export default function PricingPage() {
                 backgroundColor: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : undefined,
               }}
             >
-              <span className="text-white/60 text-sm col-span-1">{row.feature}</span>
+              <span className="text-white/60 text-sm col-span-1">{t(`table.${row.key}` as any)}</span>
               {[row.free, row.pro, row.premium].map((val, j) => (
                 <div key={j} className="flex justify-center">
                   {typeof val === 'boolean' ? (
@@ -285,7 +264,7 @@ export default function PricingPage() {
       </div>
 
       <p className="text-white/20 text-xs mt-10">
-        Pagamento sicuro tramite Stripe · Solo fatturazione mensile · Cancella quando vuoi
+        {t('footer')}
       </p>
     </div>
   )

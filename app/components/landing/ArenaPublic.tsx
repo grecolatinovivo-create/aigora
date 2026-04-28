@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import LoginModal, { type SelectableMode } from '@/app/components/landing/LoginModal'
 
 // ── Background hell per Devil's Advocate ─────────────────────────────────────
@@ -24,6 +25,7 @@ function HellGridBg() {
 
 // ── Schermo chat classica con 4 AI ────────────────────────────────────────────
 function ClassicoScreen() {
+  const t = useTranslations('arena.mock')
   const msgs = [
     { ai: 'C', color: '#7C3AED', name: 'Claude', text: 'La democrazia diretta è superiore a quella rappresentativa perché elimina gli intermediari tra cittadino e decisione.' },
     { ai: 'G', color: '#10A37F', name: 'GPT', text: 'In larga scala diventa impraticabile. Richiede un\'informazione diffusa che storicamente non esiste.' },
@@ -37,7 +39,7 @@ function ClassicoScreen() {
         {[['#7C3AED','C'],['#10A37F','G'],['#1A73E8','Ge'],['#20B2AA','P']].map(([c,l]) => (
           <div key={l} style={{ width: 18, height: 18, borderRadius: '50%', background: c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 900, color: '#fff' }}>{l}</div>
         ))}
-        <div style={{ marginLeft: 3, fontSize: 7, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>dibattito in corso</div>
+        <div style={{ marginLeft: 3, fontSize: 7, fontWeight: 700, color: 'rgba(255,255,255,0.4)' }}>{t('debating')}</div>
       </div>
       {/* Messaggi */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 5, padding: '6px 7px 6px' }}>
@@ -53,7 +55,7 @@ function ClassicoScreen() {
       </div>
       {/* Input */}
       <div style={{ padding: '5px 7px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.4)', display: 'flex', gap: 5, alignItems: 'center' }}>
-        <div style={{ flex: 1, padding: '3px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 6, color: 'rgba(255,255,255,0.25)' }}>Rispondi al dibattito…</div>
+        <div style={{ flex: 1, padding: '3px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 6, color: 'rgba(255,255,255,0.25)' }}>{t('replyPlaceholder')}</div>
         <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="7" height="7" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
         </div>
@@ -64,11 +66,12 @@ function ClassicoScreen() {
 
 // ── Schermo Brainstormer — 4 AI che deliberano ────────────────────────────────
 function BrainstormScreen() {
+  const t = useTranslations('arena.mock')
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#09060f' }}>
       <div style={{ padding: '7px 10px', borderBottom: '1px solid rgba(167,139,250,0.15)', background: 'rgba(0,0,0,0.4)' }}>
         <div style={{ fontSize: 7, fontWeight: 900, color: '#A78BFA', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Brainstormer</div>
-        <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>Il concilio sta deliberando…</div>
+        <div style={{ fontSize: 6, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{t('councilDeliberating')}</div>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 8px' }}>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -85,12 +88,12 @@ function BrainstormScreen() {
           ))}
         </div>
         <div style={{ width: '100%', padding: '8px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(167,139,250,0.18)' }}>
-          <div style={{ fontSize: 8, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>Il concilio ha deciso:</div>
+          <div style={{ fontSize: 8, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>{t('councilDecided')}</div>
           <div style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55, marginTop: 2 }}>Parti dal prodotto, non dal mercato.</div>
         </div>
       </div>
       <div style={{ padding: '5px 7px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
-        <div style={{ padding: '3px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 6, color: 'rgba(255,255,255,0.25)' }}>La tua idea…</div>
+        <div style={{ padding: '3px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 6, color: 'rgba(255,255,255,0.25)' }}>{t('ideaPlaceholder')}</div>
       </div>
     </div>
   )
@@ -99,37 +102,9 @@ function BrainstormScreen() {
 // ── Tipi ─────────────────────────────────────────────────────────────────────
 type PhoneMode = SelectableMode | 'multiplayer'
 
-const MODE_INFO: Record<PhoneMode, { title: string; desc: string; cta: string; soon?: boolean }> = {
-  'chat': {
-    title: 'Dibattito',
-    desc: 'Poni una domanda e guarda Claude, GPT, Gemini e Perplexity confrontarsi in tempo reale. Puoi intervenire in qualsiasi momento.',
-    cta: 'Avvia il dibattito →',
-  },
-  '2v2': {
-    title: '2 vs 2',
-    desc: 'Due squadre si sfidano. Ogni squadra ha un umano e un\'AI alleata. Un\'AI arbitro pronuncia il verdetto finale round dopo round.',
-    cta: 'Scegli le squadre →',
-  },
-  'devil': {
-    title: 'Devil\'s Advocate',
-    desc: 'Grok ti assegna una posizione scomoda da difendere. Claude, GPT, Gemini e Perplexity ti attaccheranno senza pietà. Più reggi, più sali.',
-    cta: 'Inizia la sfida →',
-  },
-  'brainstorm': {
-    title: 'Brainstormer',
-    desc: 'Lancia un\'idea. Le 4 AI deliberano tra loro in due round e ti restituiscono una risposta unificata e ragionata.',
-    cta: 'Avvia il concilio →',
-  },
-  'multiplayer': {
-    title: 'Multiplayer',
-    desc: 'Da 1 a 4 umani discutono con le 4 AI simultaneamente. La vera arena pubblica.',
-    cta: 'In arrivo',
-    soon: true,
-  },
-}
-
 // ── Schermo Multiplayer — SOON ────────────────────────────────────────────────
 function MultiplayerScreen() {
+  const t = useTranslations('arena.mock')
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#0a0a12', padding: 12 }}>
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 100 }}>
@@ -137,27 +112,92 @@ function MultiplayerScreen() {
           <div key={l} style={{ width: 22, height: 22, borderRadius: '50%', background: c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 900, color: '#fff' }}>{l}</div>
         ))}
       </div>
-      <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>4 umani</div>
+      <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>{t('humans4')}</div>
       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)' }}>+</div>
       <div style={{ display: 'flex', gap: 4 }}>
         {[['#7C3AED','C'],['#10A37F','G'],['#1A73E8','Ge'],['#20B2AA','P']].map(([c,l]) => (
           <div key={l} style={{ width: 22, height: 22, borderRadius: '50%', background: c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 900, color: '#fff', opacity: 0.6 }}>{l}</div>
         ))}
       </div>
-      <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>4 AI</div>
+      <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>{t('ais4')}</div>
+    </div>
+  )
+}
+
+// ── Schermo 2 vs 2 ────────────────────────────────────────────────────────────
+function TwoVsTwoScreen() {
+  const t = useTranslations('arena.mock')
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0d0d14' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', background: 'rgba(0,0,0,0.5)', borderBottom: '1px solid rgba(255,80,0,0.2)' }}>
+        <div style={{ fontSize: 7, fontWeight: 900, padding: '2px 6px', borderRadius: 3, color: '#3b82f6', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>{t('teamA')}</div>
+        <div style={{ fontSize: 13, fontWeight: 900, color: '#fff' }}>2 — 1</div>
+        <div style={{ fontSize: 7, fontWeight: 900, padding: '2px 6px', borderRadius: 3, color: '#ef4444', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>{t('teamB')}</div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {[['#F59E0B','Alex'],['#7C3AED','Claude']].map(([c,n]) => (
+            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: c, flexShrink: 0 }} />
+              <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)' }}>{n}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-end' }}>
+          {[['#10B981','Marco'],['#10A37F','GPT']].map(([c,n]) => (
+            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)' }}>{n}</span>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: c, flexShrink: 0 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 5, padding: '6px 7px' }}>
+        <div style={{ alignSelf: 'flex-start', maxWidth: '78%', padding: '4px 8px', borderRadius: '8px 8px 8px 2px', fontSize: 7, lineHeight: 1.45, background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>L'IA amplifica la creatività, non la sostituisce.</div>
+        <div style={{ alignSelf: 'flex-end', maxWidth: '78%', padding: '4px 8px', borderRadius: '8px 8px 2px 8px', fontSize: 7, lineHeight: 1.45, background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>Romantico. I budget spariscono nel mondo reale.</div>
+        <div style={{ padding: '5px 8px', borderRadius: 7, fontSize: 6.5, lineHeight: 1.45, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'rgba(251,191,36,0.9)' }}>
+          <span style={{ fontWeight: 900 }}>🏆 GEMINI — ARBITRO</span><br/>Squadra A più solida sul piano storico.
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 7px', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ flex: 1, padding: '3px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 6, color: 'rgba(255,255,255,0.25)' }}>{t('yourArgument')}</div>
+        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="7" height="7" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Schermo Devil's Advocate ──────────────────────────────────────────────────
+function DevilScreen() {
+  const t = useTranslations('arena.mock')
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#080004', position: 'relative' }}>
+      <HellGridBg />
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12 }}>
+        <div style={{ fontSize: 42, filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.8))' }}>😈</div>
+        <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(239,68,68,0.85)', textAlign: 'center' }}>{t('defendIndefensible')}</div>
+        <div style={{ padding: '3px 10px', borderRadius: 999, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', fontSize: 8, fontWeight: 900, color: '#ef4444' }}>{t('enemyAIs')}</div>
+      </div>
+      {/* Powered by Grok */}
+      <div style={{ position: 'relative', zIndex: 1, padding: '6px 10px', borderTop: '1px solid rgba(239,68,68,0.15)', background: 'rgba(0,0,0,0.4)', textAlign: 'center' }}>
+        <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(239,68,68,0.45)' }}>Powered by GROK</div>
+      </div>
     </div>
   )
 }
 
 // ── Componente iPhone mock ────────────────────────────────────────────────────
 function PhoneMock({
-  mode, selected, small, onClick, onHover,
+  mode, selected, small, onClick, onHover, label,
 }: {
   mode: PhoneMode
   selected: boolean
   small?: boolean
   onClick: () => void
   onHover: () => void
+  label: string
 }) {
   const W = small ? 140 : 185
   const H = small ? 288 : 380
@@ -203,69 +243,7 @@ function PhoneMock({
         )}
       </div>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: labelColor }}>
-        {MODE_INFO[mode].title}
-      </div>
-    </div>
-  )
-}
-
-// ── Schermo 2 vs 2 ────────────────────────────────────────────────────────────
-function TwoVsTwoScreen() {
-  return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0d0d14' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', background: 'rgba(0,0,0,0.5)', borderBottom: '1px solid rgba(255,80,0,0.2)' }}>
-        <div style={{ fontSize: 7, fontWeight: 900, padding: '2px 6px', borderRadius: 3, color: '#3b82f6', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>SQUADRA A</div>
-        <div style={{ fontSize: 13, fontWeight: 900, color: '#fff' }}>2 — 1</div>
-        <div style={{ fontSize: 7, fontWeight: 900, padding: '2px 6px', borderRadius: 3, color: '#ef4444', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>SQUADRA B</div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {[['#F59E0B','Giampiero'],['#7C3AED','Claude']].map(([c,n]) => (
-            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: c, flexShrink: 0 }} />
-              <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)' }}>{n}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-end' }}>
-          {[['#10B981','Marco'],['#10A37F','GPT']].map(([c,n]) => (
-            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 7, color: 'rgba(255,255,255,0.7)' }}>{n}</span>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: c, flexShrink: 0 }} />
-            </div>
-          ))}
-        </div>
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 5, padding: '6px 7px' }}>
-        <div style={{ alignSelf: 'flex-start', maxWidth: '78%', padding: '4px 8px', borderRadius: '8px 8px 8px 2px', fontSize: 7, lineHeight: 1.45, background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>L'IA amplifica la creatività, non la sostituisce.</div>
-        <div style={{ alignSelf: 'flex-end', maxWidth: '78%', padding: '4px 8px', borderRadius: '8px 8px 2px 8px', fontSize: 7, lineHeight: 1.45, background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>Romantico. I budget spariscono nel mondo reale.</div>
-        <div style={{ padding: '5px 8px', borderRadius: 7, fontSize: 6.5, lineHeight: 1.45, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'rgba(251,191,36,0.9)' }}>
-          <span style={{ fontWeight: 900 }}>🏆 GEMINI — ARBITRO</span><br/>Squadra A più solida sul piano storico.
-        </div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 7px', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ flex: 1, padding: '3px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontSize: 6, color: 'rgba(255,255,255,0.25)' }}>Il tuo argomento…</div>
-        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="7" height="7" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Schermo Devil's Advocate ──────────────────────────────────────────────────
-function DevilScreen() {
-  return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#080004', position: 'relative' }}>
-      <HellGridBg />
-      <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12 }}>
-        <div style={{ fontSize: 42, filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.8))' }}>😈</div>
-        <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(239,68,68,0.85)', textAlign: 'center' }}>Difendi l'indifendibile</div>
-        <div style={{ padding: '3px 10px', borderRadius: 999, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', fontSize: 8, fontWeight: 900, color: '#ef4444' }}>4 AI nemiche</div>
-      </div>
-      {/* Powered by Grok */}
-      <div style={{ position: 'relative', zIndex: 1, padding: '6px 10px', borderTop: '1px solid rgba(239,68,68,0.15)', background: 'rgba(0,0,0,0.4)', textAlign: 'center' }}>
-        <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(239,68,68,0.45)' }}>Powered by GROK</div>
+        {label}
       </div>
     </div>
   )
@@ -274,11 +252,20 @@ function DevilScreen() {
 // ── Componente principale ─────────────────────────────────────────────────────
 export default function ArenaPublic() {
   const router = useRouter()
+  const t = useTranslations('arena')
   const [pendingMode, setPendingMode] = useState<SelectableMode | null>(null)
   const [selected, setSelected] = useState<PhoneMode>('2v2')
 
-  const info = MODE_INFO[selected]
+  type ModeInfo = { title: string; desc: string; cta: string; soon?: boolean }
+  const MODE_INFO: Record<PhoneMode, ModeInfo> = {
+    'chat':        { title: t('modes.chat.title'),        desc: t('modes.chat.desc'),        cta: t('modes.chat.cta') },
+    '2v2':         { title: t('modes.2v2.title'),         desc: t('modes.2v2.desc'),         cta: t('modes.2v2.cta') },
+    'devil':       { title: t('modes.devil.title'),       desc: t('modes.devil.desc'),       cta: t('modes.devil.cta') },
+    'brainstorm':  { title: t('modes.brainstorm.title'),  desc: t('modes.brainstorm.desc'),  cta: t('modes.brainstorm.cta') },
+    'multiplayer': { title: t('modes.multiplayer.title'), desc: t('modes.multiplayer.desc'), cta: t('modes.multiplayer.cta'), soon: true },
+  }
 
+  const info = MODE_INFO[selected]
   const phones: PhoneMode[] = ['chat', '2v2', 'devil', 'brainstorm', 'multiplayer']
 
   return (
@@ -293,8 +280,8 @@ export default function ArenaPublic() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div className="flex-1 text-center">
-            <div className="font-black text-base text-white">Come vuoi dibattere?</div>
-            <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Scegli il formato</div>
+            <div className="font-black text-base text-white">{t('header')}</div>
+            <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('headerSub')}</div>
           </div>
           <div className="w-9" />
         </div>
@@ -302,12 +289,12 @@ export default function ArenaPublic() {
         {/* ── MOBILE: card verticali ── */}
         <div className="lg:hidden flex-1 flex flex-col px-4 py-4 gap-3 overflow-hidden" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
 
-          {/* Dibattito — chat esistente */}
+          {/* Dibattito */}
           <button onClick={() => setPendingMode('chat')} className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(10,6,20,0.9) 100%)', border: '1.5px solid rgba(167,139,250,0.25)', minHeight: 0 }}>
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>Dibattito</div>
-                <div className="text-xl font-black text-white leading-tight">4 AI a confronto</div>
+                <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>{t('modes.chat.tag')}</div>
+                <div className="text-xl font-black text-white leading-tight">{t('modes.chat.mobileTitle')}</div>
               </div>
               <div className="flex gap-1">
                 {[['#7C3AED','C'],['#10A37F','G'],['#1A73E8','Ge'],['#20B2AA','P']].map(([c,l]) => (
@@ -315,9 +302,9 @@ export default function ArenaPublic() {
                 ))}
               </div>
             </div>
-            <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Poni una domanda e guarda Claude, GPT, Gemini e Perplexity confrontarsi in tempo reale.</div>
+            <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('modes.chat.mobileDesc')}</div>
             <div className="flex justify-end mt-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>Avvia <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>{t('modes.chat.mobileCta')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
             </div>
           </button>
 
@@ -325,8 +312,8 @@ export default function ArenaPublic() {
           <button onClick={() => setPendingMode('2v2')} className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(91,33,182,0.1) 100%)', border: '1.5px solid rgba(167,139,250,0.35)', boxShadow: '0 4px 20px rgba(124,58,237,0.15)', minHeight: 0 }}>
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>2 vs 2</div>
-                <div className="text-xl font-black text-white leading-tight">Sfida a squadre</div>
+                <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>{t('modes.2v2.tag')}</div>
+                <div className="text-xl font-black text-white leading-tight">{t('modes.2v2.mobileTitle')}</div>
               </div>
               <div className="flex gap-1">
                 {[['#7C3AED','C'],['#10A37F','G']].map(([c,l]) => (
@@ -334,9 +321,9 @@ export default function ArenaPublic() {
                 ))}
               </div>
             </div>
-            <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Tu + AI vs un altro umano + AI. L'arbitro assegna i punti a ogni round.</div>
+            <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('modes.2v2.mobileDesc')}</div>
             <div className="flex justify-end mt-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>Gioca <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>{t('modes.2v2.mobileCta')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
             </div>
           </button>
 
@@ -345,14 +332,14 @@ export default function ArenaPublic() {
             <HellGridBg />
             <div className="relative z-10 flex items-start justify-between">
               <div>
-                <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>Devil's Advocate</div>
-                <div className="text-xl font-black text-white leading-tight">Difendi l'indifendibile</div>
+                <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#ef4444' }}>{t('modes.devil.tag')}</div>
+                <div className="text-xl font-black text-white leading-tight">{t('modes.devil.mobileTitle')}</div>
               </div>
               <div className="text-2xl" style={{ filter: 'drop-shadow(0 0 8px rgba(239,68,68,0.6))' }}>😈</div>
             </div>
-            <div className="relative z-10 text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.</div>
+            <div className="relative z-10 text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.6)' }}>{t('modes.devil.mobileDesc')}</div>
             <div className="relative z-10 flex justify-end mt-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#dc2626,#991b1b)' }}>Gioca <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#dc2626,#991b1b)' }}>{t('modes.devil.mobileCta')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
             </div>
           </button>
 
@@ -360,14 +347,14 @@ export default function ArenaPublic() {
           <button onClick={() => setPendingMode('brainstorm')} className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(10,6,20,0.9) 100%)', border: '1.5px solid rgba(167,139,250,0.2)', minHeight: 0 }}>
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>Brainstormer</div>
-                <div className="text-xl font-black text-white leading-tight">4 AI per la tua idea</div>
+                <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>{t('modes.brainstorm.tag')}</div>
+                <div className="text-xl font-black text-white leading-tight">{t('modes.brainstorm.mobileTitle')}</div>
               </div>
               <div className="text-2xl">🧠</div>
             </div>
-            <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>Lancia un'idea, le AI discutono tra loro e ricevi una risposta unificata.</div>
+            <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('modes.brainstorm.mobileDesc')}</div>
             <div className="flex justify-end mt-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>Prova <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>{t('modes.brainstorm.mobileCta')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg></div>
             </div>
           </button>
         </div>
@@ -379,13 +366,13 @@ export default function ArenaPublic() {
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3 text-[11px] font-medium text-purple-300 border border-purple-500/30" style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>
               <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
-              Scegli il formato del dibattito
+              {t('badge')}
             </div>
-            <h1 className="font-black text-white" style={{ fontSize: 'clamp(2rem, 3.8vw, 3rem)', lineHeight: 1.1, marginBottom: 6 }}>Come vuoi dibattere?</h1>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Quattro formati, un'unica arena. Passa sopra per esplorare.</p>
+            <h1 className="font-black text-white" style={{ fontSize: 'clamp(2rem, 3.8vw, 3rem)', lineHeight: 1.1, marginBottom: 6 }}>{t('header')}</h1>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>{t('mainSubtitle')}</p>
           </div>
 
-          {/* 4 iPhone grandi + 1 piccolo SOON — quella selezionata cresce */}
+          {/* 4 iPhone grandi + 1 piccolo SOON */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22 }}>
             {phones.map(mode => (
               <PhoneMock
@@ -393,6 +380,7 @@ export default function ArenaPublic() {
                 mode={mode}
                 selected={selected === mode}
                 small={mode === 'multiplayer'}
+                label={MODE_INFO[mode].title}
                 onClick={() => {
                   if (mode !== 'multiplayer') setPendingMode(mode as SelectableMode)
                 }}
@@ -420,7 +408,7 @@ export default function ArenaPublic() {
               </button>
             ) : (
               <div style={{ padding: '10px 24px', borderRadius: 16, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                In arrivo
+                {t('comingSoon')}
               </div>
             )}
           </div>

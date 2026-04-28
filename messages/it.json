@@ -46,7 +46,12 @@
     "heroTitle": "4 AI. Un solo dibattito.",
     "heroSubtitle": "Fai una domanda, guarda le AI confrontarsi in tempo reale.\nOppure entra tu nell'arena.",
     "heroCta": "Prova la demo →",
-    "heroModes": ["Dibattito", "2 vs 2", "Devil's Advocate", "Brainstormer"],
+    "heroModes": [
+      "Dibattito",
+      "2 vs 2",
+      "Devil's Advocate",
+      "Brainstormer"
+    ],
     "ctaFinalTitle": "Entra nell'arena.",
     "ctaFinalBody": "Scegli il formato che fa per te e inizia subito. Ci vogliono 30 secondi.",
     "ctaFinalBtn": "Scegli come iniziare →",
@@ -94,35 +99,84 @@
   },
   "pricing": {
     "title": "Scegli il tuo piano",
-    "subtitle": "Inizia gratis, scala quando sei pronto.",
+    "subtitle": "Free include 4 AI. Pro e Premium sbloccano Grok, le modalità avanzate e l'upload documenti.",
+    "tryDemo": "Prova senza account su",
     "perMonth": "/mese",
-    "free": "Gratis",
-    "mostPopular": "Più popolare",
-    "cta": {
-      "free": "Inizia gratis →",
-      "pro": "Passa a Pro →",
-      "premium": "Passa a Premium →",
-      "current": "Piano attuale"
+    "freePlanLabel": "Gratis",
+    "mostPopular": "PIÙ POPOLARE",
+    "comparisonTitle": "Confronto dettagliato",
+    "footer": "Pagamento sicuro tramite Stripe · Solo fatturazione mensile · Cancella quando vuoi",
+    "plans": {
+      "free": {
+        "cta": "Inizia gratis",
+        "features": [
+          "4 AI (Claude, GPT, Gemini, Perplexity)",
+          "3 dibattiti a settimana",
+          "Fino a 20 risposte per dibattito",
+          "Brainstormer",
+          "Avvocato del Diavolo",
+          "Multiplayer 2v2",
+          "Upload documenti",
+          "Cronologia dibattiti"
+        ]
+      },
+      "pro": {
+        "subtitle": "Per uso frequente e completo",
+        "badge": "PIÙ POPOLARE",
+        "cta": "Inizia con Pro",
+        "features": [
+          "4 AI nei dibattiti",
+          "Grok disponibile in Brainstormer e 2v2",
+          "10 dibattiti al giorno",
+          "Risposte più dettagliate (2× Free)",
+          "Brainstormer: 2 sessioni/settimana",
+          "Avvocato del Diavolo",
+          "Multiplayer 2v2",
+          "Upload documenti e immagini: fino a 20/mese",
+          "Cronologia dibattiti: 30 giorni"
+        ]
+      },
+      "premium": {
+        "subtitle": "Per uso intensivo e avanzato",
+        "cta": "Inizia con Premium",
+        "features": [
+          "4 AI nei dibattiti",
+          "Grok disponibile in Brainstormer e 2v2",
+          "Dibattiti illimitati",
+          "Risposte complete senza limiti",
+          "Brainstormer illimitato",
+          "Avvocato del Diavolo",
+          "Multiplayer 2v2",
+          "Upload documenti e immagini: fino a 100/mese",
+          "Accesso beta alle nuove funzionalità",
+          "Cronologia completa"
+        ]
+      }
     },
-    "features": {
-      "free": "3 dibattiti a settimana · Claude, GPT, Gemini, Perplexity",
-      "pro": "10 dibattiti al giorno · tutte le modalità · Grok incluso",
-      "premium": "Dibattiti illimitati · upload documenti · accesso prioritario alle novità"
-    },
-    "comparison": {
-      "title": "Confronto completo",
-      "feature": "Funzionalità",
-      "debatesPerWeek": "Dibattiti / settimana",
-      "debatesPerDay": "Dibattiti / giorno",
-      "aiInDebates": "AI nei dibattiti",
+    "table": {
+      "aiDebates": "AI nei dibattiti",
       "grok": "Grok (Brainstormer e 2v2)",
-      "twoVsTwo": "Modalità 2 vs 2",
-      "devil": "Devil's Advocate",
+      "debates": "Dibattiti",
+      "responsesPerDebate": "Risposte per dibattito",
       "brainstormer": "Brainstormer",
-      "uploadDocs": "Upload documenti",
-      "priorityAccess": "Accesso prioritario novità",
+      "devilsAdvocate": "Avvocato del Diavolo",
+      "multiplayer": "Multiplayer 2v2",
+      "upload": "Upload documenti e immagini",
+      "history": "Cronologia dibattiti",
+      "betaAccess": "Accesso beta nuove funzionalità",
+      "ai4": "4 AI",
+      "weekly3": "3/settimana",
+      "upTo20": "Fino a 20",
+      "daily10": "10/giorno",
+      "extended": "Estese",
+      "sessions2": "2 sessioni/settimana",
+      "days30": "30 giorni",
+      "upTo20mo": "fino a 20/mese",
       "unlimited": "Illimitati",
-      "notAvailable": "Non disponibile"
+      "unlimitedResponses": "Illimitate",
+      "unlimitedBrainstorm": "Illimitato",
+      "upTo100mo": "fino a 100/mese",
+      "full": "Completa"
     }
   },
   "auth": {
@@ -222,11 +276,31 @@
     "title": "Brainstormer",
     "subtitle": "Il concilio sta deliberando…",
     "decided": "Il concilio ha deciso:",
-    "ideaPlaceholder": "La tua idea…",
-    "startBtn": "Avvia il concilio →",
-    "newSession": "Nuova sessione",
-    "history": "Sessioni precedenti",
-    "noHistory": "Nessuna sessione salvata.",
+    "ideaPlaceholder": "Cosa hai in mente?",
+    "startBtn": "Inizia →",
+    "newSession": "Nuovo brainstorm",
+    "history": "Storico",
+    "historyTabLabel": "Storico",
+    "noHistory": "Nessuna brainstorming salvata ancora.",
+    "initialSubtitle": "Descrivi la tua idea o cosa ti serve.",
+    "attachmentNote": "Il concilio analizzerà anche il documento allegato",
+    "ideaLabel": "La tua idea",
+    "writeYourself": "+ scrivi tu",
+    "yourAnswerPlaceholder": "La tua risposta…",
+    "phase": {
+      "deliberating": "● Deliberazione in corso…",
+      "discussing": "● Il concilio si confronta…",
+      "synthesizing": "● Sintesi in arrivo…"
+    },
+    "rewriteBtn": "↺ Riscrivi",
+    "addNoteBtn": "+ nota",
+    "notePlaceholder": "Aggiungi un'osservazione, un'integrazione, una direzione diversa…",
+    "refineBtn": "→ Raffina",
+    "councilSpoken": "Il concilio ha parlato.",
+    "grokBtn": "Lascia parlare Grok →",
+    "grokAttack": "— attacco finale",
+    "today": "Oggi",
+    "yesterday": "Ieri",
     "building": {
       "thinking": "Le AI stanno deliberando…",
       "round1": "Round 1 — Analisi indipendente",
@@ -274,7 +348,69 @@
   },
   "arena": {
     "title": "Arena pubblica",
-    "subtitle": "Guarda i dibattiti in diretta"
+    "subtitle": "Guarda i dibattiti in diretta",
+    "header": "Come vuoi dibattere?",
+    "headerSub": "Scegli il formato",
+    "badge": "Scegli il formato del dibattito",
+    "mainSubtitle": "Quattro formati, un'unica arena. Passa sopra per esplorare.",
+    "comingSoon": "In arrivo",
+    "modes": {
+      "chat": {
+        "tag": "Dibattito",
+        "mobileTitle": "4 AI a confronto",
+        "mobileDesc": "Poni una domanda e guarda Claude, GPT, Gemini e Perplexity confrontarsi in tempo reale.",
+        "mobileCta": "Avvia",
+        "title": "Dibattito",
+        "desc": "Poni una domanda e guarda Claude, GPT, Gemini e Perplexity confrontarsi in tempo reale. Puoi intervenire in qualsiasi momento.",
+        "cta": "Avvia il dibattito →"
+      },
+      "2v2": {
+        "tag": "2 vs 2",
+        "mobileTitle": "Sfida a squadre",
+        "mobileDesc": "Tu + AI vs un altro umano + AI. L'arbitro assegna i punti a ogni round.",
+        "mobileCta": "Gioca",
+        "title": "2 vs 2",
+        "desc": "Due squadre si sfidano. Ogni squadra ha un umano e un'AI alleata. Un'AI arbitro pronuncia il verdetto finale round dopo round.",
+        "cta": "Scegli le squadre →"
+      },
+      "devil": {
+        "tag": "Devil's Advocate",
+        "mobileTitle": "Difendi l'indifendibile",
+        "mobileDesc": "Difendi una posizione scomoda contro 4 AI che ti attaccheranno senza pietà.",
+        "mobileCta": "Gioca",
+        "title": "Devil's Advocate",
+        "desc": "Grok ti assegna una posizione scomoda da difendere. Claude, GPT, Gemini e Perplexity ti attaccheranno senza pietà. Più reggi, più sali.",
+        "cta": "Inizia la sfida →"
+      },
+      "brainstorm": {
+        "tag": "Brainstormer",
+        "mobileTitle": "4 AI per la tua idea",
+        "mobileDesc": "Lancia un'idea, le AI discutono tra loro e ricevi una risposta unificata.",
+        "mobileCta": "Prova",
+        "title": "Brainstormer",
+        "desc": "Lancia un'idea. Le 4 AI deliberano tra loro in due round e ti restituiscono una risposta unificata e ragionata.",
+        "cta": "Avvia il concilio →"
+      },
+      "multiplayer": {
+        "title": "Multiplayer",
+        "desc": "Da 1 a 4 umani discutono con le 4 AI simultaneamente. La vera arena pubblica.",
+        "cta": "In arrivo"
+      }
+    },
+    "mock": {
+      "debating": "dibattito in corso",
+      "replyPlaceholder": "Rispondi al dibattito…",
+      "councilDeliberating": "Il concilio sta deliberando…",
+      "councilDecided": "Il concilio ha deciso:",
+      "ideaPlaceholder": "La tua idea…",
+      "teamA": "SQUADRA A",
+      "teamB": "SQUADRA B",
+      "yourArgument": "Il tuo argomento…",
+      "defendIndefensible": "Difendi l'indifendibile",
+      "enemyAIs": "4 AI nemiche",
+      "humans4": "4 umani",
+      "ais4": "4 AI"
+    }
   },
   "admin": {
     "title": "Pannello Admin"
@@ -369,5 +505,20 @@
       "errorTitle": "Ops",
       "backHome": "Torna alla home"
     }
+  },
+  "legal": {
+    "terms": {
+      "title": "Termini di Servizio",
+      "lastUpdated": "Ultimo aggiornamento:",
+      "placeholder": "I Termini di Servizio completi di AiGORÀ saranno pubblicati qui a breve.",
+      "contact": "Per qualsiasi domanda, scrivici a"
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Ultimo aggiornamento:",
+      "placeholder": "La Privacy Policy completa di AiGORÀ sarà pubblicata qui a breve.",
+      "contact": "Per qualsiasi domanda sui tuoi dati, scrivici a"
+    },
+    "backHome": "← Torna alla home"
   }
 }

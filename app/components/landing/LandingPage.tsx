@@ -487,6 +487,36 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── CTA FINALE ── */}
+      <section style={{ padding: '80px 24px', textAlign: 'center', background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(124,58,237,0.12) 0%, transparent 70%)' }}>
+        <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900, color: '#fff', lineHeight: 1.1, marginBottom: 16, letterSpacing: '-0.02em' }}>
+          {t('ctaFinalTitle')}
+        </h2>
+        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', marginBottom: 32, maxWidth: 460, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+          {t('ctaFinalBody')}
+        </p>
+        <button
+          onClick={() => setShowTopicPicker(true)}
+          style={{
+            padding: '16px 40px',
+            borderRadius: 16,
+            background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
+            border: 'none',
+            color: '#fff',
+            fontSize: 16,
+            fontWeight: 800,
+            cursor: 'pointer',
+            letterSpacing: '0.02em',
+            boxShadow: '0 6px 40px rgba(124,58,237,0.45)',
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.03)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)' }}
+        >
+          {t('ctaFinalBtn')}
+        </button>
+      </section>
+
       {showTopicPicker && <TopicPickerModal onClose={() => setShowTopicPicker(false)} />}
       {pendingMode && <LoginModal mode={pendingMode} onClose={() => setPendingMode(null)} />}
     </div>

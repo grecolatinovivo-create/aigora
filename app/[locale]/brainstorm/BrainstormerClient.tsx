@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { signOut } from 'next-auth/react'
+import { useTranslations, useLocale } from 'next-intl'
 import Navbar from '@/app/components/layout/Navbar'
 import AttachmentButton, { type ChatAttachment } from '@/app/components/chat/AttachmentButton'
 import LimitWall from '@/app/components/ui/LimitWall'
@@ -62,6 +63,8 @@ function useTypewriter(text: string, speed = 38) {
 }
 
 export default function BrainstormerClient({ userEmail, userName, userPlan }: Props) {
+  const t = useTranslations('brainstorm')
+  const locale = useLocale()
   const [phase, setPhase] = useState<Phase>('entry')
   const [idea, setIdea] = useState('')
   const [answers, setAnswers] = useState<IntakeAnswer[]>([])
@@ -432,9 +435,10 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     const d = new Date(iso)
     const now = new Date()
     const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000)
-    if (diffDays === 0) return `Oggi, ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
-    if (diffDays === 1) return `Ieri, ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
-    return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }) + `, ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+    const timeStr = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+    if (diffDays === 0) return `${t('today')}, ${timeStr}`
+    if (diffDays === 1) return `${t('yesterday')}, ${timeStr}`
+    return d.toLocaleDateString(locale, { day: 'numeric', month: 'short' }) + `, ${timeStr}`
   }
 
   return (
@@ -559,7 +563,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
               textOrientation: 'mixed',
               transform: 'rotate(180deg)',
               whiteSpace: 'nowrap',
-            }}>Storico</span>
+            }}>{t('historyTabLabel')}</span>
           </div>
         </div>
       )}
@@ -644,7 +648,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
             }}
           >
             <span style={{ fontSize: '14px', lineHeight: 1 }}>+</span>
-            Nuovo brainstorm
+            {t('newSession')}
           </button>
         </div>
 
@@ -673,7 +677,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
             <div style={{ textAlign: 'center', padding: '48px 16px' }}>
               <div style={{ fontSize: '28px', marginBottom: '12px', opacity: 0.3 }}>📋</div>
               <p style={{ fontSize: '13px', color: '#CCCCCC', lineHeight: 1.5 }}>
-                Nessuna brainstorming salvata ancora.
+                {t('noHistory')}
               </p>
             </div>
           )}
@@ -804,7 +808,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     Brainstormer
                   </p>
                   <p style={{ fontSize: '18px', color: '#BBBBBB', marginBottom: '32px', fontWeight: 300, lineHeight: 1.5 }}>
-                    Descrivi la tua idea o cosa ti serve.
+                    {t('initialSubtitle')}
                   </p>
                   <textarea
                     ref={ideaRef}
@@ -820,7 +824,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                         handleIdeaSubmit()
                       }
                     }}
-                    placeholder="Cosa hai in mente?"
+                    placeholder={t('ideaPlaceholder')}
                     rows={2}
                     style={{
                       width: '100%', border: 'none',
@@ -842,7 +846,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     />
                     {ideaAttachment && (
                       <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
-                        Il concilio analizzerà anche il documento allegato
+                        {t('attachmentNote')}
                       </span>
                     )}
                   </div>
@@ -854,7 +858,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                         fontWeight: 600, cursor: 'pointer', letterSpacing: '0.05em',
                         fontFamily: 'inherit', transition: 'opacity 0.15s',
                       }}>
-                        Inizia →
+                        {t('startBtn')}
                       </button>
                     )}
                   </div>
@@ -865,7 +869,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
               {phase === 'intake' && (
                 <div style={{ width: '100%', maxWidth: '540px' }}>
                   <div style={{ marginBottom: '44px' }}>
-                    <p style={{ fontSize: '11px', color: '#CCC', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>La tua idea</p>
+                    <p style={{ fontSize: '11px', color: '#CCC', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>{t('ideaLabel')}</p>
                     <p style={{ fontSize: '16px', color: '#333', fontWeight: 500, lineHeight: 1.5 }}>{idea}</p>
                   </div>
 
@@ -909,7 +913,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                       {qDone && !showFree && !selected && (
                         <div style={{ textAlign: 'center', marginTop: '12px' }}>
                           <button onClick={() => setShowFree(true)} style={{ background: 'none', border: 'none', color: '#BBBBBB', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>
-                            + scrivi tu
+                            {t('writeYourself')}
                           </button>
                         </div>
                       )}
@@ -920,7 +924,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                             autoFocus value={freeInput}
                             onChange={e => setFreeInput(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && freeInput.trim()) handleFreeSubmit() }}
-                            placeholder="La tua risposta..."
+                            placeholder={t('yourAnswerPlaceholder')}
                             style={{ padding: '11px 18px', border: '1.5px solid rgba(0,0,0,0.15)', borderRadius: '100px', fontSize: '14px', outline: 'none', width: '280px', fontFamily: 'inherit', color: '#1A1A1A', background: '#ffffff', WebkitTextFillColor: '#1A1A1A', colorScheme: 'light' } as React.CSSProperties}
                           />
                           <button onClick={handleFreeSubmit} style={{ padding: '11px 20px', background: '#1A1A1A', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>→</button>
@@ -993,9 +997,9 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     {/* Label fase */}
                     {concilioPhase && (
                       <p style={{ fontSize: '10px', color: '#BBBBBB', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0, animation: 'bs-q-enter 0.3s ease-out' }}>
-                        {concilioPhase === 'round1' && '● Deliberazione in corso…'}
-                        {concilioPhase === 'round2' && '● Il concilio si confronta…'}
-                        {concilioPhase === 'synthesis' && '● Sintesi in arrivo…'}
+                        {concilioPhase === 'round1' && t('phase.deliberating')}
+                        {concilioPhase === 'round2' && t('phase.discussing')}
+                        {concilioPhase === 'synthesis' && t('phase.synthesizing')}
                       </p>
                     )}
                   </div>
@@ -1062,13 +1066,13 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                           {!grokStreaming && !grokDone && (
                             <button onClick={() => { setOutputThread([]); setOutputText(''); setOutputDone(false); setShowNote(false); setOutputNote(''); setOutputFeedback(null); setCurrentSessionId(null); startGeneration() }}
                               style={{ padding: '7px 18px', border: '1px solid rgba(0,0,0,0.12)', borderRadius: '100px', background: 'transparent', color: '#999', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                              ↺ Riscrivi
+                              {t('rewriteBtn')}
                             </button>
                           )}
                           {!showNote && (
                             <button onClick={() => setShowNote(true)}
                               style={{ padding: '7px 0', border: 'none', background: 'transparent', color: '#BBBBBB', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>
-                              + nota
+                              {t('addNoteBtn')}
                             </button>
                           )}
                         </div>
@@ -1087,7 +1091,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                                 startGeneration(outputNote, outputText)
                               }
                             }}
-                            placeholder="Aggiungi un'osservazione, un'integrazione, una direzione diversa…"
+                            placeholder={t('notePlaceholder')}
                             rows={3}
                             style={{
                               width: '100%', padding: '12px 16px',
@@ -1107,7 +1111,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                                 fontSize: '13px', fontWeight: 600,
                                 cursor: 'pointer', fontFamily: 'inherit',
                               }}>
-                              → Raffina
+                              {t('refineBtn')}
                             </button>
                           )}
                         </div>
@@ -1119,7 +1123,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                   {outputDone && !grokStreaming && !grokDone && (
                     <div style={{ marginTop: '56px', textAlign: 'center', animation: 'bs-q-enter 0.4s ease-out' }}>
                       <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', marginBottom: '36px' }} />
-                      <p style={{ fontSize: '13px', color: '#BBBBBB', marginBottom: '16px' }}>Il concilio ha parlato.</p>
+                      <p style={{ fontSize: '13px', color: '#BBBBBB', marginBottom: '16px' }}>{t('councilSpoken')}</p>
                       <button onClick={startGrok} style={{
                         padding: '12px 32px',
                         background: 'linear-gradient(135deg, #1A1A1A 0%, #2D1F3D 100%)',
@@ -1128,7 +1132,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                         fontFamily: 'inherit', letterSpacing: '0.03em',
                         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                       }}>
-                        Lascia parlare Grok →
+                        {t('grokBtn')}
                       </button>
                     </div>
                   )}
@@ -1144,7 +1148,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 700, color: '#1A1A1A', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Grok</span>
-                        <span style={{ fontSize: '11px', color: '#AAAAAA' }}>— attacco finale</span>
+                        <span style={{ fontSize: '11px', color: '#AAAAAA' }}>{t('grokAttack')}</span>
                       </div>
                       <p style={{ fontSize: '16px', color: '#1A1A1A', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
                         {renderBold(grokText)}
