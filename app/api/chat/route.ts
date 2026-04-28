@@ -476,7 +476,23 @@ export async function POST(req: NextRequest) {
           })
         }
       }
+
+      // Limite upload mensili (silenzioso — allegato ignorato, nessuna LimitWall)
+      if (!isAdmin && attachment && currentUserId) {
+        const maxUploads = TIER_CONFIG[tier]?.maxUploadsPerMonth
+        if (maxUploads !== undefined) {
+          const MONTH_MS = 30 * 24 * 60 * 60 * 1000
+          const uploadRl = rateLimit(`uploads-monthly:${currentUserId}`, maxUploads, MONTH_MS)
+          if (!uploadRl.ok) {
+            // Limite raggiunto: prosegui senza allegato, nessun errore visibile
+            ;(req as any)._attachmentStripped = true
+          }
+        }
+      }
     }
+
+    // Applica stripping silenzioso dell'allegato se il limite mensile è stato raggiunto
+    const effectiveAttachment: ChatAttachment | undefined = (req as any)._attachmentStripped ? undefined : attachment
 
     const historyText = history.length > 0
       ? history.map((m: { name: string; content: string }) => `[${m.name}]: ${m.content}`).join('\n\n')
@@ -547,7 +563,7 @@ export async function POST(req: NextRequest) {
       : ''
     const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`
 
-    const att: ChatAttachment | undefined = attachment ?? undefined
+    const att = effectiveAttachment
     // Token per risposta in base al tier: Free=220, Pro=420, Premium/Admin/Freemium=600
     const replyTokens = TIER_CONFIG[tier]?.maxTokensPerReply ?? 600
 

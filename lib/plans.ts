@@ -31,6 +31,8 @@ export interface TierConfig {
   maxRepliesPerDebate?: number // Free: 20 — undefined = illimitato
   // Token per risposta AI nel dibattito
   maxTokensPerReply?: number   // Free: 220, Pro: 420 — undefined = illimitato (Premium)
+  // Limite upload mensili (silenzioso — nessuna LimitWall, allegato ignorato)
+  maxUploadsPerMonth?: number  // Pro: 100, Premium: 200 — undefined = illimitato
   // Limiti brainstormer
   weeklyBrainstormer?: number  // Pro: 2/sett — undefined = illimitato
   modes: AppMode[]
@@ -56,6 +58,7 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     dailyDebates: 10,
     weeklyBrainstormer: 2,
     maxTokensPerReply: 420,
+    maxUploadsPerMonth: 100,
     modes: ['chat', 'brainstorm', 'devil', '2v2'],
     hasHistory: true,
     historyDays: 30,
@@ -65,6 +68,7 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     price: 19.99,
     priceId: process.env.STRIPE_PRICE_MAX ?? '',
     color: '#FF6B2B',
+    maxUploadsPerMonth: 200,
     modes: ['chat', 'brainstorm', 'devil', '2v2'],
     hasHistory: true,
   },
