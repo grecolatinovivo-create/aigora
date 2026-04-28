@@ -22,7 +22,7 @@ const PLANS = [
     features: [
       { text: '4 AI (Claude, GPT, Gemini, Perplexity)', ok: true },
       { text: '3 dibattiti a settimana', ok: true },
-      { text: 'Fino a 100 risposte per dibattito', ok: true },
+      { text: 'Fino a 20 risposte per dibattito', ok: true },
       { text: 'Brainstormer', ok: false },
       { text: 'Avvocato del Diavolo', ok: false },
       { text: 'Multiplayer 2v2', ok: false },
@@ -247,7 +247,7 @@ export default function PricingPage() {
             { feature: 'AI nei dibattiti', free: '4 AI', pro: '4 AI', premium: '4 AI' },
             { feature: 'Grok (Brainstormer e 2v2)', free: false, pro: true, premium: true },
             { feature: 'Dibattiti', free: '3/settimana', pro: '10/giorno', premium: 'Illimitati' },
-            { feature: 'Risposte per dibattito', free: 'Fino a 100', pro: 'Estese', premium: 'Illimitate' },
+            { feature: 'Risposte per dibattito', free: 'Fino a 20', pro: 'Estese', premium: 'Illimitate' },
             { feature: 'Brainstormer', free: false, pro: '2 sessioni/settimana', premium: 'Illimitato' },
             { feature: 'Avvocato del Diavolo', free: false, pro: true, premium: true },
             { feature: 'Multiplayer 2v2', free: false, pro: true, premium: true },

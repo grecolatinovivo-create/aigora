@@ -459,6 +459,23 @@ export async function POST(req: NextRequest) {
           })
         }
       }
+
+      // Limite risposte per dibattito (Free: 20)
+      if (!isAdmin && aiId && action !== 'route' && action !== 'synthesize' && action !== 'factcheck') {
+        const { TIER_CONFIG } = await import('@/lib/plans')
+        const maxReplies = TIER_CONFIG[tier]?.maxRepliesPerDebate
+        if (maxReplies !== undefined && Array.isArray(history) && history.length >= maxReplies) {
+          return new Response(JSON.stringify({
+            error: 'limit_reached',
+            limitType: 'replies_per_debate',
+            limit: maxReplies,
+            tier,
+            requiredTier: 'pro',
+          }), {
+            status: 429, headers: { 'Content-Type': 'application/json' }
+          })
+        }
+      }
     }
 
     const historyText = history.length > 0

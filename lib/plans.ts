@@ -26,8 +26,9 @@ export interface TierConfig {
   priceId?: string
   color: string
   // Limiti dibattiti
-  weeklyDebates?: number    // Free: 3/sett — undefined = nessun limite settimanale
-  dailyDebates?: number     // Pro: 10/giorno — undefined = nessun limite giornaliero
+  weeklyDebates?: number       // Free: 3/sett — undefined = nessun limite settimanale
+  dailyDebates?: number        // Pro: 10/giorno — undefined = nessun limite giornaliero
+  maxRepliesPerDebate?: number // Free: 20 — undefined = illimitato
   // Limiti brainstormer
   weeklyBrainstormer?: number  // Pro: 2/sett — undefined = illimitato
   modes: AppMode[]
@@ -40,6 +41,7 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     label: 'Free',
     color: '#10A37F',
     weeklyDebates: 3,
+    maxRepliesPerDebate: 20,
     modes: ['chat'],
     hasHistory: false,
   },
