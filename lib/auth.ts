@@ -20,6 +20,9 @@ export const PLANS = {
 
 export type PlanKey = keyof typeof PLANS
 
+// Intervallo di refresh del piano nel JWT (5 minuti)
+const PLAN_REFRESH_INTERVAL = 5 * 60
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -39,7 +42,7 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user || !user.password) return null
-        if (user.blocked) return null  // utente bloccato
+        if (user.blocked) return null
 
         const valid = await bcrypt.compare(credentials.password, user.password)
         if (!valid) return null
@@ -48,32 +51,66 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  session: { strategy: 'jwt', maxAge: 24 * 60 * 60 }, // token scade ogni 24h
+
+  session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 giorni
+
   pages: { signIn: '/login', error: '/login' },
+
   callbacks: {
+    /**
+     * jwt — viene chiamato solo al login e quando il token deve essere
+     * aggiornato. Qui risolviamo il piano dal DB e lo salviamo nel token.
+     * Il DB viene interrogato solo al login + ogni PLAN_REFRESH_INTERVAL secondi,
+     * non ad ogni singolo caricamento di pagina.
+     */
     async jwt({ token, user }) {
+      const now = Math.floor(Date.now() / 1000)
+
+      // Primo login: salva l'id e forza il refresh del piano
       if (user) {
         token.id = user.id
+        token.planUpdatedAt = 0
       }
+
+      // Refresh piano: solo al login o dopo 5 minuti dall'ultimo aggiornamento
+      const lastUpdate = (token.planUpdatedAt as number) ?? 0
+      if (now - lastUpdate > PLAN_REFRESH_INTERVAL) {
+        try {
+          const { prisma } = require('./prisma')
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { email: true, plan: true, blocked: true, beta: true },
+          })
+          if (dbUser) {
+            token.plan = dbUser.email === process.env.ADMIN_EMAIL
+              ? 'admin'
+              : normalizePlan(dbUser.plan)
+            token.blocked = dbUser.blocked
+            token.beta = dbUser.beta
+            token.planUpdatedAt = now
+          }
+        } catch {
+          // Se il DB non risponde, mantieni il piano già nel token
+        }
+      }
+
       return token
     },
+
+    /**
+     * session — legge solo dal token JWT, zero query al DB.
+     * Questo elimina il bottleneck che causava problemi su connessioni lente.
+     */
     async session({ session, token }) {
       if (session.user && token) {
-        const { prisma } = require('./prisma')
-        ;(session.user as any).id = token.id as string
-        const dbUser = await prisma.user.findUnique({ where: { id: token.id as string } })
-
-        // Admin override
-        if (dbUser?.email === process.env.ADMIN_EMAIL) {
-          ;(session.user as any).plan = 'admin'
-        } else {
-          // Normalizza valori legacy (starter→free, max→premium, ecc.)
-          ;(session.user as any).plan = normalizePlan(dbUser?.plan)
-        }
+        ;(session.user as any).id = token.id
+        ;(session.user as any).plan = token.plan ?? 'free'
+        ;(session.user as any).beta = token.beta ?? false
       }
       return session
     },
   },
+
   secret: process.env.NEXTAUTH_SECRET,
 }
 
