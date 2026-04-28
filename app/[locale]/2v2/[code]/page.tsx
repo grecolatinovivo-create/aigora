@@ -17,7 +17,7 @@ type Preview = {
   topic: string
   isFull: boolean
   teamA: { humanName: string; aiId: string }
-  teamB: { aiId: string }
+  teamB: { aiId: string | null; aiId2: string | null }
   arbiterAiId: string
 }
 
@@ -168,6 +168,15 @@ export default function JoinTwoVsTwo() {
                 {preview.teamB.aiId === 'gemini' ? 'Ge' : (AI_NAMES[preview.teamB.aiId]?.[0] ?? '?')}
               </div>
               <div className="text-[10px] text-white/35">{AI_NAMES[preview.teamB.aiId] ?? preview.teamB.aiId}</div>
+            </div>
+          )}
+          {preview.teamB.aiId2 && (
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[8px] font-black flex-shrink-0"
+                style={{ background: AI_COLOR[preview.teamB.aiId2] ?? '#6B7280' }}>
+                {preview.teamB.aiId2 === 'gemini' ? 'Ge' : (AI_NAMES[preview.teamB.aiId2]?.[0] ?? '?')}
+              </div>
+              <div className="text-[10px] text-white/35">{AI_NAMES[preview.teamB.aiId2] ?? preview.teamB.aiId2}</div>
             </div>
           )}
         </div>

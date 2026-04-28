@@ -36,11 +36,11 @@ export async function POST(req: NextRequest) {
     }, { status: 429 })
   }
 
-  const { topic, teamAAiId, teamBAiId, arbiterAiId, teamAName } = await req.json()
+  const { topic, teamAAiId, teamBAiId1, teamBAiId2, arbiterAiId, teamAName, maxRounds } = await req.json()
   if (!topic?.trim()) return NextResponse.json({ error: 'Topic mancante' }, { status: 400 })
 
   const VALID_AIS = ['claude', 'gemini', 'perplexity', 'gpt']
-  if (!VALID_AIS.includes(teamAAiId) || !VALID_AIS.includes(teamBAiId) || !VALID_AIS.includes(arbiterAiId)) {
+  if (!VALID_AIS.includes(teamAAiId) || !VALID_AIS.includes(teamBAiId1) || !VALID_AIS.includes(teamBAiId2) || !VALID_AIS.includes(arbiterAiId)) {
     return NextResponse.json({ error: 'AI non valida' }, { status: 400 })
   }
 
@@ -61,14 +61,14 @@ export async function POST(req: NextRequest) {
       visibility: 'private',
       type: '2v2',
       code,
-      aiIds: [teamAAiId, teamBAiId, arbiterAiId],
+      aiIds: [teamAAiId, teamBAiId1, teamBAiId2, arbiterAiId],
       gameState: {
         teamA: { humanId: user.id, humanName: teamAName || user.name || 'Squadra A', aiId: teamAAiId },
-        teamB: { humanId: null, humanName: null, aiId: teamBAiId },
+        teamB: { humanId: null, humanName: null, aiId: teamBAiId1, aiId2: teamBAiId2 },
         arbiterAiId,
         currentTurn: 'A',
         round: 1,
-        maxRounds: 4,
+        maxRounds: typeof maxRounds === 'number' && maxRounds > 0 ? maxRounds : 5,
         messagesThisTurn: 0,
         maxMessagesPerTurn: 3,
         status: 'waiting', // waiting | playing | ended

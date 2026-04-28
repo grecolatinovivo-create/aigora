@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
   if (room.status === 'ended') return NextResponse.json({ error: 'Partita già terminata' }, { status: 410 })
 
   const gs = room.gameState as any
-  const isFull = gs?.teamB?.humanId !== null
+  // isFull solo se humanId è davvero valorizzato (null ≠ undefined)
+  const isFull = gs?.teamB?.humanId != null
 
   return NextResponse.json({
     id: room.id,
@@ -38,7 +39,8 @@ export async function GET(req: NextRequest) {
       aiId: gs?.teamA?.aiId,
     },
     teamB: {
-      aiId: gs?.teamB?.aiId,
+      aiId: gs?.teamB?.aiId ?? null,
+      aiId2: gs?.teamB?.aiId2 ?? null,
     },
     arbiterAiId: gs?.arbiterAiId,
   })
