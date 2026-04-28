@@ -127,6 +127,13 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
               {t('devil.cta')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </div>
           </div>
+          {!isPaid && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-3xl"
+              style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(3px)' }}>
+              <span style={{ fontSize: 26 }}>🔒</span>
+              <div className="font-black text-white text-sm">Upgrade to Pro</div>
+            </div>
+          )}
         </button>
 
       </div>
@@ -242,6 +249,14 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
               </div>
               {/* Notch */}
               <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 10, width: 60, height: 14, background: '#1c1c1e', zIndex: 10 }} />
+              {/* Upgrade veil */}
+              {!isPaid && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 rounded-[26px]"
+                  style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(3px)' }}>
+                  <span style={{ fontSize: 28 }}>🔒</span>
+                  <div className="font-black text-white text-[13px] text-center px-4">Upgrade to Pro</div>
+                </div>
+              )}
             </div>
             <div className="flex flex-col items-center gap-0.5">
               <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(239,68,68,0.7)' }}>{t('devil.tag')}</div>
