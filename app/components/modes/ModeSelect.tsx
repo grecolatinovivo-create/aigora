@@ -107,8 +107,8 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
         <button onClick={() => handleSelect('devil')}
           className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all relative overflow-hidden"
           style={{
-            border: '1.5px solid rgba(239,68,68,0.35)',
-            boxShadow: '0 4px 20px rgba(239,68,68,0.15)',
+            border: '1.5px solid rgba(239,68,68,0.45)',
+            boxShadow: '0 0 22px rgba(239,68,68,0.28)',
             minHeight: 0,
             background: '#080004',
           }}>
@@ -234,7 +234,7 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
           <button onClick={() => handleSelect('devil')} className="flex flex-col items-center gap-4 transition-transform hover:scale-[1.02] active:scale-[0.98]">
             <div className="relative" style={{ width: 200, height: 410 }}>
               {/* Glow rosso */}
-              <div className="absolute inset-0 rounded-[32px]" style={{ boxShadow: '0 0 0 1.5px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.2)', borderRadius: 32 }} />
+              <div className="absolute inset-0 rounded-[32px]" style={{ boxShadow: '0 0 0 1.5px rgba(239,68,68,0.55), 0 0 40px rgba(239,68,68,0.35)', borderRadius: 32 }} />
               {/* Cornice */}
               <div className="absolute inset-0 rounded-[32px]" style={{ background: '#1c1c1e', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }} />
               {/* Schermo */}
