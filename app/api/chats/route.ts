@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rateLimit'
+import { normalizePlan, TIER_CONFIG } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,15 +20,30 @@ export async function GET(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
-  // Pulizia silenziosa: elimina definitivamente le chat cancellate da più di 30 giorni
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-  await prisma.chat.deleteMany({
-    where: { userId: user.id, deletedAt: { lte: thirtyDaysAgo } },
-  }).catch(() => {})
+  const isAdmin = user.email === process.env.ADMIN_EMAIL
+  const tier = isAdmin ? 'admin' : normalizePlan(user.plan)
+  const tierConfig = TIER_CONFIG[tier]
 
-  // Ritorna solo le chat non eliminate
+  // Pulizia silenziosa: elimina chat in base al limite giorni del tier
+  // Pro: 30 giorni · Premium/Admin/Freemium: nessuna scadenza
+  if (tierConfig.historyDays) {
+    const cutoff = new Date(Date.now() - tierConfig.historyDays * 24 * 60 * 60 * 1000)
+    await prisma.chat.deleteMany({
+      where: { userId: user.id, createdAt: { lte: cutoff } },
+    }).catch(() => {})
+  }
+
+  // Filtro lettura: mostra solo chat nel periodo consentito dal tier
+  const createdAtFilter = tierConfig.historyDays
+    ? { gte: new Date(Date.now() - tierConfig.historyDays * 24 * 60 * 60 * 1000) }
+    : undefined
+
   const chats = await prisma.chat.findMany({
-    where: { userId: user.id, deletedAt: null },
+    where: {
+      userId: user.id,
+      deletedAt: null,
+      ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
+    },
     orderBy: { updatedAt: 'desc' },
     take: 50,
   })

@@ -29,6 +29,8 @@ export interface TierConfig {
   weeklyDebates?: number       // Free: 3/sett — undefined = nessun limite settimanale
   dailyDebates?: number        // Pro: 10/giorno — undefined = nessun limite giornaliero
   maxRepliesPerDebate?: number // Free: 20 — undefined = illimitato
+  // Token per risposta AI nel dibattito
+  maxTokensPerReply?: number   // Free: 220, Pro: 420 — undefined = illimitato (Premium)
   // Limiti brainstormer
   weeklyBrainstormer?: number  // Pro: 2/sett — undefined = illimitato
   modes: AppMode[]
@@ -42,6 +44,7 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     color: '#10A37F',
     weeklyDebates: 3,
     maxRepliesPerDebate: 20,
+    maxTokensPerReply: 220,
     modes: ['chat'],
     hasHistory: false,
   },
@@ -52,6 +55,7 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     color: '#A78BFA',
     dailyDebates: 10,
     weeklyBrainstormer: 2,
+    maxTokensPerReply: 420,
     modes: ['chat', 'brainstorm', 'devil', '2v2'],
     hasHistory: true,
     historyDays: 30,

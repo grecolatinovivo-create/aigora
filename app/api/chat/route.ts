@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { rateLimit } from '@/lib/rateLimit'
-import { normalizePlan, checkDebateLimit } from '@/lib/plans'
+import { normalizePlan, checkDebateLimit, TIER_CONFIG } from '@/lib/plans'
 
 // ── Tipo allegato condiviso ───────────────────────────────────────────────────
 export interface ChatAttachment {
@@ -548,10 +548,12 @@ export async function POST(req: NextRequest) {
     const lastMessage = `Ora è il tuo turno, ${aiName}. Rispondi in 2-3 frasi nella stessa lingua della domanda originale dell'utente.${perplexityExtra}`
 
     const att: ChatAttachment | undefined = attachment ?? undefined
+    // Token per risposta in base al tier: Free=220, Pro=420, Premium/Admin/Freemium=600
+    const replyTokens = TIER_CONFIG[tier]?.maxTokensPerReply ?? 600
 
-    if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage, currentUserId, 'risposta', 350, att), 'Claude')
-    if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage, currentUserId, 'risposta', 350, att), 'GPT')
-    if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage, currentUserId, 'risposta', 350, att); return sseStream(g.stream, g.model) }
+    if (aiId === 'claude')     return sseStream(streamClaude(system, historyText, lastMessage, currentUserId, 'risposta', replyTokens, att), 'Claude')
+    if (aiId === 'gpt')        return sseStream(streamGPT(system, historyText, lastMessage, currentUserId, 'risposta', replyTokens, att), 'GPT')
+    if (aiId === 'gemini')     { const g = streamGeminiWithModel(system, historyText, lastMessage, currentUserId, 'risposta', replyTokens, att); return sseStream(g.stream, g.model) }
     if (aiId === 'perplexity') {
       // Se il flag forceGeminiPerp è attivo (per-utente o globale), sempre Gemini-as-Perplexity
       const forceGemini = (req as any)._forceGeminiPerp ?? false
@@ -564,7 +566,7 @@ export async function POST(req: NextRequest) {
       // Turno 11+ (count%10===0): torna Sonar Pro
       const isRealPerplexity = (perplexityTurnCount ?? 0) % 10 === 0
       if (isRealPerplexity) {
-        const p = streamPerplexityWithModel(system, historyText, lastMessage, true, currentUserId, 'risposta', 350, att)
+        const p = streamPerplexityWithModel(system, historyText, lastMessage, true, currentUserId, 'risposta', replyTokens, att)
         return sseStream(p.stream, 'Perplexity')
       } else {
         const g = streamGeminiAsPerplexity(historyText, today, year, currentUserId)
