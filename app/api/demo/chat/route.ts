@@ -174,7 +174,7 @@ async function* streamPerplexity(system: string, historyText: string, lastMessag
 export async function POST(req: NextRequest) {
   // Rate limit per IP: max 30 call/ora (ogni demo round = 4 call)
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const rl = rateLimit(`demo:${ip}`, 30, 60 * 60 * 1000)
+  const rl = await rateLimit(`demo:${ip}`, 30, 60 * 60 * 1000)
   if (!rl.ok) {
     return new Response(JSON.stringify({ error: 'Rate limit superato. Riprova tra poco.' }), { status: 429 })
   }

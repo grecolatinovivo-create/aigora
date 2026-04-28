@@ -287,7 +287,7 @@ export async function POST(req: NextRequest) {
 
   // ── Limite settimanale Brainstormer (solo Pro: 2/sett; Premium/Admin illimitato) ─
   if (!note && !isAdmin && dbUserPlan?.id) {
-    const limitResult = checkBrainstormerLimit(dbUserPlan.id, tier)
+    const limitResult = await checkBrainstormerLimit(dbUserPlan.id, tier)
     if (!limitResult.ok) {
       return NextResponse.json({
         error: 'limit_reached',

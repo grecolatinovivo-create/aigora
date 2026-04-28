@@ -195,3 +195,12 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+// ── Rate limiting persistente (multi-instance safe) ──────────────────────────
+model RateLimit {
+  key     String   @id          // es. "debates-weekly:user123", "chat:1.2.3.4"
+  count   Int      @default(1)
+  resetAt DateTime
+
+  @@index([resetAt])
+}

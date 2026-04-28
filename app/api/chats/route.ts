@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   // Rate limit: 30 richieste/min per IP — blocca hammering (normale uso: max 2-3/min)
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const rl = rateLimit(`chats-get:${ip}:${session.user.email}`, 30, 60_000)
+  const rl = await rateLimit(`chats-get:${ip}:${session.user.email}`, 30, 60_000)
   if (!rl.ok) return NextResponse.json({ error: 'Troppe richieste.' }, { status: 429 })
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   // Rate limit: 60 POST/min — abbondante per uso normale (1 save per messaggio)
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const rl = rateLimit(`chats-post:${ip}:${session.user.email}`, 60, 60_000)
+  const rl = await rateLimit(`chats-post:${ip}:${session.user.email}`, 60, 60_000)
   if (!rl.ok) return NextResponse.json({ error: 'Troppe richieste.' }, { status: 429 })
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })

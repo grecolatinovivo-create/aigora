@@ -5,7 +5,7 @@ import { rateLimit } from '@/lib/rateLimit'
 export async function POST(req: NextRequest) {
   // Rate limit: max 10 tentativi ogni 10 minuti per IP (anti brute-force)
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const rl = rateLimit(`verify-code:${ip}`, 10, 10 * 60_000)
+  const rl = await rateLimit(`verify-code:${ip}`, 10, 10 * 60_000)
   if (!rl.ok) {
     return NextResponse.json({ error: 'Troppi tentativi. Riprova tra qualche minuto.' }, { status: 429 })
   }

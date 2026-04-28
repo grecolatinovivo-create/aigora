@@ -5,7 +5,7 @@ import { rateLimit } from '@/lib/rateLimit'
 export async function POST(req: NextRequest) {
   // Rate limit: max 3 codici ogni 10 minuti per IP
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const rl = rateLimit(`send-code:${ip}`, 3, 10 * 60_000)
+  const rl = await rateLimit(`send-code:${ip}`, 3, 10 * 60_000)
   if (!rl.ok) {
     return NextResponse.json({ error: 'Troppe richieste. Riprova tra qualche minuto.' }, { status: 429 })
   }

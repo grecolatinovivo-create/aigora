@@ -403,7 +403,7 @@ export async function POST(req: NextRequest) {
   try {
     // Rate limiting: max 30 richieste/minuto per IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-    const rl = rateLimit(`chat:${ip}`, 30, 60_000)
+    const rl = await rateLimit(`chat:${ip}`, 30, 60_000)
     if (!rl.ok) {
       return new Response(JSON.stringify({ error: 'Troppe richieste. Riprova tra ' + rl.retryAfter + ' secondi.' }), {
         status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) }
@@ -436,7 +436,7 @@ export async function POST(req: NextRequest) {
 
       // Rate limit orario per account (evita abusi): max 80 turni/ora — admin esente
       if (!isAdmin && aiId && action !== 'route' && action !== 'synthesize' && action !== 'factcheck') {
-        const accountRl = rateLimit(`chat-account:${session.user.email}`, 80, 60 * 60_000)
+        const accountRl = await rateLimit(`chat-account:${session.user.email}`, 80, 60 * 60_000)
         if (!accountRl.ok) {
           return new Response(JSON.stringify({ error: 'Hai raggiunto il limite orario. Riprova tra ' + accountRl.retryAfter + ' secondi.' }), {
             status: 429, headers: { 'Content-Type': 'application/json' }
@@ -446,7 +446,7 @@ export async function POST(req: NextRequest) {
 
       // Limite dibattiti: si conta una volta per dibattito (action === 'route')
       if (!isAdmin && action === 'route' && currentUserId) {
-        const limitResult = checkDebateLimit(currentUserId, tier)
+        const limitResult = await checkDebateLimit(currentUserId, tier)
         if (!limitResult.ok) {
           return new Response(JSON.stringify({
             error: 'limit_reached',
@@ -483,7 +483,7 @@ export async function POST(req: NextRequest) {
         const maxUploads = TIER_CONFIG[tier]?.maxUploadsPerMonth
         if (maxUploads !== undefined) {
           const MONTH_MS = 30 * 24 * 60 * 60 * 1000
-          const uploadRl = rateLimit(`uploads-monthly:${currentUserId}`, maxUploads, MONTH_MS)
+          const uploadRl = await rateLimit(`uploads-monthly:${currentUserId}`, maxUploads, MONTH_MS)
           if (!uploadRl.ok) {
             // Limite raggiunto: prosegui senza allegato, nessun errore visibile
             ;(req as any)._attachmentStripped = true

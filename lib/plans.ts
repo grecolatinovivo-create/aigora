@@ -117,18 +117,18 @@ const WEEK_MS =  7 * DAY_MS
  * Controlla il limite dibattiti per tier.
  * Free → settimanale (3/sett) · Pro → giornaliero (10/giorno) · Premium/Admin → illimitato
  */
-export function checkDebateLimit(userId: string, tier: Tier): LimitResult {
+export async function checkDebateLimit(userId: string, tier: Tier): Promise<LimitResult> {
   const cfg = TIER_CONFIG[tier]
 
   if (tier === 'premium' || tier === 'admin' || tier === 'freemium') return { ok: true }
 
   if (tier === 'free' && cfg.weeklyDebates) {
-    const rl = rateLimit(`debates-weekly:${userId}`, cfg.weeklyDebates, WEEK_MS)
+    const rl = await rateLimit(`debates-weekly:${userId}`, cfg.weeklyDebates, WEEK_MS)
     if (!rl.ok) return { ok: false, limitType: 'weekly_debates', retryAfter: rl.retryAfter!, limit: cfg.weeklyDebates, requiredTier: 'pro' }
   }
 
   if (tier === 'pro' && cfg.dailyDebates) {
-    const rl = rateLimit(`debates-daily:${userId}`, cfg.dailyDebates, DAY_MS)
+    const rl = await rateLimit(`debates-daily:${userId}`, cfg.dailyDebates, DAY_MS)
     if (!rl.ok) return { ok: false, limitType: 'daily_debates', retryAfter: rl.retryAfter!, limit: cfg.dailyDebates, requiredTier: 'premium' }
   }
 
@@ -138,12 +138,12 @@ export function checkDebateLimit(userId: string, tier: Tier): LimitResult {
 /**
  * Controlla il limite settimanale del Brainstormer (Pro: 2/sett, altri: illimitato).
  */
-export function checkBrainstormerLimit(userId: string, tier: Tier): LimitResult {
+export async function checkBrainstormerLimit(userId: string, tier: Tier): Promise<LimitResult> {
   if (tier === 'premium' || tier === 'admin' || tier === 'freemium') return { ok: true }
 
   const cfg = TIER_CONFIG[tier]
   if (tier === 'pro' && cfg.weeklyBrainstormer) {
-    const rl = rateLimit(`brainstormer-weekly:${userId}`, cfg.weeklyBrainstormer, WEEK_MS)
+    const rl = await rateLimit(`brainstormer-weekly:${userId}`, cfg.weeklyBrainstormer, WEEK_MS)
     if (!rl.ok) return { ok: false, limitType: 'weekly_brainstormer', retryAfter: rl.retryAfter!, limit: cfg.weeklyBrainstormer, requiredTier: 'premium' }
   }
 
@@ -151,7 +151,7 @@ export function checkBrainstormerLimit(userId: string, tier: Tier): LimitResult 
 }
 
 /** @deprecated usa checkDebateLimit */
-export function checkDailyDebateLimit(userId: string, tier: Tier): { ok: boolean; retryAfter?: number } {
-  const result = checkDebateLimit(userId, tier)
+export async function checkDailyDebateLimit(userId: string, tier: Tier): Promise<{ ok: boolean; retryAfter?: number }> {
+  const result = await checkDebateLimit(userId, tier)
   return result.ok ? { ok: true } : { ok: false, retryAfter: result.retryAfter }
 }

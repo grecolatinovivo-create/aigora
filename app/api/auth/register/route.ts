@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     // Rate limiting: max 5 registrazioni ogni 10 minuti per IP
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-    const rl = rateLimit(`register:${ip}`, 5, 10 * 60_000)
+    const rl = await rateLimit(`register:${ip}`, 5, 10 * 60_000)
     if (!rl.ok) {
       return NextResponse.json({ error: 'Troppe richieste. Riprova tra ' + rl.retryAfter + ' secondi.' }, { status: 429 })
     }
