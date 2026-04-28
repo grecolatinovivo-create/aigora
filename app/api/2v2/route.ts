@@ -35,12 +35,17 @@ export async function POST(req: NextRequest) {
     }, { status: 429 })
   }
 
-  const { topic, teamAAiId, teamBAiId1, teamBAiId2, arbiterAiId, teamAName, maxRounds } = await req.json()
+  const { mode, topic, teamAAiId, teamBAiId1, teamBAiId2, arbiterAiId, teamAName, maxRounds } = await req.json()
   if (!topic?.trim()) return NextResponse.json({ error: 'Topic mancante' }, { status: 400 })
 
   const VALID_AIS = ['claude', 'gemini', 'perplexity', 'gpt']
-  if (!VALID_AIS.includes(teamAAiId) || !VALID_AIS.includes(teamBAiId1) || !VALID_AIS.includes(teamBAiId2) || !VALID_AIS.includes(arbiterAiId)) {
+  const isAmico = mode === 'amico'
+
+  if (!VALID_AIS.includes(teamAAiId) || !VALID_AIS.includes(arbiterAiId)) {
     return NextResponse.json({ error: 'AI non valida' }, { status: 400 })
+  }
+  if (!isAmico && (!VALID_AIS.includes(teamBAiId1) || !VALID_AIS.includes(teamBAiId2))) {
+    return NextResponse.json({ error: 'AI squadra B non valida' }, { status: 400 })
   }
 
   // Genera codice univoco (riprova se già esiste)
@@ -60,10 +65,15 @@ export async function POST(req: NextRequest) {
       visibility: 'private',
       type: '2v2',
       code,
-      aiIds: [teamAAiId, teamBAiId1, teamBAiId2, arbiterAiId],
+      aiIds: isAmico
+        ? [teamAAiId, arbiterAiId]
+        : [teamAAiId, teamBAiId1, teamBAiId2, arbiterAiId],
       gameState: {
+        mode: isAmico ? 'amico' : 'solo',
         teamA: { humanId: user.id, humanName: teamAName || user.name || 'Squadra A', aiId: teamAAiId },
-        teamB: { humanId: null, humanName: null, aiId: teamBAiId1, aiId2: teamBAiId2 },
+        teamB: isAmico
+          ? { humanId: null, humanName: null, aiId: null }
+          : { humanId: null, humanName: null, aiId: teamBAiId1, aiId2: teamBAiId2 },
         arbiterAiId,
         currentTurn: 'A',
         round: 1,
@@ -117,7 +127,7 @@ export async function PATCH(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
-  const { code, playerName } = await req.json()
+  const { code, playerName, teamBAiId } = await req.json()
   const room = await prisma.room.findUnique({ where: { code: code?.toUpperCase() } })
 
   if (!room) return NextResponse.json({ error: 'Room non trovata' }, { status: 404 })
@@ -130,11 +140,23 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'La squadra B è già occupata' }, { status: 409 })
   }
 
-  // Aggiorna gameState con il giocatore B
+  // Per mode amico: il guest porta anche il suo AI
+  const VALID_AIS = ['claude', 'gemini', 'perplexity', 'gpt']
+  const isAmico = gs?.mode === 'amico'
+  if (isAmico && (!teamBAiId || !VALID_AIS.includes(teamBAiId))) {
+    return NextResponse.json({ error: 'Scegli un AI alleato per la Squadra B' }, { status: 400 })
+  }
+
+  // Aggiorna gameState con il giocatore B (e il suo AI se mode amico)
   const bName = playerName || user.name || 'Squadra B'
   const updatedGs = {
     ...gs,
-    teamB: { ...gs.teamB, humanId: user.id, humanName: bName, humanNameB: bName },
+    teamB: {
+      ...gs.teamB,
+      humanId: user.id,
+      humanName: bName,
+      ...(isAmico && teamBAiId ? { aiId: teamBAiId } : {}),
+    },
     status: 'playing',
   }
 

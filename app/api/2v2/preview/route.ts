@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
     id: room.id,
     topic: room.topic,
     isFull,
+    mode: gs?.mode ?? 'solo',
     teamA: {
       humanName: gs?.teamA?.humanName || room.host?.name || 'Squadra A',
       aiId: gs?.teamA?.aiId,
