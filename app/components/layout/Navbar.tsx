@@ -111,88 +111,69 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   </div>
                 </div>
 
-                {/* ── Modalità ── */}
-                {/* Dibattito — tutti */}
+                {/* ── Voci menu ── */}
                 <button onClick={() => { onNewChat?.(); close() }}
-                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5"
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                   style={{ color: 'rgba(255,255,255,0.75)' }}>
                   Dibattito
                 </button>
 
-                {/* Brainstormer — pro+ o lock */}
+                <button
+                  onClick={() => { close(); if (isPaid) { onMultiplayer?.() } else router.push('/pricing') }}
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
+                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.3)' }}>
+                  2v2
+                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
+                </button>
+
+                <button
+                  onClick={() => { close(); if (isPaid) { onMultiplayer?.() } else router.push('/pricing') }}
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
+                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.3)' }}>
+                  {"Devil's Advocate"}
+                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
+                </button>
+
                 <button
                   onClick={() => { close(); if (isPaid) window.location.href = '/brainstorm'; else router.push('/pricing') }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                   style={{ color: isPaid ? '#86EFAC' : 'rgba(255,255,255,0.3)' }}>
-                  <div className="flex items-center gap-2.5">
-                    Brainstormer
-                  </div>
-                  {!isPaid && (
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
-                      style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>
-                      PRO
-                    </span>
-                  )}
+                  Brainstormer
+                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
                 </button>
 
-                {/* 2v2 + Devil — pro+ o lock */}
-                <button
-                  onClick={() => { close(); if (isPaid) onMultiplayer?.(); else router.push('/pricing') }}
-                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
-                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.3)' }}>
-                  <div className="flex items-center gap-2.5">
-                    <span>2v2 · Avvocato del Diavolo</span>
-                  </div>
-                  {!isPaid && (
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
-                      style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>
-                      PRO
-                    </span>
-                  )}
-                </button>
-
-                {/* Upgrade — solo per utenti free */}
                 {!isPaid && (
                   <button onClick={() => { close(); router.push('/pricing') }}
-                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5"
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                     style={{ color: '#A78BFA' }}>
-                    Upgrade a Pro →
+                    Upgrade to Pro →
                   </button>
                 )}
 
-                {/* Prezzi — solo per utenti free */}
-                {!isPaid && (
-                  <button onClick={() => { close(); router.push('/pricing') }}
-                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5"
-                    style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    <span style={{ fontSize: 13 }}>💳</span>
-                    Piani e prezzi
-                  </button>
-                )}
+                <button onClick={() => { close(); router.push('/pricing') }}
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
+                  style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  Plans
+                </button>
 
                 {/* ── Funzioni social — admin/beta ── */}
                 {(userPlan === 'admin' || isBeta) && (
                   <>
                     <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
-                      className="w-full px-4 py-2.5 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5">
-                      <span style={{ fontSize: 13 }}>👤</span>
+                      className="w-full px-4 py-2.5 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                       {tChat('ai.chiSono').includes('Who') ? 'My public profile' : 'Il mio profilo pubblico'}
                     </a>
                     <button onClick={() => { onFeed?.(); close() }}
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                       style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      <div className="flex items-center gap-2.5">
-                        <span style={{ fontSize: 13 }}>📡</span>
-                        Feed dibattiti
-                      </div>
+                      Feed dibattiti
                       {(unreadCount ?? 0) > 0 && (
                         <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white" style={{ backgroundColor: '#7C3AED' }}>{unreadCount}</span>
                       )}
                     </button>
                     <button onClick={() => { onCrea?.(); close() }}
-                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5"
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
                       style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      <span style={{ fontSize: 13 }}>➕</span>
                       Crea dibattito
                     </button>
                   </>
@@ -201,17 +182,15 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 {/* ── Admin panel ── */}
                 {userPlan === 'admin' && (
                   <button onClick={() => { close(); window.location.href = '/admin' }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5">
-                    <span style={{ fontSize: 13 }}>⚙️</span>
+                    className="w-full px-4 py-2.5 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                     Pannello Admin
                   </button>
                 )}
 
                 {/* ── Sign out ── */}
                 <button onClick={onSignOut}
-                  className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium flex items-center gap-2.5">
-                  <span style={{ fontSize: 13 }}>↩</span>
-                  {t('signOut')}
+                  className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-white/5 transition-colors font-medium">
+                  Esci dall'account
                 </button>
               </div>
             </>

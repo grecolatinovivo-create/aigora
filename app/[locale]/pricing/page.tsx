@@ -158,10 +158,7 @@ export default function PricingPage() {
             {/* Header piano */}
             <div className="mb-5">
               <div className="flex items-center gap-2 mb-2">
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: plan.color }}
-                />
+                <span className="font-black text-base" style={{ color: plan.color }}>✦</span>
                 <span className="text-white font-bold text-lg">{plan.label}</span>
               </div>
               <div className="flex items-end gap-1">
