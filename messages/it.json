@@ -69,6 +69,21 @@
         "body": "Descrivi la tua idea in due parole o duemila. Le 4 AI deliberano in due round — prima in modo indipendente, poi reagendo l'una all'altra — e ti restituiscono una risposta unificata e ragionata.",
         "cta": "Avvia il concilio →"
       }
+    },
+    "mock": {
+      "chat1": "La democrazia diretta è superiore perché elimina gli intermediari tra cittadino e decisione.",
+      "chat2": "In larga scala diventa impraticabile. Richiede un'informazione diffusa che storicamente non esiste.",
+      "chat3": "I dati sui referendum svizzeri mostrano risultati misti: alta partecipazione, polarizzazione crescente.",
+      "chat4": "Le piattaforme digitali stanno rendendo più fattibile la consultazione continua — Estonia docet.",
+      "twoMsg1": "L'IA amplifica la creatività umana, non la sostituisce.",
+      "twoMsg2": "Romantico. I budget spariscono nel mondo reale.",
+      "twoJudge": "Squadra A più solida sul piano storico.",
+      "youLabel": "Tu 👤",
+      "judgeLabel": "GEMINI — ARBITRO",
+      "devilDefend": "Difendi l'indifendibile",
+      "devilEnemies": "4 AI nemiche",
+      "brainstormDecided": "Il concilio ha deciso:",
+      "brainstormResult": "Parti dal prodotto, non dal mercato."
     }
   },
   "pricing": {

@@ -26,13 +26,7 @@ function HellGridBg() {
 }
 
 // ── Mock screen components ────────────────────────────────────────────────────
-function ChatScreen({ debateLabel, replyLabel }: { debateLabel: string; replyLabel: string }) {
-  const msgs = [
-    { id: 'C', color: '#7C3AED', name: 'Claude',     text: 'La democrazia diretta è superiore perché elimina gli intermediari tra cittadino e decisione.' },
-    { id: 'G', color: '#10A37F', name: 'GPT',        text: 'In larga scala diventa impraticabile. Richiede un\'informazione diffusa che storicamente non esiste.' },
-    { id: 'Ge',color: '#1A73E8', name: 'Gemini',     text: 'I dati sui referendum svizzeri mostrano risultati misti: alta partecipazione, polarizzazione crescente.' },
-    { id: 'P', color: '#20B2AA', name: 'Perplexity', text: 'Le piattaforme digitali stanno rendendo più fattibile la consultazione continua — Estonia docet.' },
-  ]
+function ChatScreen({ debateLabel, replyLabel, msgs }: { debateLabel: string; replyLabel: string; msgs: { id: string; color: string; name: string; text: string }[] }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#07070f' }}>
       <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -62,17 +56,17 @@ function ChatScreen({ debateLabel, replyLabel }: { debateLabel: string; replyLab
   )
 }
 
-function TwoVsTwoScreen({ yourArgLabel }: { yourArgLabel: string }) {
+function TwoVsTwoScreen({ yourArgLabel, youLabel, msg1, msg2, judgeMsg, judgeLabel }: { yourArgLabel: string; youLabel: string; msg1: string; msg2: string; judgeMsg: string; judgeLabel: string }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0d0d14' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(0,0,0,0.5)', borderBottom: '1px solid rgba(255,80,0,0.2)' }}>
-        <div style={{ fontSize: 8, fontWeight: 900, padding: '2px 7px', borderRadius: 4, color: '#3b82f6', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>TU + AI</div>
+        <div style={{ fontSize: 8, fontWeight: 900, padding: '2px 7px', borderRadius: 4, color: '#3b82f6', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)' }}>YOU + AI</div>
         <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>2 — 1</div>
         <div style={{ fontSize: 8, fontWeight: 900, padding: '2px 7px', borderRadius: 4, color: '#ef4444', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }}>AI vs AI</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {[['#F59E0B','Tu 👤'],['#7C3AED','Claude']].map(([c,n]) => (
+          {[['#F59E0B', youLabel],['#7C3AED','Claude']].map(([c,n]) => (
             <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
               <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)' }}>{n}</span>
@@ -89,10 +83,10 @@ function TwoVsTwoScreen({ yourArgLabel }: { yourArgLabel: string }) {
         </div>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 6, padding: '8px 10px' }}>
-        <div style={{ alignSelf: 'flex-start', maxWidth: '78%', padding: '5px 9px', borderRadius: '9px 9px 9px 2px', fontSize: 8, lineHeight: 1.45, background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>L&apos;IA amplifica la creatività, non la sostituisce.</div>
-        <div style={{ alignSelf: 'flex-end', maxWidth: '78%', padding: '5px 9px', borderRadius: '9px 9px 2px 9px', fontSize: 8, lineHeight: 1.45, background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>Romantico. I budget spariscono nel mondo reale.</div>
+        <div style={{ alignSelf: 'flex-start', maxWidth: '78%', padding: '5px 9px', borderRadius: '9px 9px 9px 2px', fontSize: 8, lineHeight: 1.45, background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>{msg1}</div>
+        <div style={{ alignSelf: 'flex-end', maxWidth: '78%', padding: '5px 9px', borderRadius: '9px 9px 2px 9px', fontSize: 8, lineHeight: 1.45, background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>{msg2}</div>
         <div style={{ padding: '6px 9px', borderRadius: 8, fontSize: 7.5, lineHeight: 1.45, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'rgba(251,191,36,0.9)' }}>
-          <span style={{ fontWeight: 900 }}>🏆 GEMINI — ARBITRO</span><br/>Squadra A più solida sul piano storico.
+          <span style={{ fontWeight: 900 }}>{judgeLabel}</span><br/>{judgeMsg}
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -105,14 +99,14 @@ function TwoVsTwoScreen({ yourArgLabel }: { yourArgLabel: string }) {
   )
 }
 
-function DevilScreenContent() {
+function DevilScreenContent({ defendLabel, enemiesLabel }: { defendLabel: string; enemiesLabel: string }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#080004', position: 'relative' }}>
       <HellGridBg />
       <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 16 }}>
         <div style={{ fontSize: 52, filter: 'drop-shadow(0 0 24px rgba(239,68,68,0.9))' }}>😈</div>
-        <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(239,68,68,0.9)', textAlign: 'center' }}>Difendi l&apos;indifendibile</div>
-        <div style={{ padding: '4px 12px', borderRadius: 999, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', fontSize: 9, fontWeight: 900, color: '#ef4444' }}>4 AI nemiche</div>
+        <div style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(239,68,68,0.9)', textAlign: 'center' }}>{defendLabel}</div>
+        <div style={{ padding: '4px 12px', borderRadius: 999, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', fontSize: 9, fontWeight: 900, color: '#ef4444' }}>{enemiesLabel}</div>
       </div>
       <div style={{ position: 'relative', zIndex: 1, padding: '7px 12px', borderTop: '1px solid rgba(239,68,68,0.15)', background: 'rgba(0,0,0,0.4)', textAlign: 'center' }}>
         <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(239,68,68,0.45)' }}>Powered by GROK</div>
@@ -121,7 +115,7 @@ function DevilScreenContent() {
   )
 }
 
-function BrainstormScreenContent({ councilLabel, ideaLabel }: { councilLabel: string; ideaLabel: string }) {
+function BrainstormScreenContent({ councilLabel, ideaLabel, councilDecidedLabel, councilResult }: { councilLabel: string; ideaLabel: string; councilDecidedLabel: string; councilResult: string }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#09060f' }}>
       <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(167,139,250,0.15)', background: 'rgba(0,0,0,0.4)' }}>
@@ -143,8 +137,8 @@ function BrainstormScreenContent({ councilLabel, ideaLabel }: { councilLabel: st
           ))}
         </div>
         <div style={{ width: '100%', padding: '9px 11px', borderRadius: 10, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(167,139,250,0.18)' }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>Il concilio ha deciso:</div>
-          <div style={{ fontSize: 8.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55, marginTop: 3 }}>Parti dal prodotto, non dal mercato.</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>{councilDecidedLabel}</div>
+          <div style={{ fontSize: 8.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55, marginTop: 3 }}>{councilResult}</div>
         </div>
       </div>
       <div style={{ padding: '7px 10px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
@@ -223,6 +217,7 @@ export default function LandingPage() {
   const t = useTranslations('landing')
   const tNav = useTranslations('nav')
   const tPricing = useTranslations('pricing')
+  const tBrainstorm = useTranslations('brainstorm')
 
   const [pendingMode, setPendingMode] = useState<SelectableMode | null>(null)
   const [showTopicPicker, setShowTopicPicker] = useState(false)
@@ -312,7 +307,16 @@ export default function LandingPage() {
           bgFade="#07070f"
           phone={
             <IPhone glow="0 0 0 1.5px rgba(167,139,250,0.4), 0 0 55px rgba(124,58,237,0.3)">
-              <ChatScreen debateLabel="debate in progress" replyLabel="Reply to the debate…" />
+              <ChatScreen
+                debateLabel={t('modes.debate.tag')}
+                replyLabel={t('mock.chat1').slice(0, 22) + '…'}
+                msgs={[
+                  { id: 'C',  color: '#7C3AED', name: 'Claude',     text: t('mock.chat1') },
+                  { id: 'G',  color: '#10A37F', name: 'GPT',        text: t('mock.chat2') },
+                  { id: 'Ge', color: '#1A73E8', name: 'Gemini',     text: t('mock.chat3') },
+                  { id: 'P',  color: '#20B2AA', name: 'Perplexity', text: t('mock.chat4') },
+                ]}
+              />
             </IPhone>
           }
         />
@@ -333,7 +337,14 @@ export default function LandingPage() {
           bgFade="#07070f"
           phone={
             <IPhone glow="0 0 0 2px rgba(56,189,248,0.5), 0 0 60px rgba(14,165,233,0.3)">
-              <TwoVsTwoScreen yourArgLabel="Your argument…" />
+              <TwoVsTwoScreen
+                yourArgLabel={t('mock.twoMsg1').slice(0, 18) + '…'}
+                youLabel={t('mock.youLabel')}
+                msg1={t('mock.twoMsg1')}
+                msg2={t('mock.twoMsg2')}
+                judgeMsg={t('mock.twoJudge')}
+                judgeLabel={t('mock.judgeLabel')}
+              />
             </IPhone>
           }
         />
@@ -354,7 +365,10 @@ export default function LandingPage() {
           bgFade="#07070f"
           phone={
             <IPhone glow="0 0 0 2px rgba(239,68,68,0.6), 0 0 60px rgba(239,68,68,0.3)">
-              <DevilScreenContent />
+              <DevilScreenContent
+                defendLabel={t('mock.devilDefend')}
+                enemiesLabel={t('mock.devilEnemies')}
+              />
             </IPhone>
           }
         />
@@ -375,7 +389,12 @@ export default function LandingPage() {
           bgFade="#07070f"
           phone={
             <IPhone glow="0 0 0 1.5px rgba(245,158,11,0.4), 0 0 55px rgba(245,158,11,0.2)">
-              <BrainstormScreenContent councilLabel="The council is deliberating…" ideaLabel="Your idea…" />
+              <BrainstormScreenContent
+                councilLabel={tBrainstorm('subtitle')}
+                ideaLabel={tBrainstorm('ideaPlaceholder')}
+                councilDecidedLabel={t('mock.brainstormDecided')}
+                councilResult={t('mock.brainstormResult')}
+              />
             </IPhone>
           }
         />

@@ -69,6 +69,21 @@
         "body": "Describe your idea in two words or two thousand. The 4 AIs deliberate in two rounds — independently first, then reacting to each other — and return a unified, reasoned response.",
         "cta": "Convene the council →"
       }
+    },
+    "mock": {
+      "chat1": "Direct democracy is superior — it removes the intermediaries between citizens and decisions.",
+      "chat2": "At scale it becomes unworkable. It requires a level of informed participation that has never existed historically.",
+      "chat3": "Swiss referendum data shows mixed results: high turnout, but rising polarisation.",
+      "chat4": "Digital platforms are making continuous consultation more feasible — Estonia is proof.",
+      "twoMsg1": "AI amplifies human creativity, it doesn't replace it.",
+      "twoMsg2": "Romantic. In the real world, budgets disappear.",
+      "twoJudge": "Team A stronger on the historical argument.",
+      "youLabel": "You 👤",
+      "judgeLabel": "GEMINI — REFEREE",
+      "devilDefend": "Defend the indefensible",
+      "devilEnemies": "4 enemy AIs",
+      "brainstormDecided": "The council has decided:",
+      "brainstormResult": "Start with the product, not the market."
     }
   },
   "pricing": {
