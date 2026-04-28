@@ -147,7 +147,9 @@ function AuthCard() {
 
 export default function LoginPage() {
   return (
-    <div className="desktop-bg min-h-screen flex items-center justify-center px-4">
+    <div style={{ background: '#07070f', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', position: 'relative' }}>
+      {/* Glow centrato — identico alla landing */}
+      <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', width: 800, height: 600, background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.09) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
       <Suspense>
         <AuthCard />
       </Suspense>
