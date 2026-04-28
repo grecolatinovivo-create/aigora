@@ -228,7 +228,7 @@ export default function PricingPage() {
                 border: !plan.price ? '1px solid rgba(255,255,255,0.12)' : undefined,
               }}
             >
-              {loading === plan.key ? '...' : plan.cta}
+              {loading && loading === plan.key ? '...' : plan.cta}
             </button>
           </div>
         ))}
