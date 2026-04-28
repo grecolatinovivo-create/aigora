@@ -439,8 +439,8 @@
     "modeMessages": {
       "chat": "To start the debate with the 4 AIs, create a free account.",
       "2v2": "To join the 2 vs 2 you need an account. It takes 30 seconds.",
-      "devil": "To challenge AIs in Devil's Advocate, create a free account.",
-      "brainstorm": "To use the full Brainstormer, create a free account."
+      "devil": "Devil's Advocate requires the Pro plan. Upgrade to Pro to unlock this mode.",
+      "brainstorm": "Brainstormer requires the Pro plan. Upgrade to Pro to unlock this mode."
     },
     "tabLogin": "Sign in",
     "tabRegister": "Register",

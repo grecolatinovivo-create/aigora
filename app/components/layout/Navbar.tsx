@@ -118,11 +118,11 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 </button>
 
                 <button
-                  onClick={() => { close(); if (isPaid) { onMultiplayer?.() } else router.push('/pricing') }}
+                  onClick={() => { close(); onMultiplayer?.() }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
-                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.3)' }}>
+                  style={{ color: 'rgba(255,255,255,0.75)' }}>
                   2v2
-                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
+                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(16,163,127,0.15)', color: '#10A37F', border: '1px solid rgba(16,163,127,0.3)' }}>FREE</span>}
                 </button>
 
                 <button

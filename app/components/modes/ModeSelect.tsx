@@ -45,7 +45,7 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
   const isPaid = PAID_TIERS.includes(userPlan ?? '')
 
   const handleSelect = (mode: GameMode) => {
-    if (!isPaid && (mode === '2v2' || mode === 'devil')) {
+    if (!isPaid && mode === 'devil') {
       window.location.href = '/pricing'
       return
     }
