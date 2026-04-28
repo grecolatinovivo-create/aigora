@@ -25,33 +25,57 @@ export async function POST(req: NextRequest) {
         let event: any
         try { event = JSON.parse(msg.data) } catch { continue }
 
-        // Solo messaggi utente
+        // Persisti messaggio umano
+        if (event.type === 'user_message' && event.content) {
+          await prisma.roomMessage.create({
+            data: {
+              roomId,
+              authorId: event.userId || null,
+              authorName: event.userName || 'Utente',
+              aiId: null,
+              content: event.content,
+            },
+          }).catch(() => {}) // non bloccare su errori di persistenza
+        }
+
+        // Solo messaggi utente triggerano risposta AI
         if (event.type !== 'user_message') continue
 
         // Carica la room dal DB
         const room = await prisma.room.findUnique({ where: { id: roomId } })
         if (!room || room.status === 'ended') continue
 
+        // Non rispondere nelle room 2v2 (gestite dall'host client)
+        if (room.type === '2v2') continue
+
+        // Controlla scadenza
+        if (room.expiresAt && room.expiresAt < new Date()) {
+          await prisma.room.update({ where: { id: roomId }, data: { status: 'ended' } }).catch(() => {})
+          continue
+        }
+
         const aiIds: string[] = Array.isArray(room.aiIds) ? (room.aiIds as string[]) : ['claude', 'gemini', 'perplexity', 'gpt']
 
-        // Carica la history della room (ultimi 20 messaggi dalle chat dei partecipanti)
-        // Per ora usiamo un history semplice basato sul content dell'evento
-        const historyText = event.content
-          ? `[${event.userName}]: ${event.content}`
-          : ''
+        // Carica history recente dal DB (ultimi 20 messaggi)
+        const recentMessages = await prisma.roomMessage.findMany({
+          where: { roomId },
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        })
+        const historyText = recentMessages
+          .reverse()
+          .map(m => `[${m.authorName}]: ${m.content}`)
+          .join('\n')
 
-        // Fai rispondere le AI in sequenza (non in parallelo per non sovraccaricare)
         const ablyClient = new Ably.Rest(process.env.ABLY_API_KEY!)
         const channel = ablyClient.channels.get(`room:${roomId}`)
 
-        // Scegli l'AI di partenza
-        const startAi = aiIds[Math.floor(Math.random() * aiIds.length)]
-        const orderedAis = [startAi, ...aiIds.filter(id => id !== startAi)]
+        // Risposta contestuale: l'AI risponde al messaggio specifico
+        // Scegli 1 AI tra quelle della room (ruota in base all'ora per varietà)
+        const aiIndex = Math.floor(Date.now() / 1000) % aiIds.length
+        const aiId = aiIds[aiIndex]
 
-        for (const aiId of orderedAis.slice(0, 2)) { // max 2 AI per turno per non spammare
-          await streamAiToRoom(channel, aiId, room.topic, historyText, event.userName)
-          await new Promise(r => setTimeout(r, 800)) // pausa tra le AI
-        }
+        await streamAiToRoom(channel, aiId, room.topic, historyText, event.content, event.userName, roomId)
       }
     }
 
@@ -66,14 +90,16 @@ async function streamAiToRoom(
   channel: ReturnType<Ably.Rest['channels']['get']>,
   aiId: string,
   topic: string,
-  userMessage: string,
-  userName: string
+  history: string,
+  lastMessage: string,
+  userName: string,
+  roomId: string,
 ) {
   const SYSTEM_PROMPTS: Record<string, string> = {
-    claude: `Sei Claude (Anthropic), riflessivo e poetico. Stai partecipando a un dibattito multiplayer su "${topic}". ${userName} ha scritto un messaggio. Rispondi in 2-3 frasi nella stessa lingua del messaggio. Sii diretto e coinvolgente.`,
-    gpt: `Sei GPT (OpenAI), pratico e diretto. Stai partecipando a un dibattito multiplayer su "${topic}". ${userName} ha scritto un messaggio. Rispondi in 2-3 frasi nella stessa lingua del messaggio. Sii conciso.`,
-    gemini: `Sei Gemini (Google), analitico e preciso. Stai partecipando a un dibattito multiplayer su "${topic}". ${userName} ha scritto un messaggio. Rispondi in 2-3 frasi nella stessa lingua del messaggio.`,
-    perplexity: `Sei Perplexity, aggiornato e veloce. Stai partecipando a un dibattito multiplayer su "${topic}". ${userName} ha scritto un messaggio. Rispondi in 2-3 frasi nella stessa lingua del messaggio con dati aggiornati se disponibili.`,
+    claude:     `Sei Claude (Anthropic), riflessivo e preciso. Stai partecipando a una conversazione di gruppo su "${topic}". Rispondi al messaggio più recente di ${userName} in modo diretto e coinvolgente. Massimo 3 frasi. Rispondi nella stessa lingua del messaggio.`,
+    gpt:        `Sei GPT (OpenAI), pratico e diretto. Stai partecipando a una conversazione di gruppo su "${topic}". Rispondi al messaggio più recente di ${userName} in modo conciso. Massimo 3 frasi. Rispondi nella stessa lingua del messaggio.`,
+    gemini:     `Sei Gemini (Google), analitico e preciso. Stai partecipando a una conversazione di gruppo su "${topic}". Rispondi al messaggio più recente di ${userName}. Massimo 3 frasi. Rispondi nella stessa lingua del messaggio.`,
+    perplexity: `Sei Perplexity, aggiornato e veloce. Stai partecipando a una conversazione di gruppo su "${topic}". Rispondi al messaggio più recente di ${userName} con dati aggiornati se disponibili. Massimo 3 frasi. Rispondi nella stessa lingua del messaggio.`,
   }
 
   const AI_NAMES: Record<string, string> = { claude: 'Claude', gpt: 'GPT', gemini: 'Gemini', perplexity: 'Perplexity' }
@@ -81,6 +107,9 @@ async function streamAiToRoom(
   if (!system) return
 
   const messageId = `${aiId}-${Date.now()}`
+  const historyWithLast = history
+    ? `${history}\n[${userName}]: ${lastMessage}`
+    : `[${userName}]: ${lastMessage}`
 
   try {
     let fullText = ''
@@ -90,70 +119,72 @@ async function streamAiToRoom(
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
       const stream = await client.messages.stream({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 180,
+        max_tokens: 200,
         system,
-        messages: [{ role: 'user', content: userMessage }],
+        messages: [{ role: 'user', content: historyWithLast }],
       })
       for await (const chunk of stream) {
         if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
           fullText += chunk.delta.text
-          await channel.publish('event', JSON.stringify({
-            type: 'ai_chunk', aiId, aiName: AI_NAMES[aiId], chunk: chunk.delta.text, messageId,
-          }))
+          await channel.publish('event', JSON.stringify({ type: 'ai_chunk', aiId, aiName: AI_NAMES[aiId], chunk: chunk.delta.text, messageId }))
         }
       }
     } else if (aiId === 'gpt') {
       const OpenAI = (await import('openai')).default
       const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
       const stream = await client.chat.completions.create({
-        model: 'gpt-4.1-mini', max_tokens: 180, stream: true,
-        messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
+        model: 'gpt-4.1-mini', max_tokens: 200, stream: true,
+        messages: [{ role: 'system', content: system }, { role: 'user', content: historyWithLast }],
       })
       for await (const chunk of stream) {
         const text = chunk.choices[0]?.delta?.content
         if (text) {
           fullText += text
-          await channel.publish('event', JSON.stringify({
-            type: 'ai_chunk', aiId, aiName: AI_NAMES[aiId], chunk: text, messageId,
-          }))
+          await channel.publish('event', JSON.stringify({ type: 'ai_chunk', aiId, aiName: AI_NAMES[aiId], chunk: text, messageId }))
         }
       }
     } else if (aiId === 'gemini') {
       const { GoogleGenerativeAI } = await import('@google/generative-ai')
       const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
       const model = client.getGenerativeModel({ model: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash', systemInstruction: system })
-      const result = await model.generateContentStream(userMessage)
+      const result = await model.generateContentStream(historyWithLast)
       for await (const chunk of result.stream) {
         const text = chunk.text()
         if (text) {
           fullText += text
-          await channel.publish('event', JSON.stringify({
-            type: 'ai_chunk', aiId, aiName: AI_NAMES[aiId], chunk: text, messageId,
-          }))
+          await channel.publish('event', JSON.stringify({ type: 'ai_chunk', aiId, aiName: AI_NAMES[aiId], chunk: text, messageId }))
         }
       }
     } else if (aiId === 'perplexity') {
       const OpenAI = (await import('openai')).default
       const client = new OpenAI({ apiKey: process.env.PERPLEXITY_API_KEY, baseURL: 'https://api.perplexity.ai' })
       const stream = await client.chat.completions.create({
-        model: 'sonar-pro', max_tokens: 180, stream: true,
-        messages: [{ role: 'system', content: system }, { role: 'user', content: userMessage }],
+        model: 'sonar-pro', max_tokens: 200, stream: true,
+        messages: [{ role: 'system', content: system }, { role: 'user', content: historyWithLast }],
       } as any) as any
       for await (const chunk of stream) {
         const text = chunk.choices[0]?.delta?.content
         if (text) {
           fullText += text
-          await channel.publish('event', JSON.stringify({
-            type: 'ai_chunk', aiId, aiName: AI_NAMES[aiId], chunk: text, messageId,
-          }))
+          await channel.publish('event', JSON.stringify({ type: 'ai_chunk', aiId, aiName: AI_NAMES[aiId], chunk: text, messageId }))
         }
       }
     }
 
-    // Messaggio completo
-    await channel.publish('event', JSON.stringify({
-      type: 'ai_done', aiId, aiName: AI_NAMES[aiId], messageId, fullText,
-    }))
+    // Messaggio completo — pubblica e persisti
+    await channel.publish('event', JSON.stringify({ type: 'ai_done', aiId, aiName: AI_NAMES[aiId], messageId, fullText }))
+
+    if (fullText) {
+      await prisma.roomMessage.create({
+        data: {
+          roomId,
+          authorId: null,
+          authorName: AI_NAMES[aiId],
+          aiId,
+          content: fullText,
+        },
+      }).catch(() => {})
+    }
 
   } catch (err) {
     console.error(`AI ${aiId} error in room:`, err)

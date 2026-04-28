@@ -117,6 +117,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
   const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
+  const [twoVsTwoRoomAblyId, setTwoVsTwoRoomAblyId] = useState<string | null>(null)
   const [desktopRoundBanner, setDesktopRoundBanner] = useState<number | null>(null)
   const prevDesktopRound = useRef<number>(0)
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -319,6 +320,42 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     enabled: !!activeRoom,
   })
 
+  // ── 2v2 real multiplayer: Ably sync ───────────────────────────────────────
+  const twoVsTwoStateRef = useRef<TwoVsTwoState | null>(null)
+  twoVsTwoStateRef.current = twoVsTwoState
+
+  // Ref per chiamare processB2v2Action (definita più avanti) dall'event handler
+  const processB2v2ActionRef = useRef<((content: string, bName: string) => void) | null>(null)
+
+  const handle2v2RoomEvent = useCallback((event: RoomEvent) => {
+    if (event.type === 'presence' && event.action === 'enter') {
+      // Player B è entrato nella stanza — rimuovi il flag waitingForOpponent
+      setTwoVsTwoState(prev => prev ? { ...prev, waitingForOpponent: false } : prev)
+    } else if (event.type === '2v2_action_b') {
+      // Player B ha mandato la sua mossa umana
+      processB2v2ActionRef.current?.(event.content, event.userName)
+    }
+  }, [])
+
+  const { publish: publish2v2 } = useAbly({
+    roomId: twoVsTwoRoomAblyId,
+    userId: userEmail ?? '',
+    userName: userName.trim() || propUserName || userEmail?.split('@')[0] || '',
+    onEvent: handle2v2RoomEvent,
+    enabled: !!twoVsTwoRoomAblyId,
+  })
+
+  // Tiene il publish aggiornato senza dipendenze nell'effect sottostante
+  const publish2v2Ref = useRef(publish2v2)
+  publish2v2Ref.current = publish2v2
+
+  // Pubblica lo stato completo a tutti i player connessi dopo ogni aggiornamento
+  useEffect(() => {
+    if (!twoVsTwoRoomAblyId || !twoVsTwoState) return
+    publish2v2Ref.current({ type: '2v2_state', state: twoVsTwoState })
+  }, [twoVsTwoState, twoVsTwoRoomAblyId])
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Registra la sessione al mount
   useEffect(() => {
     fetch('/api/session', { method: 'POST' }).catch(() => {})
@@ -357,10 +394,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const effectivePlan = resolvedPlan ?? userPlan ?? 'free'
   // Allegati disponibili solo per Pro, Premium e Admin
   const canAttach = effectivePlan === 'pro' || effectivePlan === 'premium' || effectivePlan === 'admin'
+  // Group chat disponibile da Pro in su
+  const canUseGroupChat = effectivePlan === 'pro' || effectivePlan === 'premium' || effectivePlan === 'admin' || effectivePlan === 'freemium'
 
-  // Carica rooms e notifiche (solo admin)
+  // Carica rooms e notifiche (Pro+)
   useEffect(() => {
-    if (effectivePlan !== 'admin') return
+    if (!canUseGroupChat) return
     fetch('/api/rooms').then(r => r.json()).then(d => { if (d.rooms) setRooms(d.rooms) }).catch(() => {})
     fetch('/api/notifications').then(r => r.json()).then(d => {
       if (d.notifications) {
@@ -368,7 +407,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         setUnreadCount(d.notifications.filter((n: any) => !n.read).length)
       }
     }).catch(() => {})
-  }, [userPlan])
+  }, [canUseGroupChat])
 
   // Ricerca utenti con debounce (per crea room)
   useEffect(() => {
@@ -394,6 +433,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (!createTopic.trim()) return
     setCreatingRoom(true)
     try {
+      // Room effimera: scade dopo 24 ore
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -402,6 +443,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
           visibility: createVisibility,
           aiIds: createAis,
           invitedUserIds: createInvited.map(u => u.id),
+          type: 'group',
+          expiresAt,
         }),
       })
       const data = await res.json()
@@ -410,8 +453,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         setCreateTopic('')
         setCreateInvited([])
         setSocialTab('feed')
-        // Apri subito la room appena creata
-        handleOpenRoom(data.room.id)
+        // Redirect alla pagina room dedicata
+        window.location.href = `/room/${data.room.id}`
       }
     } catch {}
     setCreatingRoom(false)
@@ -1017,8 +1060,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       setShowDevilDifficulty(true)
     } else if (mode === '2v2') {
       setShow2v2Setup(true)
+    } else if (mode === 'group') {
+      // Apri il pannello social tab "create" direttamente
+      setSocialTab('crea')
+      setShowSocialPanel(true)
+      setSelectedMode(null)
     } else if (mode === 'classico') {
-      // Torna alla chat normale (fase new → l'utente inserisce topic)
       setSelectedMode(null)
       setPhase('new')
     }
@@ -1077,6 +1124,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     // Animazione navbar: prima "2 VS 2", poi dopo 2.5s il tema
     setShow2v2Label('title')
     setTimeout(() => setShow2v2Label('topic'), 2500)
+    // Attiva sync Ably se questa è una partita multiplayer (ha un roomId)
+    if (config.roomId) setTwoVsTwoRoomAblyId(config.roomId)
     setTwoVsTwoState({
       config,
       messages: [],
@@ -1234,7 +1283,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     // Passa a B automaticamente dopo 1s
     await new Promise(r => setTimeout(r, 1000))
 
-    // Segna che ora tocca a B
+    // In multiplayer: pubblica lo stato e aspetta la mossa umana di B via Ably
+    if (twoVsTwoRoomAblyId) {
+      setTwoVsTwoState(prev => prev ? { ...prev, currentTurn: 'B', messagesThisTurn: 0, waitingForOpponent: true } : prev)
+      setTwoVsTwoLoading(false)
+      return
+    }
+
+    // Solo: segna che ora tocca a B e fai rispondere le AI di B
     setTwoVsTwoState(prev => prev ? { ...prev, currentTurn: 'B', messagesThisTurn: 0 } : prev)
     setTwoVsTwoLoading(true)
 
@@ -1485,6 +1541,133 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     } catch {}
     setTwoVsTwoLoading(false)
   }
+
+  // ── 2v2 multiplayer: processa la mossa umana di Player B ─────────────────
+  // Chiamata dall'event handler Ably quando arriva un evento '2v2_action_b'
+  const processB2v2Action = useCallback(async (content: string, bName = 'Squadra B') => {
+    const state = twoVsTwoStateRef.current
+    if (!state || state.ended) return
+
+    const { config, round, maxRounds } = state
+    const bHumanName = bName || config.teamB.humanNameB || 'Squadra B'
+    const bAiId = config.teamB.aiId1
+    const bAiName = AI_NAMES[bAiId]
+
+    // 1. Aggiungi il messaggio umano di B
+    setTwoVsTwoState(prev => prev ? {
+      ...prev,
+      messages: [...prev.messages, { team: 'B' as const, isAI: false, author: bHumanName, content }],
+      messagesThisTurn: prev.messagesThisTurn + 1,
+      waitingForOpponent: false,
+    } : prev)
+
+    setTwoVsTwoLoading(true)
+
+    // 2. Fai rispondere l'AI alleata di B (aiId1)
+    const currentMsgs = [...(twoVsTwoStateRef.current?.messages ?? state.messages)]
+    const bHistory = currentMsgs
+      .filter(m => m.team !== 'arbiter')
+      .map(m => {
+        const isEnemy = m.team === 'A'
+        return { name: isEnemy ? `${m.author} (avversario)` : `${m.author} (tuo alleato)`, content: m.content }
+      })
+
+    const teamAHumanName = config.teamA.humanName
+    const teamAAiName = AI_NAMES[config.teamA.aiId]
+
+    setTwoVsTwoState(prev => prev ? {
+      ...prev,
+      messages: [...prev.messages, { team: 'B' as const, isAI: true, aiId: bAiId, author: bAiName, content: '', streaming: true }]
+    } : prev)
+
+    try {
+      const bRes = await fetch('/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: '2v2', aiId: bAiId, maxTokens: 350,
+          history: [
+            { name: 'Sistema', content: `Sei ${bAiName}, alleato di ${bHumanName} nella Squadra B. State dibattendo contro ${teamAHumanName} e ${teamAAiName} sul tema: "${config.topic}". Supporta la posizione di ${bHumanName} e attacca gli argomenti avversari. Tono diretto. Massimo 2 frasi brevi nella lingua del messaggio. Niente asterischi. Carattere: ${AI_PROFILES[bAiId]?.carattere ?? ''}` },
+            ...bHistory,
+            { name: 'Sistema', content: `${bHumanName} ha detto: "${content}". Supporta questo argomento e attacca gli avversari.` }
+          ],
+          needsWebSearch: false,
+        }),
+      })
+      if (bRes.ok && bRes.body) {
+        const reader = bRes.body.getReader(); const decoder = new TextDecoder()
+        let buffer = '', fullText = '', done = false
+        while (!done) {
+          const { done: sd, value } = await reader.read()
+          if (value) buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+            const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
+            try { const p = JSON.parse(d); if (p.text) fullText += p.text } catch {}
+          }
+          if (sd) break
+        }
+        // Typewrite
+        await new Promise<void>(resolve => {
+          let i = 0
+          const iv = setInterval(() => {
+            if (i >= fullText.length) {
+              clearInterval(iv)
+              setTwoVsTwoState(prev => {
+                if (!prev) return prev
+                const msgs = [...prev.messages]
+                msgs[msgs.length - 1] = { team: 'B' as const, isAI: true, aiId: bAiId, author: bAiName, content: fullText, streaming: false }
+                return { ...prev, messages: msgs }
+              })
+              resolve(); return
+            }
+            i++
+            setTwoVsTwoState(prev => {
+              if (!prev) return prev
+              const msgs = [...prev.messages]
+              msgs[msgs.length - 1] = { team: 'B' as const, isAI: true, aiId: bAiId, author: bAiName, content: fullText.slice(0, i), streaming: true }
+              return { ...prev, messages: msgs }
+            })
+          }, TYPEWRITER_DELAY)
+        })
+      }
+    } catch (e) { console.warn('B AI error:', e) }
+
+    setTwoVsTwoLoading(false)
+
+    // 3. Logica di fine round / fine partita (identica alla modalità solo)
+    const latest = twoVsTwoStateRef.current
+    if (!latest) return
+    const isLastRound = latest.round >= maxRounds
+    if (isLastRound) {
+      await handle2v2RoundVerdict(latest.round)
+      await handle2v2Verdict()
+    } else {
+      await handle2v2RoundVerdict(latest.round)
+      let elapsed = 0
+      const DURATION = 7000
+      setTwoVsTwoState(prev => prev ? { ...prev, roundProgress: 0 } : prev)
+      await new Promise<void>(resolve => {
+        const iv = setInterval(() => {
+          elapsed += 50
+          const pct = Math.min(elapsed / DURATION, 1)
+          setTwoVsTwoState(prev => prev ? { ...prev, roundProgress: pct } : prev)
+          if (elapsed >= DURATION) {
+            clearInterval(iv)
+            const newRound = (twoVsTwoStateRef.current?.round ?? latest.round) + 1
+            setTwoVsTwoState(prev => prev ? { ...prev, roundProgress: null, currentTurn: 'A', round: newRound, messagesThisTurn: 0 } : prev)
+            resolve()
+          }
+        }, 50)
+      })
+    }
+  }, [])
+
+  // Aggiorna il ref ogni volta che processB2v2Action cambia (evita stale ref nel event handler)
+  useEffect(() => {
+    processB2v2ActionRef.current = processB2v2Action
+  }, [processB2v2Action])
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Musica Devil's Advocate — unica istanza, gestita qui per evitare duplicati
   useEffect(() => {
@@ -2087,7 +2270,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             )}
 
             {/* ── TAB FEED ── */}
-            {(effectivePlan === 'admin' || isBeta) && socialTab === 'feed' && (
+            {canUseGroupChat && socialTab === 'feed' && (
               <div className="flex flex-col gap-3">
                 {/* Notifiche pendenti */}
                 {notifications.filter(n => !n.read).map((n: any) => (
@@ -2165,7 +2348,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             )}
 
             {/* ── TAB CREA ── */}
-            {(effectivePlan === 'admin' || isBeta) && socialTab === 'crea' && (
+            {canUseGroupChat && socialTab === 'crea' && (
               <div className="glass rounded-3xl p-4 flex flex-col gap-3">
                 <div className="text-xs font-bold text-white/40 uppercase tracking-wide">Tema del dibattito</div>
                 <textarea

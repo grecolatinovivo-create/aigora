@@ -49,8 +49,8 @@ export default function JoinTwoVsTwo() {
       setError(data.error)
       setJoining(false)
     } else {
-      // Redirect alla chat con il codice room
-      router.push(`/?2v2=${code}`)
+      // Redirect alla pagina live di Player B
+      router.push(`/2v2/live/${code}?name=${encodeURIComponent(playerName.trim())}`)
     }
   }
 
@@ -85,9 +85,9 @@ export default function JoinTwoVsTwo() {
   const gs = roomInfo.room?.gameState as any
   const isFull = roomInfo.isFull
 
-  // Se sei già l'host, redirect diretto
+  // Se sei già l'host, torna alla home (la partita si apre dall'arena)
   if (roomInfo.room?.hostId === session?.user?.email) {
-    router.push(`/?2v2=${code}`)
+    router.push('/')
     return null
   }
 

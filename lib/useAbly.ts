@@ -23,6 +23,9 @@ export type RoomEvent =
   | { type: 'ai_chunk'; aiId: string; aiName: string; chunk: string; messageId: string }
   | { type: 'ai_done'; aiId: string; aiName: string; messageId: string; fullText: string }
   | { type: 'presence'; userId: string; userName: string; action: 'enter' | 'leave' }
+  // ── 2v2 real multiplayer ──────────────────────────────────────────────────
+  | { type: '2v2_state'; state: any }         // TwoVsTwoState serializzato dall'host
+  | { type: '2v2_action_b'; content: string; messageId: string; userId: string; userName: string }
 
 interface UseAblyOptions {
   roomId: string | null

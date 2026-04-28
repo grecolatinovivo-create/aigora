@@ -67,20 +67,39 @@ model Chat {
 // ── SOCIAL ────────────────────────────────────────────
 
 model Room {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   hostId     String
   topic      String
-  visibility String   @default("private") // "public" | "private"
-  status     String   @default("live")    // "live" | "ended"
-  aiIds      Json                          // array di AI selezionate
-  type       String   @default("classic") // "classic" | "2v2" | "devil"
-  code       String?  @unique             // codice join per 2v2, es. "AIG-X7K2"
-  gameState  Json?                        // stato partita 2v2 serializzato
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  visibility String    @default("private") // "public" | "private"
+  status     String    @default("live")    // "live" | "ended"
+  aiIds      Json                           // array di AI selezionate
+  type       String    @default("classic") // "classic" | "2v2" | "group"
+  code       String?   @unique             // codice join per 2v2, es. "AIG-X7K2"
+  gameState  Json?                         // stato partita 2v2 serializzato
+  expiresAt  DateTime?                     // room effimera: scade dopo N ore
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   host         User              @relation("RoomHost", fields: [hostId], references: [id], onDelete: Cascade)
   participants RoomParticipant[]
+  roomMessages RoomMessage[]
+
+  @@index([status, expiresAt])
+}
+
+model RoomMessage {
+  id         String   @id @default(cuid())
+  roomId     String
+  authorId   String?  // null = AI
+  authorName String
+  aiId       String?  // quale AI ha scritto (null se umano)
+  content    String
+  replyToId  String?  // thread contestuale nel group chat
+  createdAt  DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
 }
 
 model RoomParticipant {

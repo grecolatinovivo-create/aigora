@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
-  const { topic, visibility, aiIds, invitedUserIds } = await req.json()
+  const { topic, visibility, aiIds, invitedUserIds, type: roomType, expiresAt } = await req.json()
   if (!topic?.trim()) return NextResponse.json({ error: 'Tema mancante' }, { status: 400 })
 
   // Validazione whitelist AI
@@ -75,6 +75,8 @@ export async function POST(req: NextRequest) {
         topic: topic.trim().slice(0, 500),
         visibility: validVisibility,
         aiIds: validatedAiIds,
+        type: ['group', '2v2', 'classic'].includes(roomType) ? roomType : 'group',
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
         participants: {
           create: [
             { userId: user.id, role: 'host' },

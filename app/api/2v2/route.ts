@@ -130,9 +130,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Aggiorna gameState con il giocatore B
+  const bName = playerName || user.name || 'Squadra B'
   const updatedGs = {
     ...gs,
-    teamB: { ...gs.teamB, humanId: user.id, humanName: playerName || user.name || 'Squadra B' },
+    teamB: { ...gs.teamB, humanId: user.id, humanName: bName, humanNameB: bName },
     status: 'playing',
   }
 

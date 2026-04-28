@@ -1,7 +1,7 @@
 // ── Tipi e interfacce globali di AiGORÀ ──────────────────────────────────────
 
 export type ChatPhase = 'start' | 'running' | 'done' | 'history' | 'profile' | 'new'
-export type GameMode = 'classico' | '2v2' | 'devil'
+export type GameMode = 'classico' | '2v2' | 'devil' | 'group'
 
 export interface Team {
   name: string
@@ -36,7 +36,7 @@ export interface DevilSession {
 export interface TwoVsTwoConfig {
   topic: string
   teamA: { humanName: string; aiId: string }
-  teamB: { aiId1: string; aiId2: string }  // squadra B: 2 AI
+  teamB: { aiId1: string; aiId2: string; humanNameB?: string }  // squadra B: 2 AI oppure umano+AI
   arbiterAiId: string  // 4a AI — non gioca mai
   maxRounds?: number
   roomCode?: string

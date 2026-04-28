@@ -20,8 +20,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       participants: {
         include: { user: { select: { id: true, name: true } } },
       },
+      roomMessages: {
+        orderBy: { createdAt: 'asc' },
+        take: 50,
+      },
     },
   })
+
+  // Lazy expiry: se la room è scaduta, marcala come ended
+  if (room && room.expiresAt && room.expiresAt < new Date() && room.status === 'live') {
+    await prisma.room.update({ where: { id: params.id }, data: { status: 'ended' } }).catch(() => {})
+    room.status = 'ended'
+  }
 
   if (!room) return NextResponse.json({ error: 'Room non trovata' }, { status: 404 })
 
