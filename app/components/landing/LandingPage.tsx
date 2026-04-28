@@ -246,10 +246,7 @@ export default function LandingPage() {
           <button onClick={scrollToModes} style={{ padding: '7px 14px', borderRadius: 9, background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {tNav('discoverFormats')}
           </button>
-          <button onClick={() => router.push('/pricing')} style={{ padding: '7px 14px', borderRadius: 9, background: 'transparent', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Prezzi
-          </button>
-          <button onClick={() => router.push('/login')} style={{ padding: '8px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+<button onClick={() => router.push('/login')} style={{ padding: '8px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {tNav('signIn')}
           </button>
         </div>
