@@ -35,8 +35,19 @@ function HellGridBg() {
   )
 }
 
-export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: GameMode) => void; onClose: () => void }) {
+const PAID_TIERS = ['pro', 'premium', 'admin', 'freemium', 'max']
+
+export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: (mode: GameMode) => void; onClose: () => void; userPlan?: string }) {
   const [selected, setSelected] = useState<GameMode>('2v2')
+  const isPaid = PAID_TIERS.includes(userPlan ?? '')
+
+  const handleSelect = (mode: GameMode) => {
+    if (!isPaid && (mode === '2v2' || mode === 'devil')) {
+      window.location.href = '/pricing'
+      return
+    }
+    onSelect(mode)
+  }
 
   return (
     <>
@@ -61,7 +72,7 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
       {/* ── LAYOUT MOBILE: card verticali ── */}
       <div className="lg:hidden flex-1 flex flex-col px-4 py-4 gap-3 overflow-hidden" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
         {/* Card 2 vs 2 — attiva */}
-        <button onClick={() => onSelect('2v2')}
+        <button onClick={() => handleSelect('2v2')}
           className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all"
           style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(91,33,182,0.1) 100%)', border: '1.5px solid rgba(167,139,250,0.35)', boxShadow: '0 4px 20px rgba(124,58,237,0.15)', minHeight: 0 }}>
           <div className="flex items-start justify-between">
@@ -90,7 +101,7 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
           </div>
         </div>
         {/* Card Devil's Advocate — attiva */}
-        <button onClick={() => onSelect('devil')}
+        <button onClick={() => handleSelect('devil')}
           className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all relative overflow-hidden"
           style={{
             border: '1.5px solid rgba(239,68,68,0.35)',
@@ -150,7 +161,7 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
           </div>
 
           {/* ── 2 VS 2 — attivo, più grande, selezionato ── */}
-          <button onClick={() => onSelect('2v2')} className="flex flex-col items-center gap-5 transition-transform hover:scale-[1.02] active:scale-[0.98]">
+          <button onClick={() => handleSelect('2v2')} className="flex flex-col items-center gap-5 transition-transform hover:scale-[1.02] active:scale-[0.98]">
             <div className="relative" style={{ width: 240, height: 490 }}>
               {/* Glow */}
               <div className="absolute inset-0 rounded-[38px]" style={{ boxShadow: '0 0 0 2px rgba(167,139,250,0.6), 0 0 60px rgba(124,58,237,0.4)', borderRadius: 38 }} />
@@ -210,7 +221,7 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
           </button>
 
           {/* ── DEVIL'S ADVOCATE — attivo ── */}
-          <button onClick={() => onSelect('devil')} className="flex flex-col items-center gap-4 transition-transform hover:scale-[1.02] active:scale-[0.98]">
+          <button onClick={() => handleSelect('devil')} className="flex flex-col items-center gap-4 transition-transform hover:scale-[1.02] active:scale-[0.98]">
             <div className="relative" style={{ width: 200, height: 410 }}>
               {/* Glow rosso */}
               <div className="absolute inset-0 rounded-[32px]" style={{ boxShadow: '0 0 0 1.5px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.2)', borderRadius: 32 }} />
@@ -245,7 +256,7 @@ export default function ModeSelect({ onSelect, onClose }: { onSelect: (mode: Gam
               Due squadre si sfidano. Ogni squadra ha un umano e un'AI alleata.<br/>Un'AI arbitro pronuncia il verdetto finale.
             </p>
           </div>
-          <button onClick={() => onSelect('2v2')}
+          <button onClick={() => handleSelect('2v2')}
             className="px-10 py-4 rounded-2xl font-black text-white text-base transition-all hover:scale-[1.03] active:scale-[0.97]"
             style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', boxShadow: '0 6px 30px rgba(124,58,237,0.5)', fontSize: 16 }}>
             Scegli le squadre →

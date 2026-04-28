@@ -108,7 +108,7 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="desktop-bg min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <div className="desktop-bg min-h-screen flex flex-col items-center justify-start md:justify-center px-4 py-16 overflow-y-auto">
 
       {/* Header */}
       <div className="text-center mb-4">

@@ -116,7 +116,6 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 <button onClick={() => { onNewChat?.(); close() }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5"
                   style={{ color: 'rgba(255,255,255,0.75)' }}>
-                  <span style={{ fontSize: 14 }}>🎯</span>
                   Dibattito
                 </button>
 
@@ -126,7 +125,6 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                   style={{ color: isPaid ? '#86EFAC' : 'rgba(255,255,255,0.3)' }}>
                   <div className="flex items-center gap-2.5">
-                    <span style={{ fontSize: 14 }}>✦</span>
                     Brainstormer
                   </div>
                   {!isPaid && (
@@ -143,7 +141,6 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                   style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.3)' }}>
                   <div className="flex items-center gap-2.5">
-                    <span style={{ fontSize: 14 }}>⚔️</span>
                     <span>2v2 · Avvocato del Diavolo</span>
                   </div>
                   {!isPaid && (
@@ -159,7 +156,7 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   <button onClick={() => { close(); router.push('/pricing') }}
                     className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2.5"
                     style={{ color: '#A78BFA' }}>
-                    ✨ Upgrade a Pro →
+                    Upgrade a Pro →
                   </button>
                 )}
 

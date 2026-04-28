@@ -2269,6 +2269,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
         <ModeSelect
           onSelect={handleSelectMode}
           onClose={() => setShowModeSelect(false)}
+          userPlan={effectivePlan}
         />,
         document.body
       )}
@@ -3737,6 +3738,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
         <ModeSelect
           onSelect={handleSelectMode}
           onClose={() => setShowModeSelect(false)}
+          userPlan={effectivePlan}
         />,
         document.body
       )}
