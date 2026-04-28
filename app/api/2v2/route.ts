@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { normalizePlan, checkTwoVsTwoLimit } from '@/lib/plans'
+import { resolveUserTier, checkTwoVsTwoLimit } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,8 +24,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
   // ── Verifica limite 2v2: Free = 1/settimana, Pro+ = illimitato ────────
-  const isAdmin = user.email === process.env.ADMIN_EMAIL
-  const tier = isAdmin ? 'admin' : normalizePlan((user as any).plan)
+  const tier = resolveUserTier(user)
   const limitCheck = await checkTwoVsTwoLimit(user.id, tier)
   if (!limitCheck.ok) {
     return NextResponse.json({

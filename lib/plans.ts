@@ -90,6 +90,22 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
   },
 }
 
+/**
+ * Risolve il tier effettivo di un utente controllando ENTRAMBI:
+ * 1. Il campo plan nel DB (fonte primaria)
+ * 2. L'email contro ADMIN_EMAIL (fallback legacy)
+ * Usare questa invece di fare `isAdmin = user.email === ADMIN_EMAIL` in ogni route.
+ */
+export function resolveUserTier(user: { email?: string | null; plan?: string | null } | null | undefined): Tier {
+  if (!user) return 'free'
+  // Check by plan field (primary — più robusto dell'email)
+  const byPlan = normalizePlan(user.plan)
+  if (byPlan !== 'free') return byPlan
+  // Fallback: check by ADMIN_EMAIL (retrocompatibilità)
+  if (user.email && process.env.ADMIN_EMAIL && user.email === process.env.ADMIN_EMAIL) return 'admin'
+  return 'free'
+}
+
 /** Normalizza il valore raw del DB (inclusi legacy) verso un Tier valido */
 export function normalizePlan(dbPlan: string | null | undefined): Tier {
   switch (dbPlan) {

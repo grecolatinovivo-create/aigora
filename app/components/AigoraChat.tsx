@@ -1156,6 +1156,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
     setShow2v2Setup(false)
+    setSelectedMode('2v2')
     // Animazione navbar: prima "2 VS 2", poi dopo 2.5s il tema
     setShow2v2Label('title')
     setTimeout(() => setShow2v2Label('topic'), 2500)

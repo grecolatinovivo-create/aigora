@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { normalizePlan, canUseMode, checkBrainstormerLimit } from '@/lib/plans'
+import { resolveUserTier, canUseMode, checkBrainstormerLimit } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -275,8 +275,8 @@ export async function POST(req: NextRequest) {
   // ── Verifica piano: Brainstormer richiede Pro o superiore ─────────────
   const { prisma: prismaPlan } = await import('@/lib/prisma')
   const dbUserPlan = await prismaPlan.user.findUnique({ where: { email: session.user.email } })
-  const isAdmin = dbUserPlan?.email === process.env.ADMIN_EMAIL
-  const tier = isAdmin ? 'admin' : normalizePlan(dbUserPlan?.plan)
+  const tier = resolveUserTier(dbUserPlan)
+  const isAdmin = tier === 'admin'
   if (!canUseMode(tier, 'brainstorm')) {
     return NextResponse.json({
       error: 'Il Brainstormer è disponibile dal piano Pro. Aggiorna il piano per accedere.',

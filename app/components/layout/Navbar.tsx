@@ -110,11 +110,15 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   </div>
                 </div>
 
-                {/* ── Voci menu ── */}
+                {/* ── Dibattito (chat libera) ── */}
                 <button onClick={() => { onNewChat?.(); close() }}
-                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
-                  style={{ color: 'rgba(255,255,255,0.75)' }}>
-                  {t('debateMode')}
+                  className="w-full px-4 pt-3 pb-2 text-left hover:bg-white/5 transition-colors border-b border-white/8 flex items-center justify-between group">
+                  <div className="text-[10px] font-black uppercase tracking-widest group-hover:text-white/50 transition-colors" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                    {t('debateMode')}
+                  </div>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" className="group-hover:stroke-white/40 transition-all">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
                 </button>
 
                 <button
@@ -128,7 +132,7 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 <button
                   onClick={() => { close(); if (isPaid) { onMultiplayer?.() } else router.push('/pricing') }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
-                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.3)' }}>
+                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.35)' }}>
                   {"Devil's Advocate"}
                   {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
                 </button>
@@ -136,16 +140,16 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 <button
                   onClick={() => { close(); if (isPaid) window.location.href = '/brainstorm'; else router.push('/pricing') }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
-                  style={{ color: isPaid ? '#86EFAC' : 'rgba(255,255,255,0.3)' }}>
+                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.35)' }}>
                   Brainstormer
                   {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
                 </button>
 
                 {!isPaid && (
                   <button onClick={() => { close(); router.push('/pricing') }}
-                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-1.5"
                     style={{ color: '#A78BFA' }}>
-                    {t('upgradePro')}
+                    <span>✦</span> {t('upgradePro')}
                   </button>
                 )}
 
@@ -155,30 +159,7 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   {t('plans')}
                 </button>
 
-                {/* ── Funzioni social — admin/beta ── */}
-                {(userPlan === 'admin' || isBeta) && (
-                  <>
-                    <a href={`/${encodeURIComponent(dbUserName || displayName !== 'Tu' ? (dbUserName || displayName) : (userEmail || ''))}`}
-                      className="w-full px-4 py-2.5 text-left text-sm text-purple-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
-                      {t('myPublicProfile')}
-                    </a>
-                    <button onClick={() => { onFeed?.(); close() }}
-                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
-                      style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      {t('feedDebates')}
-                      {(unreadCount ?? 0) > 0 && (
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white" style={{ backgroundColor: '#7C3AED' }}>{unreadCount}</span>
-                      )}
-                    </button>
-                    <button onClick={() => { onCrea?.(); close() }}
-                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
-                      style={{ color: 'rgba(255,255,255,0.6)' }}>
-                      {t('createDebate')}
-                    </button>
-                  </>
-                )}
-
-                {/* ── Admin panel ── */}
+                {/* ── Admin panel — solo per admin ── */}
                 {userPlan === 'admin' && (
                   <button onClick={() => { close(); window.location.href = '/admin' }}
                     className="w-full px-4 py-2.5 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">

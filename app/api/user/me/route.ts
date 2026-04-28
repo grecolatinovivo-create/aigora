@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { normalizePlan } from '@/lib/plans'
+import { resolveUserTier } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +13,7 @@ export async function GET() {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
-  const plan = user.email === process.env.ADMIN_EMAIL ? 'admin' : normalizePlan(user.plan)
+  const plan = resolveUserTier(user)
 
   return NextResponse.json({ plan, name: user.name, image: user.image, beta: user.beta ?? false })
 }

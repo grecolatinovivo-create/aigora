@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { rateLimit } from '@/lib/rateLimit'
-import { normalizePlan, checkDebateLimit, TIER_CONFIG } from '@/lib/plans'
+import { resolveUserTier, checkDebateLimit, TIER_CONFIG } from '@/lib/plans'
 
 // ── Tipo allegato condiviso ───────────────────────────────────────────────────
 export interface ChatAttachment {
@@ -422,8 +422,8 @@ export async function POST(req: NextRequest) {
       const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
       currentUserId = dbUser?.id
 
-      const isAdmin = dbUser?.email === process.env.ADMIN_EMAIL
-      tier = isAdmin ? 'admin' : normalizePlan(dbUser?.plan)
+      tier = resolveUserTier(dbUser)
+      const isAdmin = tier === 'admin'
 
       // Flag forceGeminiPerp: per-utente o globale (flag dell'admin)
       const userForceGemini = dbUser?.forceGeminiPerp ?? false

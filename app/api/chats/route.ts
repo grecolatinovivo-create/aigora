@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rateLimit'
-import { normalizePlan, TIER_CONFIG } from '@/lib/plans'
+import { resolveUserTier, TIER_CONFIG } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +20,7 @@ export async function GET(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
-  const isAdmin = user.email === process.env.ADMIN_EMAIL
-  const tier = isAdmin ? 'admin' : normalizePlan(user.plan)
+  const tier = resolveUserTier(user)
   const tierConfig = TIER_CONFIG[tier]
 
   // Pulizia silenziosa: elimina chat in base al limite giorni del tier

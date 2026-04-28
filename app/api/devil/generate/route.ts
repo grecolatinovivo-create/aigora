@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { normalizePlan, canUseMode } from '@/lib/plans'
+import { resolveUserTier, canUseMode } from '@/lib/plans'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -69,8 +69,7 @@ export async function POST(req: NextRequest) {
     if (session?.user?.email) {
       const { prisma } = await import('@/lib/prisma')
       const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
-      const isAdmin = dbUser?.email === process.env.ADMIN_EMAIL
-      const tier = isAdmin ? 'admin' : normalizePlan(dbUser?.plan)
+      const tier = resolveUserTier(dbUser)
       if (!canUseMode(tier, 'devil')) {
         return NextResponse.json({
           error: 'L\'Avvocato del Diavolo è disponibile dal piano Pro. Aggiorna il piano per accedere.',
