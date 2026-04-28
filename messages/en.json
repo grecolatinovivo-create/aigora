@@ -99,7 +99,7 @@
   },
   "pricing": {
     "title": "Choose your plan",
-    "subtitle": "Free includes 4 AIs. Pro and Premium unlock Grok, advanced modes and document upload.",
+    "subtitle": "Free includes 4 AIs and Multiplayer 2v2. Pro and Premium unlock Grok, advanced modes and uploads.",
     "tryDemo": "Try without an account at",
     "perMonth": "/month",
     "freePlanLabel": "Free",
@@ -113,10 +113,10 @@
           "4 AIs (Claude, GPT, Gemini, Perplexity)",
           "3 debates per week",
           "Up to 20 responses per debate",
+          "Multiplayer 2v2 (1 challenge per week)",
           "Brainstormer",
           "Devil's Advocate",
-          "Multiplayer 2v2",
-          "Document upload",
+          "Document and image upload",
           "Debate history"
         ]
       },
@@ -166,6 +166,7 @@
       "betaAccess": "Beta access to new features",
       "ai4": "4 AIs",
       "weekly3": "3/week",
+      "weekly1": "1/week",
       "upTo20": "Up to 20",
       "daily10": "10/day",
       "extended": "Extended",

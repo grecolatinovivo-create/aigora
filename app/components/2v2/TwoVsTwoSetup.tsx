@@ -27,6 +27,7 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [roomCode, setRoomCode] = useState('')
   const [roomId, setRoomId] = useState('')
   const [copied, setCopied] = useState(false)
+  const [weeklyLimit, setWeeklyLimit] = useState<{ retryAfter: number } | null>(null)
   // Transizione desktop iPad→iPhone
   const [desktopTransition, setDesktopTransition] = useState<'idle' | 'exit' | 'done'>('idle')
   // AI-chosen topic: random pick from pool, revealed on dice roll
@@ -86,6 +87,13 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     setTimeout(async () => {
       try {
         const data = await apiPromise
+        if (data.limitReached) {
+          // Limite settimanale raggiunto: torna al topic e mostra il muro
+          setWeeklyLimit({ retryAfter: data.retryAfter ?? 0 })
+          setStep('topic')
+          setTopicRevealed(false)
+          return
+        }
         if (data.code) {
           setRoomCode(data.code)
           setRoomId(data.room.id)
@@ -106,8 +114,46 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   // Contenuto step condiviso — usato sia in mobile che in iPad desktop
   const stepContent = (
     <>
+        {/* ── Limite settimanale raggiunto ── */}
+        {weeklyLimit && step === 'topic' && (() => {
+          // Calcola la data di reset (lunedì prossimo approssimativo)
+          const resetDate = new Date(Date.now() + weeklyLimit.retryAfter * 1000)
+          const resetLabel = resetDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })
+          return (
+            <div className="flex flex-col items-center justify-center h-full px-6 py-10 text-center gap-6">
+              {/* Icona */}
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+                style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                ⚔️
+              </div>
+
+              {/* Testo principale */}
+              <div>
+                <div className="text-white font-black text-xl mb-2">Sfide esaurite</div>
+                <div className="text-white/50 text-sm leading-relaxed max-w-xs">
+                  Hai usato la <span className="text-white/80 font-semibold">sfida settimanale</span> inclusa nel piano Free.<br/>
+                  Si ricaricano <span className="text-white/80 font-semibold">{resetLabel}</span>.
+                </div>
+              </div>
+
+              {/* CTA upgrade */}
+              <div className="w-full max-w-xs flex flex-col gap-3">
+                <a href="/pricing"
+                  className="w-full py-3.5 rounded-2xl font-bold text-white text-sm text-center block transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
+                  Sfida senza limiti → Pro
+                </a>
+                <button onClick={() => { setWeeklyLimit(null); onBack() }}
+                  className="text-white/30 text-xs hover:text-white/50 transition-colors">
+                  Torna all'arena
+                </button>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* ── STEP 1: Dado ── */}
-        {step === 'topic' && (() => {
+        {!weeklyLimit && step === 'topic' && (() => {
           const handleRoll = async () => {
             if (topicRevealed || diceRolling) return
             SFX.diceRoll()

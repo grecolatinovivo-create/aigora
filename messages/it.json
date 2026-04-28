@@ -99,7 +99,7 @@
   },
   "pricing": {
     "title": "Scegli il tuo piano",
-    "subtitle": "Free include 4 AI. Pro e Premium sbloccano Grok, le modalità avanzate e l'upload documenti.",
+    "subtitle": "Free include 4 AI e il Multiplayer 2v2. Pro e Premium sbloccano Grok, le modalità avanzate e l'upload.",
     "tryDemo": "Prova senza account su",
     "perMonth": "/mese",
     "freePlanLabel": "Gratis",
@@ -113,10 +113,10 @@
           "4 AI (Claude, GPT, Gemini, Perplexity)",
           "3 dibattiti a settimana",
           "Fino a 20 risposte per dibattito",
+          "Multiplayer 2v2 (1 sfida a settimana)",
           "Brainstormer",
           "Avvocato del Diavolo",
-          "Multiplayer 2v2",
-          "Upload documenti",
+          "Upload documenti e immagini",
           "Cronologia dibattiti"
         ]
       },
@@ -166,6 +166,7 @@
       "betaAccess": "Accesso beta nuove funzionalità",
       "ai4": "4 AI",
       "weekly3": "3/settimana",
+      "weekly1": "1/settimana",
       "upTo20": "Fino a 20",
       "daily10": "10/giorno",
       "extended": "Estese",

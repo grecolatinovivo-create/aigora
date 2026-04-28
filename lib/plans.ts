@@ -10,6 +10,7 @@ export type LimitType =
   | 'weekly_debates'       // Free: 3/settimana
   | 'daily_debates'        // Pro: 10/giorno
   | 'weekly_brainstormer'  // Pro: 2/settimana
+  | 'weekly_2v2'           // Free: 1/settimana
 
 export interface LimitReached {
   ok: false
@@ -35,6 +36,8 @@ export interface TierConfig {
   maxUploadsPerMonth?: number  // Pro: 20, Premium: 100 — undefined = illimitato
   // Limiti brainstormer
   weeklyBrainstormer?: number  // Pro: 2/sett — undefined = illimitato
+  // Sfide 2v2 (solo host — B non consuma crediti)
+  weekly2v2?: number           // Free: 1/sett — undefined = illimitato
   modes: AppMode[]
   hasHistory: boolean
   historyDays?: number
@@ -47,7 +50,8 @@ export const TIER_CONFIG: Record<Tier, TierConfig> = {
     weeklyDebates: 3,
     maxRepliesPerDebate: 20,
     maxTokensPerReply: 220,
-    modes: ['chat'],
+    weekly2v2: 1,
+    modes: ['chat', '2v2'],
     hasHistory: false,
   },
   pro: {
@@ -154,4 +158,27 @@ export async function checkBrainstormerLimit(userId: string, tier: Tier): Promis
 export async function checkDailyDebateLimit(userId: string, tier: Tier): Promise<{ ok: boolean; retryAfter?: number }> {
   const result = await checkDebateLimit(userId, tier)
   return result.ok ? { ok: true } : { ok: false, retryAfter: result.retryAfter }
+}
+
+/**
+ * Controlla il limite sfide 2v2 settimanali.
+ * Free: 1/settimana (solo host — B che accetta non consuma crediti).
+ * Pro/Premium/Admin/Freemium: illimitato.
+ */
+export async function checkTwoVsTwoLimit(userId: string, tier: Tier): Promise<LimitResult> {
+  if (tier !== 'free') return { ok: true }
+
+  const cfg = TIER_CONFIG[tier]
+  if (cfg.weekly2v2) {
+    const rl = await rateLimit(`2v2-weekly:${userId}`, cfg.weekly2v2, WEEK_MS)
+    if (!rl.ok) return {
+      ok: false,
+      limitType: 'weekly_2v2',
+      retryAfter: rl.retryAfter!,
+      limit: cfg.weekly2v2,
+      requiredTier: 'pro',
+    }
+  }
+
+  return { ok: true }
 }

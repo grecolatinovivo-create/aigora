@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { normalizePlan, canUseMode } from '@/lib/plans'
+import { normalizePlan, checkTwoVsTwoLimit } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,15 +23,17 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
-  // ── Verifica piano: 2v2 richiede Pro o superiore ──────────────────────
+  // ── Verifica limite 2v2: Free = 1/settimana, Pro+ = illimitato ────────
   const isAdmin = user.email === process.env.ADMIN_EMAIL
   const tier = isAdmin ? 'admin' : normalizePlan((user as any).plan)
-  if (!canUseMode(tier, '2v2')) {
+  const limitCheck = await checkTwoVsTwoLimit(user.id, tier)
+  if (!limitCheck.ok) {
     return NextResponse.json({
-      error: 'Il Multiplayer 2v2 è disponibile dal piano Pro. Aggiorna il piano per accedere.',
-      upgradeRequired: true,
+      error: 'Hai usato la sfida settimanale inclusa nel piano Free.',
+      limitReached: true,
+      retryAfter: limitCheck.retryAfter,
       requiredTier: 'pro',
-    }, { status: 403 })
+    }, { status: 429 })
   }
 
   const { topic, teamAAiId, teamBAiId, arbiterAiId, teamAName } = await req.json()
