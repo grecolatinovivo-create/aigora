@@ -100,6 +100,7 @@
   "pricing": {
     "title": "Scegli il tuo piano",
     "subtitle": "Free include 4 AI e il Multiplayer 2v2. Pro e Premium sbloccano Grok, le modalità avanzate e l'upload.",
+    "landingSubtitle": "Inizia gratis, scala quando sei pronto.",
     "tryDemo": "Prova senza account su",
     "perMonth": "/mese",
     "freePlanLabel": "Gratis",
@@ -109,6 +110,8 @@
     "plans": {
       "free": {
         "subtitle": "4 AI, dibattiti, 2v2 — senza carta di credito",
+        "tagline": "3 dibattiti a settimana · Claude, GPT, Gemini, Perplexity",
+        "ctaLanding": "Inizia gratis →",
         "cta": "Inizia gratis",
         "features": [
           "4 AI (Claude, GPT, Gemini, Perplexity)",
@@ -123,6 +126,8 @@
       },
       "pro": {
         "subtitle": "Per uso frequente e completo",
+        "tagline": "Dibattiti illimitati al giorno · tutte le modalità · Grok incluso",
+        "ctaLanding": "Passa a Pro →",
         "badge": "PIÙ POPOLARE",
         "cta": "Inizia con Pro",
         "features": [
@@ -139,6 +144,8 @@
       },
       "premium": {
         "subtitle": "Per uso intensivo e avanzato",
+        "tagline": "Tutto di Pro · accesso prioritario alle novità · upload documenti",
+        "ctaLanding": "Passa a Premium →",
         "cta": "Inizia con Premium",
         "features": [
           "4 AI nei dibattiti",

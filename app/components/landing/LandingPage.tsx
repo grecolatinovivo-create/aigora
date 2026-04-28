@@ -411,7 +411,7 @@ export default function LandingPage() {
               {tPricing('title')}
             </h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.38)', lineHeight: 1.6 }}>
-              {tPricing('subtitle')}
+              {tPricing('landingSubtitle')}
             </p>
           </div>
 
@@ -424,19 +424,14 @@ export default function LandingPage() {
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
                 <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>{tPricing('freePlanLabel')}</span>
               </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0 12px', display: 'flex', flexDirection: 'column', gap: 7, flex: 1 }}>
-                {(tPricing.raw('plans.free.features') as string[]).map((f, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13 }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10A37F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><polyline points="20 6 9 17 4 12"/></svg>
-                    <span style={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1.45 }}>{f}</span>
-                  </li>
-                ))}
-              </ul>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', lineHeight: 1.55, marginBottom: 8, flex: 1 }}>
+                {tPricing('plans.free.tagline')}
+              </p>
               <button
                 onClick={() => router.push('/login')}
                 style={{ padding: '12px 0', borderRadius: 11, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%' }}
               >
-                {tPricing('plans.free.cta')}
+                {tPricing('plans.free.ctaLanding')}
               </button>
             </div>
 
@@ -450,19 +445,14 @@ export default function LandingPage() {
                 <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>{TIER_CONFIG.pro.price?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}€</span>
                 <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tPricing('perMonth')}</span>
               </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0 12px', display: 'flex', flexDirection: 'column', gap: 7, flex: 1 }}>
-                {(tPricing.raw('plans.pro.features') as string[]).map((f, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13 }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><polyline points="20 6 9 17 4 12"/></svg>
-                    <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.45 }}>{f}</span>
-                  </li>
-                ))}
-              </ul>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55, marginBottom: 8, flex: 1 }}>
+                {tPricing('plans.pro.tagline')}
+              </p>
               <button
                 onClick={() => router.push('/pricing')}
                 style={{ padding: '12px 0', borderRadius: 11, background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}
               >
-                {tPricing('plans.pro.cta')}
+                {tPricing('plans.pro.ctaLanding')}
               </button>
             </div>
 
@@ -473,19 +463,14 @@ export default function LandingPage() {
                 <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>{TIER_CONFIG.premium.price?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}€</span>
                 <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>{tPricing('perMonth')}</span>
               </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0 12px', display: 'flex', flexDirection: 'column', gap: 7, flex: 1 }}>
-                {(tPricing.raw('plans.premium.features') as string[]).map((f, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13 }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><polyline points="20 6 9 17 4 12"/></svg>
-                    <span style={{ color: 'rgba(255,255,255,0.65)', lineHeight: 1.45 }}>{f}</span>
-                  </li>
-                ))}
-              </ul>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', lineHeight: 1.55, marginBottom: 8, flex: 1 }}>
+                {tPricing('plans.premium.tagline')}
+              </p>
               <button
                 onClick={() => router.push('/pricing')}
                 style={{ padding: '12px 0', borderRadius: 11, background: 'rgba(255,107,43,0.15)', border: '1px solid rgba(255,107,43,0.3)', color: '#FF6B2B', fontSize: 14, fontWeight: 700, cursor: 'pointer', width: '100%' }}
               >
-                {tPricing('plans.premium.cta')}
+                {tPricing('plans.premium.ctaLanding')}
               </button>
             </div>
           </div>

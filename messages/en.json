@@ -100,6 +100,7 @@
   "pricing": {
     "title": "Choose your plan",
     "subtitle": "Free includes 4 AIs and Multiplayer 2v2. Pro and Premium unlock Grok, advanced modes and uploads.",
+    "landingSubtitle": "Start free, scale when you're ready.",
     "tryDemo": "Try without an account at",
     "perMonth": "/month",
     "freePlanLabel": "Free",
@@ -109,6 +110,8 @@
     "plans": {
       "free": {
         "subtitle": "4 AIs, debates, 2v2 — no credit card needed",
+        "tagline": "3 debates per week · Claude, GPT, Gemini, Perplexity",
+        "ctaLanding": "Get started free →",
         "cta": "Get started free",
         "features": [
           "4 AIs (Claude, GPT, Gemini, Perplexity)",
@@ -123,6 +126,8 @@
       },
       "pro": {
         "subtitle": "For frequent and complete use",
+        "tagline": "Unlimited debates per day · all modes · Grok included",
+        "ctaLanding": "Upgrade to Pro →",
         "badge": "MOST POPULAR",
         "cta": "Get started with Pro",
         "features": [
@@ -139,6 +144,8 @@
       },
       "premium": {
         "subtitle": "For intensive and advanced use",
+        "tagline": "Everything in Pro · priority access to new features · document upload",
+        "ctaLanding": "Upgrade to Premium →",
         "cta": "Get started with Premium",
         "features": [
           "4 AIs in debates",
