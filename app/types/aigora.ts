@@ -35,6 +35,7 @@ export interface DevilSession {
 
 export interface TwoVsTwoConfig {
   topic: string
+  mode?: 'solo' | 'amico'
   teamA: { humanName: string; aiId: string }
   teamB: { aiId1: string; aiId2: string; humanNameB?: string }  // squadra B: 2 AI oppure umano+AI
   arbiterAiId: string  // 4a AI — non gioca mai

@@ -15,5 +15,5 @@ export async function GET() {
 
   const plan = resolveUserTier(user)
 
-  return NextResponse.json({ plan, name: user.name, image: user.image, beta: user.beta ?? false })
+  return NextResponse.json({ id: user.id, plan, name: user.name, image: user.image, beta: user.beta ?? false })
 }

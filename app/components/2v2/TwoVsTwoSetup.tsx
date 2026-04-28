@@ -546,6 +546,7 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
             onClick={() => {
               const startConfig = {
                 topic: topic.trim(),
+                mode: mode as 'solo' | 'amico',
                 teamA: { humanName: teamAHuman, aiId: teamAAI },
                 teamB: { aiId1: teamBAI, aiId2: teamBAI2 },
                 arbiterAiId: arbiter,

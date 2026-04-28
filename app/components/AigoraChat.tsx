@@ -109,6 +109,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [userImage, setUserImage] = useState<string | null>(null)
   const [resolvedPlan, setResolvedPlan] = useState<string | null>(null)
   const [dbUserName, setDbUserName] = useState<string | null>(null)
+  const [dbUserId, setDbUserId] = useState<string | null>(null)
   const [isBeta, setIsBeta] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showModeSelect, setShowModeSelect] = useState(false)
@@ -411,6 +412,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     fetch('/api/user/me')
       .then(r => r.json())
       .then(d => {
+        if (d.id) setDbUserId(d.id)
         if (d.plan) setResolvedPlan(d.plan)
         if (d.image) setUserImage(d.image)
         if (d.name) {
@@ -521,6 +523,14 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       })))
     }).catch(() => {})
     setUndoChat(null)
+  }
+
+  const handleCloseRoom = async (roomId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await fetch(`/api/rooms/${roomId}`, { method: 'PATCH' })
+      setRooms(prev => prev.filter(r => r.id !== roomId))
+    } catch {}
   }
 
   const handleOpenRoom = async (roomId: string) => {
@@ -1175,7 +1185,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       roundScores: [],
       ended: false,
       verdict: null,
-      waitingForOpponent: !!config.roomCode,
+      waitingForOpponent: config.mode === 'amico',
     })
     setPhase('running')
   }
@@ -2363,9 +2373,22 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                           ) : (
                             <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-white/30" style={{ backgroundColor:'rgba(255,255,255,0.06)' }}>CONCLUSO</span>
                           )}
-                          {room.visibility === 'private' && <span className="text-[10px] text-white/30">🔒</span>}
+                          {room.visibility === 'private' && <span className="text-[10px] text-white/30 ml-1">privata</span>}
                         </div>
-                        <span className="text-[10px] text-white/25">{new Date(room.createdAt).toLocaleDateString('it-IT', { day:'2-digit', month:'short' })}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-white/25">{new Date(room.createdAt).toLocaleDateString('it-IT', { day:'2-digit', month:'short' })}</span>
+                          {(room.hostId === dbUserId || room.host?.id === dbUserId) && (
+                            <button
+                              onClick={(e) => handleCloseRoom(room.id, e)}
+                              className="w-5 h-5 flex items-center justify-center rounded-full transition-all hover:bg-white/15"
+                              style={{ background: 'rgba(255,255,255,0.07)' }}
+                              title="Chiudi dibattito">
+                              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
+                                <path d="M1 1l10 10M11 1L1 11"/>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="text-sm font-bold text-white mb-2 leading-snug">{room.topic}</div>
                       <div className="flex items-center gap-2 flex-wrap">
@@ -2786,9 +2809,22 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                               ) : (
                                 <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-white/30" style={{ backgroundColor:'rgba(255,255,255,0.06)' }}>CONCLUSO</span>
                               )}
-                              {room.visibility === 'private' && <span className="text-[10px] text-white/30">🔒</span>}
+                              {room.visibility === 'private' && <span className="text-[10px] text-white/30 ml-1">privata</span>}
                             </div>
-                            <span className="text-[10px] text-white/25">{new Date(room.createdAt).toLocaleDateString('it-IT', { day:'2-digit', month:'short' })}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-white/25">{new Date(room.createdAt).toLocaleDateString('it-IT', { day:'2-digit', month:'short' })}</span>
+                              {(room.hostId === dbUserId || room.host?.id === dbUserId) && (
+                                <button
+                                  onClick={(e) => handleCloseRoom(room.id, e)}
+                                  className="w-5 h-5 flex items-center justify-center rounded-full transition-all hover:bg-white/15"
+                                  style={{ background: 'rgba(255,255,255,0.07)' }}
+                                  title="Chiudi dibattito">
+                                  <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
+                                    <path d="M1 1l10 10M11 1L1 11"/>
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <div className="text-sm font-bold text-white mb-2 leading-snug">{room.topic}</div>
                           <div className="flex items-center gap-2 flex-wrap">
