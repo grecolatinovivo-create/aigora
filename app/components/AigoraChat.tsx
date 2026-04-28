@@ -118,6 +118,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [twoVsTwoState, setTwoVsTwoState] = useState<TwoVsTwoState | null>(null)
   const [twoVsTwoLoading, setTwoVsTwoLoading] = useState(false)
   const [twoVsTwoRoomAblyId, setTwoVsTwoRoomAblyId] = useState<string | null>(null)
+  const [pendingReconnect, setPendingReconnect] = useState<{ roomId: string; state: TwoVsTwoState } | null>(null)
   const [desktopRoundBanner, setDesktopRoundBanner] = useState<number | null>(null)
   const prevDesktopRound = useRef<number>(0)
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -354,6 +355,40 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (!twoVsTwoRoomAblyId || !twoVsTwoState) return
     publish2v2Ref.current({ type: '2v2_state', state: twoVsTwoState })
   }, [twoVsTwoState, twoVsTwoRoomAblyId])
+
+  // Persiste lo stato 2v2 in localStorage per il reconnect dell'host
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!twoVsTwoState || !twoVsTwoRoomAblyId) return
+    if (twoVsTwoState.ended) {
+      localStorage.removeItem('aigora_2v2_active')
+      return
+    }
+    localStorage.setItem('aigora_2v2_active', JSON.stringify({
+      roomId: twoVsTwoRoomAblyId,
+      state: twoVsTwoState,
+      savedAt: Date.now(),
+    }))
+  }, [twoVsTwoState, twoVsTwoRoomAblyId])
+
+  // Al mount: controlla se esiste una partita 2v2 salvata
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const saved = localStorage.getItem('aigora_2v2_active')
+      if (!saved) return
+      const { roomId, state, savedAt } = JSON.parse(saved)
+      if (Date.now() - savedAt > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('aigora_2v2_active')
+        return
+      }
+      if (state && !state.ended && roomId) {
+        setPendingReconnect({ roomId, state })
+      }
+    } catch {
+      localStorage.removeItem('aigora_2v2_active')
+    }
+  }, [])
   // ─────────────────────────────────────────────────────────────────────────
 
   // Registra la sessione al mount
@@ -1141,6 +1176,16 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       verdict: null,
       waitingForOpponent: !!config.roomCode,
     })
+    setPhase('running')
+  }
+
+  const handle2v2Reconnect = () => {
+    if (!pendingReconnect) return
+    setPendingReconnect(null)
+    setShow2v2Label('topic')
+    setSelectedMode('2v2')
+    setTwoVsTwoRoomAblyId(pendingReconnect.roomId)
+    setTwoVsTwoState(pendingReconnect.state)
     setPhase('running')
   }
 
@@ -2490,12 +2535,30 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
             loading={twoVsTwoLoading}
             myTeam="A"
-            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
-            onNewGame={() => { setTwoVsTwoState(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true) }}
-            onMultiplayer={() => { setTwoVsTwoState(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false) }}
+            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setPhase('start'); setShow2v2Label(null); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
+            onNewGame={() => { setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
+            onMultiplayer={() => { setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
           />
         </div>,
         document.body
+      )}
+
+      {/* ── Banner reconnect 2v2 ── */}
+      {pendingReconnect && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl"
+          style={{ background: 'rgba(124,58,237,0.97)', border: '1px solid rgba(167,139,250,0.5)', backdropFilter: 'blur(12px)', whiteSpace: 'nowrap' }}>
+          <span className="text-xl">⚔️</span>
+          <div className="text-white text-sm font-semibold">Partita 2v2 in corso</div>
+          <button onClick={handle2v2Reconnect}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)' }}>
+            Riprendi →
+          </button>
+          <button onClick={() => { setPendingReconnect(null); localStorage.removeItem('aigora_2v2_active') }}
+            className="text-white/50 text-xl leading-none hover:text-white/80 transition-colors ml-1">
+            ×
+          </button>
+        </div>
       )}
       </>
     )
@@ -3448,9 +3511,9 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
             loading={twoVsTwoLoading}
             myTeam="A"
-            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setPhase('start'); setShow2v2Label(null) }}
-            onNewGame={() => { setTwoVsTwoState(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true) }}
-            onMultiplayer={() => { setTwoVsTwoState(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false) }}
+            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setPhase('start'); setShow2v2Label(null); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
+            onNewGame={() => { setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
+            onMultiplayer={() => { setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
           />
         )}
 

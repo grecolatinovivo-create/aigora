@@ -103,12 +103,30 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     }, 3800)
   }
 
-  const shareLink = typeof window !== 'undefined' ? `${window.location.origin}/2v2/${roomCode}` : ''
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : 'https://aigora.eu')
+  const shareLink = roomCode ? `${siteUrl}/2v2/${roomCode}` : ''
 
   const handleCopy = () => {
+    if (!shareLink) return
     navigator.clipboard.writeText(shareLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleNativeShare = async () => {
+    if (!shareLink) return
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Sfida 2v2 su AiGORÀ',
+          text: `Sei stato sfidato! Argomento: "${topic}". Entra nella Squadra B →`,
+          url: shareLink,
+        })
+      } catch { /* utente ha annullato */ }
+    } else {
+      handleCopy()
+    }
   }
 
   // Contenuto step condiviso — usato sia in mobile che in iPad desktop
@@ -305,13 +323,49 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           </div>
         )}
 
-        {/* ── STEP 4: Riepilogo squadre ── */}
+        {/* ── STEP 4: Riepilogo squadre + invito ── */}
         {step === 'share' && (
-          <div className="flex flex-col px-5 pt-8 pb-6 gap-6">
+          <div className="flex flex-col px-5 pt-8 pb-6 gap-5">
             <div>
               <div className="text-2xl font-black text-white mb-1">Partita pronta.</div>
-              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Tutto pronto. Inizia quando vuoi.</div>
+              <div className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>Invita un amico nella Squadra B.</div>
             </div>
+
+            {/* Invito */}
+            <div className="rounded-2xl p-4 flex flex-col gap-3" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(167,139,250,0.25)' }}>
+              <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'rgba(167,139,250,0.7)' }}>Codice invito</div>
+              {roomCode ? (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-black text-2xl tracking-widest text-white">{roomCode}</span>
+                    <div className="flex gap-2">
+                      {typeof navigator !== 'undefined' && 'share' in navigator && (
+                        <button onClick={handleNativeShare}
+                          className="px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all active:scale-95"
+                          style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', color: '#A78BFA' }}>
+                          Condividi
+                        </button>
+                      )}
+                      <button onClick={handleCopy}
+                        className="px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all active:scale-95"
+                        style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(167,139,250,0.12)', border: `1px solid ${copied ? 'rgba(16,163,127,0.4)' : 'rgba(167,139,250,0.25)'}`, color: copied ? '#34d399' : '#A78BFA' }}>
+                        {copied ? '✓ Copiato' : 'Copia link'}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.3)' }}>{shareLink}</div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 py-1">
+                  {[0, 100, 200].map(d => (
+                    <span key={d} className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce"
+                      style={{ animationDelay: `${d}ms` }} />
+                  ))}
+                  <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Generazione codice…</span>
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <div className="flex-1 rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
                 <div className="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">SQUADRA A</div>
@@ -337,7 +391,6 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                 </div>
               </div>
             </div>
-            {/* Bottone: su desktop triggera transizione iPad→iPhone, su mobile chiama subito onStart */}
             <button
               onClick={() => {
                 const startConfig = { topic: topic.trim(), teamA: { humanName: teamAHuman, aiId: teamAAI }, teamB: { aiId1: teamBAI, aiId2: teamBAI2 }, arbiterAiId: arbiter, maxRounds: maxRoundsChoice, roomCode, roomId, teamASide: userSide }
@@ -350,7 +403,7 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               }}
               className="w-full py-4 rounded-2xl font-bold text-white text-[15px] transition-all active:scale-[0.98]"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
-              Inizia la partita →
+              Inizia e aspetta l'avversario →
             </button>
           </div>
         )}
@@ -443,41 +496,70 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
             {/* Contenuto step — step 4 ha layout dedicato su desktop */}
             {step === 'share' ? (
               <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Corpo: titolo centrato + squadre */}
-                <div className="flex-1 flex flex-col items-center justify-center px-12 gap-8">
+                <div className="flex-1 flex flex-col items-center justify-center px-12 gap-6">
                   {/* Titolo */}
                   <div className="text-center">
                     <div className="text-4xl font-black text-white tracking-tight">Partita pronta.</div>
-                    <div className="text-base mt-2" style={{ color: 'rgba(255,255,255,0.35)' }}>Tutto pronto. Inizia quando vuoi.</div>
+                    <div className="text-base mt-2" style={{ color: 'rgba(255,255,255,0.35)' }}>Invita un amico nella Squadra B.</div>
+                  </div>
+                  {/* Box invito */}
+                  <div className="w-full rounded-2xl px-6 py-4 flex items-center justify-between gap-6" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(167,139,250,0.3)' }}>
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(167,139,250,0.7)' }}>Codice invito</div>
+                      {roomCode ? (
+                        <>
+                          <div className="font-black text-3xl tracking-widest text-white">{roomCode}</div>
+                          <div className="text-[11px] mt-1 truncate max-w-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{shareLink}</div>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2 py-1">
+                          {[0, 100, 200].map(d => (
+                            <span key={d} className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce"
+                              style={{ animationDelay: `${d}ms` }} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      {typeof navigator !== 'undefined' && 'share' in navigator && (
+                        <button onClick={handleNativeShare}
+                          className="px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95"
+                          style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.35)', color: '#A78BFA' }}>
+                          Condividi
+                        </button>
+                      )}
+                      <button onClick={handleCopy} disabled={!roomCode}
+                        className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:opacity-40"
+                        style={{ background: copied ? 'rgba(16,163,127,0.2)' : 'rgba(167,139,250,0.15)', border: `1px solid ${copied ? 'rgba(16,163,127,0.4)' : 'rgba(167,139,250,0.35)'}`, color: copied ? '#34d399' : '#A78BFA' }}>
+                        {copied ? '✓ Copiato' : 'Copia link'}
+                      </button>
+                    </div>
                   </div>
                   {/* Squadre con VS centrale */}
                   <div className="w-full flex items-stretch gap-0">
-                    {/* Squadra A */}
-                    <div className="flex-1 rounded-3xl p-8 flex flex-col gap-4" style={{ background: 'rgba(59,130,246,0.1)', border: '2px solid rgba(59,130,246,0.3)' }}>
+                    <div className="flex-1 rounded-3xl p-6 flex flex-col gap-3" style={{ background: 'rgba(59,130,246,0.1)', border: '2px solid rgba(59,130,246,0.3)' }}>
                       <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: '#60a5fa' }}>Squadra A</div>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: '#3b82f6' }}>{teamAHuman[0]?.toUpperCase()}</div>
-                        <div className="text-2xl font-black text-white">{teamAHuman}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-base flex-shrink-0" style={{ background: '#3b82f6' }}>{teamAHuman[0]?.toUpperCase()}</div>
+                        <div className="text-xl font-black text-white">{teamAHuman}</div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: AI_COLOR[teamAAI] }}>{teamAAI === 'gemini' ? 'Ge' : AI_NAMES[teamAAI][0]}</div>
-                        <div className="text-2xl font-black" style={{ color: AI_COLOR[teamAAI] }}>{AI_NAMES[teamAAI]}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-base flex-shrink-0" style={{ background: AI_COLOR[teamAAI] }}>{teamAAI === 'gemini' ? 'Ge' : AI_NAMES[teamAAI][0]}</div>
+                        <div className="text-xl font-black" style={{ color: AI_COLOR[teamAAI] }}>{AI_NAMES[teamAAI]}</div>
                       </div>
                     </div>
-                    {/* VS */}
                     <div className="flex items-center justify-center px-6">
                       <div className="text-3xl font-black" style={{ color: 'rgba(255,255,255,0.2)' }}>VS</div>
                     </div>
-                    {/* Squadra B */}
-                    <div className="flex-1 rounded-3xl p-8 flex flex-col gap-4" style={{ background: 'rgba(239,68,68,0.1)', border: '2px solid rgba(239,68,68,0.3)' }}>
+                    <div className="flex-1 rounded-3xl p-6 flex flex-col gap-3" style={{ background: 'rgba(239,68,68,0.1)', border: '2px solid rgba(239,68,68,0.3)' }}>
                       <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: '#f87171' }}>Squadra B</div>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: AI_COLOR[teamBAI] }}>{teamBAI === 'gemini' ? 'Ge' : AI_NAMES[teamBAI][0]}</div>
-                        <div className="text-2xl font-black" style={{ color: AI_COLOR[teamBAI] }}>{AI_NAMES[teamBAI]}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-base flex-shrink-0" style={{ background: AI_COLOR[teamBAI] }}>{teamBAI === 'gemini' ? 'Ge' : AI_NAMES[teamBAI][0]}</div>
+                        <div className="text-xl font-black" style={{ color: AI_COLOR[teamBAI] }}>{AI_NAMES[teamBAI]}</div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0" style={{ background: AI_COLOR[teamBAI2] }}>{teamBAI2 === 'gemini' ? 'Ge' : AI_NAMES[teamBAI2][0]}</div>
-                        <div className="text-2xl font-black" style={{ color: AI_COLOR[teamBAI2] }}>{AI_NAMES[teamBAI2]}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-base flex-shrink-0" style={{ background: AI_COLOR[teamBAI2] }}>{teamBAI2 === 'gemini' ? 'Ge' : AI_NAMES[teamBAI2][0]}</div>
+                        <div className="text-xl font-black" style={{ color: AI_COLOR[teamBAI2] }}>{AI_NAMES[teamBAI2]}</div>
                       </div>
                     </div>
                   </div>
@@ -492,7 +574,7 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
                     }}
                     className="w-full py-5 rounded-2xl font-black text-white text-xl transition-all hover:scale-[1.01] active:scale-[0.98]"
                     style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)', boxShadow: '0 6px 30px rgba(124,58,237,0.5)' }}>
-                    Inizia la partita →
+                    Inizia e aspetta l'avversario →
                   </button>
                 </div>
               </div>
