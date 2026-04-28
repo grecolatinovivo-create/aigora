@@ -415,6 +415,7 @@ export async function POST(req: NextRequest) {
     // ── Auth + piano utente ────────────────────────────────────────────────────
     const session = await getServerSession(authOptions)
     let currentUserId: string | undefined = undefined
+    let tier: import('@/lib/plans').Tier = 'free'
 
     if (session?.user?.email) {
       const { prisma } = await import('@/lib/prisma')
@@ -422,7 +423,7 @@ export async function POST(req: NextRequest) {
       currentUserId = dbUser?.id
 
       const isAdmin = dbUser?.email === process.env.ADMIN_EMAIL
-      const tier = isAdmin ? 'admin' : normalizePlan(dbUser?.plan)
+      tier = isAdmin ? 'admin' : normalizePlan(dbUser?.plan)
 
       // Flag forceGeminiPerp: per-utente o globale (flag dell'admin)
       const userForceGemini = dbUser?.forceGeminiPerp ?? false
