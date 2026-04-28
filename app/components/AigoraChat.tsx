@@ -331,8 +331,40 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handle2v2RoomEvent = useCallback((event: RoomEvent) => {
     if (event.type === 'presence' && event.action === 'enter') {
-      // Player B è entrato nella stanza — rimuovi il flag waitingForOpponent
-      setTwoVsTwoState(prev => prev ? { ...prev, waitingForOpponent: false } : prev)
+      // Player B è entrato nella stanza
+      const currentConfig = twoVsTwoStateRef.current?.config
+      const isAmico = currentConfig?.mode === 'amico'
+      const roomCode = currentConfig?.roomCode
+
+      if (isAmico && roomCode) {
+        // In amico mode: recupera il gameState aggiornato dal DB per ottenere l'AI scelto dall'ospite
+        fetch(`/api/2v2?code=${roomCode}`)
+          .then(r => r.json())
+          .then(data => {
+            // Il DB salva l'AI dell'ospite in teamB.aiId (campo usato nel PATCH)
+            const guestAiId = (data.room?.gameState as any)?.teamB?.aiId
+            setTwoVsTwoState(prev => {
+              if (!prev) return prev
+              return {
+                ...prev,
+                config: guestAiId ? {
+                  ...prev.config,
+                  teamB: {
+                    ...prev.config.teamB,
+                    aiId1: guestAiId,  // mappa teamB.aiId (DB) → aiId1 (client)
+                  },
+                } : prev.config,
+                waitingForOpponent: false,
+              }
+            })
+          })
+          .catch(e => {
+            console.warn('2v2 amico: impossibile recuperare AI ospite', e)
+            setTwoVsTwoState(prev => prev ? { ...prev, waitingForOpponent: false } : prev)
+          })
+      } else {
+        setTwoVsTwoState(prev => prev ? { ...prev, waitingForOpponent: false } : prev)
+      }
     } else if (event.type === '2v2_action_b') {
       // Player B ha mandato la sua mossa umana
       processB2v2ActionRef.current?.(event.content, event.userName)
@@ -371,6 +403,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       savedAt: Date.now(),
     }))
   }, [twoVsTwoState, twoVsTwoRoomAblyId])
+
+  // Quando la partita 2v2 termina con verdetto, marca la room come ended nel DB
+  useEffect(() => {
+    if (!twoVsTwoState?.ended || !twoVsTwoState?.verdict || !twoVsTwoRoomAblyId) return
+    fetch(`/api/rooms/${twoVsTwoRoomAblyId}`, { method: 'PATCH' })
+      .catch(e => console.warn('2v2: impossibile chiudere room nel DB:', e))
+  }, [twoVsTwoState?.ended, twoVsTwoState?.verdict, twoVsTwoRoomAblyId])
 
   // Al mount: controlla se esiste una partita 2v2 salvata
   useEffect(() => {
@@ -437,13 +476,19 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // Carica rooms e notifiche (Pro+)
   useEffect(() => {
     if (!canUseGroupChat) return
-    fetch('/api/rooms').then(r => r.json()).then(d => { if (d.rooms) setRooms(d.rooms) }).catch(() => {})
-    fetch('/api/notifications').then(r => r.json()).then(d => {
-      if (d.notifications) {
-        setNotifications(d.notifications)
-        setUnreadCount(d.notifications.filter((n: any) => !n.read).length)
-      }
-    }).catch(() => {})
+    fetch('/api/rooms', { signal: AbortSignal.timeout(5000) })
+      .then(r => r.json())
+      .then(d => { if (d.rooms) setRooms(d.rooms) })
+      .catch(e => { if (e?.name !== 'TimeoutError' && e?.name !== 'AbortError') console.warn('rooms fetch error:', e) })
+    fetch('/api/notifications', { signal: AbortSignal.timeout(5000) })
+      .then(r => r.json())
+      .then(d => {
+        if (d.notifications) {
+          setNotifications(d.notifications)
+          setUnreadCount(d.notifications.filter((n: any) => !n.read).length)
+        }
+      })
+      .catch(e => { if (e?.name !== 'TimeoutError' && e?.name !== 'AbortError') console.warn('notifications fetch error:', e) })
   }, [canUseGroupChat])
 
   // Ricerca utenti con debounce (per crea room)
@@ -1205,7 +1250,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTwoVsTwoLoading(true)
     const state = twoVsTwoState
     const { config } = state
-    const aiId = team === 'A' ? config.teamA.aiId : config.teamB.aiId1
+    // In amico mode teamB.aiId1 = AI scelto dall'ospite; in solo mode = primo AI assegnato dalla roulette
+    const aiId = team === 'A' ? config.teamA.aiId : (config.teamB.aiId1 || (config.teamB as any).aiId)
     const aiName = AI_NAMES[aiId]
     const humanName = team === 'A' ? config.teamA.humanName : 'Squadra B'
     const enemyAiNames = team === 'A'
@@ -1351,6 +1397,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTwoVsTwoLoading(true)
 
     // B risponde: aiId1 e aiId2 (l'arbitro è separato e non gioca mai)
+    // In amico mode solo aiId1 è settato (AI scelto dall'ospite), aiId2 non esiste
     const bConfig = twoVsTwoState.config.teamB
     const teamAHumanName = twoVsTwoState.config.teamA.humanName
     const teamAAiName = AI_NAMES[twoVsTwoState.config.teamA.aiId]
@@ -1364,7 +1411,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         return { name: label, content: m.content }
       })
 
-    for (const bAiId of [bConfig.aiId1, bConfig.aiId2]) {
+    // Filtra gli AI di B: in solo mode sono 2, in amico mode solo aiId1 (l'AI dell'ospite)
+    const bAiIds = [bConfig.aiId1, bConfig.aiId2].filter(Boolean) as string[]
+    for (const bAiId of bAiIds) {
       setTwoVsTwoState(prev => prev ? {
         ...prev,
         messages: [...prev.messages, { team: 'B' as const, isAI: true, aiId: bAiId, author: AI_NAMES[bAiId], content: '', streaming: true }]
@@ -1436,7 +1485,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setTwoVsTwoLoading(false)
 
     // Dopo che B ha risposto, torna ad A per il round successivo (o verdetto)
-    const currentState = twoVsTwoState
+    // Usa il ref per evitare stale closure (twoVsTwoState sarebbe congelato al valore pre-await)
+    const currentState = twoVsTwoStateRef.current
+    if (!currentState) return
     const newRound = currentState.round + 1
     if (newRound > currentState.maxRounds) {
       // Ultimo round completato — prima assegna il punto del round, poi verdetto finale
@@ -1478,7 +1529,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       content: m.content,
     }))
 
-    const promptContent = `Sei ${arbName}, arbitro imparziale di un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}). Hai appena assistito al round ${roundNumber}. Devi assegnare esattamente 1 punto a UNA delle due squadre: scrivi "PUNTO: A" oppure "PUNTO: B". Non puoi mai fare pareggio. Poi motiva il punto con una frase secca e diretta. Massimo 150 tokens in totale. Niente di più.`
+    const teamBDesc = config.mode === 'amico'
+      ? `umano + ${AI_NAMES[config.teamB.aiId1] ?? 'AI'}`
+      : `AI (${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]})`
+    const promptContent = `Sei ${arbName}, arbitro imparziale di un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]}. Squadra B: ${teamBDesc}. Hai appena assistito al round ${roundNumber}. Devi assegnare esattamente 1 punto a UNA delle due squadre: scrivi "PUNTO: A" oppure "PUNTO: B". Non puoi mai fare pareggio. Poi motiva il punto con una frase secca e diretta. Massimo 150 tokens in totale. Niente di più.`
 
     try {
       const res = await fetch('/api/chat', {
@@ -1552,7 +1606,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const tiebreakInstruction = existingScoreA === existingScoreB
         ? ` I punti sono in parità. Devi comunque dichiarare un vincitore: scrivi "VINCITORE: A" oppure "VINCITORE: B" in base alla qualità complessiva degli argomenti. Niente pareggi.`
         : ''
-      const promptContent = `Sei ${arbName}, arbitro imparziale. Hai arbitrato un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]} (${existingScoreA} punti). Squadra B: AI — ${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]} (${existingScoreB} punti). Il dibattito è finito.${tiebreakInstruction} Scrivi un commento finale sintetico in 2-3 frasi: chi ha dominato, perché, e un giudizio complessivo. Niente numeri, già calcolati. Sii diretto e neutro.`
+      const teamBFinalDesc = config.mode === 'amico'
+        ? `umano + ${AI_NAMES[config.teamB.aiId1] ?? 'AI'}`
+        : `AI — ${AI_NAMES[config.teamB.aiId1]} + ${AI_NAMES[config.teamB.aiId2]}`
+      const promptContent = `Sei ${arbName}, arbitro imparziale. Hai arbitrato un dibattito 2v2 su: "${config.topic}". Squadra A: ${config.teamA.humanName} + ${AI_NAMES[config.teamA.aiId]} (${existingScoreA} punti). Squadra B: ${teamBFinalDesc} (${existingScoreB} punti). Il dibattito è finito.${tiebreakInstruction} Scrivi un commento finale sintetico in 2-3 frasi: chi ha dominato, perché, e un giudizio complessivo. Niente numeri, già calcolati. Sii diretto e neutro.`
 
       const res = await fetch('/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1606,7 +1663,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
     const { config, round, maxRounds } = state
     const bHumanName = bName || config.teamB.humanNameB || 'Squadra B'
-    const bAiId = config.teamB.aiId1
+    // In amico mode il DB salva teamB.aiId (via PATCH); nel client è mappato su aiId1 da handle2v2RoomEvent.
+    // Fallback su (config.teamB as any).aiId per robustezza se l'update non è ancora arrivato.
+    const bAiId = config.teamB.aiId1 || (config.teamB as any).aiId || 'claude'
     const bAiName = AI_NAMES[bAiId]
 
     // 1. Aggiungi il messaggio umano di B

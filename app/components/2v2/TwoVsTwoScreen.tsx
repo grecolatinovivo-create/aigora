@@ -1,5 +1,15 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+
+// Escape HTML entities prima di applicare i transform markdown — previene XSS
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 import { AI_OPTIONS, AI_NAMES, AI_COLOR } from '@/app/lib/aiProfiles'
 import { SFX } from '@/app/lib/audioEngine'
 import type { TwoVsTwoState } from '@/app/types/aigora'
@@ -382,7 +392,7 @@ export default function TwoVsTwoScreen({ state, onHumanMessage, onRequestAI, loa
                       {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: aiColor, opacity: 0.6, animationDelay: `${d}ms` }} />)}
                     </span>
                   ) : (
-                    <span dangerouslySetInnerHTML={{ __html: msg.content
+                    <span dangerouslySetInnerHTML={{ __html: escapeHtml(msg.content)
                       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
                       .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
                       .replace(/\n/g, '<br/>')

@@ -65,6 +65,8 @@ function useTypewriter(text: string, speed = 38) {
 export default function BrainstormerClient({ userEmail, userName, userPlan }: Props) {
   const t = useTranslations('brainstorm')
   const locale = useLocale()
+  // Piano aggiornato dinamicamente dopo ogni sessione completata
+  const [effectivePlan, setEffectivePlan] = useState(userPlan)
   const [phase, setPhase] = useState<Phase>('entry')
   const [idea, setIdea] = useState('')
   const [answers, setAnswers] = useState<IntakeAnswer[]>([])
@@ -176,6 +178,11 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         body: JSON.stringify({ id: currentSessionId, thread: outputThread, output: outputText }),
       }).catch(() => {})
     }
+    // Aggiorna il piano locale — così Navbar riflette lo stato aggiornato senza reload
+    fetch('/api/user/me')
+      .then(r => r.json())
+      .then(d => { if (d.plan) setEffectivePlan(d.plan) })
+      .catch(() => {})
   }, [outputDone]) // eslint-disable-line
 
   // ── Aggiorna feedback nella sessione ──
@@ -446,7 +453,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
       <Navbar
         displayName={userName || userEmail}
         userEmail={userEmail}
-        userPlan={userPlan}
+        userPlan={effectivePlan}
         showProfileMenu={showProfileMenu}
         setShowProfileMenu={setShowProfileMenu}
         onCronologia={() => { window.location.href = '/' }}

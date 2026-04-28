@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import Ably from 'ably'
 
 // Un client per room per evitare conflitti
@@ -39,18 +39,39 @@ export function useAbly({ roomId, userId, userName, onEvent, enabled = true }: U
   const channelRef = useRef<Ably.RealtimeChannel | null>(null)
   const onEventRef = useRef(onEvent)
   onEventRef.current = onEvent
+  const [isConnected, setIsConnected] = useState(false)
+  // Ref to cancel the pending close timeout if effect re-runs before it fires
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     if (!roomId || !enabled || !userId) return
+
+    // Cancel any pending close from a previous cleanup
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = undefined
+    }
 
     const client = getAblyClient(roomId)
     const channel = client.channels.get(`room:${roomId}`)
     channelRef.current = channel
 
-    // Ascolta messaggi
+    // Track connection state
+    setIsConnected(client.connection.state === 'connected')
+    const handleConnectionChange = (change: Ably.ConnectionStateChange) => {
+      setIsConnected(change.current === 'connected')
+    }
+    client.connection.on(handleConnectionChange)
+
+    // Ascolta messaggi — valida la forma prima di consegnare
     const handleMessage = (msg: Ably.Message) => {
       try {
         const event = JSON.parse(msg.data) as RoomEvent
+        // Validate: must have a string 'type' field
+        if (!event || typeof event.type !== 'string') {
+          console.warn('Ably: evento con forma non valida ignorato', event)
+          return
+        }
         onEventRef.current(event)
       } catch (e) {
         console.warn('Ably parse error:', e)
@@ -102,9 +123,13 @@ export function useAbly({ roomId, userId, userName, onEvent, enabled = true }: U
       channel.presence.leave().catch(() => {})
       channel.unsubscribe(handleMessage)
       channel.presence.unsubscribe()
+      client.connection.off(handleConnectionChange)
       channelRef.current = null
+      setIsConnected(false)
       // Chiudi il client dopo un po' (non subito per evitare reconnect immediato)
-      setTimeout(() => {
+      // Salviamo il ref così il prossimo effect può cancellarlo se necessario
+      closeTimeoutRef.current = setTimeout(() => {
+        closeTimeoutRef.current = undefined
         const c = clients.get(roomId)
         if (c) { c.close(); clients.delete(roomId) }
       }, 2000)
@@ -116,5 +141,5 @@ export function useAbly({ roomId, userId, userName, onEvent, enabled = true }: U
     channelRef.current.publish('event', JSON.stringify(event)).catch(console.warn)
   }, [])
 
-  return { publish }
+  return { publish, isConnected }
 }

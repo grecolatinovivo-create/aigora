@@ -104,9 +104,18 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
         if (data.code) {
           setRoomCode(data.code)
           setRoomId(data.room.id)
+          setRouletteReady(true)  // solo se la room è stata creata con successo
+        } else {
+          // API ha risposto senza codice — torna al topic con notifica silenziosa
+          console.warn('2v2 API: nessun codice ricevuto', data)
+          setStep('topic')
+          setTopicRevealed(false)
         }
-      } catch {}
-      setRouletteReady(true)
+      } catch (e) {
+        console.warn('2v2 API error:', e)
+        setStep('topic')
+        setTopicRevealed(false)
+      }
     }, 3800)
   }
 

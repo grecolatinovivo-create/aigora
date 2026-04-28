@@ -78,7 +78,7 @@ export default function TwoVsTwoLivePage() {
     }
   }, [])
 
-  const { publish } = useAbly({
+  const { publish, isConnected } = useAbly({
     roomId,
     userId,
     userName: playerName,
@@ -145,6 +145,16 @@ export default function TwoVsTwoLivePage() {
 
   return createPortal(
     <div className="fixed inset-0 z-[9999]" style={{ background: '#0d0d14' }}>
+      {/* Banner disconnessione — visibile solo durante partita attiva */}
+      {!isConnected && gameState && !gameState.ended && (
+        <div className="absolute top-0 left-0 right-0 z-[10001] flex items-center justify-center gap-2 py-2 px-4"
+          style={{ background: 'rgba(239,68,68,0.92)', backdropFilter: 'blur(8px)' }}>
+          <div className="flex gap-1">
+            {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+          </div>
+          <span className="text-white text-xs font-bold">Connessione persa — riconnessione in corso…</span>
+        </div>
+      )}
       <TwoVsTwoScreen
         state={gameState}
         onHumanMessage={handleHumanMessage}
