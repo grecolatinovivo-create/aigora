@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 
 // ── Tipo condiviso con i client ───────────────────────────────────────────────
 export interface LimitInfo {
-  limitType: 'weekly_debates' | 'daily_debates' | 'weekly_brainstormer'
-  retryAfter: number   // secondi
+  limitType: 'weekly_debates' | 'daily_debates' | 'weekly_brainstormer' | 'replies_per_debate'
+  retryAfter?: number  // secondi — assente per replies_per_debate
   limit: number
   tier: string
   requiredTier: 'pro' | 'premium'
@@ -53,6 +53,13 @@ const LIMIT_COPY: Record<LimitInfo['limitType'], {
     body: (limit, reset) =>
       `Il piano Pro include ${limit} sessioni Brainstormer a settimana. Il contatore si rinnova ${reset}.`,
   },
+  replies_per_debate: {
+    icon: '💬',
+    badge: 'Limite dibattito',
+    title: 'Hai raggiunto il limite di risposte per questo dibattito',
+    body: (limit) =>
+      `Il piano Free include fino a ${limit} risposte per dibattito. Passa a Pro per dibattiti illimitati.`,
+  },
 }
 
 const PLAN_CTA: Record<'pro' | 'premium', { label: string; price: string; color: string; gradient: string }> = {
@@ -70,7 +77,7 @@ interface LimitWallProps {
 // ── Componente principale ─────────────────────────────────────────────────────
 export default function LimitWall({ limitInfo, isDark = true, onDismiss }: LimitWallProps) {
   const router = useRouter()
-  const [secondsLeft, setSecondsLeft] = useState(limitInfo.retryAfter)
+  const [secondsLeft, setSecondsLeft] = useState(limitInfo.retryAfter ?? 0)
 
   // Countdown live
   useEffect(() => {

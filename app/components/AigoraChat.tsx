@@ -708,6 +708,17 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
         signal: controller.signal,
       })
 
+      if (res.status === 429) {
+        try {
+          const data = await res.json()
+          if (data.error === 'limit_reached') {
+            setLimitInfo(data as LimitInfo)
+          }
+        } catch {}
+        setActiveAi(null)
+        return null
+      }
+
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`)
 
       const reader = res.body.getReader()
