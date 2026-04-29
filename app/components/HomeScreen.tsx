@@ -200,6 +200,7 @@ export default function HomeScreen({
   const [arenaOpen, setArenaOpen] = useState(false)
   const [question, setQuestion]  = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const arenaCardRef = useRef<HTMLDivElement>(null)
   const dailyTopic = getDailyTopic(locale)
 
   // Contatore sessioni Free per questa settimana
@@ -220,7 +221,10 @@ export default function HomeScreen({
   }, [paid])
 
   useEffect(() => {
-    if (arenaOpen) setTimeout(() => textareaRef.current?.focus(), 120)
+    if (arenaOpen) {
+      setTimeout(() => textareaRef.current?.focus(), 120)
+      setTimeout(() => arenaCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 350)
+    }
   }, [arenaOpen])
 
   // Colore avatar per piano
@@ -376,6 +380,7 @@ export default function HomeScreen({
         {/* ─── Card Arena — full-width, prominente ───────────────────────── */}
         {/* C1 fix: div invece di button per evitare button annidati (invalido HTML/iOS) */}
         <div
+          ref={arenaCardRef}
           role="region"
           onClick={() => { if (!arenaOpen) setArenaOpen(true) }}
           style={{ ...card(C.arena, arenaOpen), padding: arenaOpen ? '16px 16px 0' : '16px', cursor: arenaOpen ? 'default' : 'pointer' }}
@@ -501,7 +506,7 @@ export default function HomeScreen({
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>{t('brainstorm.desc')}</div>
               </div>
             </div>
-            <div style={tag(C.brainstorm)}>Brainstorm</div>
+            <div style={tag(C.brainstorm)}>Brainstormer</div>
           </div>
           {!paid && <ProOverlay />}
         </button>
