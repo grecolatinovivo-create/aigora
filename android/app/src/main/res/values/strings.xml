@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AiGORÀ</string>
+    <string name="title_activity_main">AiGORÀ</string>
+    <string name="package_name">eu.aigora.app</string>
+    <string name="custom_url_scheme">eu.aigora.app</string>
+</resources>
