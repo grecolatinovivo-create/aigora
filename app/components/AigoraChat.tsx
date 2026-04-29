@@ -2,6 +2,7 @@
 // v3
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import HomeScreen from './HomeScreen'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
 import { useAbly, type RoomEvent } from '@/lib/useAbly'
@@ -2226,38 +2227,62 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
     )
   }
 
-  // ── SCHERMATA INIZIALE ────────────────────────────────────────────────────────
+  // ── SCHERMATA INIZIALE (HomeScreen) ──────────────────────────────────────────
   if (phase === 'start') {
     return (
       <>
-      {/* ── Backdrop globale — colora il chrome Safari su mobile ── */}
-      <div style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 50px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))', left: 0, right: 0, background: '#07070f', zIndex: -1, pointerEvents: 'none' }} />
-      <div className="desktop-bg relative overflow-hidden"
-        style={{ position: 'fixed', top: 'calc(-1 * env(safe-area-inset-top, 0px))', bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))', left: 0, right: 0, paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* HomeScreen — 4 card: Arena, 2v2, Devil, Brainstorm */}
+        <HomeScreen
+          userPlan={effectivePlan}
+          userName={userName}
+          userImage={userImage}
+          lastChat={savedChats[0] ? { id: savedChats[0].id, title: savedChats[0].title } : null}
+          onStartArena={(q) => handleStart(q)}
+          onStart2v2={() => { setSelectedMode('2v2'); setShow2v2Setup(true) }}
+          onStartDevil={() => { setSelectedMode('devil'); setShowDevilDifficulty(true) }}
+          onOpenHistory={() => setShowHistory(true)}
+        />
 
-        {/* ── Pannello cronologia (disponibile anche dalla start) ── */}
-        <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
-          <div className="w-72 h-full flex flex-col" style={{ backgroundColor: mobileBg.value, borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, backdropFilter: 'blur(20px)' }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
-              <span className="font-bold text-sm" style={{ color: isDark ? '#fff' : '#111' }}>Cronologia</span>
+        {/* ── Pannello cronologia slide-in ── */}
+        <div
+          className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        >
+          <div className="w-72 h-full flex flex-col"
+            style={{ backgroundColor: '#07070f', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b"
+              style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+              <span className="font-bold text-sm text-white">Cronologia</span>
               <div className="flex items-center gap-3">
-                <button onClick={() => { handleReset(); setPhase('new'); setShowHistory(false) }}
+                <button
+                  onClick={() => { handleReset(); setPhase('new'); setShowHistory(false) }}
                   className="text-purple-400 hover:text-purple-300 text-xs font-semibold transition-colors">
                   + Nuova
                 </button>
-                <button onClick={() => setShowHistory(false)} className="text-xl leading-none transition-colors" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>×</button>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="text-xl leading-none transition-colors"
+                  style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  ×
+                </button>
               </div>
             </div>
-            {/* Undo banner */}
             {undoChat && (
-              <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', backgroundColor: 'rgba(239,68,68,0.1)' }}>
-                <span className="text-xs truncate mr-2" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }}>"{undoChat.title}" eliminata · rimossa entro 30gg</span>
-                <button onClick={handleUndoDelete} className="text-red-400 text-xs font-bold flex-shrink-0 hover:text-red-300 transition-colors">Annulla</button>
+              <div className="flex items-center justify-between px-4 py-2.5 border-b"
+                style={{ borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(239,68,68,0.1)' }}>
+                <span className="text-xs truncate mr-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  &ldquo;{undoChat.title}&rdquo; eliminata
+                </span>
+                <button onClick={handleUndoDelete} className="text-red-400 text-xs font-bold flex-shrink-0 hover:text-red-300 transition-colors">
+                  Annulla
+                </button>
               </div>
             )}
             <div className="flex-1 overflow-y-auto py-2">
               {savedChats.length === 0 ? (
-                <p className="text-xs text-center mt-8 px-4" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)' }}>Nessuna chat salvata.</p>
+                <p className="text-xs text-center mt-8 px-4" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  Nessuna chat salvata.
+                </p>
               ) : (
                 savedChats.map(chat => (
                   <SwipeableChatRow
@@ -2274,8 +2299,8 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                       setTimeout(() => { isLoadingHistoryRef.current = false }, 100)
                     }}
                     onDelete={(e) => handleDeleteChat(chat.id, chat.title, e)}
-                    bgColor={mobileBg.value}
-                    isDark={isDark}
+                    bgColor="#07070f"
+                    isDark={true}
                   />
                 ))
               )}
@@ -2284,437 +2309,78 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
         </div>
         {showHistory && <div className="fixed inset-0 z-[39]" onClick={() => setShowHistory(false)} />}
 
-        {/* ── Navbar mobile (solo mobile) ── */}
-        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-5"
-          style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '10px' }}>
-          {/* Logo */}
-          <span className="font-black text-xl tracking-tight leading-none">
-            <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
-          </span>
-          {/* Avatar utente — va alla chat */}
-          {(() => {
-            const pc: Record<string,string> = { admin:'#F59E0B', max:'#FF6B2B', pro:'#A78BFA', starter:'#1A73E8', free:'#10A37F', none:'#6B7280' }
-            const c = pc[effectivePlan ?? 'free'] ?? '#6B7280'
-            return (
-              <button onClick={() => { handleReset(); setPhase('new') }}
-                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
-                style={{ background: userImage ? 'transparent' : c, boxShadow: `0 2px 12px ${c}66` }}>
-                {userImage
-                  ? <img src={userImage} alt="avatar" className="w-full h-full object-cover" />
-                  : (displayName[0] ?? 'U').toUpperCase()
-                }
-              </button>
-            )
-          })()}
-        </div>
+        {/* ── Portals: setup e schermate modi ── */}
+        {showModeSelect && typeof window !== 'undefined' && createPortal(
+          <ModeSelect
+            onSelect={handleSelectMode}
+            onClose={() => setShowModeSelect(false)}
+            userPlan={effectivePlan}
+          />,
+          document.body
+        )}
+        {show2v2Setup && typeof window !== 'undefined' && createPortal(
+          <TwoVsTwoSetup
+            onStart={handle2v2Start}
+            onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
+            currentUserName={dbUserName || userName.trim() || ''}
+          />,
+          document.body
+        )}
+        {showDevilDifficulty && typeof window !== 'undefined' && createPortal(
+          <DevilDifficultyScreen
+            onSelect={handleDevilDifficultySelect}
+            onBack={() => { setShowDevilDifficulty(false); setSelectedMode(null) }}
+            loading={devilLoading}
+          />,
+          document.body
+        )}
+        {devilIntroData && typeof window !== 'undefined' && createPortal(
+          <DevilIntroScreen
+            positions={devilIntroData.positions}
+            difficulty={devilIntroData.difficulty}
+            onStart={handleDevilStart}
+            onBack={() => { setDevilIntroData(null); setSelectedMode(null) }}
+          />,
+          document.body
+        )}
+        {selectedMode === '2v2' && twoVsTwoState && typeof window !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-[9999]" style={{ background: '#0d0d14' }}>
+            <TwoVsTwoScreen
+              state={twoVsTwoState}
+              onHumanMessage={handle2v2HumanMessage}
+              onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
+              loading={twoVsTwoLoading}
+              myTeam="A"
+              onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setPhase('start'); setShow2v2Label(null); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
+              onNewGame={() => { setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
+              onMultiplayer={() => { setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
+            />
+          </div>,
+          document.body
+        )}
 
-        {/* ── Navbar desktop ── */}
-        <div className="hidden lg:block flex-shrink-0">
-          <Navbar {...navbarProps} />
-        </div>
-
-        {/* ── Bubble fluttuanti (solo desktop xl+) — 12 bolle ── */}
-        {selectedMode !== 'devil' && [
-          { top: '180px', left: 'calc(50% - 560px)', delay: '-2s',   dur: '14s', anim: 'float-1' },
-          { top: '320px', left: 'calc(50% - 550px)', delay: '-7s',   dur: '13s', anim: 'float-3' },
-          { top: '460px', left: 'calc(50% - 560px)', delay: '-4s',   dur: '15s', anim: 'float-2' },
-          { top: '600px', left: 'calc(50% - 545px)', delay: '-9s',   dur: '12s', anim: 'float-4' },
-          { top: '720px', left: 'calc(50% - 555px)', delay: '-5s',   dur: '14s', anim: 'float-1' },
-          { top: '840px', left: 'calc(50% - 545px)', delay: '-11s',  dur: '13s', anim: 'float-3' },
-          { top: '180px', right: 'calc(50% - 560px)', delay: '-3s',  dur: '13s', anim: 'float-2' },
-          { top: '320px', right: 'calc(50% - 550px)', delay: '-8s',  dur: '15s', anim: 'float-4' },
-          { top: '460px', right: 'calc(50% - 560px)', delay: '-6s',  dur: '12s', anim: 'float-1' },
-          { top: '600px', right: 'calc(50% - 545px)', delay: '-1s',  dur: '14s', anim: 'float-3' },
-          { top: '720px', right: 'calc(50% - 555px)', delay: '-10s', dur: '13s', anim: 'float-2' },
-          { top: '840px', right: 'calc(50% - 545px)', delay: '-4.5s',dur: '15s', anim: 'float-4' },
-        ].map(({ top, left, right, delay, dur, anim }: any, i) => (
-          <button key={i}
-            className="absolute hidden lg:block px-4 py-2 rounded-full text-[11px] cursor-pointer transition-all hover:scale-105 hover:brightness-125"
-            onAnimationIteration={() => rotateBubble(i)}
-            onClick={() => handleStart(bubbleTopics[i])}
-            style={{
-              top, left, right,
-              color: 'rgba(255,255,255,0.5)',
-              backgroundColor: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              backdropFilter: 'blur(6px)',
-              maxWidth: '160px',
-              textAlign: 'center',
-              lineHeight: 1.4,
-              animation: `${anim} ${dur} ease-in-out infinite`,
-              animationDelay: delay,
-              zIndex: 20,
-              pointerEvents: 'auto',
-            }}>
-            {bubbleTopics[i]}
-          </button>
-        ))}
-
-        {/* ── Contenuto principale — occupa tutto lo spazio rimanente ── */}
-        <div className="flex-1 flex flex-col items-center justify-center relative z-10 scale-in"
-          style={{
-            paddingLeft: '20px',
-            paddingRight: '20px',
-            paddingTop: 'max(env(safe-area-inset-top), 16px)',
-            paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
-            gap: '0',
-            overflow: 'hidden',
-          }}>
-
-          <div className="w-full max-w-lg flex flex-col" style={{ gap: '14px' }}>
-
-            {/* ── HERO ── */}
-            <div className="text-center">
-              {/* Badge — nascosto su mobile piccolo per risparmiare spazio */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3 text-[11px] font-medium text-purple-300 border border-purple-500/30"
-                style={{ backgroundColor: 'rgba(124,58,237,0.12)' }}>
-                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
-                4 intelligenze artificiali · dibattito in tempo reale
-              </div>
-              {/* Logo */}
-              <h1 className="font-black tracking-tight leading-none"
-                style={{ fontSize: 'clamp(2.8rem, 14vw, 4rem)', marginBottom: '8px' }}>
-                <span className="text-white">Ai</span>
-                <span style={{ color: '#A78BFA' }}>GORÀ</span>
-              </h1>
-              {/* Sottotitolo */}
-              <p className="text-white/50 leading-relaxed mx-auto"
-                style={{ fontSize: 'clamp(0.75rem, 3.5vw, 0.875rem)', maxWidth: '340px' }}>
-                Poni una domanda e assisti al dibattito in tempo reale tra le quattro principali intelligenze artificiali
-              </p>
-            </div>
-
-            {/* ── AI cards ── */}
-            <div className="grid grid-cols-4 gap-2">
-              {AI_ORDER.map(id => (
-                <div key={id} className="glass rounded-2xl flex flex-col items-center text-center"
-                  style={{ padding: '10px 4px', gap: '6px' }}>
-                  <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-                    style={{
-                      width: 'clamp(32px, 9vw, 44px)',
-                      height: 'clamp(32px, 9vw, 44px)',
-                      fontSize: 'clamp(9px, 2.5vw, 13px)',
-                      backgroundColor: AI_COLOR[id],
-                      boxShadow: `0 4px 16px ${AI_COLOR[id]}60`,
-                    }}>
-                    {id === 'gemini' ? 'Ge' : AI_NAMES[id][0]}
-                  </div>
-                  <div>
-                    <div className="text-white font-semibold leading-tight"
-                      style={{ fontSize: 'clamp(9px, 2.8vw, 12px)' }}>
-                      {AI_NAMES[id]}
-                    </div>
-                    <div className="text-white/35 leading-tight mt-0.5"
-                      style={{ fontSize: 'clamp(7px, 2vw, 9px)' }}>
-                      {AI_DESC[id]}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* ── Form domanda o LimitWall ── */}
-            {limitInfo ? (
-              <div className="glass rounded-3xl overflow-hidden">
-                <LimitWall
-                  limitInfo={limitInfo}
-                  isDark={true}
-                  onDismiss={() => setLimitInfo(null)}
-                />
-              </div>
-            ) : (
-            <div className="glass rounded-3xl" style={{ padding: '12px' }}>
-              <textarea
-                value={question}
-                onChange={e => setQuestion(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleStart() } }}
-                placeholder="Poni una domanda alle AI…"
-                rows={3}
-                className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 outline-none focus:border-purple-500/50 placeholder:text-white/20 resize-none leading-relaxed transition-colors"
-                style={{ fontSize: 'clamp(13px, 3.5vw, 15px)', marginBottom: '8px' }}
-              />
-              <div className="lg:hidden">
-                <RotatingTopics onSelect={setQuestion} />
-              </div>
-              <button
-                onClick={() => handleStart()}
-                disabled={!question.trim()}
-                className="w-full rounded-xl font-semibold text-white transition-all disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98]"
-                style={{
-                  padding: '13px',
-                  fontSize: 'clamp(13px, 3.5vw, 15px)',
-                  background: question.trim() ? 'linear-gradient(135deg, #7C3AED, #5B21B6)' : '#333',
-                  boxShadow: question.trim() ? '0 4px 24px rgba(124,58,237,0.45)' : undefined,
-                }}>
-                Avvia il dibattito →
-              </button>
-            </div>
-            )}
-
-            {/* ── TAB FEED — rimosso: nessuna card nel main area ── */}
-            {false && canUseGroupChat && socialTab === 'feed' && (
-              <div className="flex flex-col gap-3">
-                {/* Notifiche pendenti */}
-                {notifications.filter(n => !n.read).map((n: any) => (
-                  <div key={n.id} className="glass rounded-2xl p-4" style={{ borderColor: 'rgba(124,58,237,0.3)', backgroundColor: 'rgba(124,58,237,0.07)' }}>
-                    <div className="text-sm text-white/80 mb-2">
-                      {n.type === 'room_invite' && <span><strong className="text-white">{n.fromName}</strong> ti ha invitato: <em className="text-white/70">"{n.roomTopic}"</em></span>}
-                      {n.type === 'follow' && <span><strong className="text-white">{n.fromName}</strong> ha iniziato a seguirti</span>}
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={async () => {
-                        if (n.roomId) await fetch(`/api/rooms/${n.roomId}/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'accept' }) })
-                        else await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: n.id }) })
-                        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
-                        setUnreadCount(c => Math.max(0, c - 1))
-                        if (n.roomId) { await fetch('/api/rooms').then(r => r.json()).then(d => { if (d.rooms) setRooms(d.rooms) }) }
-                      }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
-                        Accetta
-                      </button>
-                      <button onClick={async () => {
-                        if (n.roomId) await fetch(`/api/rooms/${n.roomId}/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject' }) })
-                        else await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: n.id }) })
-                        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
-                        setUnreadCount(c => Math.max(0, c - 1))
-                      }} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white/40" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
-                        Rifiuta
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Lista room */}
-                {rooms.length > 0 && rooms.map((room: any) => {
-                  const aiColors: Record<string,string> = { claude:'#7C3AED', gpt:'#10A37F', gemini:'#1A73E8', perplexity:'#FF6B2B' }
-                  const aiNames: Record<string,string> = { claude:'Claude', gpt:'GPT', gemini:'Gemini', perplexity:'Perplexity' }
-                  const ais: string[] = Array.isArray(room.aiIds) ? room.aiIds : []
-                  return (
-                    <div key={room.id} className="glass rounded-2xl p-4 active:scale-[0.99] transition-transform" style={{ cursor: 'pointer' }} onClick={() => handleOpenRoom(room.id)}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {room.status === 'live' ? (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold" style={{ backgroundColor:'rgba(239,68,68,0.15)', color:'#f87171', border:'1px solid rgba(239,68,68,0.25)' }}>
-                              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse inline-block" />LIVE
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-white/30" style={{ backgroundColor:'rgba(255,255,255,0.06)' }}>CONCLUSO</span>
-                          )}
-                          {room.visibility === 'private' && <span className="text-[10px] text-white/30 ml-1">privata</span>}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-white/25">{new Date(room.createdAt).toLocaleDateString('it-IT', { day:'2-digit', month:'short' })}</span>
-                          {(room.hostId === dbUserId || room.host?.id === dbUserId) && (
-                            <button
-                              onClick={(e) => handleCloseRoom(room.id, e)}
-                              className="w-5 h-5 flex items-center justify-center rounded-full transition-all hover:bg-white/15"
-                              style={{ background: 'rgba(255,255,255,0.07)' }}
-                              title="Chiudi dibattito">
-                              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round">
-                                <path d="M1 1l10 10M11 1L1 11"/>
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-sm font-bold text-white mb-2 leading-snug">{room.topic}</div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div className="flex">
-                          {room.participants?.slice(0,5).map((p: any, i: number) => (
-                            <div key={p.id} className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white border border-black/30"
-                              style={{ backgroundColor:'#F59E0B', marginLeft: i > 0 ? '-5px' : '0' }}>
-                              {(p.user?.name || '?')[0].toUpperCase()}
-                            </div>
-                          ))}
-                        </div>
-                        <span className="text-[10px] text-white/30">{room.participants?.length} {room.participants?.length === 1 ? 'umano' : 'umani'}</span>
-                        <div className="flex gap-1">
-                          {ais.map(id => (
-                            <span key={id} className="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                              style={{ backgroundColor:`${aiColors[id]}22`, color: aiColors[id] }}>
-                              {aiNames[id]}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* ── TAB CREA ── */}
-            {false && canUseGroupChat && socialTab === 'crea' && (
-              <div className="glass rounded-3xl p-4 flex flex-col gap-3">
-                <div className="text-xs font-bold text-white/40 uppercase tracking-wide">Tema del dibattito</div>
-                <textarea
-                  value={createTopic}
-                  onChange={e => setCreateTopic(e.target.value)}
-                  placeholder="Es. L'IA sostituirà i lavori creativi?"
-                  rows={2}
-                  className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-purple-500/50 placeholder:text-white/20 resize-none"
-                />
-
-                {/* Visibilità */}
-                <div>
-                  <div className="text-xs font-bold text-white/40 uppercase tracking-wide mb-2">Visibilità</div>
-                  <div className="flex gap-2">
-                    {(['public','private'] as const).map(v => (
-                      <button key={v} onClick={() => setCreateVisibility(v)}
-                        className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
-                        style={{
-                          backgroundColor: createVisibility === v ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.05)',
-                          border: createVisibility === v ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.1)',
-                          color: createVisibility === v ? '#A78BFA' : 'rgba(255,255,255,0.35)',
-                        }}>
-                        {v === 'public' ? '🌍 Pubblico' : '🔒 Privato'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* AI */}
-                <div>
-                  <div className="text-xs font-bold text-white/40 uppercase tracking-wide mb-2">AI partecipanti</div>
-                  <div className="flex gap-2 flex-wrap">
-                    {[['claude','Claude','#7C3AED'],['gemini','Gemini','#1A73E8'],['perplexity','Perplexity','#FF6B2B'],['gpt','GPT','#10A37F']].map(([id,name,color]) => {
-                      const active = createAis.includes(id)
-                      return (
-                        <button key={id} onClick={() => setCreateAis(prev => active ? prev.filter(a => a !== id) : [...prev, id])}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                          style={{
-                            backgroundColor: active ? `${color}25` : 'rgba(255,255,255,0.05)',
-                            border: active ? `1px solid ${color}50` : '1px solid rgba(255,255,255,0.1)',
-                            color: active ? color : 'rgba(255,255,255,0.35)',
-                          }}>
-                          {name}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Invita */}
-                <div>
-                  <div className="text-xs font-bold text-white/40 uppercase tracking-wide mb-2">Invita amici (max 4)</div>
-                  <input
-                    value={userSearch}
-                    onChange={e => setUserSearch(e.target.value)}
-                    placeholder="Cerca per nome…"
-                    className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-purple-500/50 placeholder:text-white/20 mb-2"
-                  />
-                  {userResults.length > 0 && (
-                    <div className="flex flex-col gap-1 mb-2">
-                      {userResults.filter(u => !createInvited.find(i => i.id === u.id)).map((u: any) => (
-                        <button key={u.id} onClick={() => { if (createInvited.length < 4) { setCreateInvited(prev => [...prev, { id: u.id, name: u.name || u.email }]); setUserSearch(''); setUserResults([]) } }}
-                          className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-colors text-left">
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0" style={{ backgroundColor:'#7C3AED' }}>
-                            {(u.name || u.email || '?')[0].toUpperCase()}
-                          </div>
-                          <span className="text-sm text-white/70">{u.name || u.email}</span>
-                          <span className="ml-auto text-[10px] text-purple-400">+ aggiungi</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {createInvited.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {createInvited.map(u => (
-                        <span key={u.id} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
-                          style={{ backgroundColor:'rgba(124,58,237,0.15)', border:'1px solid rgba(124,58,237,0.3)', color:'#A78BFA' }}>
-                          {u.name}
-                          <button onClick={() => setCreateInvited(prev => prev.filter(i => i.id !== u.id))} className="opacity-50 hover:opacity-100 ml-0.5">×</button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <button onClick={handleCreateRoom} disabled={!createTopic.trim() || creatingRoom}
-                  className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-30"
-                  style={{ background:'linear-gradient(135deg,#7C3AED,#5B21B6)', boxShadow:'0 4px 20px rgba(124,58,237,0.4)' }}>
-                  {creatingRoom ? 'Creazione…' : 'Lancia il dibattito →'}
-                </button>
-              </div>
-            )}
-
+        {/* Banner reconnect 2v2 */}
+        {pendingReconnect && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl"
+            style={{ background: 'rgba(124,58,237,0.97)', border: '1px solid rgba(167,139,250,0.5)', backdropFilter: 'blur(12px)', whiteSpace: 'nowrap' }}>
+            <span className="text-xl">⚔️</span>
+            <div className="text-white text-sm font-semibold">Partita 2v2 in corso</div>
+            <button onClick={handle2v2Reconnect}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 active:scale-95"
+              style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)' }}>
+              Riprendi →
+            </button>
+            <button onClick={() => { setPendingReconnect(null); localStorage.removeItem('aigora_2v2_active') }}
+              className="text-white/50 text-xl leading-none hover:text-white/80 transition-colors ml-1">
+              ×
+            </button>
           </div>
-        </div>
-
-      </div>
-
-      {/* ── SELEZIONE FORMATO / SETUP 2v2 — solo mobile (su desktop sono inline nella cornice) ── */}
-      {showModeSelect && typeof window !== 'undefined' && createPortal(
-        <ModeSelect
-          onSelect={handleSelectMode}
-          onClose={() => setShowModeSelect(false)}
-          userPlan={effectivePlan}
-        />,
-        document.body
-      )}
-      {show2v2Setup && typeof window !== 'undefined' && createPortal(
-        <TwoVsTwoSetup
-          onStart={handle2v2Start}
-          onBack={() => { setShow2v2Setup(false); setSelectedMode(null) }}
-          currentUserName={dbUserName || userName.trim() || ''}
-        />,
-        document.body
-      )}
-      {showDevilDifficulty && typeof window !== 'undefined' && createPortal(
-        <DevilDifficultyScreen
-          onSelect={handleDevilDifficultySelect}
-          onBack={() => { setShowDevilDifficulty(false); setSelectedMode(null) }}
-          loading={devilLoading}
-        />,
-        document.body
-      )}
-      {devilIntroData && typeof window !== 'undefined' && createPortal(
-        <DevilIntroScreen
-          positions={devilIntroData.positions}
-          difficulty={devilIntroData.difficulty}
-          onStart={handleDevilStart}
-          onBack={() => { setDevilIntroData(null); setSelectedMode(null) }}
-        />,
-        document.body
-      )}
-      {/* ── SCHERMATA 2v2 (dalla start, via portal) ── */}
-      {selectedMode === '2v2' && twoVsTwoState && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999]" style={{ background: '#0d0d14' }}>
-          <TwoVsTwoScreen
-            state={twoVsTwoState}
-            onHumanMessage={handle2v2HumanMessage}
-            onRequestAI={(team) => handle2v2AIResponse(team, 'Supporta la squadra con un argomento forte.')}
-            loading={twoVsTwoLoading}
-            myTeam="A"
-            onBack={() => { setSelectedMode(null); setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setPhase('start'); setShow2v2Label(null); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
-            onNewGame={() => { setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setSelectedMode('2v2'); setPhase('start'); setShow2v2Setup(true); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
-            onMultiplayer={() => { setTwoVsTwoState(null); setTwoVsTwoRoomAblyId(null); setSelectedMode(null); setPhase('start'); setShow2v2Setup(false); if (typeof window !== 'undefined') localStorage.removeItem('aigora_2v2_active') }}
-          />
-        </div>,
-        document.body
-      )}
-
-      {/* ── Banner reconnect 2v2 ── */}
-      {pendingReconnect && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl"
-          style={{ background: 'rgba(124,58,237,0.97)', border: '1px solid rgba(167,139,250,0.5)', backdropFilter: 'blur(12px)', whiteSpace: 'nowrap' }}>
-          <span className="text-xl">⚔️</span>
-          <div className="text-white text-sm font-semibold">Partita 2v2 in corso</div>
-          <button onClick={handle2v2Reconnect}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-105 active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)' }}>
-            Riprendi →
-          </button>
-          <button onClick={() => { setPendingReconnect(null); localStorage.removeItem('aigora_2v2_active') }}
-            className="text-white/50 text-xl leading-none hover:text-white/80 transition-colors ml-1">
-            ×
-          </button>
-        </div>
-      )}
+        )}
       </>
     )
   }
 
-  // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
+    // ── SCHERMATA CHAT ────────────────────────────────────────────────────────────
   return (
     <>
     {/* ── Backdrop globale — colora il chrome Safari su mobile ── */}

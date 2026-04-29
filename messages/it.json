@@ -529,5 +529,34 @@
       "contact": "Per qualsiasi domanda sui tuoi dati, scrivici a"
     },
     "backHome": "← Torna alla home"
+  },
+  "home": {
+    "greet": {
+      "morning": "Buongiorno",
+      "afternoon": "Buon pomeriggio",
+      "evening": "Buonasera"
+    },
+    "subtitle": "Scegli il tuo modo di dibattere.",
+    "arena": {
+      "tag": "Arena",
+      "title": "Il dibattito",
+      "desc": "4 AI si confrontano sulla tua domanda in tempo reale.",
+      "placeholder": "Poni una domanda alle 4 AI…",
+      "cta": "Avvia il dibattito →"
+    },
+    "twoVsTwo": {
+      "title": "Sfida a squadre",
+      "desc": "Tu + AI contro un avversario + AI. L'arbitro giudica ogni round."
+    },
+    "devil": {
+      "title": "Difendi l'indifendibile",
+      "desc": "Una posizione scomoda. Quattro AI nemiche. Reggi il più a lungo possibile."
+    },
+    "brainstorm": {
+      "title": "Il concilio",
+      "desc": "4 AI deliberano sulla tua idea e ti restituiscono un piano ragionato."
+    },
+    "lastSession": "RIPRENDI",
+    "upgradeHint": "Sblocca Devil e Brainstorm — passa a Pro"
   }
 }

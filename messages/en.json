@@ -529,5 +529,34 @@
       "contact": "For any questions about your data, write to us at"
     },
     "backHome": "← Back to home"
+  },
+  "home": {
+    "greet": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "subtitle": "Choose how you want to debate.",
+    "arena": {
+      "tag": "Arena",
+      "title": "The debate",
+      "desc": "4 AIs discuss your question in real time.",
+      "placeholder": "Ask the 4 AIs a question…",
+      "cta": "Start the debate →"
+    },
+    "twoVsTwo": {
+      "title": "Team battle",
+      "desc": "You + AI vs an opponent + AI. An arbiter scores each round."
+    },
+    "devil": {
+      "title": "Defend the indefensible",
+      "desc": "A tough position. Four enemy AIs. Hold your ground as long as you can."
+    },
+    "brainstorm": {
+      "title": "The council",
+      "desc": "4 AIs deliberate on your idea and give you a reasoned plan."
+    },
+    "lastSession": "RESUME",
+    "upgradeHint": "Unlock Devil and Brainstorm — upgrade to Pro"
   }
 }
