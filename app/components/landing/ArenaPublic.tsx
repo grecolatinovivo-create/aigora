@@ -100,29 +100,7 @@ function BrainstormScreen() {
 }
 
 // ── Tipi ─────────────────────────────────────────────────────────────────────
-type PhoneMode = SelectableMode | 'multiplayer'
-
-// ── Schermo Multiplayer — SOON ────────────────────────────────────────────────
-function MultiplayerScreen() {
-  const t = useTranslations('arena.mock')
-  return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#0a0a12', padding: 12 }}>
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 100 }}>
-        {[['#F59E0B','U1'],['#10B981','U2'],['#3B82F6','U3'],['#EC4899','U4']].map(([c,l]) => (
-          <div key={l} style={{ width: 22, height: 22, borderRadius: '50%', background: c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 900, color: '#fff' }}>{l}</div>
-        ))}
-      </div>
-      <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>{t('humans4')}</div>
-      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)' }}>+</div>
-      <div style={{ display: 'flex', gap: 4 }}>
-        {[['#7C3AED','C'],['#10A37F','G'],['#1A73E8','Ge'],['#20B2AA','P']].map(([c,l]) => (
-          <div key={l} style={{ width: 22, height: 22, borderRadius: '50%', background: c, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6, fontWeight: 900, color: '#fff', opacity: 0.6 }}>{l}</div>
-        ))}
-      </div>
-      <div style={{ fontSize: 7, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>{t('ais4')}</div>
-    </div>
-  )
-}
+type PhoneMode = SelectableMode
 
 // ── Schermo 2 vs 2 ────────────────────────────────────────────────────────────
 function TwoVsTwoScreen() {
@@ -190,39 +168,35 @@ function DevilScreen() {
 
 // ── Componente iPhone mock ────────────────────────────────────────────────────
 function PhoneMock({
-  mode, selected, small, onClick, onHover, label,
+  mode, selected, onClick, onHover, label,
 }: {
   mode: PhoneMode
   selected: boolean
-  small?: boolean
   onClick: () => void
   onHover: () => void
   label: string
 }) {
-  const W = small ? 140 : 185
-  const H = small ? 288 : 380
+  const W = 185
+  const H = 380
 
   const glowMap: Record<PhoneMode, string> = {
-    chat:        selected ? '0 0 0 2px rgba(167,139,250,0.6), 0 0 50px rgba(124,58,237,0.4)'  : '0 0 0 1.5px rgba(167,139,250,0.25)',
-    '2v2':       selected ? '0 0 0 2px rgba(167,139,250,0.7), 0 0 50px rgba(124,58,237,0.45)' : '0 0 0 1.5px rgba(167,139,250,0.3)',
-    devil:       selected ? '0 0 0 2px rgba(239,68,68,0.7), 0 0 50px rgba(239,68,68,0.35)'    : '0 0 0 1.5px rgba(239,68,68,0.35)',
-    brainstorm:  selected ? '0 0 0 2px rgba(167,139,250,0.6), 0 0 50px rgba(124,58,237,0.35)' : '0 0 0 1.5px rgba(167,139,250,0.2)',
-    multiplayer: '0 0 0 1.5px rgba(255,255,255,0.1)',
+    chat:       selected ? '0 0 0 2px rgba(167,139,250,0.6), 0 0 50px rgba(124,58,237,0.4)'  : '0 0 0 1.5px rgba(167,139,250,0.25)',
+    '2v2':      selected ? '0 0 0 2px rgba(56,189,248,0.7), 0 0 50px rgba(14,165,233,0.4)'   : '0 0 0 1.5px rgba(56,189,248,0.3)',
+    devil:      selected ? '0 0 0 2px rgba(239,68,68,0.7), 0 0 50px rgba(239,68,68,0.35)'    : '0 0 0 1.5px rgba(239,68,68,0.35)',
+    brainstorm: selected ? '0 0 0 2px rgba(252,211,77,0.6), 0 0 50px rgba(245,158,11,0.3)'   : '0 0 0 1.5px rgba(252,211,77,0.2)',
   }
 
-  const disabled = mode === 'multiplayer'
-  const labelColor = mode === 'devil' ? 'rgba(239,68,68,0.7)' : disabled ? 'rgba(255,255,255,0.2)' : 'rgba(167,139,250,0.75)'
+  const labelColor = mode === 'devil' ? 'rgba(239,68,68,0.7)' : mode === '2v2' ? 'rgba(56,189,248,0.75)' : mode === 'brainstorm' ? 'rgba(252,211,77,0.75)' : 'rgba(167,139,250,0.75)'
 
   return (
     <div
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-        transform: selected && !disabled ? 'scale(1.13)' : 'scale(1)',
+        transform: selected ? 'scale(1.13)' : 'scale(1)',
         transition: 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.35 : 1,
+        cursor: 'pointer',
       }}
-      onClick={disabled ? undefined : onClick}
+      onClick={onClick}
       onMouseEnter={onHover}
     >
       <div style={{ position: 'relative', width: W, height: H }}>
@@ -233,14 +207,8 @@ function PhoneMock({
           {mode === '2v2'         && <TwoVsTwoScreen />}
           {mode === 'devil'       && <DevilScreen />}
           {mode === 'brainstorm'  && <BrainstormScreen />}
-          {mode === 'multiplayer' && <MultiplayerScreen />}
         </div>
-        <div style={{ position: 'absolute', top: 9, left: '50%', transform: 'translateX(-50%)', width: small ? 42 : 54, height: 11, background: '#1c1c1e', borderRadius: 999, zIndex: 10 }} />
-        {disabled && (
-          <div style={{ position: 'absolute', inset: 0, borderRadius: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>SOON</div>
-          </div>
-        )}
+        <div style={{ position: 'absolute', top: 9, left: '50%', transform: 'translateX(-50%)', width: 54, height: 11, background: '#1c1c1e', borderRadius: 999, zIndex: 10 }} />
       </div>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: labelColor }}>
         {label}
@@ -262,11 +230,10 @@ export default function ArenaPublic() {
     '2v2':         { title: t('modes.2v2.title'),         desc: t('modes.2v2.desc'),         cta: t('modes.2v2.cta') },
     'devil':       { title: t('modes.devil.title'),       desc: t('modes.devil.desc'),       cta: t('modes.devil.cta') },
     'brainstorm':  { title: t('modes.brainstorm.title'),  desc: t('modes.brainstorm.desc'),  cta: t('modes.brainstorm.cta') },
-    'multiplayer': { title: t('modes.multiplayer.title'), desc: t('modes.multiplayer.desc'), cta: t('modes.multiplayer.cta'), soon: true },
   }
 
   const info = MODE_INFO[selected]
-  const phones: PhoneMode[] = ['chat', '2v2', 'devil', 'brainstorm', 'multiplayer']
+  const phones: PhoneMode[] = ['chat', '2v2', 'devil', 'brainstorm']
 
   return (
     <>
@@ -372,18 +339,15 @@ export default function ArenaPublic() {
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>{t('mainSubtitle')}</p>
           </div>
 
-          {/* 4 iPhone grandi + 1 piccolo SOON */}
+          {/* 4 iPhone */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22 }}>
             {phones.map(mode => (
               <PhoneMock
                 key={mode}
                 mode={mode}
                 selected={selected === mode}
-                small={mode === 'multiplayer'}
                 label={MODE_INFO[mode].title}
-                onClick={() => {
-                  if (mode !== 'multiplayer') setPendingMode(mode as SelectableMode)
-                }}
+                onClick={() => setPendingMode(mode)}
                 onHover={() => setSelected(mode)}
               />
             ))}
@@ -395,9 +359,8 @@ export default function ArenaPublic() {
               <div className="font-black text-white text-xl mb-1">{info.title}</div>
               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, maxWidth: 460, lineHeight: 1.6 }}>{info.desc}</p>
             </div>
-            {!info.soon ? (
-              <button
-                onClick={() => setPendingMode(selected as SelectableMode)}
+            <button
+                onClick={() => setPendingMode(selected)}
                 className="px-9 py-3.5 rounded-2xl font-black text-white transition-all hover:scale-[1.03] active:scale-[0.97]"
                 style={{
                   background: selected === 'devil' ? 'linear-gradient(135deg,#dc2626,#991b1b)' : 'linear-gradient(135deg,#7C3AED,#5B21B6)',
@@ -406,11 +369,6 @@ export default function ArenaPublic() {
                 }}>
                 {info.cta}
               </button>
-            ) : (
-              <div style={{ padding: '10px 24px', borderRadius: 16, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                {t('comingSoon')}
-              </div>
-            )}
           </div>
 
         </div>

@@ -96,13 +96,6 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
             </div>
           </div>
         </button>
-        {/* Card Classico — soon */}
-        <div className="flex-1 flex flex-col rounded-3xl relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(255,255,255,0.10)', cursor: 'not-allowed', minHeight: 0 }}>
-          <div className="absolute top-4 left-5 text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>{t('classic.tag')}</div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="font-black uppercase" style={{ fontSize: 44, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.22)' }}>{t('classic.soon')}</div>
-          </div>
-        </div>
         {/* Card Devil's Advocate — attiva */}
         <button onClick={() => handleSelect('devil')}
           className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all relative overflow-hidden"
@@ -153,22 +146,6 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
 
         {/* 3 mock iPhone */}
         <div className="flex items-end justify-center gap-8">
-
-          {/* ── CLASSICO — grigio, SOON ── */}
-          <div className="flex flex-col items-center gap-4" style={{ opacity: 0.45, cursor: 'not-allowed' }}>
-            <div className="relative" style={{ width: 200, height: 410 }}>
-              {/* Cornice */}
-              <div className="absolute inset-0 rounded-[32px]" style={{ background: '#1c1c1e', boxShadow: '0 0 0 1.5px #3a3a3c, 0 20px 60px rgba(0,0,0,0.6)' }} />
-              {/* Schermo */}
-              <div className="absolute rounded-[26px] overflow-hidden flex flex-col items-center justify-center"
-                style={{ top: 6, left: 6, right: 6, bottom: 6, background: '#111' }}>
-                <div className="font-black uppercase text-center" style={{ fontSize: 36, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.25)' }}>{t('classic.soon')}</div>
-              </div>
-              {/* Notch */}
-              <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 10, width: 60, height: 14, background: '#1c1c1e', zIndex: 10 }} />
-            </div>
-            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>{t('classic.tag')}</div>
-          </div>
 
           {/* ── 2 VS 2 — attivo, più grande, selezionato ── */}
           <button onClick={() => handleSelect('2v2')} className="flex flex-col items-center gap-5 transition-transform hover:scale-[1.02] active:scale-[0.98]">

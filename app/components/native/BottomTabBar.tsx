@@ -3,9 +3,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { useIsNative } from './CapacitorProvider'
 
-// ─── Icone SVG inline ────────────────────────────────────────────────────────
+// ─── Icone SVG inline ─────────────────────────────────────────────────────────
+// Naming ufficiale: Arena (#A78BFA) | 2v2 (#38BDF8) | Brainstorm (#FCD34D) | Profilo (#A78BFA→sky)
 
-// Arena — due bolle di dialogo stilizzate
 function IconArena({ active }: { active: boolean }) {
   const c = active ? '#A78BFA' : 'rgba(255,255,255,0.32)'
   const w = active ? 2.2 : 1.8
@@ -17,9 +17,9 @@ function IconArena({ active }: { active: boolean }) {
   )
 }
 
-// 2v2 — due persone affiancate
 function Icon2v2({ active }: { active: boolean }) {
-  const c = active ? '#FB923C' : 'rgba(255,255,255,0.32)'
+  // Colore ufficiale 2v2: #38BDF8 (sky blue) — coerente con landing e arena
+  const c = active ? '#38BDF8' : 'rgba(255,255,255,0.32)'
   const w = active ? 2.2 : 1.8
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -32,19 +32,6 @@ function Icon2v2({ active }: { active: boolean }) {
   )
 }
 
-// Devil's Advocate — fiamma
-function IconDevil({ active }: { active: boolean }) {
-  const c = active ? '#F87171' : 'rgba(255,255,255,0.32)'
-  const w = active ? 2.2 : 1.8
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={c} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-    </svg>
-  )
-}
-
-// Brainstorm — lampadina
 function IconBrainstorm({ active }: { active: boolean }) {
   const c = active ? '#FCD34D' : 'rgba(255,255,255,0.32)'
   const w = active ? 2.2 : 1.8
@@ -58,13 +45,27 @@ function IconBrainstorm({ active }: { active: boolean }) {
   )
 }
 
-// ─── Tipo tab ──────────────────────────────────────────────────────────────────
+function IconProfile({ active }: { active: boolean }) {
+  const c = active ? '#A78BFA' : 'rgba(255,255,255,0.32)'
+  const w = active ? 2.2 : 1.8
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke={c} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  )
+}
+
+// ─── Tab definition ───────────────────────────────────────────────────────────
 interface Tab {
   key:         string
   label:       string
-  path:        string
+  path:        (base: string) => string
   icon:        (active: boolean) => React.ReactNode
   activeColor: string
+  // Pathname match: se il pathname corrente contiene uno di questi, questo tab è attivo
+  match:       (pathname: string, base: string) => boolean
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
@@ -82,58 +83,57 @@ export default function BottomTabBar() {
     {
       key:         'arena',
       label:       'Arena',
-      path:        `${base}/arena`,
+      // ⚠️ IMPORTANTE: la home loggati è /[locale] (AigoraChat), NON /arena (pagina pubblica)
+      path:        (b) => b,
       icon:        (a) => <IconArena active={a} />,
       activeColor: '#A78BFA',
+      match:       (p, b) =>
+        // Attivo se siamo sulla home base o su /arena o su /room
+        p === b || p === b + '/' || p.startsWith(b + '/arena') || p.startsWith(b + '/room'),
     },
     {
       key:         '2v2',
       label:       '2 vs 2',
-      path:        `${base}/2v2`,
+      path:        (b) => `${b}/2v2`,
       icon:        (a) => <Icon2v2 active={a} />,
-      activeColor: '#FB923C',
-    },
-    {
-      key:         'devil',
-      label:       "Devil",
-      path:        `${base}/arena`,   // Devil è un modo nell'arena
-      icon:        (a) => <IconDevil active={a} />,
-      activeColor: '#F87171',
+      activeColor: '#38BDF8', // sky blue — colore ufficiale 2v2
+      match:       (p, b) => p.startsWith(`${b}/2v2`),
     },
     {
       key:         'brainstorm',
       label:       'Brainstorm',
-      path:        `${base}/brainstorm`,
+      path:        (b) => `${b}/brainstorm`,
       icon:        (a) => <IconBrainstorm active={a} />,
       activeColor: '#FCD34D',
+      match:       (p, b) => p.startsWith(`${b}/brainstorm`),
+    },
+    {
+      key:         'profile',
+      label:       'Profilo',
+      path:        (b) => `${b}/dashboard`,
+      icon:        (a) => <IconProfile active={a} />,
+      activeColor: '#A78BFA',
+      match:       (p, b) => p.startsWith(`${b}/dashboard`) || p.startsWith(`${b}/admin`),
     },
   ]
 
-  // Determina il tab attivo in base al pathname corrente
-  const activeKey = (() => {
-    if (pathname.includes('/2v2'))        return '2v2'
-    if (pathname.includes('/brainstorm')) return 'brainstorm'
-    // Devil mode: room con devil + pathname nell'arena non in 2v2/brainstorm
-    // (non possiamo distinguere dall'URL, quindi arena di default)
-    if (pathname.includes('/arena') || pathname.includes('/room')) return 'arena'
-    return 'arena'
-  })()
+  const activeKey = tabs.find(t => t.match(pathname, base))?.key ?? 'arena'
 
   return (
     <nav
       style={{
-        position:           'fixed',
-        bottom:             0,
-        left:               0,
-        right:              0,
-        zIndex:             900,
-        display:            'flex',
-        alignItems:         'stretch',
-        paddingBottom:      'env(safe-area-inset-bottom)',
-        backgroundColor:    'rgba(7,7,15,0.97)',
-        borderTop:          '1px solid rgba(255,255,255,0.07)',
-        backdropFilter:     'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
+        position:              'fixed',
+        bottom:                0,
+        left:                  0,
+        right:                 0,
+        zIndex:                900,
+        display:               'flex',
+        alignItems:            'stretch',
+        paddingBottom:         'env(safe-area-inset-bottom)',
+        backgroundColor:       'rgba(7,7,15,0.97)',
+        borderTop:             '1px solid rgba(255,255,255,0.07)',
+        backdropFilter:        'blur(24px)',
+        WebkitBackdropFilter:  'blur(24px)',
       }}
     >
       {tabs.map(tab => {
@@ -141,7 +141,7 @@ export default function BottomTabBar() {
         return (
           <button
             key={tab.key}
-            onClick={() => router.push(tab.path)}
+            onClick={() => router.push(tab.path(base))}
             style={{
               flex:                    1,
               display:                 'flex',
@@ -172,7 +172,7 @@ export default function BottomTabBar() {
               {tab.label}
             </span>
 
-            {/* Dot indicatore tab attivo */}
+            {/* Dot indicatore */}
             <span
               style={{
                 width:           4,
