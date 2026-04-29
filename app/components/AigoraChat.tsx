@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom'
 import HomeScreen from './HomeScreen'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { useAbly, type RoomEvent } from '@/lib/useAbly'
 import {
   AI_ORDER_DEFAULT, AI_NAMES, AI_COLOR, AI_DESC, AI_PROFILES,
@@ -53,8 +55,10 @@ function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[
 }
 
 // ── Componente principale ─────────────────────────────────────────────────────
-export default function AigoraChat({ allowedAis, userPlan, userName: propUserName, userEmail }: AigoraChatProps) {
+export default function AigoraChat({ allowedAis, userPlan, userName: propUserName, userEmail, resumeChatId }: AigoraChatProps) {
   const AI_ORDER = allowedAis?.length ? allowedAis : AI_ORDER_DEFAULT
+  const chatRouter = useRouter()
+  const chatLocale = useLocale()
 
   const [phase, setPhase] = useState<ChatPhase>('start')
   const [currentTime, setCurrentTime] = useState(() => {
@@ -695,6 +699,22 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const aiTurnCountRef = useRef(0)
   const perplexityTurnCountRef = useRef(0)  // conta solo i turni di Perplexity
   const isLoadingHistoryRef = useRef(false) // previeni saveCurrentChat durante apertura chat da cronologia
+  const pendingResumeRef = useRef<string | null>(resumeChatId ?? null)
+
+  // Auto-apri chat da URL ?resume=chatId (es. redirect da dashboard)
+  useEffect(() => {
+    if (!pendingResumeRef.current || savedChats.length === 0) return
+    const chat = savedChats.find(c => c.id === pendingResumeRef.current)
+    if (!chat) return
+    pendingResumeRef.current = null
+    isLoadingHistoryRef.current = true
+    currentChatIdRef.current = chat.id
+    chatTitleRef.current = chat.title
+    chatHistoryRef.current = chat.history ?? []
+    setMessages(chat.messages)
+    setPhase('running')
+    setTimeout(() => { isLoadingHistoryRef.current = false }, 100)
+  }, [savedChats])
 
   // Musica 2v2 — fade in all'inizio, fade out alla fine con crossfade
   const twoVsTwoFadeRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -2069,6 +2089,23 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
       setSelectedMode(null)
       setPhase('start')
     }
+  }
+
+  const [shareCopied, setShareCopied] = useState(false)
+
+  const handleShare = async () => {
+    const title = chatTitleRef.current || 'Dibattito su AiGORÀ'
+    const url = typeof window !== 'undefined' ? window.location.origin : 'https://app.aigora.eu'
+    const text = `Ho appena dibattuto su AiGORÀ: "${title}". Prova anche tu!`
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title, text, url })
+      } else {
+        await navigator.clipboard.writeText(`${text}\n${url}`)
+        setShareCopied(true)
+        setTimeout(() => setShareCopied(false), 2000)
+      }
+    } catch {}
   }
 
   const handleTogglePortfolio = async () => {
@@ -3629,11 +3666,38 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                       {portfolioSaved ? '✓ Salvato!' : isPublic ? '📂 Nel portfolio · rimuovi' : '📂 Aggiungi al portfolio'}
                     </button>
                   )}
+                  <button onClick={handleShare}
+                    className="w-full py-3 rounded-xl text-sm font-medium transition-all"
+                    style={{
+                      backgroundColor: shareCopied ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.05)',
+                      border: shareCopied ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                      color: shareCopied ? '#A78BFA' : 'rgba(255,255,255,0.55)',
+                    }}>
+                    {shareCopied ? '✓ Link copiato!' : '↗ Condividi questa sessione'}
+                  </button>
                   <button onClick={handleReset}
                     className="w-full py-3 rounded-xl text-white/60 text-sm font-medium"
                     style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                    🔄 Nuovo dibattito
+                    🔄 Nuova domanda
                   </button>
+                  {/* Prova un altro modo */}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {[
+                      { label: '2v2', color: '#38BDF8', action: () => { setSelectedMode('2v2'); setShow2v2Setup(true) } },
+                      { label: 'Devil', color: '#F87171', action: () => { setSelectedMode('devil'); setShowDevilDifficulty(true) } },
+                      { label: 'Brainstorm', color: '#FCD34D', action: () => chatRouter.push(`/${chatLocale}/brainstorm`) },
+                    ].map(m => (
+                      <button key={m.label} onClick={m.action}
+                        style={{
+                          flex: 1, padding: '8px 4px', borderRadius: 10, border: `1px solid ${m.color}28`,
+                          background: `${m.color}0d`, color: m.color, fontSize: 11, fontWeight: 700,
+                          cursor: 'pointer', transition: 'background 0.15s',
+                          WebkitTapHighlightColor: 'transparent',
+                        }}>
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -3771,10 +3835,37 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
                       {portfolioSaved ? '✓ Salvato!' : isPublic ? '📂 Nel portfolio · rimuovi' : '📂 Aggiungi al portfolio'}
                     </button>
                   )}
+                  <button onClick={handleShare}
+                    className="w-full rounded-xl py-3 text-sm font-medium transition-all"
+                    style={{
+                      backgroundColor: shareCopied ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.05)',
+                      border: shareCopied ? '1px solid rgba(167,139,250,0.3)' : '1px solid rgba(255,255,255,0.1)',
+                      color: shareCopied ? '#A78BFA' : 'rgba(255,255,255,0.5)',
+                    }}>
+                    {shareCopied ? '✓ Link copiato!' : '↗ Condividi questa sessione'}
+                  </button>
                   <button onClick={handleReset}
                     className="w-full glass rounded-xl py-3 text-white/60 hover:text-white text-sm font-medium transition-all hover:bg-white/10">
-                    🔄 Nuovo dibattito
+                    🔄 Nuova domanda
                   </button>
+                  {/* Prova un altro modo */}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {[
+                      { label: '2v2', color: '#38BDF8', action: () => { setSelectedMode('2v2'); setShow2v2Setup(true) } },
+                      { label: 'Devil', color: '#F87171', action: () => { setSelectedMode('devil'); setShowDevilDifficulty(true) } },
+                      { label: 'Brainstorm', color: '#FCD34D', action: () => chatRouter.push(`/${chatLocale}/brainstorm`) },
+                    ].map(m => (
+                      <button key={m.label} onClick={m.action}
+                        className="hover:opacity-80 transition-opacity"
+                        style={{
+                          flex: 1, padding: '8px 4px', borderRadius: 10, border: `1px solid ${m.color}28`,
+                          background: `${m.color}0d`, color: m.color, fontSize: 11, fontWeight: 700,
+                          cursor: 'pointer',
+                        }}>
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

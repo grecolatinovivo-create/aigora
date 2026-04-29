@@ -2,7 +2,7 @@
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 
-export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, onManageSub, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta, show2v2Label, twoVsTwoTopic, hideCronologia }: {
+export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, onManageSub, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta, show2v2Label, twoVsTwoTopic, hideCronologia, modeLabel, modeLabelColor }: {
   onCronologia: () => void
   hideCronologia?: boolean
   onFeed?: () => void
@@ -21,6 +21,8 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
   unreadCount?: number
   show2v2Label?: 'title' | 'topic' | null
   twoVsTwoTopic?: string
+  modeLabel?: string         // es. 'Brainstorm' — chip colorato accanto al logo
+  modeLabelColor?: string    // es. '#FCD34D'
 }) {
   const t = useTranslations('nav')
   const router = useRouter()
@@ -56,7 +58,8 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
 
       {/* Centro — Logo o Label 2v2 */}
       <button onClick={onNewChat}
-        className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight hover:opacity-80 active:scale-95 transition-all text-center">
+        className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight hover:opacity-80 active:scale-95 transition-all text-center"
+        style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {show2v2Label === 'topic' && twoVsTwoTopic ? (
           <span className="text-white text-sm font-bold max-w-[200px] truncate block">{twoVsTwoTopic}</span>
         ) : (
@@ -64,6 +67,16 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
             <span className="text-white">Ai</span>
             <span style={{ color: '#A78BFA' }}>GORÀ</span>
           </>
+        )}
+        {modeLabel && modeLabelColor && (
+          <span style={{
+            fontSize: 11, fontWeight: 900, letterSpacing: '0.1em',
+            textTransform: 'uppercase', color: modeLabelColor,
+            background: `${modeLabelColor}18`, border: `1px solid ${modeLabelColor}30`,
+            padding: '2px 8px', borderRadius: 999, lineHeight: 1,
+          }}>
+            {modeLabel}
+          </span>
         )}
       </button>
 

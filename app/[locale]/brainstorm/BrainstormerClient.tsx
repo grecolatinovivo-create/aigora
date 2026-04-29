@@ -456,6 +456,8 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         displayName={userName || userEmail}
         userEmail={userEmail}
         userPlan={effectivePlan}
+        modeLabel="Brainstorm"
+        modeLabelColor="#FCD34D"
         showProfileMenu={showProfileMenu}
         setShowProfileMenu={setShowProfileMenu}
         onCronologia={() => { router.push('/') }}

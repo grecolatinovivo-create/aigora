@@ -36,6 +36,82 @@ const C = {
 const PAID = ['pro', 'premium', 'admin', 'freemium', 'max']
 const isPaid = (plan: string) => PAID.includes(plan)
 
+// ── Argomento del giorno — deterministico per data ───────────────────────────
+
+const DAILY_TOPICS_IT = [
+  "L'intelligenza artificiale sostituirà il lavoro creativo?",
+  "I social media fanno più danno che bene alla democrazia?",
+  "La settimana lavorativa di 4 giorni dovrebbe diventare la norma?",
+  "Il vegetarianesimo dovrebbe essere incentivato per legge?",
+  "L'esplorazione spaziale è uno spreco di risorse?",
+  "Privacy personale o sicurezza collettiva: quale viene prima?",
+  "I videogiochi sono la nuova letteratura?",
+  "L'istruzione universitaria è ancora necessaria?",
+  "Le città dovrebbero vietare le automobili private?",
+  "Il capitalismo può essere riformato o va sostituito?",
+  "L'immortalità tecnologica sarebbe una benedizione o una maledizione?",
+  "Il lavoro da remoto ha ucciso la cultura aziendale?",
+  "La carne coltivata in laboratorio salverà il pianeta?",
+  "Dovremmo pagare i giovani per partecipare alle elezioni?",
+  "L'arte generata da AI merita lo stesso rispetto dell'arte umana?",
+  "Esiste ancora il libero arbitrio nell'era degli algoritmi?",
+  "Le multinazionali tech sono diventate troppo potenti?",
+  "Il turismo di massa è compatibile con la sostenibilità?",
+  "Dovremmo limitare la crescita demografica globale?",
+  "La scuola tradizionale è obsoleta?",
+  "Il metaverso sarà il futuro della socialità?",
+  "Dovremmo abolire il denaro contante?",
+  "L'immigrazione è una risorsa o una minaccia per l'identità culturale?",
+  "Ha senso sperare nell'utopia?",
+  "La pena di morte è mai giustificabile?",
+  "L'ottimismo è una forma di ignoranza?",
+  "Siamo davvero liberi online?",
+  "La globalizzazione ha fatto più bene o più male?",
+  "Chi controlla i dati controlla il mondo?",
+  "Il giornalismo è ancora possibile nell'era delle fake news?",
+]
+
+const DAILY_TOPICS_EN = [
+  "Will artificial intelligence replace creative work?",
+  "Do social media do more harm than good to democracy?",
+  "Should the 4-day work week become the norm?",
+  "Should vegetarianism be incentivized by law?",
+  "Is space exploration a waste of resources?",
+  "Personal privacy vs collective security: which comes first?",
+  "Are video games the new literature?",
+  "Is university education still necessary?",
+  "Should cities ban private cars?",
+  "Can capitalism be reformed or does it need to be replaced?",
+  "Would technological immortality be a blessing or a curse?",
+  "Has remote work killed company culture?",
+  "Will lab-grown meat save the planet?",
+  "Should we pay young people to vote?",
+  "Does AI-generated art deserve the same respect as human art?",
+  "Does free will still exist in the age of algorithms?",
+  "Have big tech companies become too powerful?",
+  "Is mass tourism compatible with sustainability?",
+  "Should we limit global population growth?",
+  "Is traditional schooling obsolete?",
+  "Will the metaverse be the future of social interaction?",
+  "Should we abolish cash?",
+  "Is immigration a resource or a threat to cultural identity?",
+  "Does it make sense to hope for utopia?",
+  "Is capital punishment ever justifiable?",
+  "Is optimism a form of ignorance?",
+  "Are we truly free online?",
+  "Has globalization done more good than harm?",
+  "Whoever controls data controls the world?",
+  "Is journalism still possible in the age of fake news?",
+]
+
+function getDailyTopic(locale: string): string {
+  const topics = locale === 'it' ? DAILY_TOPICS_IT : DAILY_TOPICS_EN
+  const now = new Date()
+  const start = new Date(now.getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((now.getTime() - start.getTime()) / 86400000)
+  return topics[dayOfYear % topics.length]
+}
+
 // ── Icone SVG ─────────────────────────────────────────────────────────────────
 
 const IcoArena = () => (
@@ -79,6 +155,13 @@ const IcoLock = () => (
   </svg>
 )
 
+const IcoSpark = () => (
+  <svg width={15} height={15} viewBox="0 0 24 24" fill="none"
+    stroke={C.arena} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+  </svg>
+)
+
 // ── ProBadge (overlay su card bloccata) ──────────────────────────────────────
 
 function ProOverlay() {
@@ -93,7 +176,7 @@ function ProOverlay() {
     }}>
       <IcoLock />
       <div style={{
-        fontSize: 9, fontWeight: 900, letterSpacing: '0.12em',
+        fontSize: 12, fontWeight: 900, letterSpacing: '0.12em',
         textTransform: 'uppercase', color: C.arena,
         background: 'rgba(167,139,250,0.14)',
         border: '1px solid rgba(167,139,250,0.28)',
@@ -117,6 +200,24 @@ export default function HomeScreen({
   const [arenaOpen, setArenaOpen] = useState(false)
   const [question, setQuestion]  = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const dailyTopic = getDailyTopic(locale)
+
+  // Contatore sessioni Free per questa settimana
+  const [weeklyUsed, setWeeklyUsed]   = useState<number | null>(null)
+  const [weeklyLimit, setWeeklyLimit] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (paid) return // solo per Free
+    fetch('/api/limits')
+      .then(r => r.json())
+      .then(data => {
+        if (data.weeklyDebates) {
+          setWeeklyUsed(data.weeklyDebates.used)
+          setWeeklyLimit(data.weeklyDebates.limit)
+        }
+      })
+      .catch(() => {})
+  }, [paid])
 
   useEffect(() => {
     if (arenaOpen) setTimeout(() => textareaRef.current?.focus(), 120)
@@ -134,7 +235,10 @@ export default function HomeScreen({
   const h = new Date().getHours()
   const greetKey = h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'
   const firstName = userName?.split(' ')[0] || ''
-  const greetText = `${t(`greet.${greetKey}`)}${firstName ? `, ${firstName}` : ''}.`
+  // Se il nome c'è: "Buonasera, Giampiero." — se no: "Buonasera!" (esclamativo, più caldo)
+  const greetText = firstName
+    ? `${t(`greet.${greetKey}`)}, ${firstName}.`
+    : `${t(`greet.${greetKey}`)}!`
 
   const goLocked = () => router.push(`/${locale}/pricing`)
 
@@ -162,7 +266,7 @@ export default function HomeScreen({
   })
 
   const tag = (color: string): React.CSSProperties => ({
-    fontSize: 9, fontWeight: 900, letterSpacing: '0.14em',
+    fontSize: 12, fontWeight: 900, letterSpacing: '0.14em',
     textTransform: 'uppercase', color,
     background: `${color}18`, border: `1px solid ${color}28`,
     padding: '3px 8px', borderRadius: 999,
@@ -187,7 +291,7 @@ export default function HomeScreen({
           <span style={{ color: '#fff' }}>Ai</span>
           <span style={{ color: C.arena }}>GORÀ</span>
         </span>
-        <button onClick={onOpenHistory} style={{
+        <button onClick={() => router.push(`/${locale}/dashboard`)} style={{
           width: 38, height: 38, borderRadius: '50%',
           background: userImage ? 'transparent' : avatarColor,
           boxShadow: `0 2px 10px ${avatarColor}44`,
@@ -215,11 +319,62 @@ export default function HomeScreen({
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.32)', marginTop: 3 }}>
             {t('subtitle')}
           </div>
+          {/* Counter sessioni Free */}
+          {!paid && weeklyLimit !== null && weeklyUsed !== null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+              <div style={{ flex: 1, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: 99,
+                  width: `${Math.min(1, weeklyUsed / weeklyLimit) * 100}%`,
+                  background: weeklyUsed >= weeklyLimit ? '#F87171' : '#A78BFA',
+                  transition: 'width 0.6s ease',
+                }} />
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: weeklyUsed >= weeklyLimit ? '#F87171' : 'rgba(255,255,255,0.38)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {weeklyUsed}/{weeklyLimit} {t('weeklyDebates')}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* ─── Argomento del giorno ────────────────────────────────────── */}
+        <button
+          onClick={() => { setQuestion(dailyTopic); setArenaOpen(true) }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '11px 14px', borderRadius: 15,
+            background: 'rgba(167,139,250,0.07)',
+            border: '1px solid rgba(167,139,250,0.18)',
+            cursor: 'pointer', textAlign: 'left',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'background 0.15s',
+          }}
+        >
+          <div style={{
+            width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+            background: 'rgba(167,139,250,0.12)',
+            border: '1px solid rgba(167,139,250,0.22)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <IcoSpark />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.arena, marginBottom: 2 }}>
+              {t('dailyTopicLabel')}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)', lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {dailyTopic}
+            </div>
+          </div>
+          <svg width={13} height={13} viewBox="0 0 24 24" fill="none"
+            stroke="rgba(167,139,250,0.5)" strokeWidth={2.5} strokeLinecap="round">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
 
         {/* ─── Card Arena — full-width, prominente ───────────────────────── */}
         <button
-          onClick={() => setArenaOpen(o => !o)}
+          onClick={() => { if (!arenaOpen) setArenaOpen(true) }}
           style={{ ...card(C.arena, arenaOpen), padding: arenaOpen ? '16px 16px 0' : '16px', width: '100%', display: 'block' }}
         >
           {/* Header card */}
@@ -228,10 +383,26 @@ export default function HomeScreen({
               <div style={iconBox(C.arena)}><IcoArena /></div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.15 }}>{t('arena.title')}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>{t('arena.desc')}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>{t('arena.desc')}</div>
               </div>
             </div>
-            <div style={tag(C.arena)}>{t('arena.tag')}</div>
+            {arenaOpen ? (
+              <button
+                onClick={e => { e.stopPropagation(); setArenaOpen(false); setQuestion('') }}
+                style={{
+                  width: 26, height: 26, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  cursor: 'pointer',
+                }}>
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
+                  stroke="rgba(255,255,255,0.55)" strokeWidth={2.5} strokeLinecap="round">
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            ) : (
+              <div style={tag(C.arena)}>{t('arena.tag')}</div>
+            )}
           </div>
 
           {/* Input espandibile in-place */}
@@ -291,7 +462,7 @@ export default function HomeScreen({
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{t('twoVsTwo.title')}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginTop: 4, lineHeight: 1.45 }}>{t('twoVsTwo.desc')}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 4, lineHeight: 1.45 }}>{t('twoVsTwo.desc')}</div>
               </div>
             </div>
           </button>
@@ -305,7 +476,7 @@ export default function HomeScreen({
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{t('devil.title')}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginTop: 4, lineHeight: 1.45 }}>{t('devil.desc')}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 4, lineHeight: 1.45 }}>{t('devil.desc')}</div>
               </div>
             </div>
             {!paid && <ProOverlay />}
@@ -323,7 +494,7 @@ export default function HomeScreen({
               <div style={iconBox(C.brainstorm)}><IcoBrainstorm /></div>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{t('brainstorm.title')}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>{t('brainstorm.desc')}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 2 }}>{t('brainstorm.desc')}</div>
               </div>
             </div>
             <div style={tag(C.brainstorm)}>Brainstorm</div>
@@ -354,7 +525,7 @@ export default function HomeScreen({
               </svg>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: C.arena, letterSpacing: '0.05em', marginBottom: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.arena, letterSpacing: '0.05em', marginBottom: 1 }}>
                 {t('lastSession')}
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -382,7 +553,7 @@ export default function HomeScreen({
               stroke={C.arena} strokeWidth={2.5} strokeLinecap="round">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
-            <span style={{ fontSize: 11, fontWeight: 700, color: C.arena }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.arena }}>
               {t('upgradeHint')}
             </span>
           </button>

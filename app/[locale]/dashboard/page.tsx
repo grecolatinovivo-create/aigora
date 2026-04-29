@@ -80,11 +80,11 @@ function ModeButton({
         <div style={{ fontSize: 13, fontWeight: 700, color: isLocked ? 'rgba(255,255,255,0.4)' : '#fff', lineHeight: 1.2 }}>
           {label}
         </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 1 }}>{desc}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)', marginTop: 1 }}>{desc}</div>
       </div>
       {isLocked ? (
         <div style={{
-          fontSize: 9, fontWeight: 900, letterSpacing: '0.1em',
+          fontSize: 12, fontWeight: 900, letterSpacing: '0.1em',
           textTransform: 'uppercase', color: '#A78BFA',
           background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.22)',
           padding: '2px 8px', borderRadius: 999, flexShrink: 0,
@@ -219,7 +219,7 @@ function DashboardContent() {
 
         {/* ── Sezione Piano ── */}
         <div style={{ marginTop: 20 }}>
-          <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
             Il tuo piano
           </div>
           <div style={{
@@ -229,7 +229,7 @@ function DashboardContent() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: nextPlan ? 12 : 0 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 2 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 2 }}>
                   {label}
                 </div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
@@ -242,7 +242,7 @@ function DashboardContent() {
                 background: `${color}22`, border: `1px solid ${color}38`,
               }}>
                 <div style={{ width: 7, height: 7, borderRadius: '50%', background: color }} className="animate-pulse" />
-                <span style={{ fontSize: 11, fontWeight: 800, color }}>{label}</span>
+                <span style={{ fontSize: 12, fontWeight: 800, color }}>{label}</span>
               </div>
             </div>
 
@@ -250,10 +250,10 @@ function DashboardContent() {
             {nextPlan && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
                     {label}
                   </span>
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
                     {PLAN_LABELS[nextPlan]}
                   </span>
                 </div>
@@ -300,7 +300,7 @@ function DashboardContent() {
 
         {/* ── Accesso rapido ai 4 modi ── */}
         <div>
-          <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
             Accesso rapido
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -322,7 +322,7 @@ function DashboardContent() {
         {/* ── Sessioni recenti ── */}
         {(recentChats.length > 0 || loadingChats) && (
           <div>
-            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
               Sessioni recenti
             </div>
             {loadingChats ? (
@@ -334,7 +334,7 @@ function DashboardContent() {
                 {recentChats.map(chat => (
                   <button
                     key={chat.id}
-                    onClick={() => router.push(`/${locale}`)}
+                    onClick={() => router.push(`/${locale}?resume=${chat.id}`)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: '11px 13px', borderRadius: 13,
@@ -363,7 +363,7 @@ function DashboardContent() {
                       </div>
                     </div>
                     {chat.date && (
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>
                         {formatDate(chat.date)}
                       </div>
                     )}

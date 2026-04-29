@@ -557,6 +557,8 @@
       "desc": "4 AI deliberano sulla tua idea e ti restituiscono un piano ragionato."
     },
     "lastSession": "RIPRENDI",
-    "upgradeHint": "Sblocca Devil e Brainstorm — passa a Pro"
+    "upgradeHint": "Sblocca Devil e Brainstorm — passa a Pro",
+    "dailyTopicLabel": "Argomento del giorno",
+    "weeklyDebates": "dibattiti questa settimana"
   }
 }

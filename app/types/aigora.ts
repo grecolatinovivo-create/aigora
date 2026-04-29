@@ -69,4 +69,5 @@ export interface AigoraChatProps {
   userPlan?: string
   userName?: string
   userEmail?: string
+  resumeChatId?: string   // se presente, apre automaticamente quella chat al mount
 }

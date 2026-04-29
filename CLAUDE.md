@@ -128,20 +128,38 @@ glow pulse triplo (1750ms) → fade-out (2650ms) → unmount (3250ms).
 
 ---
 
-## 6. Flusso di lavoro sessione
+## 6. Regola assoluta sui fix — ZERO FIX LASCIATI INDIETRO
+
+> Questa è una regola non derogabile stabilita da Giampiero.
+
+**Ogni volta che vengono identificati dei problemi — da audit, da round table, da simulazione utenti, da qualsiasi fonte — TUTTI i fix vanno risolti in sequenza, uno dopo l'altro, senza saltarne nessuno e senza passare ad altro finché la lista non è vuota.**
+
+- Non si chiude una sessione lasciando fix aperti
+- Non si inizia uno sprint nuovo se ci sono fix critici del precedente ancora aperti
+- L'ordine è: critici → alti → medi → bassi
+- Ogni fix va aggiunto come task, marcato `in_progress` quando inizia, `completed` solo quando verificato
+- Dopo l'ultimo fix: `tsc --noEmit` + aggiornamento `STATO_PROGETTO.md`
+
+Se una sessione finisce prima che tutti i fix siano completati, i task rimangono aperti e la sessione successiva li attacca PER PRIMA COSA, prima di qualsiasi nuova feature.
+
+---
+
+## 7. Flusso di lavoro sessione
 
 All'inizio di ogni sessione con lavoro significativo:
 
 1. Leggere questo file
-2. Leggere i file rilevanti al task (`Read` tool)
-3. Fare il round table se la decisione lo richiede
-4. Creare un TodoList con `TaskCreate`
-5. Implementare con verifiche intermedie (`tsc --noEmit`)
-6. Verificare il risultato finale prima di dichiarare done
+2. Controllare se ci sono task aperti da sessioni precedenti — risolverli PRIMA di tutto
+3. Leggere i file rilevanti al task (`Read` tool)
+4. Fare il round table se la decisione lo richiede (brainstorm prima del codice)
+5. Creare un TodoList con `TaskCreate`
+6. Implementare con verifiche intermedie (`tsc --noEmit`)
+7. Verificare il risultato finale prima di dichiarare done
+8. Aggiornare `STATO_PROGETTO.md` con il log della sessione
 
 ---
 
-## 7. Note del proprietario
+## 8. Note del proprietario
 
 - Il proprietario è **Giampiero** (`grecolatinovivo@gmail.com`)
 - Lingua principale del codice e dei commenti: **italiano** (per i commenti nei file)

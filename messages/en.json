@@ -557,6 +557,8 @@
       "desc": "4 AIs deliberate on your idea and give you a reasoned plan."
     },
     "lastSession": "RESUME",
-    "upgradeHint": "Unlock Devil and Brainstorm — upgrade to Pro"
+    "upgradeHint": "Unlock Devil and Brainstorm — upgrade to Pro",
+    "dailyTopicLabel": "Topic of the day",
+    "weeklyDebates": "debates this week"
   }
 }
