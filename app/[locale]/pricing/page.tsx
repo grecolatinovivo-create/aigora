@@ -17,6 +17,7 @@ export default function PricingPage() {
   const router = useRouter()
   const t = useTranslations('pricing')
   const [loading, setLoading] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   const freeFeatures = t.raw('plans.free.features') as string[]
   const proFeatures  = t.raw('plans.pro.features')  as string[]
@@ -71,15 +72,22 @@ export default function PricingPage() {
 
     if (!plan.key) return
     setLoading(plan.key)
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: plan.key }),
-    })
-    const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
-    } else {
+    setCheckoutError(null)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: plan.key }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setCheckoutError(data.error ?? 'Errore durante il pagamento. Riprova.')
+        setLoading(null)
+      }
+    } catch {
+      setCheckoutError('Errore di rete. Controlla la connessione e riprova.')
       setLoading(null)
     }
   }
@@ -111,6 +119,14 @@ export default function PricingPage() {
           {t('subtitle')}
         </p>
       </div>
+
+      {/* Checkout error banner */}
+      {checkoutError && (
+        <div className="w-full max-w-md mb-6 px-4 py-3 rounded-xl text-sm font-medium text-red-300 flex items-center gap-2"
+          style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
+          <span>⚠️</span> {checkoutError}
+        </div>
+      )}
 
       {/* Demo pill */}
       <div

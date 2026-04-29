@@ -113,10 +113,10 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 {/* ── Dibattito (chat libera) ── */}
                 <button onClick={() => { onNewChat?.(); close() }}
                   className="w-full px-4 pt-3 pb-2 text-left hover:bg-white/5 transition-colors border-b border-white/8 flex items-center justify-between group">
-                  <div className="text-[10px] font-black uppercase tracking-widest group-hover:text-white/50 transition-colors" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  <div className="text-[10px] font-black uppercase tracking-widest transition-colors" style={{ color: '#A78BFA' }}>
                     {t('debateMode')}
                   </div>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" className="group-hover:stroke-white/40 transition-all">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.4)" strokeWidth="2.5" strokeLinecap="round">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                 </button>
@@ -124,25 +124,25 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 <button
                   onClick={() => { close(); onMultiplayer?.() }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
-                  style={{ color: 'rgba(255,255,255,0.75)' }}>
+                  style={{ color: '#38BDF8' }}>
                   2v2
-                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(16,163,127,0.15)', color: '#10A37F', border: '1px solid rgba(16,163,127,0.3)' }}>FREE</span>}
+                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(56,189,248,0.12)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.3)' }}>FREE</span>}
                 </button>
 
                 <button
                   onClick={() => { close(); if (isPaid) { onMultiplayer?.() } else router.push('/pricing') }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
-                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.35)' }}>
+                  style={{ color: isPaid ? '#f87171' : 'rgba(248,113,113,0.4)' }}>
                   {"Devil's Advocate"}
-                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
+                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(248,113,113,0.12)', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)' }}>PRO</span>}
                 </button>
 
                 <button
                   onClick={() => { close(); if (isPaid) router.push('/brainstorm'); else router.push('/pricing') }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
-                  style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.35)' }}>
+                  style={{ color: isPaid ? '#FCD34D' : 'rgba(252,211,77,0.4)' }}>
                   Brainstormer
-                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
+                  {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(252,211,77,0.12)', color: '#FCD34D', border: '1px solid rgba(252,211,77,0.3)' }}>PRO</span>}
                 </button>
 
                 <button onClick={() => { close(); router.push('/pricing') }}

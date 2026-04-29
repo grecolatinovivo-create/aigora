@@ -77,10 +77,10 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
         {/* Card 2 vs 2 — attiva */}
         <button onClick={() => handleSelect('2v2')}
           className="flex-1 flex flex-col justify-between px-5 py-4 rounded-3xl active:scale-[0.98] transition-all"
-          style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(91,33,182,0.1) 100%)', border: '1.5px solid rgba(167,139,250,0.35)', boxShadow: '0 4px 20px rgba(124,58,237,0.15)', minHeight: 0 }}>
+          style={{ background: 'linear-gradient(135deg, rgba(14,165,233,0.18) 0%, rgba(3,105,161,0.08) 100%)', border: '1.5px solid rgba(56,189,248,0.35)', boxShadow: '0 4px 20px rgba(14,165,233,0.15)', minHeight: 0 }}>
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#A78BFA' }}>{t('twoVsTwo.tag')}</div>
+              <div className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: '#38BDF8' }}>{t('twoVsTwo.tag')}</div>
               <div className="text-xl font-black text-white leading-tight">{t('twoVsTwo.title')}</div>
             </div>
             <div className="flex gap-1">
@@ -91,7 +91,7 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
           </div>
           <div className="text-[12px] leading-relaxed mt-2" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('twoVsTwo.body')}</div>
           <div className="flex items-center justify-end mt-3">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold text-white" style={{ background: 'linear-gradient(135deg,#0EA5E9,#0369A1)' }}>
               {t('twoVsTwo.cta')} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
           <button onClick={() => handleSelect('2v2')} className="flex flex-col items-center gap-5 transition-transform hover:scale-[1.02] active:scale-[0.98]">
             <div className="relative" style={{ width: 240, height: 490 }}>
               {/* Glow */}
-              <div className="absolute inset-0 rounded-[38px]" style={{ boxShadow: '0 0 0 2px rgba(167,139,250,0.6), 0 0 60px rgba(124,58,237,0.4)', borderRadius: 38 }} />
+              <div className="absolute inset-0 rounded-[38px]" style={{ boxShadow: '0 0 0 2px rgba(56,189,248,0.6), 0 0 60px rgba(14,165,233,0.4)', borderRadius: 38 }} />
               {/* Cornice */}
               <div className="absolute inset-0 rounded-[38px]" style={{ background: '#1c1c1e', boxShadow: '0 30px 80px rgba(0,0,0,0.7)' }} />
               {/* Schermo */}
@@ -219,7 +219,7 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
                 {/* Input */}
                 <div className="flex items-center gap-1.5 px-2 py-2" style={{ background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="flex-1 px-3 py-1.5 rounded-full text-[8px]" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)' }}>{t('yourArgument')}</div>
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#0EA5E9,#0369A1)' }}>
                     <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export default function ModeSelect({ onSelect, onClose, userPlan }: { onSelect: 
               {/* Notch */}
               <div className="absolute left-1/2 -translate-x-1/2 rounded-full" style={{ top: 12, width: 72, height: 16, background: '#1c1c1e', zIndex: 10 }} />
             </div>
-            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(167,139,250,0.8)' }}>{t('twoVsTwo.tag')}</div>
+            <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(56,189,248,0.8)' }}>{t('twoVsTwo.tag')}</div>
           </button>
 
           {/* ── DEVIL'S ADVOCATE — attivo ── */}

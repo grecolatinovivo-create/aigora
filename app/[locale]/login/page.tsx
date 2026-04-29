@@ -78,12 +78,13 @@ function AuthCard() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [emailExists, setEmailExists] = useState(false) // email già registrata durante la registrazione
   const [devCode, setDevCode] = useState<string | null>(null) // codice visibile in dev
 
   const inputCls = "w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-white/40 border border-white/10 focus:outline-none focus:border-purple-400 text-sm"
 
   const reset = (target: Step) => {
-    setError(''); setCode(''); setDevCode(null); setLoading(false)
+    setError(''); setEmailExists(false); setCode(''); setDevCode(null); setLoading(false)
     setStep(target)
   }
 
@@ -111,8 +112,12 @@ function AuthCard() {
         body: JSON.stringify({ email }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? t('errors.registrationError')); setLoading(false); return }
-      if (data.code) setDevCode(data.code) // visibile solo in dev / finché Resend non è configurato
+      if (!res.ok) {
+        if (res.status === 409) setEmailExists(true)
+        else setError(data.error ?? t('errors.registrationError'))
+        setLoading(false); return
+      }
+      if (data.code) setDevCode(data.code)
       setStep('register-verify')
     } catch { setError(t('errors.networkError')) }
     setLoading(false)
@@ -239,7 +244,18 @@ function AuthCard() {
         <form onSubmit={handleRegisterSendCode} className="space-y-3">
           <p className="text-white/40 text-xs text-center mb-1">Inserisci la tua email — ti mandiamo un codice di verifica.</p>
           <input type="email" placeholder={t('emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} required autoFocus className={inputCls} />
-          {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+          {emailExists ? (
+            <div className="rounded-xl px-4 py-3 text-center" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <p className="text-red-400 text-xs mb-1.5">Questa email è già registrata.</p>
+              <button type="button"
+                onClick={() => { setEmailExists(false); reset('forgot-email') }}
+                className="text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors underline underline-offset-2">
+                Hai dimenticato la password?
+              </button>
+            </div>
+          ) : error ? (
+            <p className="text-red-400 text-xs text-center">{error}</p>
+          ) : null}
           <button type="submit" disabled={loading}
             className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, #7C3AED, #A78BFA)' }}>
