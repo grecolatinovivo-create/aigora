@@ -29,6 +29,11 @@ export async function generateMetadata({
   return {
     title: m?.title ?? 'AiGORÀ',
     description: m?.description ?? '',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'black-translucent',
+      title: m?.title ?? 'AiGORÀ',
+    },
   }
 }
 
