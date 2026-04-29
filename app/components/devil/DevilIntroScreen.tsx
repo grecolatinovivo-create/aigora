@@ -57,7 +57,7 @@ export default function DevilIntroScreen({
   return (
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center px-6 overflow-hidden"
-      style={{ background: '#080004' }}
+      style={{ background: '#080004', paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <HellGridBg />
       {/* Stile flip card */}
@@ -76,11 +76,11 @@ export default function DevilIntroScreen({
         .devil-card-back { transform: rotateY(180deg); }
       `}</style>
 
-      {/* Back */}
+      {/* Back — BUG-T2/T3 fix: safe-area-inset-top per non finire sotto il notch */}
       <button
         onClick={onBack}
-        className="absolute top-4 left-4 z-10 w-9 h-9 flex items-center justify-center rounded-full"
-        style={{ background: 'rgba(255,255,255,0.07)' }}
+        className="absolute left-4 z-10 w-9 h-9 flex items-center justify-center rounded-full"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)', background: 'rgba(255,255,255,0.07)' }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
           <path d="M15 18l-6-6 6-6" />

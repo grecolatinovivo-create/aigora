@@ -278,7 +278,8 @@ export default function HomeScreen({
       display: 'flex', flexDirection: 'column',
       backgroundColor: C.bg,
       paddingTop:    'env(safe-area-inset-top, 0px)',
-      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      // BUG-T1 fix: BottomTabBar è 64px fixed — senza questo la scroll area finisce sotto la tab bar
+      paddingBottom: 'calc(var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px))',
     }}>
 
       {/* ─── Header ─────────────────────────────────────────────────────── */}

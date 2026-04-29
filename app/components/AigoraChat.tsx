@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import HomeScreen from './HomeScreen'
+import FirstRunScreen from './FirstRunScreen'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -61,6 +62,23 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const chatLocale = useLocale()
 
   const [phase, setPhase] = useState<ChatPhase>('start')
+
+  // ── Primo accesso — mostra FirstRunScreen invece di HomeScreen ───────────────
+  // Nessuna chiamata API: usiamo localStorage. Dopo la prima azione → flag settato.
+  const [isFirstRun, setIsFirstRun] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    // Non mostrare il first-run se l'utente sta riprendendo una sessione
+    if (resumeChatId || startMode) return
+    const done = localStorage.getItem('aigora_onboarded')
+    if (!done) setIsFirstRun(true)
+  }, [resumeChatId, startMode])
+
+  const completeFirstRun = () => {
+    if (typeof window !== 'undefined') localStorage.setItem('aigora_onboarded', '1')
+    setIsFirstRun(false)
+  }
+
   const [currentTime, setCurrentTime] = useState(() => {
     const now = new Date()
     return `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
@@ -2273,6 +2291,18 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
           </button>
         </div>
       </div>
+    )
+  }
+
+  // ── PRIMO ACCESSO — FirstRunScreen (bypassa la HomeScreen) ──────────────────
+  if (phase === 'start' && isFirstRun) {
+    return (
+      <FirstRunScreen
+        onStart={(q) => {
+          completeFirstRun()
+          handleStart(q)
+        }}
+      />
     )
   }
 

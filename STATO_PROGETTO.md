@@ -237,4 +237,8 @@ AigoraChat.tsx (shell, ~200 righe)
 
 ---
 
-*Prossima sessione: Sprint 4 — ModeCard unificato + route propria Devil*
+| 29 apr 2026 | Sprint 4 — Bug safe-area + FirstRunScreen | **BUG-T1** HomeScreen: `paddingBottom` non includeva `--bottom-nav-height` (64px BottomTabBar) → Arena card tagliata. Fix: `calc(var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px))`. **BUG-T2/T3** `DevilDifficultyScreen` + `DevilIntroScreen`: back button con `top-4` (16px) sotto il notch (47–59px), contenuto centrato su viewport fisico invece di area utile. Fix: `paddingTop: env(safe-area-inset-top, 0px)` sul container, `top: calc(env(safe-area-inset-top, 0px) + 8px)` sul back button. **FirstRunScreen**: nuovo componente `app/components/FirstRunScreen.tsx` — chi non ha mai usato l'app vede una battaglia AI in corso (4 messaggi in sequenza automatica su topic fisso, contatore "live" seeded sull'ora), poi sceglie "Dibatti su questa domanda" (zero frizione → Arena diretta) o "Lancia la tua domanda" (textarea fullscreen). Rilevamento via `localStorage.getItem('aigora_onboarded')`: se assente → FirstRunScreen; dopo prima azione → flag settato → HomeScreen normale. Integrato in `AigoraChat.tsx` con state `isFirstRun` + `completeFirstRun()`. tsc: 0 errori. |
+
+---
+
+*Prossima sessione: LandingPage redesign (non-loggato vede il prodotto, non un hero statico) + HomeScreen argomento del giorno come protagonista centrale*
