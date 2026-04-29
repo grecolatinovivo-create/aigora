@@ -266,7 +266,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [inviteSearch, setInviteSearch] = useState('')
   const [inviteResults, setInviteResults] = useState<any[]>([])
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
-  const [undoChat, setUndoChat] = useState<{ id: string; title: string } | null>(null)
+  const [undoChat, setUndoChat] = useState<{ id: string; title: string; snapshot: { id: string; title: string; date: string; messages: Message[]; history: {name:string;content:string}[] } | null } | null>(null)
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Real-time Ably ────────────────────────────────────────────────────────
@@ -556,29 +556,28 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handleDeleteChat = (chatId: string, chatTitle: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    // Salva snapshot per undo prima di rimuovere
+    const chatSnapshot = savedChats.find(c => c.id === chatId) ?? null
     // Rimuovi subito dall'UI
     setSavedChats(prev => prev.filter(c => c.id !== chatId))
+    // DELETE immediato sul server — evita che la chat ricompaia al refresh
+    fetch(`/api/chats/${chatId}`, { method: 'DELETE' }).catch(() => {})
     // Mostra undo per 3 secondi
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
-    setUndoChat({ id: chatId, title: chatTitle })
-    undoTimerRef.current = setTimeout(async () => {
-      setUndoChat(null)
-      // Soft delete sul server dopo 3 secondi
-      await fetch(`/api/chats/${chatId}`, { method: 'DELETE' }).catch(() => {})
-    }, 3000)
+    setUndoChat({ id: chatId, title: chatTitle, snapshot: chatSnapshot })
+    undoTimerRef.current = setTimeout(() => { setUndoChat(null) }, 3000)
   }
 
   const handleUndoDelete = () => {
     if (!undoChat) return
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
-    // Ricarica le chat dal server per ripristinare
-    fetch('/api/chats').then(r => r.json()).then(data => {
-      if (data.chats) setSavedChats(data.chats.map((c: any) => ({
-        id: c.id, title: c.title,
-        date: new Date(c.updatedAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-        messages: c.messages, history: c.history,
-      })))
-    }).catch(() => {})
+    // Ripristina dallo snapshot locale
+    if (undoChat.snapshot) {
+      const snap = undoChat.snapshot
+      setSavedChats(prev => [snap, ...prev.filter(c => c.id !== snap.id)])
+      // PATCH resetta deletedAt sul server — non usa POST (che non tocca deletedAt)
+      fetch(`/api/chats/${snap.id}`, { method: 'PATCH' }).catch(() => {})
+    }
     setUndoChat(null)
   }
 
@@ -2436,8 +2435,8 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             </div>
             )}
 
-            {/* ── TAB FEED ── */}
-            {canUseGroupChat && socialTab === 'feed' && (
+            {/* ── TAB FEED — rimosso: nessuna card nel main area ── */}
+            {false && canUseGroupChat && socialTab === 'feed' && (
               <div className="flex flex-col gap-3">
                 {/* Notifiche pendenti */}
                 {notifications.filter(n => !n.read).map((n: any) => (
@@ -2528,7 +2527,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             )}
 
             {/* ── TAB CREA ── */}
-            {canUseGroupChat && socialTab === 'crea' && (
+            {false && canUseGroupChat && socialTab === 'crea' && (
               <div className="glass rounded-3xl p-4 flex flex-col gap-3">
                 <div className="text-xs font-bold text-white/40 uppercase tracking-wide">Tema del dibattito</div>
                 <textarea

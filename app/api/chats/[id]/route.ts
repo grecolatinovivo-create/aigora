@@ -5,6 +5,21 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
+// PATCH — ripristina una chat soft-deleted (undo delete)
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.email) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
+
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
+  if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
+
+  const chat = await prisma.chat.findFirst({ where: { id: params.id, userId: user.id } })
+  if (!chat) return NextResponse.json({ error: 'Chat non trovata' }, { status: 404 })
+
+  await prisma.chat.update({ where: { id: params.id }, data: { deletedAt: null } })
+  return NextResponse.json({ ok: true })
+}
+
 // DELETE — soft delete (mantiene per 30 giorni, invisibile all'utente)
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
