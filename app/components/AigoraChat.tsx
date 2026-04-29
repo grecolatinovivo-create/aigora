@@ -2151,8 +2151,14 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
     try {
       const res = await fetch('/api/stripe/portal', { method: 'POST' })
       const data = await res.json()
-      if (data.url) window.location.href = data.url
-    } catch { /* noop */ }
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert(data.error ?? 'Impossibile aprire il portale abbonamento. Riprova.')
+      }
+    } catch {
+      alert('Errore di rete. Controlla la connessione e riprova.')
+    }
   }
 
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────

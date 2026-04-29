@@ -153,8 +153,8 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   {!isPaid ? t('upgradePro') : t('plans')}
                 </button>
 
-                {/* ── Gestisci abbonamento — solo per utenti paid ── */}
-                {isPaid && onManageSub && (
+                {/* ── Gestisci abbonamento — solo per chi ha un abbonamento Stripe reale ── */}
+                {['pro', 'premium', 'max'].includes(userPlan ?? '') && onManageSub && (
                   <button onClick={() => { close(); onManageSub() }}
                     className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2"
                     style={{ color: 'rgba(255,255,255,0.45)' }}>
