@@ -64,6 +64,43 @@ html, body {
   overscroll-behavior-y: none;
   /* Chrome del browser segue la modalità sistema (chiaro di giorno, scuro di notte) */
   color-scheme: dark light;
+  /* Previene lo zoom automatico sui campi input (iOS) */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ── Safe area support (iPhone notch + home indicator) ── */
+:root {
+  --safe-top:    env(safe-area-inset-top,    0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left,   0px);
+  --safe-right:  env(safe-area-inset-right,  0px);
+  /* Altezza bottom tab bar (impostata da CapacitorProvider via classe .is-native) */
+  --bottom-nav-height: 0px;
+}
+
+/* ── App nativa: variabili e aggiustamenti globali ── */
+html.is-native {
+  --bottom-nav-height: 64px;
+  /* Previene il bounce scroll in tutta l'app */
+  overscroll-behavior: none;
+}
+
+html.is-native body {
+  overscroll-behavior: none;
+  /* Nessun tap highlight su tutto il body */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Schermata chat mobile: lascia spazio alla bottom tab bar */
+html.is-native .phone-screen-mobile {
+  bottom: calc(var(--bottom-nav-height) + var(--safe-bottom)) !important;
+}
+
+/* Pagine a schermo intero (brainstorm, arena): padding bottom per non nascondersi sotto la tab bar */
+html.is-native main,
+html.is-native [data-main-content] {
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
 }
 
 /* ── Sfondo desktop animato ── */

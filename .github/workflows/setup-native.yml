@@ -1,0 +1,51 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# SETUP NATIVE — da eseguire UNA SOLA VOLTA (o quando aggiungi nuovi plugin)
+#
+# Questo workflow genera le cartelle android/ e ios/ con npx cap add,
+# poi le committa nel repo. Dopo questo step, GitHub Actions può buildare
+# Android e Xcode Cloud può buildare iOS.
+#
+# Trigger: manuale da GitHub Actions → Run workflow
+# ──────────────────────────────────────────────────────────────────────────────
+name: Setup Native (esegui una volta)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: macos-latest   # macos richiesto per generare il progetto iOS
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Installa dipendenze
+        run: npm ci
+
+      - name: Genera progetti nativi
+        run: |
+          npx cap add android || true
+          npx cap add ios || true
+          npx cap sync
+
+      - name: Installa CocoaPods (iOS)
+        run: |
+          cd ios/App
+          pod install --repo-update
+
+      - name: Commit progetti nativi nel repo
+        run: |
+          git config user.name  "GitHub Actions [bot]"
+          git config user.email "actions@github.com"
+          git add android/ ios/ || true
+          git diff --cached --quiet || git commit -m "chore: add Capacitor native projects (android/ + ios/)"
+          git push

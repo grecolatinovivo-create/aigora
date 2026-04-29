@@ -1,0 +1,78 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# BUILD ANDROID — produce un .aab firmato pronto per il Google Play Store
+#
+# Trigger: push su main  OPPURE  manuale da GitHub Actions → Run workflow
+#
+# Secrets richiesti (da impostare in GitHub → Settings → Secrets → Actions):
+#   KEYSTORE_BASE64     — il file .jks codificato in base64
+#   KEY_STORE_PASSWORD  — password del keystore
+#   KEY_ALIAS           — alias della chiave dentro il keystore
+#   KEY_PASSWORD        — password della chiave (spesso uguale a KEY_STORE_PASSWORD)
+#
+# Come generare il keystore la prima volta:
+#   keytool -genkey -v -keystore aigora.jks -keyalg RSA -keysize 2048 \
+#           -validity 10000 -alias aigora
+#   base64 -i aigora.jks | pbcopy   # copia negli appunti su Mac
+# ──────────────────────────────────────────────────────────────────────────────
+name: Build Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Installa dipendenze Node
+        run: npm ci
+
+      - name: Sincronizza progetto Android con Capacitor
+        run: npx cap sync android
+
+      - name: Decodifica keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/aigora.jks
+
+      - name: Build AAB (release)
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=aigora.jks \
+            -Pandroid.injected.signing.store.password="${{ secrets.KEY_STORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}"
+
+      - name: Upload AAB come artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aigora-release-${{ github.run_number }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      # ── Opzionale: carica direttamente su Google Play (richiede GOOGLE_PLAY_JSON_KEY) ──
+      # - name: Deploy su Google Play (Internal Track)
+      #   uses: r0adkll/upload-google-play@v1
+      #   with:
+      #     serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+      #     packageName: eu.aigora.app
+      #     releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+      #     track: internal
