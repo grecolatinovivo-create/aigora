@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { useLocale } from 'next-intl'
 import { createPortal } from 'react-dom'
 import { useAbly, type RoomEvent } from '@/lib/useAbly'
 import TwoVsTwoScreen from '@/app/components/2v2/TwoVsTwoScreen'
@@ -38,6 +39,7 @@ export default function TwoVsTwoLivePage() {
   const searchParams = useSearchParams()
   const { data: session, status } = useSession()
   const router = useRouter()
+  const locale = useLocale()
 
   const [roomId, setRoomId] = useState<string | null>(null)
   const [gameState, setGameState] = useState<TwoVsTwoState | null>(null)
@@ -57,17 +59,17 @@ export default function TwoVsTwoLivePage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push(`/login?callbackUrl=/2v2/${code}`)
+      router.push(`/${locale}/login?callbackUrl=/${locale}/2v2/${code}`)
       return
     }
     if (status === 'authenticated') {
-      fetch(`/api/2v2?code=${code}`)
+      fetch(`/api/2v2?code=${code}`, { signal: AbortSignal.timeout(10000) })
         .then(r => r.json())
         .then(data => {
           if (data.error) setError(data.error)
           else setRoomId(data.room.id)
         })
-        .catch(() => setError('Errore di rete'))
+        .catch(() => setError('Errore di rete o timeout'))
         .finally(() => setPageLoading(false))
     }
   }, [status, code])
@@ -138,10 +140,10 @@ export default function TwoVsTwoLivePage() {
     )
   }
 
+  if (!mounted) return null
+
   // Connesso ma in attesa del primo aggiornamento di stato dall'host
   if (!gameState) return <WaitingForHost />
-
-  if (!mounted) return null
 
   return createPortal(
     <div className="fixed inset-0 z-[9999]" style={{ background: '#0d0d14' }}>

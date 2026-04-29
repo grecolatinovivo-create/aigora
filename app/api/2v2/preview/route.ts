@@ -27,8 +27,8 @@ export async function GET(req: NextRequest) {
   if (room.status === 'ended') return NextResponse.json({ error: 'Partita già terminata' }, { status: 410 })
 
   const gs = room.gameState as any
-  // isFull solo se humanId è davvero valorizzato (null ≠ undefined)
-  const isFull = gs?.teamB?.humanId != null
+  // isFull se humanId è valorizzato OPPURE se è modalità solo (non joinabile da esterni)
+  const isFull = gs?.teamB?.humanId != null || gs?.mode === 'solo'
 
   return NextResponse.json({
     id: room.id,

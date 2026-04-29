@@ -138,30 +138,23 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 </button>
 
                 <button
-                  onClick={() => { close(); if (isPaid) window.location.href = '/brainstorm'; else router.push('/pricing') }}
+                  onClick={() => { close(); if (isPaid) router.push('/brainstorm'); else router.push('/pricing') }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                   style={{ color: isPaid ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.35)' }}>
                   Brainstormer
                   {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>PRO</span>}
                 </button>
 
-                {!isPaid && (
-                  <button onClick={() => { close(); router.push('/pricing') }}
-                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-1.5"
-                    style={{ color: '#A78BFA' }}>
-                    <span>✦</span> {t('upgradePro')}
-                  </button>
-                )}
-
                 <button onClick={() => { close(); router.push('/pricing') }}
-                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8"
-                  style={{ color: 'rgba(255,255,255,0.45)' }}>
-                  {t('plans')}
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-1.5"
+                  style={{ color: isPaid ? 'rgba(255,255,255,0.45)' : '#A78BFA' }}>
+                  {!isPaid && <span>✦</span>}
+                  {!isPaid ? t('upgradePro') : t('plans')}
                 </button>
 
                 {/* ── Admin panel — solo per admin ── */}
                 {userPlan === 'admin' && (
-                  <button onClick={() => { close(); window.location.href = '/admin' }}
+                  <button onClick={() => { close(); router.push('/admin') }}
                     className="w-full px-4 py-2.5 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                     {t('adminPanel')}
                   </button>

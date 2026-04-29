@@ -6,16 +6,24 @@ import Ably from 'ably'
 const clients = new Map<string, Ably.Realtime>()
 
 function getAblyClient(roomId: string): Ably.Realtime {
-  if (!clients.has(roomId)) {
-    const client = new Ably.Realtime({
-      authUrl: `/api/ably-token?roomId=${roomId}`,
-      authMethod: 'GET',
-      disconnectedRetryTimeout: 5000,
-      suspendedRetryTimeout: 15000,
-    })
-    clients.set(roomId, client)
+  const existing = clients.get(roomId)
+  // Non riutilizzare un client che è già in fase di chiusura o fallito
+  if (existing && existing.connection.state !== 'closed' && existing.connection.state !== 'failed') {
+    return existing
   }
-  return clients.get(roomId)!
+  if (existing) {
+    // Rimuovi il client zombie prima di crearne uno nuovo
+    try { existing.close() } catch {}
+    clients.delete(roomId)
+  }
+  const client = new Ably.Realtime({
+    authUrl: `/api/ably-token?roomId=${roomId}`,
+    authMethod: 'GET',
+    disconnectedRetryTimeout: 5000,
+    suspendedRetryTimeout: 15000,
+  })
+  clients.set(roomId, client)
+  return client
 }
 
 export type RoomEvent =
@@ -135,6 +143,12 @@ export function useAbly({ roomId, userId, userName, onEvent, enabled = true }: U
       }, 2000)
     }
   }, [roomId, userId, enabled])
+
+  // Aggiorna i dati di presenza quando cambia il nome utente (senza ricreare il canale)
+  useEffect(() => {
+    if (!channelRef.current || !userId || !userName) return
+    channelRef.current.presence.update({ userId, userName }).catch(() => {})
+  }, [userName, userId])
 
   const publish = useCallback((event: RoomEvent) => {
     if (!channelRef.current) return

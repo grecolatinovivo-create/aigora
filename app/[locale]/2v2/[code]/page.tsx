@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { useLocale } from 'next-intl'
 
 const AI_COLOR: Record<string, string> = {
   claude: '#7C3AED', gpt: '#10A37F', gemini: '#1A73E8',
@@ -31,6 +32,7 @@ export default function JoinTwoVsTwo() {
   const { code } = useParams<{ code: string }>()
   const { data: session, status } = useSession()
   const router = useRouter()
+  const locale = useLocale()
 
   const [preview, setPreview] = useState<Preview | null>(null)
   const [previewError, setPreviewError] = useState('')
@@ -68,20 +70,25 @@ export default function JoinTwoVsTwo() {
     if (!playerName.trim()) return
     setJoining(true)
     setJoinError('')
-    const body: Record<string, string> = { code, playerName: playerName.trim() }
-    if (preview?.mode === 'amico') body.teamBAiId = selectedAI
+    try {
+      const body: Record<string, string> = { code, playerName: playerName.trim() }
+      if (preview?.mode === 'amico') body.teamBAiId = selectedAI
 
-    const res = await fetch('/api/2v2', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    const data = await res.json()
-    if (data.error) {
-      setJoinError(data.error)
+      const res = await fetch('/api/2v2', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setJoinError(data.error)
+      } else {
+        router.push(`/${locale}/2v2/live/${code}?name=${encodeURIComponent(playerName.trim())}`)
+      }
+    } catch {
+      setJoinError('Errore di rete')
+    } finally {
       setJoining(false)
-    } else {
-      router.push(`/2v2/live/${code}?name=${encodeURIComponent(playerName.trim())}`)
     }
   }
 
@@ -198,14 +205,20 @@ export default function JoinTwoVsTwo() {
   )
 
   if (preview.isFull) {
+    const fullMsg = preview.mode === 'solo'
+      ? 'Questa partita è in modalità solo e non accetta ospiti.'
+      : 'La Squadra B è già completa.'
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6"
         style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.12) 0%, transparent 60%)' }}>
         <div className="font-black text-2xl mb-10">
-          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORA</span>
+          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
         </div>
         {matchCard}
-        <div className="mt-6 text-white/40 text-sm text-center">La Squadra B e' gia' completa.</div>
+        <div className="mt-6 px-4 py-3 rounded-2xl text-sm text-center text-white/50"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          {fullMsg}
+        </div>
         <button onClick={() => router.push('/')} className="mt-4 px-6 py-3 rounded-2xl font-bold text-white text-sm"
           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
           Torna all'arena
@@ -227,13 +240,13 @@ export default function JoinTwoVsTwo() {
             Crea un account gratuito per giocare questa partita
           </div>
           <button
-            onClick={() => router.push(`/login?tab=register&callbackUrl=/2v2/${code}`)}
+            onClick={() => router.push(`/${locale}/login?tab=register&callbackUrl=/${locale}/2v2/${code}`)}
             className="w-full py-4 rounded-2xl font-bold text-white text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
             style={{ background: 'linear-gradient(135deg, #ef4444, #b91c1c)', boxShadow: '0 4px 20px rgba(239,68,68,0.35)' }}>
             Crea account gratis e gioca
           </button>
           <button
-            onClick={() => router.push(`/login?callbackUrl=/2v2/${code}`)}
+            onClick={() => router.push(`/${locale}/login?callbackUrl=/${locale}/2v2/${code}`)}
             className="w-full py-3 rounded-2xl font-medium text-white/60 text-sm transition-all hover:text-white/80"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
             Ho gia' un account — Accedi

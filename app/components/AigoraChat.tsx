@@ -127,6 +127,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [devilLoading, setDevilLoading] = useState(false)
   const [showDevilDifficulty, setShowDevilDifficulty] = useState(false)
   const devilVerdictRunningRef = useRef(false)
+  const devilVerdictAbortRef = useRef<AbortController | null>(null)
+  const twoVsTwoVerdictRunningRef = useRef(false)
   const saveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [devilIntroData, setDevilIntroData] = useState<{ positions: [string, string]; difficulty: DevilDifficulty } | null>(null)
   const [selectedAiProfile, setSelectedAiProfile] = useState<string | null>(null)
@@ -384,8 +386,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   publish2v2Ref.current = publish2v2
 
   // Pubblica lo stato completo a tutti i player connessi dopo ogni aggiornamento
+  // Skip durante lo streaming (typewriting): evita ~200 publish per messaggio
   useEffect(() => {
     if (!twoVsTwoRoomAblyId || !twoVsTwoState) return
+    const isStreaming = twoVsTwoState.messages.some(m => m.streaming)
+    if (isStreaming) return
     publish2v2Ref.current({ type: '2v2_state', state: twoVsTwoState })
   }, [twoVsTwoState, twoVsTwoRoomAblyId])
 
@@ -429,6 +434,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       localStorage.removeItem('aigora_2v2_active')
     }
   }, [])
+
+  // Auto-dismiss del banner reconnect dopo 30s (se l'utente non interagisce)
+  useEffect(() => {
+    if (!pendingReconnect) return
+    const timer = setTimeout(() => setPendingReconnect(null), 30000)
+    return () => clearTimeout(timer)
+  }, [pendingReconnect])
   // ─────────────────────────────────────────────────────────────────────────
 
   // Registra la sessione al mount
@@ -1161,14 +1173,25 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }
 
+  const devilDifficultyAbortRef = useRef<AbortController | null>(null)
   const handleDevilDifficultySelect = async (difficulty: DevilDifficulty) => {
+    // Cancella eventuale chiamata precedente ancora in volo
+    devilDifficultyAbortRef.current?.abort()
+    const controller = new AbortController()
+    devilDifficultyAbortRef.current = controller
+
     setDevilLoading(true)
-    const delay = new Promise(r => setTimeout(r, 5000))
+    let delayTimer: ReturnType<typeof setTimeout> | null = null
+    const delay = new Promise<void>((resolve, reject) => {
+      delayTimer = setTimeout(resolve, 5000)
+      controller.signal.addEventListener('abort', () => { if (delayTimer) clearTimeout(delayTimer); reject(new DOMException('Aborted', 'AbortError')) })
+    })
     try {
       const [res] = await Promise.all([
         fetch('/api/devil/generate', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ difficulty }),
+          signal: controller.signal,
         }),
         delay,
       ])
@@ -1176,15 +1199,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       const { positions } = await res.json()
       setDevilIntroData({ positions, difficulty })
       setShowDevilDifficulty(false)
-    } catch {
-      await delay
+    } catch (e: any) {
+      if (e?.name === 'AbortError') return  // Componente smontato o nuova selezione — non aggiornare stato
       setDevilIntroData({
         positions: ['I bugiardi abituali sono più affidabili degli onesti', 'La crudeltà è la forma più onesta di rispetto'],
         difficulty,
       })
       setShowDevilDifficulty(false)
     } finally {
-      setDevilLoading(false)
+      if (!controller.signal.aborted) setDevilLoading(false)
     }
   }
 
@@ -1210,6 +1233,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   }
 
   const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
+    // Reset dei ref di controllo per la nuova partita
+    twoVsTwoVerdictRunningRef.current = false
+    stopRequestedRef.current = false
     setShow2v2Setup(false)
     setSelectedMode('2v2')
     // Animazione navbar: prima "2 VS 2", poi dopo 2.5s il tema
@@ -1251,7 +1277,9 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const state = twoVsTwoState
     const { config } = state
     // In amico mode teamB.aiId1 = AI scelto dall'ospite; in solo mode = primo AI assegnato dalla roulette
-    const aiId = team === 'A' ? config.teamA.aiId : (config.teamB.aiId1 || (config.teamB as any).aiId)
+    const aiId = team === 'A'
+      ? config.teamA.aiId
+      : (config.teamB.aiId1 || (config.teamB as any).aiId || 'claude')  // fallback sicuro
     const aiName = AI_NAMES[aiId]
     const humanName = team === 'A' ? config.teamA.humanName : 'Squadra B'
     const enemyAiNames = team === 'A'
@@ -1517,13 +1545,15 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // Mini-verdetto arbitro dopo ogni round
   const handle2v2RoundVerdict = async (roundNumber: number) => {
-    if (!twoVsTwoState) return
-    const { config } = twoVsTwoState
+    // Usa sempre il ref per leggere lo stato più aggiornato (evita stale closure)
+    const state = twoVsTwoStateRef.current
+    if (!state) return
+    const { config } = state
     const arbId = config.arbiterAiId
     const arbName = AI_NAMES[arbId]
 
     // History del solo round corrente (messaggi non arbiter del round)
-    const nonArbMessages = twoVsTwoState.messages.filter(m => m.team !== 'arbiter')
+    const nonArbMessages = state.messages.filter(m => m.team !== 'arbiter')
     const history = nonArbMessages.map(m => ({
       name: m.isAI ? AI_NAMES[m.aiId ?? ''] ?? m.author : m.author,
       content: m.content,
@@ -1589,6 +1619,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   const handle2v2Verdict = async () => {
     if (!twoVsTwoState) return
+    if (twoVsTwoVerdictRunningRef.current) return
+    twoVsTwoVerdictRunningRef.current = true
     setTwoVsTwoLoading(true)
     const { config } = twoVsTwoState
     const arbId = config.arbiterAiId
@@ -1653,6 +1685,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       })
     } catch {}
     setTwoVsTwoLoading(false)
+    twoVsTwoVerdictRunningRef.current = false
   }
 
   // ── 2v2 multiplayer: processa la mossa umana di Player B ─────────────────
@@ -1755,10 +1788,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (!latest) return
     const isLastRound = latest.round >= maxRounds
     if (isLastRound) {
-      await handle2v2RoundVerdict(latest.round)
-      await handle2v2Verdict()
+      await handle2v2RoundVerdictRef.current(latest.round)
+      await handle2v2VerdictRef.current()
     } else {
-      await handle2v2RoundVerdict(latest.round)
+      await handle2v2RoundVerdictRef.current(latest.round)
       let elapsed = 0
       const DURATION = 7000
       setTwoVsTwoState(prev => prev ? { ...prev, roundProgress: 0 } : prev)
@@ -1778,6 +1811,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }, [])
 
+  // Refs per evitare stale closure in processB2v2Action (useCallback([]))
+  const handle2v2RoundVerdictRef = useRef(handle2v2RoundVerdict)
+  handle2v2RoundVerdictRef.current = handle2v2RoundVerdict
+  const handle2v2VerdictRef = useRef(handle2v2Verdict)
+  handle2v2VerdictRef.current = handle2v2Verdict
+
   // Aggiorna il ref ogni volta che processB2v2Action cambia (evita stale ref nel event handler)
   useEffect(() => {
     processB2v2ActionRef.current = processB2v2Action
@@ -1795,18 +1834,20 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   }, [!!devilSession])
 
   // Streaming helper per Devil's Advocate
-  const streamDevilAI = async (aiId: string, systemPrompt: string, history: { name: string; content: string }[]): Promise<string> => {
+  const streamDevilAI = async (aiId: string, systemPrompt: string, history: { name: string; content: string }[], signal?: AbortSignal): Promise<string> => {
     // Usa action '2v2': è l'unico path che usa history[0] come vero system prompt
     // 'turn' (default) usa SYSTEM_PROMPTS[aiId] ignorando il verdetto prompt → Perplexity/Gemini non incl. [SCORE:X.X]
     const trigger = { name: 'Istruzioni', content: 'Esprimi ora il verdetto seguendo il sistema. Termina con una riga che contiene SOLO: PUNTEGGIO:X.X (esempio: PUNTEGGIO:4.0). Nessuna parentesi quadra.' }
     const res = await fetch('/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: '2v2', aiId, history: [{ name: 'Sistema', content: systemPrompt }, ...history, trigger], needsWebSearch: false, maxTokens: 400 }),
+      signal,
     })
     if (!res.ok || !res.body) return ''
     const reader = res.body.getReader(); const decoder = new TextDecoder()
     let buffer = '', text = '', done = false
     while (!done) {
+      if (signal?.aborted) { reader.cancel().catch(() => {}); break }
       const { done: sd, value } = await reader.read()
       if (value) buffer += decoder.decode(value, { stream: true })
       const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
@@ -1908,6 +1949,12 @@ Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] do
   const handleDevilStartVerdict = async () => {
     if (!devilSession || devilVerdictRunningRef.current) return
     devilVerdictRunningRef.current = true
+
+    // Cancella eventuali chiamate precedenti ancora in volo
+    devilVerdictAbortRef.current?.abort()
+    const controller = new AbortController()
+    devilVerdictAbortRef.current = controller
+
     setDevilSession(prev => prev ? { ...prev, phase: 'verdict', verdicts: [] } : prev)
     setDevilLoading(true)
 
@@ -1945,15 +1992,18 @@ Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: PUNTEGGIO:X.X co
     const scoreResults: { aiId: string; score: number; text: string }[] = []
     await Promise.all(aiOrder.map(async (aiId) => {
       try {
-        const raw = await streamDevilAI(aiId, VERDICT_PROMPTS[aiId], history)
+        const raw = await streamDevilAI(aiId, VERDICT_PROMPTS[aiId], history, controller.signal)
+        if (controller.signal.aborted) return
         const match = raw.match(/PUNTEGGIO:\s*(\d+\.?\d*)/i)
         const score = match ? parseFloat(match[1]) : 5.0
         const text = raw.replace(/PUNTEGGIO:\s*\d+\.?\d*/gi, '').trim()
         scoreResults.push({ aiId, score, text })
-      } catch {
+      } catch (e: any) {
+        if (e?.name === 'AbortError') return
         scoreResults.push({ aiId, score: 5.0, text: 'Nessun verdetto disponibile.' })
       }
     }))
+    if (controller.signal.aborted) { devilVerdictRunningRef.current = false; return }
 
     // Step 2: ordina dal più clemente (score alto) al più duro (score basso)
     scoreResults.sort((a, b) => b.score - a.score)
@@ -1976,6 +2026,8 @@ Non spiegare chi sei. Poi su una nuova riga scrivi ESATTAMENTE: PUNTEGGIO:X.X co
   }
 
   const handleDevilNewGame = () => {
+    devilVerdictAbortRef.current?.abort()
+    devilVerdictAbortRef.current = null
     setDevilSession(null)
     setDevilIntroData(null)
     setDevilLoading(false)

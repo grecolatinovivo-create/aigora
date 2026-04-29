@@ -107,15 +107,20 @@ export default function DevilsAdvocateScreen({
 
   useEffect(() => {
     if (session.phase !== 'consulting') return
+    let active = true
     setCountdown(4)
     const interval = setInterval(() => {
       setCountdown(prev => {
-        if (prev <= 1) { clearInterval(interval); onStartVerdict(); return 0 }
+        if (prev <= 1) {
+          clearInterval(interval)
+          if (active) onStartVerdict()
+          return 0
+        }
         return prev - 1
       })
     }, 1000)
-    return () => clearInterval(interval)
-  }, [session.phase])
+    return () => { active = false; clearInterval(interval) }
+  }, [session.phase, onStartVerdict])
 
   // ── CONSULTAZIONE ────────────────────────────────────────────────────────────
   if (session.phase === 'consulting') {

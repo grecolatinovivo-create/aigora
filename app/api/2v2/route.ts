@@ -23,6 +23,9 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 })
 
+  // Leggi body prima di tutto — req.json() consuma il ReadableStream una volta sola
+  const { mode, topic, teamAAiId, teamBAiId1, teamBAiId2, arbiterAiId, teamAName, maxRounds } = await req.json()
+
   // ── Verifica limite 2v2: Free = 1/settimana, Pro+ = illimitato ────────
   const tier = resolveUserTier(user)
   const limitCheck = await checkTwoVsTwoLimit(user.id, tier)
@@ -34,8 +37,6 @@ export async function POST(req: NextRequest) {
       requiredTier: 'pro',
     }, { status: 429 })
   }
-
-  const { mode, topic, teamAAiId, teamBAiId1, teamBAiId2, arbiterAiId, teamAName, maxRounds } = await req.json()
   if (!topic?.trim()) return NextResponse.json({ error: 'Topic mancante' }, { status: 400 })
 
   const VALID_AIS = ['claude', 'gemini', 'perplexity', 'gpt']
@@ -136,6 +137,10 @@ export async function PATCH(req: NextRequest) {
   if (room.hostId === user.id) return NextResponse.json({ error: 'Sei già l\'host' }, { status: 400 })
 
   const gs = room.gameState as any
+  // Partite solo non sono joinabili da utenti esterni
+  if (gs?.mode === 'solo') {
+    return NextResponse.json({ error: 'Non è una partita multiplayer' }, { status: 400 })
+  }
   if (gs?.teamB?.humanId && gs.teamB.humanId !== user.id) {
     return NextResponse.json({ error: 'La squadra B è già occupata' }, { status: 409 })
   }

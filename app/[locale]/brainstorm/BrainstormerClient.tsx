@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { signOut } from 'next-auth/react'
 import { useTranslations, useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import Navbar from '@/app/components/layout/Navbar'
 import AttachmentButton, { type ChatAttachment } from '@/app/components/chat/AttachmentButton'
 import LimitWall from '@/app/components/ui/LimitWall'
@@ -65,6 +66,7 @@ function useTypewriter(text: string, speed = 38) {
 export default function BrainstormerClient({ userEmail, userName, userPlan }: Props) {
   const t = useTranslations('brainstorm')
   const locale = useLocale()
+  const router = useRouter()
   // Piano aggiornato dinamicamente dopo ogni sessione completata
   const [effectivePlan, setEffectivePlan] = useState(userPlan)
   const [phase, setPhase] = useState<Phase>('entry')
@@ -142,8 +144,8 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
   // Blocco mobile — redirect a home
   useEffect(() => {
-    if (window.innerWidth < 1024) window.location.href = '/'
-  }, [])
+    if (window.innerWidth < 1024) router.push('/')
+  }, [router])
 
   // Il foglio sale dal basso
   useEffect(() => {
@@ -456,8 +458,8 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         userPlan={effectivePlan}
         showProfileMenu={showProfileMenu}
         setShowProfileMenu={setShowProfileMenu}
-        onCronologia={() => { window.location.href = '/' }}
-        onNewChat={() => { window.location.href = '/' }}
+        onCronologia={() => { router.push('/') }}
+        onNewChat={() => { router.push('/') }}
         onSignOut={() => signOut({ callbackUrl: '/login' })}
         hideCronologia
       />

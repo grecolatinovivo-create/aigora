@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AI_OPTIONS, AI_NAMES, AI_COLOR, AI_DESC, TOPIC_SUGGESTIONS } from '@/app/lib/aiProfiles'
 import { SFX } from '@/app/lib/audioEngine'
 import type { TwoVsTwoConfig } from '@/app/types/aigora'
@@ -23,6 +23,8 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
   const [maxRoundsChoice, setMaxRoundsChoice] = useState(5)
   const [step, setStep] = useState<'mode' | 'topic' | 'teams' | 'roulette' | 'share'>('mode')
   const [creating, setCreating] = useState(false)
+  const isMountedRef = useRef(true)
+  useEffect(() => { isMountedRef.current = true; return () => { isMountedRef.current = false } }, [])
   const [rouletteSlots, setRouletteSlots] = useState<string[]>(['', ''])
   const [rouletteSettled, setRouletteSettled] = useState<boolean[]>([false, false])
   const [rouletteReady, setRouletteReady] = useState(false)
@@ -93,8 +95,10 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
     })
 
     setTimeout(async () => {
+      if (!isMountedRef.current) return
       try {
         const data = await apiPromise
+        if (!isMountedRef.current) return
         if (data.limitReached) {
           setWeeklyLimit({ retryAfter: data.retryAfter ?? 0 })
           setStep('topic')
@@ -112,6 +116,7 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           setTopicRevealed(false)
         }
       } catch (e) {
+        if (!isMountedRef.current) return
         console.warn('2v2 API error:', e)
         setStep('topic')
         setTopicRevealed(false)
@@ -154,7 +159,8 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
       }
       setStep('share')
     } catch {
-      setStep('share')
+      // Non andare alla schermata condivisione senza un roomCode valido
+      setStep('teams')
     }
     setCreating(false)
   }
