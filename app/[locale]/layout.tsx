@@ -8,6 +8,7 @@ import Providers from '../components/Providers'
 import { Analytics } from '@vercel/analytics/next'
 import CapacitorProvider from '../components/native/CapacitorProvider'
 import BottomTabBar from '../components/native/BottomTabBar'
+import SplashOverlay from '../components/native/SplashOverlay'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -86,6 +87,7 @@ export default async function LocaleLayout({
           </p>
         </div>
         <NextIntlClientProvider messages={messages}>
+          <SplashOverlay />
           <CapacitorProvider>
             <Providers>{children}</Providers>
             <BottomTabBar />

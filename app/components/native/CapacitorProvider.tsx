@@ -34,10 +34,12 @@ export default function CapacitorProvider({ children }: { children: React.ReactN
           }
         } catch { /* plugin non disponibile in dev */ }
 
-        // ── Splash Screen ──────────────────────────────────────────
+        // ── Splash Screen ─────────────────────────────────────────
+        // Nascondi subito lo splash nativo (0 ms): la nostra SplashOverlay
+        // React gestisce l'intera animazione di benvenuto.
         try {
           const { SplashScreen } = await import('@capacitor/splash-screen')
-          await SplashScreen.hide({ fadeOutDuration: 350 })
+          await SplashScreen.hide({ fadeOutDuration: 0 })
         } catch { /* plugin non disponibile in dev */ }
 
         // ── Network — rileva connessione offline ───────────────────
