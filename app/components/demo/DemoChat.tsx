@@ -276,7 +276,7 @@ export default function DemoChat({ topic }: { topic: string }) {
           </button>
           {/* Centro — logo */}
           <span className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight">
-            <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
+            <span style={{ color: '#fff' }}>Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
           </span>
           {/* Destra — accedi */}
           <button onClick={() => setShowLogin(true)}
@@ -322,7 +322,7 @@ export default function DemoChat({ topic }: { topic: string }) {
           style={{ backgroundColor: '#0d0d14', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
           <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.6)' }}>{currentTime}</span>
           <span className="absolute left-1/2 -translate-x-1/2 font-black text-base tracking-tight">
-            <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
+            <span style={{ color: '#fff' }}>Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
           </span>
           <button onClick={() => router.push('/')}
             className="flex items-center gap-1 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>

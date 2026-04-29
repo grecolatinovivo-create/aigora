@@ -225,15 +225,13 @@ export default function SplashOverlay() {
             fontSize: '44px',
             fontWeight: 800,
             letterSpacing: '0.1em',
-            color: '#ffffff',
             margin: 0,
             lineHeight: 1,
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
-            // text-shadow animato via ref
             transition: 'text-shadow 0.65s ease',
           }}
         >
-          AiGORÀ
+          <span style={{ color: '#ffffff' }}>Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
         </h1>
 
         {/* Separatore */}

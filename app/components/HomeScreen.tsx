@@ -289,8 +289,8 @@ export default function HomeScreen({
         padding: '14px 20px 8px',
       }}>
         <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em', lineHeight: 1 }}>
-          <span style={{ color: '#fff' }}>Ai</span>
-          <span style={{ color: C.arena }}>GORÀ</span>
+          <span style={{ color: C.arena }}>Ai</span>
+          <span style={{ color: '#fff' }}>GORÀ</span>
         </span>
         <button onClick={() => router.push(`/${locale}/dashboard`)} style={{
           width: 38, height: 38, borderRadius: '50%',

@@ -14,7 +14,7 @@ function WaitingForHost() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6"
       style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 80% 10%, rgba(239,68,68,0.12) 0%, transparent 60%)' }}>
       <div className="font-black text-2xl mb-10">
-        <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
+        <span style={{ color: '#fff' }}>Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
       </div>
       <div className="w-full max-w-xs text-center">
         <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"

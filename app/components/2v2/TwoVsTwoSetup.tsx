@@ -597,7 +597,7 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
           style={{ paddingTop: 'max(14px, env(safe-area-inset-top))', paddingBottom: '12px', backgroundColor: 'rgba(7,7,15,0.97)', borderColor: 'rgba(255,255,255,0.07)' }}>
           {backBtn}
           <div className="flex-1 text-center">
-            <div className="font-black text-[15px]"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORA</span></div>
+            <div className="font-black text-[15px]"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></div>
             <div className="text-[11px] text-white/30">2 vs 2</div>
           </div>
           {progressDots}
@@ -635,7 +635,7 @@ export default function TwoVsTwoSetup({ onStart, onBack, currentUserName }: {
               style={{ background: 'rgba(7,7,15,0.97)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="flex items-center gap-3">
                 {backBtn}
-                <div className="font-black text-sm"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORA</span></div>
+                <div className="font-black text-sm"><span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span></div>
                 <div className="text-[11px] text-white/30">· 2 vs 2</div>
               </div>
               <div className="text-[11px] font-semibold text-white/40">

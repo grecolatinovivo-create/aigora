@@ -65,8 +65,8 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
           <span className="text-white text-sm font-bold max-w-[200px] truncate block">{twoVsTwoTopic}</span>
         ) : (
           <>
-            <span className="text-white">Ai</span>
-            <span style={{ color: '#A78BFA' }}>GORÀ</span>
+            <span style={{ color: '#fff' }}>Ai</span>
+            <span style={{ color: '#fff' }}>GORÀ</span>
           </>
         )}
         {modeLabel && modeLabelColor && (

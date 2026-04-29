@@ -198,7 +198,7 @@ function DashboardContent() {
           lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer',
         }}>
           <span style={{ color: '#fff' }}>Ai</span>
-          <span style={{ color: '#A78BFA' }}>GORÀ</span>
+          <span style={{ color: '#fff' }}>GORÀ</span>
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{

@@ -87,7 +87,7 @@ export default async function UserProfilePage({ params }: { params: { username: 
           fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px',
         }}>
           <span style={{ color: 'white' }}>Ai</span>
-          <span style={{ color: '#A78BFA' }}>GORÀ</span>
+          <span style={{ color: 'white' }}>GORÀ</span>
         </span>
         {/* Destra — tondo profilo */}
         <a href="/" style={{

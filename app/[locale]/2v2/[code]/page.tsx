@@ -212,7 +212,7 @@ export default function JoinTwoVsTwo() {
       <div className="min-h-screen flex flex-col items-center justify-center px-6"
         style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.12) 0%, transparent 60%)' }}>
         <div className="font-black text-2xl mb-10">
-          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
+          <span style={{ color: '#fff' }}>Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
         </div>
         {matchCard}
         <div className="mt-6 px-4 py-3 rounded-2xl text-sm text-center text-white/50"
@@ -232,7 +232,7 @@ export default function JoinTwoVsTwo() {
       <div className="min-h-screen flex flex-col items-center justify-center px-6"
         style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.15) 0%, transparent 60%)' }}>
         <div className="font-black text-2xl mb-8">
-          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORA</span>
+          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
         </div>
         {matchCard}
         <div className="w-full max-w-sm mt-6 space-y-3">
@@ -262,7 +262,7 @@ export default function JoinTwoVsTwo() {
       style={{ background: '#07070f', backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.15) 0%, transparent 60%)' }}>
 
       <div className="font-black text-2xl mb-8">
-        <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORA</span>
+        <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
       </div>
 
       {matchCard}

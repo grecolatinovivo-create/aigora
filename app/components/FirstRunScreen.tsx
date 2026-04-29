@@ -192,7 +192,7 @@ export default function FirstRunScreen({
       }}>
         <span style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.02em' }}>
           <span style={{ color: '#fff' }}>Ai</span>
-          <span style={{ color: '#A78BFA' }}>GORÀ</span>
+          <span style={{ color: '#fff' }}>GORÀ</span>
         </span>
       </div>
 

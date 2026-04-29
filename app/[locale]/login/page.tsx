@@ -200,7 +200,7 @@ function AuthCard() {
       {/* Logo */}
       <div className="text-center mb-6">
         <h1 className="text-4xl font-black mb-1">
-          <span className="text-white">Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
+          <span style={{ color: '#fff' }}>Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
         </h1>
         <p className="text-white/40 text-xs">{t('subtitle')}</p>
       </div>

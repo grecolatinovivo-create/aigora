@@ -3479,7 +3479,10 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
 
             {/* Titolo centrale */}
             <div className="flex-1 min-w-0 text-center">
-              <div className="font-bold text-[14px]" style={{ color: isDark ? '#fff' : '#111' }}>AiGORÀ</div>
+              <div className="font-bold text-[14px]">
+                <span style={{ color: '#fff' }}>Ai</span>
+                <span style={{ color: isDark ? '#fff' : '#111' }}>GORÀ</span>
+              </div>
               <div className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
                 {activeAi ? `${AI_NAMES[activeAi]} sta scrivendo…` : `Turno ${turnCount + 1}`}
               </div>
