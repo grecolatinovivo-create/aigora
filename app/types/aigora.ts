@@ -70,4 +70,5 @@ export interface AigoraChatProps {
   userName?: string
   userEmail?: string
   resumeChatId?: string   // se presente, apre automaticamente quella chat al mount
+  startMode?: string      // se presente, avvia direttamente la modalità (es. '2v2')
 }

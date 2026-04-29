@@ -373,9 +373,11 @@ export default function HomeScreen({
         </button>
 
         {/* ─── Card Arena — full-width, prominente ───────────────────────── */}
-        <button
+        {/* C1 fix: div invece di button per evitare button annidati (invalido HTML/iOS) */}
+        <div
+          role="region"
           onClick={() => { if (!arenaOpen) setArenaOpen(true) }}
-          style={{ ...card(C.arena, arenaOpen), padding: arenaOpen ? '16px 16px 0' : '16px', width: '100%', display: 'block' }}
+          style={{ ...card(C.arena, arenaOpen), padding: arenaOpen ? '16px 16px 0' : '16px', cursor: arenaOpen ? 'default' : 'pointer' }}
         >
           {/* Header card */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
@@ -389,6 +391,7 @@ export default function HomeScreen({
             {arenaOpen ? (
               <button
                 onClick={e => { e.stopPropagation(); setArenaOpen(false); setQuestion('') }}
+                aria-label="Chiudi form Arena"
                 style={{
                   width: 26, height: 26, borderRadius: '50%',
                   background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
@@ -405,22 +408,22 @@ export default function HomeScreen({
             )}
           </div>
 
-          {/* Input espandibile in-place */}
+          {/* Input espandibile in-place — C2 fix: maxHeight 320px per contenere textarea+CTA */}
           <div style={{
             overflow: 'hidden',
-            maxHeight: arenaOpen ? '160px' : '0px',
+            maxHeight: arenaOpen ? '320px' : '0px',
             opacity:   arenaOpen ? 1 : 0,
-            transition: 'max-height 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.2s',
+            transition: 'max-height 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.2s',
           }}>
             <div style={{ padding: '12px 0 14px', display: 'flex', flexDirection: 'column', gap: 9 }}>
               <textarea
                 ref={textareaRef}
                 value={question}
                 onChange={e => setQuestion(e.target.value)}
+                onFocus={e => e.stopPropagation()}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (question.trim()) onStartArena(question.trim()) }
                 }}
-                onClick={e => e.stopPropagation()}
                 placeholder={t('arena.placeholder')}
                 rows={3}
                 style={{
@@ -448,7 +451,7 @@ export default function HomeScreen({
               </button>
             </div>
           </div>
-        </button>
+        </div>
 
         {/* ─── Riga 2: 2v2 + Devil ──────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

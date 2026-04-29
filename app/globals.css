@@ -441,6 +441,20 @@ html.is-native [data-main-content] {
 .suspense-orb   { animation: suspense-orb 3s ease-in-out infinite; }
 .fade-up        { animation: fade-up 0.5s ease forwards; }
 
+/* C4 fix: prefers-reduced-motion — mostra subito gli elementi con opacity:0 statico */
+@media (prefers-reduced-motion: reduce) {
+  .fade-up,
+  .verdict-reveal,
+  .score-pop,
+  .gavel-strike,
+  .iphone-enter,
+  [style*="animation"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* ── Transizione iPad→iPhone desktop ── */
 @keyframes iphone-enter {
   0%   { opacity: 0; transform: translateY(40px) scale(0.94); }

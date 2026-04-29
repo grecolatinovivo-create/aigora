@@ -21,11 +21,12 @@ const PLAN_NEXT: Record<string, string | null> = {
   free: 'pro', pro: 'premium', premium: null, admin: null, freemium: null,
 }
 
+// label e desc vengono tradotti nel componente tramite descKey
 const MODES = [
-  { key: 'arena',  color: '#A78BFA', label: 'Arena',      desc: 'Dibattito 4 AI',          path: '/',           icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', locked: false },
-  { key: '2v2',   color: '#38BDF8', label: '2 vs 2',     desc: 'Sfida a squadre',          path: null,          icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75', locked: false },
-  { key: 'devil', color: '#F87171', label: 'Devil',       desc: 'Difendi l\'indifendibile', path: null,          icon: 'M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z', locked: true },
-  { key: 'brain', color: '#FCD34D', label: 'Brainstorm',  desc: '4 AI per la tua idea',     path: '/brainstorm', icon: 'M9 18h6M10 22h4M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14', locked: true },
+  { key: 'arena',  color: '#A78BFA', label: 'Arena',      descKey: 'modeArenaDesc', path: '/',           icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', locked: false },
+  { key: '2v2',   color: '#38BDF8', label: '2 vs 2',     descKey: 'mode2v2Desc',   path: null,          icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75', locked: false },
+  { key: 'devil', color: '#F87171', label: "Devil's Adv", descKey: 'modeDevilDesc', path: null,          icon: 'M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z', locked: true },
+  { key: 'brain', color: '#FCD34D', label: 'Brainstorm',  descKey: 'modeBrainDesc', path: '/brainstorm', icon: 'M9 18h6M10 22h4M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14', locked: true },
 ] as const
 
 const PAID = ['pro', 'premium', 'admin', 'freemium', 'max']
@@ -127,7 +128,7 @@ function DashboardContent() {
         setRecentChats(
           (data ?? []).slice(0, 4).map(c => ({
             id: c.id,
-            title: c.title || 'Sessione senza titolo',
+            title: c.title || t('untitledSession'),
             date: c.createdAt ?? c.date ?? '',
           }))
         )
@@ -153,7 +154,7 @@ function DashboardContent() {
   const formatDate = (d: string) => {
     if (!d) return ''
     try {
-      return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
+      return new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short' })
     } catch { return '' }
   }
 
@@ -168,15 +169,22 @@ function DashboardContent() {
 
   const handleModeClick = (mode: typeof MODES[number]) => {
     if (mode.locked && !paid) { router.push(`/${locale}/pricing`); return }
-    if (mode.path) router.push(`/${locale}${mode.path}`)
-    else router.push(`/${locale}`)  // Arena e 2v2 vanno alla home (HomeScreen)
+    if (mode.path) {
+      router.push(`/${locale}${mode.path}`)
+    } else if (mode.key === '2v2') {
+      // C6 fix: 2v2 passa ?start=2v2 così AigoraChat apre direttamente il setup
+      router.push(`/${locale}?start=2v2`)
+    } else {
+      router.push(`/${locale}`)
+    }
   }
 
   return (
     <div style={{
       minHeight: '100vh', background: '#07070f', color: '#fff',
       paddingTop: 'env(safe-area-inset-top, 0px)',
-      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      // A7: padding extra per il BottomTabBar (≈56px) + safe area
+      paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
     }}>
 
       {/* ── Header ── */}
@@ -220,7 +228,7 @@ function DashboardContent() {
         {/* ── Sezione Piano ── */}
         <div style={{ marginTop: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
-            Il tuo piano
+            {t('yourPlan')}
           </div>
           <div style={{
             padding: '16px', borderRadius: 18,
@@ -301,7 +309,7 @@ function DashboardContent() {
         {/* ── Accesso rapido ai 4 modi ── */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
-            Accesso rapido
+            {t('quickAccess')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {MODES.map(mode => (
@@ -309,7 +317,7 @@ function DashboardContent() {
                 key={mode.key}
                 color={mode.color}
                 label={mode.label}
-                desc={mode.desc}
+                desc={t(mode.descKey as any)}
                 icon={mode.icon}
                 locked={mode.locked}
                 paid={paid}
@@ -323,11 +331,20 @@ function DashboardContent() {
         {(recentChats.length > 0 || loadingChats) && (
           <div>
             <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
-              Sessioni recenti
+              {t('recentSessions')}
             </div>
             {loadingChats ? (
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', padding: '8px 0' }}>
-                Caricamento…
+              // A6: skeleton placeholder invece di testo statico
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{
+                    height: 50, borderRadius: 13,
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                    opacity: 1 - i * 0.15,
+                  }} />
+                ))}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

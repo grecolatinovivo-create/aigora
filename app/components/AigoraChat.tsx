@@ -55,7 +55,7 @@ function getDefaultNextAi(currentAi: string, usedAis: string[], aiOrder: string[
 }
 
 // ── Componente principale ─────────────────────────────────────────────────────
-export default function AigoraChat({ allowedAis, userPlan, userName: propUserName, userEmail, resumeChatId }: AigoraChatProps) {
+export default function AigoraChat({ allowedAis, userPlan, userName: propUserName, userEmail, resumeChatId, startMode }: AigoraChatProps) {
   const AI_ORDER = allowedAis?.length ? allowedAis : AI_ORDER_DEFAULT
   const chatRouter = useRouter()
   const chatLocale = useLocale()
@@ -229,7 +229,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   }, [stopListening])
   const [showHistory, setShowHistory] = useState(false)
   const [bubbleTopics, setBubbleTopics] = useState(() => getRandomBubbleTopics())
-  const usedBubbleTopicsRef = useRef(new Set(getRandomBubbleTopics()))
+  const usedBubbleTopicsRef = useRef(new Set<string>())
 
   const rotateBubble = useCallback((index: number) => {
     setBubbleTopics(prev => {
@@ -700,6 +700,18 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const perplexityTurnCountRef = useRef(0)  // conta solo i turni di Perplexity
   const isLoadingHistoryRef = useRef(false) // previeni saveCurrentChat durante apertura chat da cronologia
   const pendingResumeRef = useRef<string | null>(resumeChatId ?? null)
+  const pendingStartModeRef = useRef<string | null>(startMode ?? null)
+
+  // Auto-avvia modalità da URL ?start=xxx (es. redirect da dashboard)
+  useEffect(() => {
+    if (!pendingStartModeRef.current) return
+    const mode = pendingStartModeRef.current
+    pendingStartModeRef.current = null
+    if (mode === '2v2') {
+      setSelectedMode('2v2')
+      setShow2v2Setup(true)
+    }
+  }, [])
 
   // Auto-apri chat da URL ?resume=chatId (es. redirect da dashboard)
   useEffect(() => {
@@ -2398,8 +2410,8 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
 
         {/* Banner reconnect 2v2 */}
         {pendingReconnect && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl"
-            style={{ background: 'rgba(124,58,237,0.97)', border: '1px solid rgba(167,139,250,0.5)', backdropFilter: 'blur(12px)', whiteSpace: 'nowrap' }}>
+          <div className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl"
+            style={{ bottom: 'calc(96px + env(safe-area-inset-bottom, 0px))', background: 'rgba(124,58,237,0.97)', border: '1px solid rgba(167,139,250,0.5)', backdropFilter: 'blur(12px)', whiteSpace: 'nowrap' }}>
             <span className="text-xl">⚔️</span>
             <div className="text-white text-sm font-semibold">Partita 2v2 in corso</div>
             <button onClick={handle2v2Reconnect}
@@ -2506,10 +2518,11 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
         </button>
       ))}
 
-      {/* Pannello cronologia */}
+      {/* Pannello cronologia — C3 fix: safe area top */}
       <div className={`fixed top-0 left-0 h-full z-50 transition-all duration-300 ease-out ${showHistory ? 'w-72' : 'w-0'} overflow-hidden`}>
         <div className="w-72 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+          <div className="flex items-center justify-between px-5 border-b border-white/8"
+            style={{ paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))', paddingBottom: 16 }}>
             <span className="text-white font-bold text-sm">Cronologia</span>
             <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
           </div>
@@ -2796,7 +2809,9 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
         style={{
           width: 390,
           height: 790,
-          zoom: phoneScale,
+          // A11: zoom è non-standard e non funziona su Firefox — usiamo transform: scale
+          transform: `scale(${phoneScale})`,
+          transformOrigin: 'top center',
           position: 'relative',
         }}
       >
@@ -3778,7 +3793,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
         style={{ width: showSynthesis ? 340 * phoneScale : 0, opacity: showSynthesis ? 1 : 0, overflow: 'hidden' }}>
         <div style={{ position: 'relative' }}>
           <div className="glass-dark rounded-3xl overflow-hidden slide-in-right"
-            style={{ width: 340, height: 790, zoom: phoneScale }}>
+            style={{ width: 340, height: 790, transform: `scale(${phoneScale})`, transformOrigin: 'top left' }}>
 
             {/* Header pannello */}
             <div className="px-5 py-4 border-b border-white/8 flex items-start justify-between">

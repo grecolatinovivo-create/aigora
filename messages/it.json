@@ -39,7 +39,11 @@
     "myPublicProfile": "Il mio profilo pubblico",
     "adminPanel": "Pannello Admin",
     "plans": "Piani",
-    "debateMode": "Dibattito"
+    "debateMode": "Dibattito",
+    "tabArena": "Arena",
+    "tab2v2": "2 vs 2",
+    "tabBrainstorm": "Brainstorm",
+    "tabProfile": "Profilo"
   },
   "landing": {
     "badge": "4 AI · Un'unica arena",
@@ -94,7 +98,17 @@
       "devilDefend": "Difendi l'indifendibile",
       "devilEnemies": "4 AI nemiche",
       "brainstormDecided": "Il concilio ha deciso:",
-      "brainstormResult": "Parti dal prodotto, non dal mercato."
+      "brainstormResult": "Parti dal prodotto, non dal mercato.",
+      "debating": "● in dibattito…",
+      "replyPlaceholder": "Intervieni nel dibattito…",
+      "councilDeliberating": "Il concilio delibera…",
+      "councilDecided": "Il concilio ha deciso:",
+      "ideaPlaceholder": "La tua idea…",
+      "teamA": "Squadra A",
+      "teamB": "Squadra B",
+      "yourArgument": "Il tuo argomento…",
+      "defendIndefensible": "Difendi l'indifendibile",
+      "enemyAIs": "4 AI nemiche"
     }
   },
   "pricing": {
@@ -226,7 +240,15 @@
     "manageSub": "⚙️ Gestisci abbonamento",
     "upgradePro": "✨ Passa a Pro",
     "managingLoading": "Caricamento…",
-    "subscriptionActivated": "🎉 Abbonamento attivato! Buon dibattito."
+    "subscriptionActivated": "🎉 Abbonamento attivato! Buon dibattito.",
+    "yourPlan": "Il tuo piano",
+    "quickAccess": "Accesso rapido",
+    "recentSessions": "Sessioni recenti",
+    "untitledSession": "Sessione senza titolo",
+    "modeArenaDesc": "Dibattito 4 AI",
+    "mode2v2Desc": "Sfida a squadre",
+    "modeDevilDesc": "Difendi l'indifendibile",
+    "modeBrainDesc": "4 AI per la tua idea"
   },
   "chat": {
     "namePage": {
@@ -315,7 +337,9 @@
       "round1": "Round 1 — Analisi indipendente",
       "round2": "Round 2 — Confronto e sintesi",
       "finalizing": "Redazione della risposta finale…"
-    }
+    },
+    "portalError": "Impossibile aprire il portale abbonamento. Riprova.",
+    "networkError": "Errore di rete. Controlla la connessione e riprova."
   },
   "limitWall": {
     "weeklyDebates": {

@@ -39,7 +39,11 @@
     "myPublicProfile": "My public profile",
     "adminPanel": "Admin Panel",
     "plans": "Plans",
-    "debateMode": "Debate"
+    "debateMode": "Debate",
+    "tabArena": "Arena",
+    "tab2v2": "2 vs 2",
+    "tabBrainstorm": "Brainstorm",
+    "tabProfile": "Profile"
   },
   "landing": {
     "badge": "4 AIs · One arena",
@@ -94,7 +98,17 @@
       "devilDefend": "Defend the indefensible",
       "devilEnemies": "4 enemy AIs",
       "brainstormDecided": "The council has decided:",
-      "brainstormResult": "Start with the product, not the market."
+      "brainstormResult": "Start with the product, not the market.",
+      "debating": "● debating…",
+      "replyPlaceholder": "Join the debate…",
+      "councilDeliberating": "The council is deliberating…",
+      "councilDecided": "The council has decided:",
+      "ideaPlaceholder": "Your idea…",
+      "teamA": "Team A",
+      "teamB": "Team B",
+      "yourArgument": "Your argument…",
+      "defendIndefensible": "Defend the indefensible",
+      "enemyAIs": "4 enemy AIs"
     }
   },
   "pricing": {
@@ -226,7 +240,15 @@
     "manageSub": "⚙️ Manage subscription",
     "upgradePro": "✨ Upgrade to Pro",
     "managingLoading": "Loading…",
-    "subscriptionActivated": "🎉 Subscription activated! Happy debating."
+    "subscriptionActivated": "🎉 Subscription activated! Happy debating.",
+    "yourPlan": "Your plan",
+    "quickAccess": "Quick access",
+    "recentSessions": "Recent sessions",
+    "untitledSession": "Untitled session",
+    "modeArenaDesc": "4 AI debate",
+    "mode2v2Desc": "Team challenge",
+    "modeDevilDesc": "Defend the indefensible",
+    "modeBrainDesc": "4 AIs for your idea"
   },
   "chat": {
     "namePage": {
@@ -315,7 +337,9 @@
       "round1": "Round 1 — Independent analysis",
       "round2": "Round 2 — Discussion and synthesis",
       "finalizing": "Writing the final response…"
-    }
+    },
+    "portalError": "Unable to open the subscription portal. Please try again.",
+    "networkError": "Network error. Check your connection and try again."
   },
   "limitWall": {
     "weeklyDebates": {

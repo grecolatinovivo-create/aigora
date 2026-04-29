@@ -1,5 +1,5 @@
 'use client'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 
 export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, onManageSub, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta, show2v2Label, twoVsTwoTopic, hideCronologia, modeLabel, modeLabelColor }: {
@@ -26,10 +26,11 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
 }) {
   const t = useTranslations('nav')
   const router = useRouter()
+  const locale = useLocale()
 
   const planColors: Record<string, string> = {
     admin: '#F59E0B', freemium: '#22D3EE', max: '#FF6B2B', premium: '#FF6B2B',
-    pro: '#A78BFA', starter: '#1A73E8', free: '#10A37F', none: '#6B7280',
+    pro: '#A78BFA', starter: '#10A37F', free: '#10A37F', none: '#6B7280',
   }
 
   // Gli utenti con piano avanzato possono usare tutte le modalità
@@ -144,7 +145,7 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 </button>
 
                 <button
-                  onClick={() => { close(); if (isPaid) { onMultiplayer?.() } else router.push('/pricing') }}
+                  onClick={() => { close(); if (isPaid) { onMultiplayer?.() } else router.push(`/${locale}/pricing`) }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                   style={{ color: isPaid ? '#f87171' : 'rgba(248,113,113,0.4)' }}>
                   {"Devil's Advocate"}
@@ -152,14 +153,14 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                 </button>
 
                 <button
-                  onClick={() => { close(); if (isPaid) router.push('/brainstorm'); else router.push('/pricing') }}
+                  onClick={() => { close(); if (isPaid) router.push(`/${locale}/brainstorm`); else router.push(`/${locale}/pricing`) }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center justify-between"
                   style={{ color: isPaid ? '#FCD34D' : 'rgba(252,211,77,0.4)' }}>
                   Brainstormer
                   {!isPaid && <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(252,211,77,0.12)', color: '#FCD34D', border: '1px solid rgba(252,211,77,0.3)' }}>PRO</span>}
                 </button>
 
-                <button onClick={() => { close(); router.push('/pricing') }}
+                <button onClick={() => { close(); router.push(`/${locale}/pricing`) }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-1.5"
                   style={{ color: isPaid ? 'rgba(255,255,255,0.45)' : '#A78BFA' }}>
                   {!isPaid && <span>✦</span>}
@@ -180,7 +181,7 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
 
                 {/* ── Admin panel — solo per admin ── */}
                 {userPlan === 'admin' && (
-                  <button onClick={() => { close(); router.push('/admin') }}
+                  <button onClick={() => { close(); router.push(`/${locale}/admin`) }}
                     className="w-full px-4 py-2.5 text-left text-sm text-amber-400 hover:bg-white/5 transition-colors font-medium border-b border-white/8">
                     {t('adminPanel')}
                   </button>

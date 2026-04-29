@@ -78,10 +78,12 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
   const [loadingQ, setLoadingQ] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
   const [showFree, setShowFree] = useState(false)
+  const [isMobileChecked, setIsMobileChecked] = useState(false)
   const [freeInput, setFreeInput] = useState('')
   const [sheetUp, setSheetUp] = useState(false)
   const [contentVisible, setContentVisible] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [portalError, setPortalError] = useState<string | null>(null)
 
   // Output unico del concilio
   const [outputThread, setOutputThread] = useState<{userNote: string; text: string}[]>([])
@@ -142,10 +144,14 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     } catch {}
   }
 
-  // Blocco mobile — redirect a home
+  // Blocco mobile — redirect a home (senza flash UI desktop)
   useEffect(() => {
-    if (window.innerWidth < 1024) router.push('/')
-  }, [router])
+    if (window.innerWidth < 1024) {
+      router.push(`/${locale}`)
+    } else {
+      setIsMobileChecked(true)
+    }
+  }, [router, locale])
 
   // Il foglio sale dal basso
   useEffect(() => {
@@ -450,8 +456,23 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
     return d.toLocaleDateString(locale, { day: 'numeric', month: 'short' }) + `, ${timeStr}`
   }
 
+  // Nasconde tutto finché non sappiamo se siamo su mobile (evita flash)
+  if (!isMobileChecked) return null
+
   return (
     <>
+      {/* Toast errore portale — A9: niente più alert() nativi */}
+      {portalError && (
+        <div style={{
+          position: 'fixed', top: 70, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 9999, background: 'rgba(220,38,38,0.92)', color: '#fff',
+          padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.3)', pointerEvents: 'none',
+          whiteSpace: 'nowrap',
+        }}>
+          {portalError}
+        </div>
+      )}
       <Navbar
         displayName={userName || userEmail}
         userEmail={userEmail}
@@ -460,9 +481,9 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         modeLabelColor="#FCD34D"
         showProfileMenu={showProfileMenu}
         setShowProfileMenu={setShowProfileMenu}
-        onCronologia={() => { router.push('/') }}
-        onNewChat={() => { router.push('/') }}
-        onSignOut={() => signOut({ callbackUrl: '/login' })}
+        onCronologia={() => { router.push(`/${locale}`) }}
+        onNewChat={() => { router.push(`/${locale}`) }}
+        onSignOut={() => signOut({ callbackUrl: `/${locale}/login` })}
         onManageSub={async () => {
           try {
             const res = await fetch('/api/stripe/portal', { method: 'POST' })
@@ -470,10 +491,12 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
             if (data.url) {
               window.location.href = data.url
             } else {
-              alert(data.error ?? 'Impossibile aprire il portale abbonamento. Riprova.')
+              setPortalError(data.error ?? t('portalError'))
+              setTimeout(() => setPortalError(null), 4000)
             }
           } catch {
-            alert('Errore di rete. Controlla la connessione e riprova.')
+            setPortalError(t('networkError'))
+            setTimeout(() => setPortalError(null), 4000)
           }
         }}
         hideCronologia
@@ -747,7 +770,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
                 {/* Footer card */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '10px', color: '#CCCCCC' }}>
+                  <span style={{ fontSize: '12px', color: '#CCCCCC' }}>
                     {formatDate(item.createdAt)}
                   </span>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -757,8 +780,8 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                         letterSpacing: '0.06em', textTransform: 'uppercase',
                       }}>Grok</span>
                     )}
-                    {item.feedback === 'up' && <span style={{ fontSize: '10px' }}>👍</span>}
-                    {item.feedback === 'down' && <span style={{ fontSize: '10px' }}>👎</span>}
+                    {item.feedback === 'up' && <span style={{ fontSize: '12px' }}>👍</span>}
+                    {item.feedback === 'down' && <span style={{ fontSize: '12px' }}>👎</span>}
                   </div>
                 </div>
               </div>
@@ -988,7 +1011,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
 
                   {/* Header idea */}
                   <div style={{ marginBottom: '32px' }}>
-                    <p style={{ fontSize: '11px', color: '#BBBBBB', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>La tua idea</p>
+                    <p style={{ fontSize: '12px', color: '#BBBBBB', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>{t('ideaLabel')}</p>
                     <p style={{ fontSize: '18px', color: '#222', fontWeight: 500, lineHeight: 1.5 }}>{idea}</p>
                   </div>
 
@@ -1011,7 +1034,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                               opacity: idle ? 0.25 : synth ? 0.4 : 1,
                               transition: 'opacity 0.4s',
                             }} />
-                            <span style={{ fontSize: '11px', color: active ? '#555' : synth ? '#BBBBBB' : '#DDDDDD', letterSpacing: '0.04em', transition: 'color 0.4s' }}>
+                            <span style={{ fontSize: '12px', color: active ? '#555' : synth ? '#BBBBBB' : '#DDDDDD', letterSpacing: '0.04em', transition: 'color 0.4s' }}>
                               {ai.label}
                             </span>
                           </div>
@@ -1020,7 +1043,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     </div>
                     {/* Label fase */}
                     {concilioPhase && (
-                      <p style={{ fontSize: '10px', color: '#BBBBBB', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0, animation: 'bs-q-enter 0.3s ease-out' }}>
+                      <p style={{ fontSize: '12px', color: '#BBBBBB', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0, animation: 'bs-q-enter 0.3s ease-out' }}>
                         {concilioPhase === 'round1' && t('phase.deliberating')}
                         {concilioPhase === 'round2' && t('phase.discussing')}
                         {concilioPhase === 'synthesis' && t('phase.synthesizing')}
@@ -1172,7 +1195,7 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 700, color: '#1A1A1A', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Grok</span>
-                        <span style={{ fontSize: '11px', color: '#AAAAAA' }}>{t('grokAttack')}</span>
+                        <span style={{ fontSize: '12px', color: '#AAAAAA' }}>{t('grokAttack')}</span>
                       </div>
                       <p style={{ fontSize: '16px', color: '#1A1A1A', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
                         {renderBold(grokText)}

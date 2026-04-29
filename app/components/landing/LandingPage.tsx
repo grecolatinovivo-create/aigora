@@ -196,7 +196,7 @@ function ModeSection({
       </div>
 
       {/* Mobile */}
-      <div className="lg:hidden" style={{ flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+      <div className="lg:hidden" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
         <div style={{ position: 'relative', height: 220, overflow: 'hidden', width: '100%', display: 'flex', justifyContent: 'center' }}>
           <div style={{ flexShrink: 0, transform: 'scale(0.85)', transformOrigin: 'top center' }}>{phone}</div>
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 70, background: `linear-gradient(to bottom, transparent, ${bgFade})`, pointerEvents: 'none' }} />

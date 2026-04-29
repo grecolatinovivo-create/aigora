@@ -27,10 +27,10 @@ function HellGridBg() {
 function ClassicoScreen() {
   const t = useTranslations('arena.mock')
   const msgs = [
-    { ai: 'C', color: '#7C3AED', name: 'Claude', text: 'La democrazia diretta è superiore a quella rappresentativa perché elimina gli intermediari tra cittadino e decisione.' },
-    { ai: 'G', color: '#10A37F', name: 'GPT', text: 'In larga scala diventa impraticabile. Richiede un\'informazione diffusa che storicamente non esiste.' },
-    { ai: 'Ge', color: '#1A73E8', name: 'Gemini', text: 'I dati sui referendum svizzeri mostrano risultati misti: alta partecipazione ma polarizzazione crescente.' },
-    { ai: 'P', color: '#20B2AA', name: 'Perplexity', text: 'Le piattaforme digitali stanno rendendo più fattibile la consultazione continua — Estonia docet.' },
+    { ai: 'C', color: '#7C3AED', name: 'Claude',     text: t('chat1') },
+    { ai: 'G', color: '#10A37F', name: 'GPT',        text: t('chat2') },
+    { ai: 'Ge', color: '#1A73E8', name: 'Gemini',    text: t('chat3') },
+    { ai: 'P', color: '#20B2AA', name: 'Perplexity', text: t('chat4') },
   ]
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#07070f' }}>
@@ -89,7 +89,7 @@ function BrainstormScreen() {
         </div>
         <div style={{ width: '100%', padding: '8px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(167,139,250,0.18)' }}>
           <div style={{ fontSize: 8, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55 }}>{t('councilDecided')}</div>
-          <div style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55, marginTop: 2 }}>Parti dal prodotto, non dal mercato.</div>
+          <div style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55, marginTop: 2 }}>{t('brainstormResult')}</div>
         </div>
       </div>
       <div style={{ padding: '5px 7px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
@@ -131,10 +131,10 @@ function TwoVsTwoScreen() {
         </div>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 5, padding: '6px 7px' }}>
-        <div style={{ alignSelf: 'flex-start', maxWidth: '78%', padding: '4px 8px', borderRadius: '8px 8px 8px 2px', fontSize: 7, lineHeight: 1.45, background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>L'IA amplifica la creatività, non la sostituisce.</div>
-        <div style={{ alignSelf: 'flex-end', maxWidth: '78%', padding: '4px 8px', borderRadius: '8px 8px 2px 8px', fontSize: 7, lineHeight: 1.45, background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>Romantico. I budget spariscono nel mondo reale.</div>
+        <div style={{ alignSelf: 'flex-start', maxWidth: '78%', padding: '4px 8px', borderRadius: '8px 8px 8px 2px', fontSize: 7, lineHeight: 1.45, background: 'rgba(124,58,237,0.25)', color: 'rgba(255,255,255,0.85)' }}>{t('twoMsg1')}</div>
+        <div style={{ alignSelf: 'flex-end', maxWidth: '78%', padding: '4px 8px', borderRadius: '8px 8px 2px 8px', fontSize: 7, lineHeight: 1.45, background: 'rgba(239,68,68,0.2)', color: 'rgba(255,255,255,0.85)' }}>{t('twoMsg2')}</div>
         <div style={{ padding: '5px 8px', borderRadius: 7, fontSize: 6.5, lineHeight: 1.45, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'rgba(251,191,36,0.9)' }}>
-          <span style={{ fontWeight: 900 }}>🏆 GEMINI — ARBITRO</span><br/>Squadra A più solida sul piano storico.
+          <span style={{ fontWeight: 900 }}>🏆 {t('judgeLabel')}</span><br/>{t('twoJudge')}
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 7px', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>

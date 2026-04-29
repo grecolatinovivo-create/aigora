@@ -1,6 +1,6 @@
 'use client'
 import { usePathname, useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useIsNative } from './CapacitorProvider'
 
 // ─── Icone SVG inline ─────────────────────────────────────────────────────────
@@ -74,6 +74,7 @@ export default function BottomTabBar() {
   const pathname = usePathname()
   const router   = useRouter()
   const locale   = useLocale()
+  const t        = useTranslations('nav')
 
   if (!isNative) return null
 
@@ -82,7 +83,7 @@ export default function BottomTabBar() {
   const tabs: Tab[] = [
     {
       key:         'arena',
-      label:       'Arena',
+      label:       t('tabArena'),
       // ⚠️ IMPORTANTE: la home loggati è /[locale] (AigoraChat), NON /arena (pagina pubblica)
       path:        (b) => b,
       icon:        (a) => <IconArena active={a} />,
@@ -93,7 +94,7 @@ export default function BottomTabBar() {
     },
     {
       key:         '2v2',
-      label:       '2 vs 2',
+      label:       t('tab2v2'),
       path:        (b) => `${b}/2v2`,
       icon:        (a) => <Icon2v2 active={a} />,
       activeColor: '#38BDF8', // sky blue — colore ufficiale 2v2
@@ -101,7 +102,7 @@ export default function BottomTabBar() {
     },
     {
       key:         'brainstorm',
-      label:       'Brainstorm',
+      label:       t('tabBrainstorm'),
       path:        (b) => `${b}/brainstorm`,
       icon:        (a) => <IconBrainstorm active={a} />,
       activeColor: '#FCD34D',
@@ -109,7 +110,7 @@ export default function BottomTabBar() {
     },
     {
       key:         'profile',
-      label:       'Profilo',
+      label:       t('tabProfile'),
       path:        (b) => `${b}/dashboard`,
       icon:        (a) => <IconProfile active={a} />,
       activeColor: '#A78BFA',
@@ -129,7 +130,7 @@ export default function BottomTabBar() {
         zIndex:                900,
         display:               'flex',
         alignItems:            'stretch',
-        paddingBottom:         'env(safe-area-inset-bottom)',
+        paddingBottom:         'env(safe-area-inset-bottom, 0px)',
         backgroundColor:       'rgba(7,7,15,0.97)',
         borderTop:             '1px solid rgba(255,255,255,0.07)',
         backdropFilter:        'blur(24px)',
@@ -161,7 +162,7 @@ export default function BottomTabBar() {
 
             <span
               style={{
-                fontSize:      '9.5px',
+                fontSize:      '10px',
                 fontWeight:    isActive ? 700 : 500,
                 color:         isActive ? tab.activeColor : 'rgba(255,255,255,0.32)',
                 transition:    'color 0.2s',

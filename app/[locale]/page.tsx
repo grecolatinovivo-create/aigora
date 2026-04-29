@@ -7,7 +7,7 @@ import LandingPage from '../components/landing/LandingPage'
 export default async function Home({
   searchParams,
 }: {
-  searchParams?: { resume?: string }
+  searchParams?: { resume?: string; start?: string }
 }) {
   const session = await getServerSession(authOptions)
 
@@ -23,6 +23,7 @@ export default async function Home({
       userName={session.user?.name ?? ''}
       userEmail={session.user?.email ?? ''}
       resumeChatId={searchParams?.resume}
+      startMode={searchParams?.start}
     />
   )
 }
