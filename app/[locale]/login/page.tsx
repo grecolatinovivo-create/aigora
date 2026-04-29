@@ -66,8 +66,10 @@ function AuthCard() {
   const t = useTranslations('auth')
   const searchParams = useSearchParams()
   const urlError = searchParams?.get('error')
+  const callbackUrl = searchParams?.get('callbackUrl') ?? '/'
+  const tabParam = searchParams?.get('tab')
 
-  const [step, setStep] = useState<Step>('login')
+  const [step, setStep] = useState<Step>(tabParam === 'register' ? 'register-email' : 'login')
 
   // Campi condivisi
   const [email, setEmail] = useState('')
@@ -94,7 +96,7 @@ function AuthCard() {
     setError('')
     if (!email.trim() || !password.trim()) { setError(t('errors.fillAllFields')); return }
     setLoading(true)
-    const result = await signIn('credentials', { email, password, callbackUrl: '/', redirect: false })
+    const result = await signIn('credentials', { email, password, callbackUrl, redirect: false })
     if (result?.error) { setError(t('errors.invalidCredentials')); setLoading(false) }
     else if (result?.url) { window.location.href = result.url }
   }
@@ -141,7 +143,7 @@ function AuthCard() {
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? t('errors.registrationError')); setLoading(false); return }
       // Login automatico dopo registrazione
-      const result = await signIn('credentials', { email, password, callbackUrl: '/', redirect: false })
+      const result = await signIn('credentials', { email, password, callbackUrl, redirect: false })
       if (result?.url) window.location.href = result.url
     } catch { setError(t('errors.networkError')) }
     setLoading(false)

@@ -2,13 +2,14 @@
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 
-export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta, show2v2Label, twoVsTwoTopic, hideCronologia }: {
+export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMultiplayer, onManageSub, displayName, userEmail, userPlan, showProfileMenu, setShowProfileMenu, onSignOut, unreadCount, dbUserName, isBeta, show2v2Label, twoVsTwoTopic, hideCronologia }: {
   onCronologia: () => void
   hideCronologia?: boolean
   onFeed?: () => void
   onCrea?: () => void
   onNewChat?: () => void
   onMultiplayer?: () => void
+  onManageSub?: () => void
   dbUserName?: string | null
   isBeta?: boolean
   displayName: string
@@ -151,6 +152,18 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
                   {!isPaid && <span>✦</span>}
                   {!isPaid ? t('upgradePro') : t('plans')}
                 </button>
+
+                {/* ── Gestisci abbonamento — solo per utenti paid ── */}
+                {isPaid && onManageSub && (
+                  <button onClick={() => { close(); onManageSub() }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors font-medium border-b border-white/8 flex items-center gap-2"
+                    style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    {t('manageSub')}
+                  </button>
+                )}
 
                 {/* ── Admin panel — solo per admin ── */}
                 {userPlan === 'admin' && (

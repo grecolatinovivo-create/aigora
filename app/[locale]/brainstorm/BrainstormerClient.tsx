@@ -461,6 +461,13 @@ export default function BrainstormerClient({ userEmail, userName, userPlan }: Pr
         onCronologia={() => { router.push('/') }}
         onNewChat={() => { router.push('/') }}
         onSignOut={() => signOut({ callbackUrl: '/login' })}
+        onManageSub={async () => {
+          try {
+            const res = await fetch('/api/stripe/portal', { method: 'POST' })
+            const data = await res.json()
+            if (data.url) window.location.href = data.url
+          } catch { /* noop */ }
+        }}
         hideCronologia
       />
 

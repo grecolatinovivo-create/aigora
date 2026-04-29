@@ -2146,6 +2146,15 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
     setDevilIntroData(null)
   }
 
+  // ── GESTIONE ABBONAMENTO (Stripe portal) ─────────────────────────────────────
+  const handleManageSub = async () => {
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch { /* noop */ }
+  }
+
   // ── SCHERMATA NOME ────────────────────────────────────────────────────────────
   const navbarProps = {
     onCronologia: () => setShowHistory(true),
@@ -2153,6 +2162,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
     onCrea: () => { setSocialTab('crea'); setShowSocialPanel(true) },
     onNewChat: () => { handleReset(); setPhase('new') },
     onMultiplayer: () => setShowModeSelect(true),
+    onManageSub: handleManageSub,
     displayName,
     userEmail,
     userPlan: effectivePlan,
