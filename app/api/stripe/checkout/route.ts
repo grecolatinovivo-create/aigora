@@ -54,7 +54,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: checkoutSession.url })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error('[stripe/checkout] Errore:', message)
-    return NextResponse.json({ error: `Errore durante la creazione del pagamento: ${message}` }, { status: 500 })
+    const code = (err as any)?.code ?? 'unknown'
+    const statusCode = (err as any)?.statusCode ?? 'unknown'
+    console.error('[stripe/checkout] Errore:', { message, code, statusCode })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

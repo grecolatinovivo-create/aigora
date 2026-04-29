@@ -120,14 +120,6 @@ export default function PricingPage() {
         </p>
       </div>
 
-      {/* Checkout error banner */}
-      {checkoutError && (
-        <div className="w-full max-w-md mb-6 px-4 py-3 rounded-xl text-sm font-medium text-red-300 flex items-center gap-2"
-          style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
-          <span>⚠️</span> {checkoutError}
-        </div>
-      )}
-
       {/* Demo pill */}
       <div
         className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium mb-10"
@@ -233,6 +225,13 @@ export default function PricingPage() {
             >
               {loading && loading === plan.key ? '...' : plan.cta}
             </button>
+            {checkoutError && loading !== plan.key && plan.ctaAction === 'stripe' && (
+              <div className="mt-3 px-3 py-2 rounded-lg text-xs text-red-300 flex items-start gap-1.5"
+                style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                <span className="mt-0.5 flex-shrink-0">⚠️</span>
+                <span>{checkoutError}</span>
+              </div>
+            )}
           </div>
         ))}
       </div>
