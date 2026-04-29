@@ -40,12 +40,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, code })
   }
 
-  // In produzione — tenta invio email, se fallisce restituisce il codice come fallback temporaneo
+  // In produzione — invia via Resend con dominio verificato
   try {
     const { Resend } = await import('resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const { error } = await resend.emails.send({
-      from: 'AiGORÀ <onboarding@resend.dev>',
+    const { data, error } = await resend.emails.send({
+      from: 'AiGORÀ <noreply@aigora.eu>',
       to: email,
       subject: `${code} — il tuo codice di verifica AiGORÀ`,
       html: `
@@ -62,11 +62,12 @@ export async function POST(req: NextRequest) {
       `,
     })
     if (error) {
-      // Fallback temporaneo: mostra codice nella risposta finché il dominio non è verificato
-      return NextResponse.json({ ok: true, code })
+      console.error('[send-code] Resend error:', error)
+      return NextResponse.json({ error: 'Errore invio email. Riprova.' }, { status: 500 })
     }
-  } catch {
-    return NextResponse.json({ ok: true, code })
+  } catch (err) {
+    console.error('[send-code] Exception:', err)
+    return NextResponse.json({ error: 'Errore invio email. Riprova.' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

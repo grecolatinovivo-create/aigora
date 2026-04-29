@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
   try {
     const { Resend } = await import('resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const { error } = await resend.emails.send({
-      from: 'AiGORÀ <onboarding@resend.dev>',
+    const { data, error } = await resend.emails.send({
+      from: 'AiGORÀ <noreply@aigora.eu>',
       to: email,
       subject: `${code} — reimposta la tua password AiGORÀ`,
       html: `
@@ -55,9 +55,13 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     })
-    if (error) return NextResponse.json({ ok: true, code })
-  } catch {
-    return NextResponse.json({ ok: true, code })
+    if (error) {
+      console.error('[forgot-password] Resend error:', error)
+      return NextResponse.json({ error: 'Errore invio email. Riprova.' }, { status: 500 })
+    }
+  } catch (err) {
+    console.error('[forgot-password] Exception:', err)
+    return NextResponse.json({ error: 'Errore invio email. Riprova.' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })
