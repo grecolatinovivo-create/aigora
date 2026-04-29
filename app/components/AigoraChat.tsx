@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import HomeScreen from './HomeScreen'
 import FirstRunScreen from './FirstRunScreen'
+import AINameScreen from './AINameScreen'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -19,6 +20,8 @@ import { SFX } from '@/app/lib/audioEngine'
 import ThinkingBubble from '@/app/components/chat/ThinkingBubble'
 import AttachmentButton, { type ChatAttachment } from '@/app/components/chat/AttachmentButton'
 import LimitWall, { type LimitInfo } from '@/app/components/ui/LimitWall'
+import { EmptyHistory, ErrorState } from '@/app/components/ui/EmptyState'
+import BattleEndOverlay from '@/app/components/ui/BattleEndOverlay'
 import UserTurnPrompt from '@/app/components/chat/UserTurnPrompt'
 import RotatingTopics from '@/app/components/shared/RotatingTopics'
 import PhoneAvatarBar from '@/app/components/layout/PhoneAvatarBar'
@@ -73,6 +76,10 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const done = localStorage.getItem('aigora_onboarded')
     if (!done) setIsFirstRun(true)
   }, [resumeChatId, startMode])
+
+  // Stato intermedio: FirstRunScreen → AINameScreen → arena
+  const [showAINameScreen, setShowAINameScreen] = useState(false)
+  const pendingStartTopicRef = useRef<string>('')
 
   const completeFirstRun = () => {
     if (typeof window !== 'undefined') localStorage.setItem('aigora_onboarded', '1')
@@ -146,6 +153,11 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const [desktopRoundBanner, setDesktopRoundBanner] = useState<number | null>(null)
   const prevDesktopRound = useRef<number>(0)
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
+  const [showBattleEnd, setShowBattleEnd] = useState(false) // overlay BATTAGLIA CONCLUSA
+  const battleEndAisRef = useRef<string[]>([]) // AI partecipanti all'ultima battaglia
+  const [aiNetworkError, setAiNetworkError] = useState(false) // true quando tutte le AI falliscono consecutivamente
+  const consecutiveFailsRef = useRef(0)
+  const [confirmLeave, setConfirmLeave] = useState<(() => void) | null>(null) // callback da eseguire se confermato
   const [devilSession, setDevilSession] = useState<DevilSession | null>(null)
   const [devilLoading, setDevilLoading] = useState(false)
   const [showDevilDifficulty, setShowDevilDifficulty] = useState(false)
@@ -720,7 +732,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const pendingResumeRef = useRef<string | null>(resumeChatId ?? null)
   const pendingStartModeRef = useRef<string | null>(startMode ?? null)
 
-  // Auto-avvia modalità da URL ?start=xxx (es. redirect da dashboard)
+  // Auto-avvia modalità da URL ?start=xxx (es. redirect da dashboard / BottomTabBar)
   useEffect(() => {
     if (!pendingStartModeRef.current) return
     const mode = pendingStartModeRef.current
@@ -728,6 +740,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     if (mode === '2v2') {
       setSelectedMode('2v2')
       setShow2v2Setup(true)
+    } else if (mode === 'devil') {
+      setShowDevilDifficulty(true)
     }
   }, [])
 
@@ -892,8 +906,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     let fullText = ''
     let realModel: string | undefined
     const controller = new AbortController()
-    // Timeout di sicurezza: se dopo 45s non arriva [DONE], abbandona
-    const timeout = setTimeout(() => controller.abort(), 45000)
+    // Timeout di sicurezza: se dopo 30s non arriva [DONE], abbandona
+    const timeout = setTimeout(() => controller.abort(), 30000)
 
     try {
       const res = await fetch('/api/chat', {
@@ -1065,12 +1079,21 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     while (!stopRequestedRef.current) {
       const text = await streamAiResponse(currentAi)
       if (stopRequestedRef.current) break
-      // Se il turno è fallito (timeout/errore), aspetta un po' e passa all'AI successiva
+      // Se il turno è fallito (timeout/errore), traccia i fallimenti consecutivi
       if (!text) {
+        consecutiveFailsRef.current += 1
+        if (consecutiveFailsRef.current >= 3) {
+          // 3 fallimenti di fila = problema di rete, mostra errore
+          setAiNetworkError(true)
+          break
+        }
         await new Promise(r => setTimeout(r, 1200))
         currentAi = getDefaultNextAi(currentAi, usedAisRef.current, AI_ORDER)
         continue
       }
+      // Turno riuscito — azzera il contatore
+      consecutiveFailsRef.current = 0
+      setAiNetworkError(false)
 
       chatHistoryRef.current.push({ name: AI_NAMES[currentAi], content: text })
       usedAisRef.current.push(currentAi)
@@ -2192,8 +2215,13 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
     } catch { fullText = 'Errore nella sintesi.' }
     setSynthesis(fullText)
     setIsSynthesizing(false)
-    setPhase('done')
-    saveCurrentChat()
+    // Celebrazione: raccogli le AI che hanno partecipato
+    const seenIds = new Set<string>()
+    messages.forEach(m => { if (!m.isUser && !m.isSynthesis && m.aiId) seenIds.add(m.aiId) })
+    const participantAis = Array.from(seenIds)
+    battleEndAisRef.current = participantAis.length ? participantAis : AI_ORDER.slice(0, 2)
+    setShowBattleEnd(true)
+    // setPhase('done') viene chiamato da BattleEndOverlay.onDone
   }
 
   const handleReset = () => {
@@ -2234,7 +2262,14 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
     onCronologia: () => setShowHistory(true),
     onFeed: () => { setSocialTab('feed'); setShowSocialPanel(true) },
     onCrea: () => { setSocialTab('crea'); setShowSocialPanel(true) },
-    onNewChat: () => { handleReset(); setPhase('new') },
+    onNewChat: () => {
+      // Se c'è una sessione in corso con messaggi, chiedi conferma prima di abbandonare
+      if (phase === 'running' && messages.length > 0) {
+        setConfirmLeave(() => () => { handleReset(); setPhase('new') })
+      } else {
+        handleReset(); setPhase('new')
+      }
+    },
     onMultiplayer: () => setShowModeSelect(true),
     onManageSub: handleManageSub,
     displayName,
@@ -2294,13 +2329,37 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
     )
   }
 
+  // ── PRIMO ACCESSO — AINameScreen (cinematic, tra FirstRun e arena) ──────────
+  if (showAINameScreen) {
+    return (
+      <AINameScreen
+        onComplete={(name) => {
+          setShowAINameScreen(false)
+          // Salva il nome localmente
+          if (name) {
+            setUserName(name)
+            setNameConfirmed(true)
+            // Persisti su DB in background — non blocca l'ingresso nell'arena
+            fetch('/api/user/name', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name }),
+            }).catch(() => {/* silenzioso — non critico */})
+          }
+          handleStart(pendingStartTopicRef.current)
+        }}
+      />
+    )
+  }
+
   // ── PRIMO ACCESSO — FirstRunScreen (bypassa la HomeScreen) ──────────────────
   if (phase === 'start' && isFirstRun) {
     return (
       <FirstRunScreen
         onStart={(q) => {
+          pendingStartTopicRef.current = q
           completeFirstRun()
-          handleStart(q)
+          setShowAINameScreen(true)
         }}
       />
     )
@@ -2331,7 +2390,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             style={{ backgroundColor: '#07070f', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
             <div className="flex items-center justify-between px-5 py-4 border-b"
               style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-              <span className="font-bold text-sm text-white">Cronologia</span>
+              <span className="font-bold text-sm text-white">Archivio Battaglie</span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => { handleReset(); setPhase('new'); setShowHistory(false) }}
@@ -2359,9 +2418,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             )}
             <div className="flex-1 overflow-y-auto py-2">
               {savedChats.length === 0 ? (
-                <p className="text-xs text-center mt-8 px-4" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                  Nessuna chat salvata.
-                </p>
+                <EmptyHistory onNew={() => { setShowHistory(false); handleReset() }} />
               ) : (
                 savedChats.map(chat => (
                   <SwipeableChatRow
@@ -2553,7 +2610,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
         <div className="w-72 h-full flex flex-col" style={{ backgroundColor: 'rgba(10,10,18,0.97)', borderRight: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
           <div className="flex items-center justify-between px-5 border-b border-white/8"
             style={{ paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))', paddingBottom: 16 }}>
-            <span className="text-white font-bold text-sm">Cronologia</span>
+            <span className="text-white font-bold text-sm">Archivio Battaglie</span>
             <button onClick={() => setShowHistory(false)} className="text-white/40 hover:text-white text-xl leading-none transition-colors">×</button>
           </div>
           {/* Undo banner */}
@@ -2565,7 +2622,7 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
           )}
           <div className="flex-1 overflow-y-auto py-2">
             {savedChats.length === 0 ? (
-              <p className="text-white/25 text-xs text-center mt-8 px-4">Nessuna chat salvata.<br />Le chat vengono salvate dopo la sintesi.</p>
+              <EmptyHistory onNew={() => { setShowHistory(false); handleReset() }} />
             ) : (
               savedChats.map(chat => (
                 <div key={chat.id} className="flex items-center group border-b border-white/5 hover:bg-white/5 transition-colors">
@@ -3068,6 +3125,27 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
             ) : (
               <>
                 {thinkingAi && <ThinkingBubble aiId={thinkingAi} isDark={isDark} />}
+                {aiNetworkError && (
+                  <div style={{
+                    margin: '12px 16px',
+                    padding: '12px 16px', borderRadius: 14,
+                    background: 'rgba(248,113,113,0.1)',
+                    border: '1px solid rgba(248,113,113,0.25)',
+                    display: 'flex', alignItems: 'center', gap: 10,
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', flex: 1, lineHeight: 1.4 }}>Le AI non rispondono. Controlla la connessione.</span>
+                    <button
+                      onClick={() => { setAiNetworkError(false); consecutiveFailsRef.current = 0; handleSendMessage() }}
+                      style={{
+                        padding: '5px 10px', borderRadius: 8, border: 'none',
+                        background: 'rgba(248,113,113,0.2)', color: '#F87171',
+                        fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+                      }}>
+                      Riprova
+                    </button>
+                  </div>
+                )}
                 {messages.slice().reverse().map(msg => <MessageBubble key={msg.id} message={msg} bgTheme={isDark ? 'white' : 'black'} isAdmin={effectivePlan === 'admin'} />)}
               </>
             )}
@@ -3975,6 +4053,72 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
       )}
 
     </div>
+
+    {/* ── BattleEndOverlay: BATTAGLIA CONCLUSA ── */}
+    {showBattleEnd && typeof window !== 'undefined' && createPortal(
+      <BattleEndOverlay
+        turnCount={turnCount}
+        aiIds={battleEndAisRef.current}
+        onDone={() => {
+          setShowBattleEnd(false)
+          setPhase('done')
+          saveCurrentChat()
+        }}
+      />,
+      document.body
+    )}
+
+    {/* ── Confirmation dialog: abbandona sessione in corso ── */}
+    {confirmLeave && typeof window !== 'undefined' && createPortal(
+      <>
+        <div
+          onClick={() => setConfirmLeave(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+          }}
+        />
+        <div style={{
+          position: 'fixed', left: '50%', top: '50%',
+          transform: 'translate(-50%,-50%)',
+          zIndex: 10000,
+          background: 'rgba(14,14,24,0.99)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 20, padding: '24px',
+          width: 'min(340px, 90vw)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+        }}>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 8 }}>
+            Abbandonare il dibattito?
+          </div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55, marginBottom: 20 }}>
+            Il dibattito in corso verrà perso. Puoi trovarlo in cronologia solo se hai già fatto la sintesi.
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={() => setConfirmLeave(null)}
+              style={{
+                flex: 1, padding: '12px', borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'transparent', color: 'rgba(255,255,255,0.6)',
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              }}>
+              Rimani
+            </button>
+            <button
+              onClick={() => { const fn = confirmLeave; setConfirmLeave(null); fn?.() }}
+              style={{
+                flex: 1, padding: '12px', borderRadius: 12, border: 'none',
+                background: 'rgba(248,113,113,0.2)', color: '#F87171',
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              }}>
+              Abbandona
+            </button>
+          </div>
+        </div>
+      </>,
+      document.body
+    )}
     </>
   )
 }

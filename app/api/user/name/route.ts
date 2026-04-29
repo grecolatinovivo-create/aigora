@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function POST(req: NextRequest) {
+async function saveName(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 })
 
@@ -17,3 +17,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true })
 }
+
+export const POST = saveName
+export const PUT = saveName

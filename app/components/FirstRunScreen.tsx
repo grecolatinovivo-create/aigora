@@ -135,7 +135,7 @@ export default function FirstRunScreen({
   onStart: (question: string) => void
 }) {
   const [visible, setVisible] = useState(0)   // quanti messaggi demo sono visibili
-  const [phase, setPhase] = useState<'arena' | 'input'>('arena')
+  const [phase, setPhase] = useState<'arena' | 'input' | 'limits'>('arena')
   const [inputQ, setInputQ] = useState('')
   const count = getLiveCount()
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -162,9 +162,114 @@ export default function FirstRunScreen({
     return (
       <QuestionInputScreen
         initialQuestion={inputQ}
-        onStart={onStart}
+        onStart={(q) => { setInputQ(q); setPhase('limits') }}
         onBack={() => setPhase('arena')}
       />
+    )
+  }
+
+  // Schermata limiti Free — ultimo step prima di entrare nell'app
+  if (phase === 'limits') {
+    const PERKS_FREE = [
+      { icon: '∞', text: 'Dibattiti Arena illimitati' },
+      { icon: '⚡', text: '2v2 gratuito — sfida con un amico' },
+      { icon: '📅', text: 'Nessuna scadenza, nessuna carta richiesta' },
+    ]
+    const PERKS_PRO = [
+      { icon: '🔥', text: "Devil's Advocate — argomenta sotto pressione" },
+      { icon: '💡', text: 'Brainstormer — 4 AI in parallelo per le tue idee' },
+      { icon: '🤖', text: 'Grok disponibile in 2v2 e Brainstormer' },
+    ]
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, backgroundColor: '#07070f',
+        display: 'flex', flexDirection: 'column',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', top: '5%', left: '50%', transform: 'translateX(-50%)',
+          width: 400, height: 400,
+          background: 'radial-gradient(ellipse, rgba(124,58,237,0.12) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '32px 24px 0', display: 'flex', flexDirection: 'column' }}>
+          {/* Badge */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <div style={{
+              fontSize: 10, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: 'rgba(167,139,250,0.7)',
+              background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.18)',
+              padding: '4px 12px', borderRadius: 999,
+            }}>
+              Sei dentro. Gratis.
+            </div>
+          </div>
+
+          <h2 style={{ fontSize: 26, fontWeight: 900, color: '#fff', textAlign: 'center', lineHeight: 1.2, marginBottom: 8 }}>
+            Il tuo piano Free
+          </h2>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginBottom: 28, lineHeight: 1.5 }}>
+            Inizia subito, senza carta di credito.{'\n'}Aggiorna quando vuoi.
+          </p>
+
+          {/* Free perks */}
+          <div style={{
+            background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.15)',
+            borderRadius: 18, padding: '16px 18px', marginBottom: 12,
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(167,139,250,0.6)', marginBottom: 12 }}>
+              ✓ Incluso nel Free
+            </div>
+            {PERKS_FREE.map((p, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: i < PERKS_FREE.length - 1 ? 10 : 0 }}>
+                <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>{p.icon}</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.4 }}>{p.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Pro teaser */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 18, padding: '16px 18px', marginBottom: 24, opacity: 0.7,
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 12 }}>
+              🔒 Solo Pro
+            </div>
+            {PERKS_PRO.map((p, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: i < PERKS_PRO.length - 1 ? 10 : 0 }}>
+                <span style={{ fontSize: 16, width: 22, textAlign: 'center', filter: 'grayscale(1)', opacity: 0.5 }}>{p.icon}</span>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>{p.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div style={{
+          flexShrink: 0, padding: '14px 24px 20px',
+          borderTop: '1px solid rgba(255,255,255,0.07)',
+          background: 'rgba(7,7,15,0.96)',
+        }}>
+          <button
+            onClick={() => onStart(inputQ || DEMO_TOPIC)}
+            style={{
+              width: '100%', padding: '16px', borderRadius: 16, border: 'none',
+              fontSize: 15, fontWeight: 900, color: '#fff',
+              background: 'linear-gradient(135deg,#7C3AED,#5B21B6)',
+              boxShadow: '0 4px 28px rgba(124,58,237,0.42)',
+              cursor: 'pointer', marginBottom: 8,
+            }}>
+            Entra nell'arena →
+          </button>
+          <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.22)', margin: 0 }}>
+            Nessun costo. Nessuna carta. Mai.
+          </p>
+        </div>
+      </div>
     )
   }
 
@@ -295,9 +400,9 @@ export default function FirstRunScreen({
         backdropFilter: 'blur(20px)',
         display: 'flex', flexDirection: 'column', gap: 10,
       }}>
-        {/* CTA primario — massimo impatto, minima frizione */}
+        {/* CTA primario — passa per lo step dei limiti Free */}
         <button
-          onClick={() => onStart(DEMO_TOPIC)}
+          onClick={() => { setInputQ(DEMO_TOPIC); setPhase('limits') }}
           style={{
             padding: '16px', borderRadius: 15, border: 'none',
             fontSize: 15, fontWeight: 900, color: '#fff', letterSpacing: '-0.01em',

@@ -7,6 +7,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import UpgradeDrawer, { type UpgradeMode } from '@/app/components/ui/UpgradeDrawer'
 
 // ── Tipi ─────────────────────────────────────────────────────────────────────
 
@@ -162,26 +163,23 @@ const IcoSpark = () => (
   </svg>
 )
 
-// ── ProBadge (overlay su card bloccata) ──────────────────────────────────────
-
-function ProOverlay() {
+// ── SoftLockBadge — chip Pro minimale in alto a destra sulla card bloccata ────
+// NON blocca la card con un overlay scuro. Segnala senza bloccare la lettura.
+function SoftLockBadge({ color }: { color: string }) {
   return (
     <div style={{
-      position: 'absolute', inset: 0, borderRadius: 'inherit',
-      background: 'rgba(7,7,15,0.78)',
-      backdropFilter: 'blur(3px)',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', gap: 6,
-      zIndex: 10,
+      position: 'absolute', top: 10, right: 10,
+      display: 'flex', alignItems: 'center', gap: 4,
+      background: 'rgba(7,7,15,0.7)',
+      border: `1px solid ${color}40`,
+      borderRadius: 999, padding: '3px 8px 3px 5px',
+      zIndex: 2, pointerEvents: 'none',
     }}>
       <IcoLock />
-      <div style={{
-        fontSize: 12, fontWeight: 900, letterSpacing: '0.12em',
-        textTransform: 'uppercase', color: C.arena,
-        background: 'rgba(167,139,250,0.14)',
-        border: '1px solid rgba(167,139,250,0.28)',
-        padding: '3px 10px', borderRadius: 999,
-      }}>Pro+</div>
+      <span style={{
+        fontSize: 10, fontWeight: 900, letterSpacing: '0.1em',
+        textTransform: 'uppercase', color,
+      }}>Pro</span>
     </div>
   )
 }
@@ -199,22 +197,45 @@ export default function HomeScreen({
 
   const [arenaOpen, setArenaOpen] = useState(false)
   const [question, setQuestion]  = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const textareaRef  = useRef<HTMLTextAreaElement>(null)
   const arenaCardRef = useRef<HTMLDivElement>(null)
+  // UpgradeDrawer — null=chiuso, altrimenti mostra la modalità selezionata
+  const [upgradeDrawer, setUpgradeDrawer] = useState<UpgradeMode | null>(null)
   const dailyTopic = getDailyTopic(locale)
 
-  // Contatore sessioni Free per questa settimana
+  // Contatore sessioni Free — cachato in localStorage con TTL 1h
   const [weeklyUsed, setWeeklyUsed]   = useState<number | null>(null)
   const [weeklyLimit, setWeeklyLimit] = useState<number | null>(null)
 
   useEffect(() => {
-    if (paid) return // solo per Free
+    if (paid) return
+    const CACHE_KEY = 'aigora_limits_cache'
+    const TTL_MS    = 60 * 60 * 1000 // 1 ora
+
+    // Prova dalla cache prima
+    try {
+      const raw = localStorage.getItem(CACHE_KEY)
+      if (raw) {
+        const { ts, used, limit } = JSON.parse(raw)
+        if (Date.now() - ts < TTL_MS) {
+          setWeeklyUsed(used)
+          setWeeklyLimit(limit)
+          return // cache valida, non fetcha
+        }
+      }
+    } catch { /* cache corrotta */ }
+
+    // Cache scaduta o assente — fetch real
     fetch('/api/limits')
       .then(r => r.json())
       .then(data => {
         if (data.weeklyDebates) {
-          setWeeklyUsed(data.weeklyDebates.used)
-          setWeeklyLimit(data.weeklyDebates.limit)
+          const { used, limit } = data.weeklyDebates
+          setWeeklyUsed(used)
+          setWeeklyLimit(limit)
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), used, limit }))
+          } catch { /* quota exceeded */ }
         }
       })
       .catch(() => {})
@@ -244,7 +265,7 @@ export default function HomeScreen({
     ? `${t(`greet.${greetKey}`)}, ${firstName}.`
     : `${t(`greet.${greetKey}`)}!`
 
-  const goLocked = () => router.push(`/${locale}/pricing`)
+  const goLocked = (mode: UpgradeMode) => setUpgradeDrawer(mode)
 
   // ── Stile base card ───────────────────────────────────────────────────────
   const card = (color: string, selected = false): React.CSSProperties => ({
@@ -476,8 +497,12 @@ export default function HomeScreen({
             </div>
           </button>
 
-          {/* Devil */}
-          <button onClick={paid ? onStartDevil : goLocked} style={{ ...card(C.devil), padding: '15px 13px' }}>
+          {/* Devil — soft-lock per Free */}
+          <button
+            onClick={paid ? onStartDevil : () => goLocked('devil')}
+            style={{ ...card(C.devil), padding: '15px 13px', opacity: paid ? 1 : 0.72 }}
+          >
+            {!paid && <SoftLockBadge color={C.devil} />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={iconBox(C.devil)}><IcoDevil /></div>
@@ -488,16 +513,16 @@ export default function HomeScreen({
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 4, lineHeight: 1.45 }}>{t('devil.desc')}</div>
               </div>
             </div>
-            {!paid && <ProOverlay />}
           </button>
 
         </div>
 
-        {/* ─── Brainstorm — full-width ────────────────────────────────── */}
+        {/* ─── Brainstormer — full-width, soft-lock per Free ──────────── */}
         <button
-          onClick={paid ? () => router.push(`/${locale}/brainstorm`) : goLocked}
-          style={{ ...card(C.brainstorm), padding: '15px 16px', width: '100%', display: 'block' }}
+          onClick={paid ? () => router.push(`/${locale}/brainstorm`) : () => goLocked('brainstorm')}
+          style={{ ...card(C.brainstorm), padding: '15px 16px', width: '100%', display: 'block', opacity: paid ? 1 : 0.72 }}
         >
+          {!paid && <SoftLockBadge color={C.brainstorm} />}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={iconBox(C.brainstorm)}><IcoBrainstorm /></div>
@@ -508,7 +533,6 @@ export default function HomeScreen({
             </div>
             <div style={tag(C.brainstorm)}>Brainstormer</div>
           </div>
-          {!paid && <ProOverlay />}
         </button>
 
         {/* ─── Ultima sessione ─────────────────────────────────────────── */}
@@ -550,7 +574,7 @@ export default function HomeScreen({
 
         {/* ─── Upgrade hint per Free ───────────────────────────────────── */}
         {!paid && (
-          <button onClick={goLocked} style={{
+          <button onClick={() => router.push(`/${locale}/pricing`)} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
             padding: '10px', borderRadius: 13,
             background: 'rgba(167,139,250,0.06)',
@@ -569,6 +593,14 @@ export default function HomeScreen({
         )}
 
       </div>
+
+      {/* UpgradeDrawer — mostra value prop della modalità bloccata */}
+      {upgradeDrawer && (
+        <UpgradeDrawer
+          mode={upgradeDrawer}
+          onClose={() => setUpgradeDrawer(null)}
+        />
+      )}
     </div>
   )
 }

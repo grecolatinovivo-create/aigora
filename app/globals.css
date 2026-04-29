@@ -77,6 +77,19 @@ html, body {
   --safe-right:  env(safe-area-inset-right,  0px);
   /* Altezza bottom tab bar (impostata da CapacitorProvider via classe .is-native) */
   --bottom-nav-height: 0px;
+
+  /* ── Design tokens AiGORÀ — sistema colori ufficiale ── */
+  --color-arena:      #A78BFA;  /* Arena / viola principale */
+  --color-2v2:        #38BDF8;  /* 2v2 / sky blue */
+  --color-devil:      #F87171;  /* Devil's Advocate / rosso */
+  --color-brainstorm: #FCD34D;  /* Brainstormer / giallo */
+  --color-bg:         #07070f;  /* Background scuro universale */
+  --color-surface:    rgba(255,255,255,0.04);
+  --color-border:     rgba(255,255,255,0.08);
+  --color-text:       #f0f0f0;
+  --color-text-muted: rgba(255,255,255,0.38);
+  --radius-card:      20px;
+  --radius-btn:       14px;
 }
 
 /* ── App nativa: variabili e aggiustamenti globali ── */

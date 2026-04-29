@@ -3,6 +3,18 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useIsNative } from './CapacitorProvider'
 
+// Icona Devil
+function IconDevil({ active }: { active: boolean }) {
+  const c = active ? '#F87171' : 'rgba(255,255,255,0.32)'
+  const w = active ? 2.2 : 1.8
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke={c} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+    </svg>
+  )
+}
+
 // ─── Icone SVG inline ─────────────────────────────────────────────────────────
 // Naming ufficiale: Arena (#A78BFA) | 2v2 (#38BDF8) | Brainstorm (#FCD34D) | Profilo (#A78BFA→sky)
 
@@ -97,8 +109,17 @@ export default function BottomTabBar() {
       label:       t('tab2v2'),
       path:        (b) => `${b}/2v2`,
       icon:        (a) => <Icon2v2 active={a} />,
-      activeColor: '#38BDF8', // sky blue — colore ufficiale 2v2
+      activeColor: '#38BDF8',
       match:       (p, b) => p.startsWith(`${b}/2v2`),
+    },
+    {
+      key:         'devil',
+      label:       'Devil',
+      // Avvia il flow Devil via ?start=devil (gestito da AigoraChat)
+      path:        (b) => `${b}?start=devil`,
+      icon:        (a) => <IconDevil active={a} />,
+      activeColor: '#F87171',
+      match:       () => false, // mai "attivo" come tab — è un flow, non una pagina
     },
     {
       key:         'brainstorm',
@@ -107,14 +128,6 @@ export default function BottomTabBar() {
       icon:        (a) => <IconBrainstorm active={a} />,
       activeColor: '#FCD34D',
       match:       (p, b) => p.startsWith(`${b}/brainstorm`),
-    },
-    {
-      key:         'profile',
-      label:       t('tabProfile'),
-      path:        (b) => `${b}/dashboard`,
-      icon:        (a) => <IconProfile active={a} />,
-      activeColor: '#A78BFA',
-      match:       (p, b) => p.startsWith(`${b}/dashboard`) || p.startsWith(`${b}/admin`),
     },
   ]
 

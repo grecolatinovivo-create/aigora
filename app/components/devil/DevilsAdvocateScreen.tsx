@@ -78,6 +78,7 @@ export default function DevilsAdvocateScreen({
   const [countdown, setCountdown] = useState(4)
   const [prevScore, setPrevScore] = useState(session.score)
   const [scoreFlash, setScoreFlash] = useState<'up' | 'down' | null>(null)
+  const [verdictFlash, setVerdictFlash] = useState(false) // flash rosso su verdetto brutale
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const diff = DIFFICULTY_LABELS[session.difficulty]
   const bgColor = '#0d0d14'
@@ -104,6 +105,18 @@ export default function DevilsAdvocateScreen({
       return () => clearTimeout(t)
     }
   }, [session.score, prevScore])
+
+  // Flash rosso + haptic su verdetto brutale (score < 5)
+  useEffect(() => {
+    if (session.phase !== 'score') return
+    if (session.finalScore !== null && session.finalScore < 5) {
+      setVerdictFlash(true)
+      const t = setTimeout(() => setVerdictFlash(false), 700)
+      // Haptic tramite Web Vibration API (fallback no-op su iOS/desktop)
+      try { navigator.vibrate?.([80, 60, 120, 60, 200]) } catch {}
+      return () => clearTimeout(t)
+    }
+  }, [session.phase, session.finalScore])
 
   useEffect(() => {
     if (session.phase !== 'consulting') return
@@ -205,6 +218,22 @@ export default function DevilsAdvocateScreen({
     return (
       <div className="flex flex-col h-full items-center justify-center relative overflow-hidden" style={{ backgroundColor: bgColor }}>
         <NoiseOverlay round={session.round} />
+        {/* Flash rosso su verdetti brutali */}
+        {verdictFlash && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 50,
+            background: 'rgba(239,68,68,0.35)',
+            animation: 'devil-verdict-flash 0.7s ease forwards',
+            pointerEvents: 'none',
+          }} />
+        )}
+        <style>{`
+          @keyframes devil-verdict-flash {
+            0%   { opacity: 1; }
+            30%  { opacity: 0.8; }
+            100% { opacity: 0; }
+          }
+        `}</style>
         <div className="relative z-10 flex flex-col items-center gap-6 text-center px-6 w-full max-w-sm">
           <div className="w-full grid grid-cols-4 gap-2">
             {session.verdicts.map((v, i) => (
