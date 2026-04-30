@@ -261,6 +261,10 @@ export default function HomeScreen({
   // ── Advance ───────────────────────────────────────────────────────────────
   const advance = useCallback((dir: 'left' | 'right') => {
     if (flyActive) return
+    // Haptic feedback — vibrazione breve sul flip
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(12)
+    }
     setFlyDir(dir)
     setFlyActive(true)
     setTimeout(() => {
@@ -449,8 +453,9 @@ export default function HomeScreen({
               <div key={pos} style={{
                 position: 'absolute', top: 0, left: 0, right: 0,
                 borderRadius: 24,
-                background: `linear-gradient(160deg, ${color}20 0%, ${color}0c 100%)`,
-                border: `1px solid ${color}30`,
+                background: `#0f0c1e`,
+                border: `1.5px solid ${color}40`,
+                boxShadow: `inset 0 0 40px ${color}12`,
                 height: '100%',
                 ...ghostStyle(pos),
               }} />
@@ -463,9 +468,9 @@ export default function HomeScreen({
             style={{
               position: 'relative', zIndex: 10,
               borderRadius: 24,
-              background: `linear-gradient(160deg, ${topColor}1e 0%, ${topColor}0a 100%)`,
-              border: `1.5px solid ${topColor}48`,
-              boxShadow: `0 12px 50px ${topColor}25, 0 0 0 1px ${topColor}18`,
+              background: `#0f0c1e`,
+              border: `1.5px solid ${topColor}55`,
+              boxShadow: `0 12px 50px ${topColor}30, inset 0 0 60px ${topColor}10`,
               overflow: 'hidden',
               display: 'flex', flexDirection: 'column',
               cursor: 'pointer',
@@ -630,7 +635,7 @@ export default function HomeScreen({
                       color: topColor, background: `${topColor}18`, border: `1px solid ${topColor}28`,
                       padding: '4px 10px', borderRadius: 999,
                     }}>
-                      {topIdx + 1} / 4
+                      {['Arena','2v2',"Devil's",'Brain'][topIdx]}
                     </div>
                   </div>
                 </>
