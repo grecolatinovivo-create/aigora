@@ -144,8 +144,8 @@ export default function BottomTabBar() {
         display:               'flex',
         alignItems:            'stretch',
         paddingBottom:         'env(safe-area-inset-bottom, 0px)',
-        backgroundColor:       'rgba(7,7,15,0.97)',
-        borderTop:             '1px solid rgba(255,255,255,0.07)',
+        backgroundColor:       'rgba(7,7,15,0.72)',
+        borderTop:             '1px solid rgba(255,255,255,0.05)',
         backdropFilter:        'blur(24px)',
         WebkitBackdropFilter:  'blur(24px)',
       }}
