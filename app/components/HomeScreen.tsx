@@ -144,14 +144,39 @@ const PHRASES: Record<string, string[]> = {
 type CardId = 'arena' | 'twoVsTwo' | 'devil' | 'brainstorm'
 const CARD_ORDER: CardId[] = ['arena', 'twoVsTwo', 'devil', 'brainstorm']
 
-// Rotazioni ghost card (pos 1,2,3) — costanti a livello modulo
-const GHOST_ROTS   = [2.5, -2, 1.2]
-const GHOST_OFFS   = [14,  26, 36]
-const GHOST_SCALES = [0.96, 0.92, 0.88]
-const GHOST_OPAC   = [0.85, 0.65, 0.45]
+// Posizioni ghost card (pos 1,2,3) — fan effect come carte sul tavolo
+// pos 1 → spostata a destra e leggermente in basso
+// pos 2 → spostata a sinistra e più in basso
+// pos 3 → leggermente a destra, più in fondo
+const GHOST_TX     = [22,  -20, 8]    // translateX
+const GHOST_TY     = [12,   22, 30]   // translateY
+const GHOST_ROTS   = [5,    -4, 2]    // rotate
+const GHOST_SCALES = [0.97, 0.94, 0.91]
+const GHOST_OPAC   = [1,    0.9, 0.8]
 
 const CARD_COLOR: Record<CardId, string> = {
   arena: C.arena, twoVsTwo: C.twoVsTwo, devil: C.devil, brainstorm: C.brainstorm,
+}
+
+// Sfondi pastello delle carte — come carte da gioco vere
+const CARD_BG: Record<CardId, string> = {
+  arena:      '#EAE6FF',
+  twoVsTwo:   '#DFF5F5',
+  devil:      '#FFE8E8',
+  brainstorm: '#FFF8E0',
+}
+// Testo scuro sulla carta (leggibile su sfondo chiaro)
+const CARD_DARK: Record<CardId, string> = {
+  arena:      '#3D2AA0',
+  twoVsTwo:   '#0B6B9E',
+  devil:      '#9C2626',
+  brainstorm: '#7A5500',
+}
+const CARD_MID: Record<CardId, string> = {
+  arena:      '#7B68C8',
+  twoVsTwo:   '#4B9CBD',
+  devil:      '#C27070',
+  brainstorm: '#B38A30',
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -379,7 +404,7 @@ export default function HomeScreen({
   const ghostStyle = (pos: number): React.CSSProperties => {
     const p = pos - 1
     return {
-      transform: `translateY(${GHOST_OFFS[p]}px) rotate(${GHOST_ROTS[p]}deg) scale(${GHOST_SCALES[p]})`,
+      transform: `translateX(${GHOST_TX[p]}px) translateY(${GHOST_TY[p]}px) rotate(${GHOST_ROTS[p]}deg) scale(${GHOST_SCALES[p]})`,
       opacity: GHOST_OPAC[p],
       zIndex: 10 - pos,
       pointerEvents: 'none',
@@ -440,57 +465,50 @@ export default function HomeScreen({
           onMouseDown={onMouseDown}
           onMouseUp={onMouseUp}
         >
-          {/* Ghost cards — back to front — con contenuto reale */}
+          {/* Ghost cards — back to front */}
           {[3, 2, 1].map(pos => {
             const id    = CARD_ORDER[(topIdx + pos) % CARD_ORDER.length]
-            const color = CARD_COLOR[id]
+            const bg    = CARD_BG[id]
+            const dark  = CARD_DARK[id]
+            const mid   = CARD_MID[id]
             const phrase = PHRASES[id][0]
             return (
               <div key={pos} style={{
                 position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                 borderRadius: 24,
-                background: '#0f0c1e',
-                border: `1.5px solid ${color}40`,
-                boxShadow: `inset 0 0 40px ${color}12`,
+                background: bg,
+                boxShadow: '0 4px 24px rgba(0,0,0,0.28)',
                 overflow: 'hidden',
                 display: 'flex', flexDirection: 'column',
                 padding: '24px 22px 22px',
                 ...ghostStyle(pos),
               }}>
-                {/* Glow */}
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: `radial-gradient(ellipse at 40% 25%, ${color}12 0%, transparent 60%)`,
-                  pointerEvents: 'none',
-                }} />
                 {/* Phrase */}
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                   <p style={{
                     margin: 0,
-                    fontSize: 'clamp(22px, 6vw, 28px)', fontWeight: 900,
-                    color: 'rgba(255,255,255,0.7)', lineHeight: 1.22,
+                    fontSize: 'clamp(20px, 5.5vw, 26px)', fontWeight: 900,
+                    color: dark, lineHeight: 1.22,
                     letterSpacing: '-0.02em', whiteSpace: 'pre-line',
+                    opacity: 0.55,
                   }}>
                     {phrase}
                   </p>
                 </div>
                 {/* Bottom identity */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  paddingTop: 14, borderTop: `1px solid ${color}18`,
-                }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
-                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                    background: `${color}20`, border: `1px solid ${color}28`,
+                    width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+                    background: CARD_COLOR[id],
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <CardIcon id={id} color={color} size={18} />
+                    <CardIcon id={id} color="#fff" size={19} />
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: 'rgba(255,255,255,0.75)', lineHeight: 1.1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: dark, lineHeight: 1.1 }}>
                       {cardLabel[id]}
                     </div>
-                    <div style={{ fontSize: 11, color: `${color}80`, marginTop: 1 }}>
+                    <div style={{ fontSize: 11, color: mid, marginTop: 1 }}>
                       {cardDesc[id]}
                     </div>
                   </div>
@@ -505,21 +523,14 @@ export default function HomeScreen({
             style={{
               position: 'relative', zIndex: 10,
               borderRadius: 24,
-              background: `#0f0c1e`,
-              border: `1.5px solid ${topColor}55`,
-              boxShadow: `0 12px 50px ${topColor}30, inset 0 0 60px ${topColor}10`,
+              background: CARD_BG[topCardId],
+              boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
               overflow: 'hidden',
               display: 'flex', flexDirection: 'column',
               cursor: 'pointer',
               ...topTransform(),
             }}
           >
-            {/* Radial glow */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: `radial-gradient(ellipse at 40% 25%, ${topColor}18 0%, transparent 65%)`,
-              pointerEvents: 'none',
-            }} />
 
             {/* Swipe hint finger */}
             {showSwipeHint && !arenaOpen && (
@@ -532,13 +543,13 @@ export default function HomeScreen({
                 {/* Finger SVG */}
                 <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
                   {/* Palm */}
-                  <ellipse cx="14" cy="28" rx="9" ry="7" fill="rgba(255,255,255,0.18)" />
+                  <ellipse cx="14" cy="28" rx="9" ry="7" fill="rgba(0,0,0,0.18)" />
                   {/* Finger */}
-                  <rect x="11" y="8" width="6" height="18" rx="3" fill="rgba(255,255,255,0.22)" />
+                  <rect x="11" y="8" width="6" height="18" rx="3" fill="rgba(0,0,0,0.22)" />
                   {/* Knuckle line */}
-                  <line x1="11" y1="20" x2="17" y2="20" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                  <line x1="11" y1="20" x2="17" y2="20" stroke="rgba(0,0,0,0.12)" strokeWidth="1" />
                   {/* Tap ring */}
-                  <circle cx="14" cy="11" r="5" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" fill="none"
+                  <circle cx="14" cy="11" r="5" stroke="rgba(0,0,0,0.18)" strokeWidth="1.5" fill="none"
                     style={{ animation: 'swipe-ring 2.2s ease-in-out infinite' }} />
                 </svg>
               </div>
@@ -562,12 +573,12 @@ export default function HomeScreen({
               <div style={{
                 position: 'absolute', top: 16, right: 16, zIndex: 2,
                 display: 'flex', alignItems: 'center', gap: 4,
-                background: 'rgba(7,7,15,0.8)',
-                border: `1px solid ${topColor}30`,
+                background: `${CARD_DARK[topCardId]}18`,
+                border: `1px solid ${CARD_DARK[topCardId]}30`,
                 borderRadius: 999, padding: '4px 10px 4px 7px',
               }}>
-                <IcoLock color={topColor} />
-                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: topColor }}>Pro</span>
+                <IcoLock color={CARD_DARK[topCardId]} />
+                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_DARK[topCardId] }}>Pro</span>
               </div>
             )}
 
@@ -654,7 +665,7 @@ export default function HomeScreen({
                       margin: 0,
                       fontSize: 'clamp(26px, 7vw, 34px)',
                       fontWeight: 900,
-                      color: '#fff',
+                      color: CARD_DARK[topCardId],
                       lineHeight: 1.22,
                       letterSpacing: '-0.025em',
                       whiteSpace: 'pre-line',
@@ -669,14 +680,14 @@ export default function HomeScreen({
                       width: '100%', padding: '13px 18px',
                       borderRadius: 14,
                       background: isLocked
-                        ? 'rgba(255,255,255,0.05)'
-                        : `linear-gradient(135deg, ${topColor}cc, ${topColor}88)`,
-                      border: isLocked ? `1px solid ${topColor}20` : 'none',
-                      boxShadow: isLocked ? 'none' : `0 4px 24px ${topColor}35`,
+                        ? `${CARD_DARK[topCardId]}12`
+                        : CARD_DARK[topCardId],
+                      border: isLocked ? `1px solid ${CARD_DARK[topCardId]}25` : 'none',
+                      boxShadow: isLocked ? 'none' : `0 4px 24px ${CARD_DARK[topCardId]}35`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                     }}>
-                      {isLocked && <IcoLock color={`${topColor}80`} />}
-                      <span style={{ fontSize: 14, fontWeight: 800, color: isLocked ? `${topColor}70` : '#fff' }}>
+                      {isLocked && <IcoLock color={`${CARD_DARK[topCardId]}80`} />}
+                      <span style={{ fontSize: 14, fontWeight: 800, color: isLocked ? `${CARD_DARK[topCardId]}70` : '#fff' }}>
                         {isLocked ? 'Sblocca con Pro' : cardCta[topCardId]}
                       </span>
                     </div>
