@@ -37,13 +37,13 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'always',
     scrollEnabled: false,
-    backgroundColor: '#07070f',
+    backgroundColor: '#f8f7ff',
     // Permette la navigazione solo verso il dominio dell'app
     allowsLinkPreview: false,
   },
 
   android: {
-    backgroundColor: '#07070f',
+    backgroundColor: '#f8f7ff',
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false, // true solo in sviluppo
