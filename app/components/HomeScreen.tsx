@@ -460,6 +460,8 @@ export default function HomeScreen({
   return (
     <div className="desktop-bg" style={{
       position: 'fixed', inset: 0,
+      zIndex: 50,
+      overflow: 'hidden',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       paddingTop:    'env(safe-area-inset-top, 0px)',
       paddingBottom: 'calc(var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px))',
