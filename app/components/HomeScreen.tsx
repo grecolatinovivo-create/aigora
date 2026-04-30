@@ -854,6 +854,7 @@ export default function HomeScreen({
         <UpgradeDrawer mode={upgradeDrawer} onClose={() => setUpgradeDrawer(null)} />
       )}
     </div>
+    </div>
     </>
   )
 }
