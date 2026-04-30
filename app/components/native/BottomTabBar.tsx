@@ -5,7 +5,7 @@ import { useIsNative } from './CapacitorProvider'
 
 // Icona Devil
 function IconDevil({ active }: { active: boolean }) {
-  const c = active ? '#F87171' : 'rgba(0,0,0,0.28)'
+  const c = active ? '#F87171' : 'rgba(255,255,255,0.32)'
   const w = active ? 2.2 : 1.8
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -19,7 +19,7 @@ function IconDevil({ active }: { active: boolean }) {
 // Naming ufficiale: Arena (#A78BFA) | 2v2 (#38BDF8) | Brainstorm (#FCD34D) | Profilo (#A78BFA→sky)
 
 function IconArena({ active }: { active: boolean }) {
-  const c = active ? '#A78BFA' : 'rgba(0,0,0,0.28)'
+  const c = active ? '#A78BFA' : 'rgba(255,255,255,0.32)'
   const w = active ? 2.2 : 1.8
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -31,7 +31,7 @@ function IconArena({ active }: { active: boolean }) {
 
 function Icon2v2({ active }: { active: boolean }) {
   // Colore ufficiale 2v2: #38BDF8 (sky blue) — coerente con landing e arena
-  const c = active ? '#38BDF8' : 'rgba(0,0,0,0.28)'
+  const c = active ? '#38BDF8' : 'rgba(255,255,255,0.32)'
   const w = active ? 2.2 : 1.8
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -45,7 +45,7 @@ function Icon2v2({ active }: { active: boolean }) {
 }
 
 function IconBrainstorm({ active }: { active: boolean }) {
-  const c = active ? '#FCD34D' : 'rgba(0,0,0,0.28)'
+  const c = active ? '#FCD34D' : 'rgba(255,255,255,0.32)'
   const w = active ? 2.2 : 1.8
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -58,7 +58,7 @@ function IconBrainstorm({ active }: { active: boolean }) {
 }
 
 function IconProfile({ active }: { active: boolean }) {
-  const c = active ? '#A78BFA' : 'rgba(0,0,0,0.28)'
+  const c = active ? '#A78BFA' : 'rgba(255,255,255,0.32)'
   const w = active ? 2.2 : 1.8
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -177,7 +177,7 @@ export default function BottomTabBar() {
               style={{
                 fontSize:      '10px',
                 fontWeight:    isActive ? 700 : 500,
-                color:         isActive ? tab.activeColor : 'rgba(0,0,0,0.28)',
+                color:         isActive ? tab.activeColor : 'rgba(255,255,255,0.32)',
                 transition:    'color 0.2s',
                 letterSpacing: '0.02em',
                 lineHeight:    1.1,

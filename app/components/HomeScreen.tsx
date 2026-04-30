@@ -472,11 +472,11 @@ export default function HomeScreen({
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em' }}>
-          <span style={{ color: '#0f0e1a' }}>Ai</span>
+          <span style={{ color: '#fff' }}>Ai</span>
           <span style={{ color: C.arena }}>GORÀ</span>
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', fontWeight: 500 }}>
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
             {greetText}
           </span>
           <button onClick={() => router.push(`/${locale}/dashboard`)} style={{
