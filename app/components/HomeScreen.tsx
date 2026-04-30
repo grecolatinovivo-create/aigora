@@ -459,9 +459,10 @@ export default function HomeScreen({
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
+    <div style={{ position: 'relative', minHeight: '100dvh', background: 'transparent' }}>
     <div className="desktop-bg" style={{
-      position: 'fixed', inset: 0,
-      zIndex: 50,
+      position: 'absolute', inset: 0,
+      zIndex: 0,
       overflow: 'hidden',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       paddingTop:    'env(safe-area-inset-top, 0px)',
