@@ -855,8 +855,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── Colore sfondo body/html + chrome browser ──
   useEffect(() => {
-    const bg = (phase === 'start') ? '#f8f7ff' : mobileBg.value
-    const headerColor = (phase === 'start') ? '#f8f7ff' : mobileBg.header
+    const bg = mobileBg.value
+    const headerColor = mobileBg.header
     document.documentElement.style.setProperty('--app-bg', bg)
     const metaTheme = document.querySelector('meta[name="theme-color"]')
     if (metaTheme) metaTheme.setAttribute('content', headerColor)
@@ -864,7 +864,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
       document.documentElement.style.setProperty('--app-bg', '#07070f')
       if (metaTheme) metaTheme.setAttribute('content', '#07070f')
     }
-  }, [phase, mobileBg.value, mobileBg.header])
+  }, [mobileBg.value, mobileBg.header])
 
 
   const scrollToBottom = useCallback(() => {
