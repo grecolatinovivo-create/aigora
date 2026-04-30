@@ -54,10 +54,6 @@
   animation: rotate-hint 1.5s ease-in-out infinite alternate;
 }
 
-html {
-  background: #f8f7ff;
-}
-
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
