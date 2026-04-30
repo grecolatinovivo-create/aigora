@@ -514,7 +514,9 @@ html.is-native [data-main-content] {
     flex-direction: column;
     z-index: 50;
     overflow: hidden;
-    height: 100dvh;
+    /* height: 100dvh rimosso — con top+bottom espliciti, height sovrascrive bottom !important
+       e la bottom-tab-bar rimane sovrapposta al contenuto. Senza height, inset:0 + is-native
+       bottom:calc(64px+safe) funzionano correttamente. */
   }
   .synthesis-panel-mobile {
     position: fixed;

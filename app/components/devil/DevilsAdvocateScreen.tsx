@@ -417,10 +417,11 @@ export default function DevilsAdvocateScreen({
         </div>
       </div>
 
-      {/* Messaggi */}
-      <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-3 relative z-10">
+      {/* Messaggi — flex-col con mt-auto: i messaggi si ancorano al fondo,
+           spazio vuoto sopra (non sotto) come in ogni chat app */}
+      <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col relative z-10">
         {/* Empty state — l'AI sta per attaccare */}
-        {session.messages.length === 0 && (
+        {session.messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-8">
             <div className="text-4xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.7))' }}>😈</div>
             <div className="text-[9px] font-black uppercase tracking-[0.25em]" style={{ color: 'rgba(239,68,68,0.6)' }}>dovrai difendere questa posizione</div>
@@ -437,7 +438,8 @@ export default function DevilsAdvocateScreen({
               <span className="text-[11px]">L'attacco sta arrivando…</span>
             </div>
           </div>
-        )}
+        ) : (
+        <div className="flex flex-col gap-3 mt-auto w-full">
         {session.messages.filter(msg => msg.role === 'user' || msg.content).map((msg, i) => (
           <div key={i}>
             {msg.role === 'user' ? (
@@ -490,6 +492,8 @@ export default function DevilsAdvocateScreen({
           )
         })()}
         <div ref={messagesEndRef} />
+        </div>
+        )}
       </div>
       {/* Input + controlli */}
       <div className="flex-shrink-0 border-t relative z-10"
