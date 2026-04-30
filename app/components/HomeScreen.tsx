@@ -150,9 +150,16 @@ const CARD_ORDER: CardId[] = ['arena', 'twoVsTwo', 'devil', 'brainstorm']
 // pos 3 → leggermente a destra, più in fondo
 const GHOST_TX     = [22,  -20, 8]    // translateX
 const GHOST_TY     = [12,   22, 30]   // translateY
-const GHOST_ROTS   = [5,    -4, 2]    // rotate
 const GHOST_SCALES = [0.97, 0.94, 0.91]
 const GHOST_OPAC   = [1,    0.9, 0.8]
+
+// Rotazione fissa per carta — viaggia con la carta (non con la posizione)
+const CARD_ROT: Record<string, number> = {
+  arena:      5,
+  twoVsTwo:  -4,
+  devil:      8,
+  brainstorm: -2,
+}
 
 const CARD_COLOR: Record<CardId, string> = {
   arena: C.arena, twoVsTwo: C.twoVsTwo, devil: C.devil, brainstorm: C.brainstorm,
@@ -250,8 +257,7 @@ export default function HomeScreen({
   const [snapback,  setSnapback]  = useState(false)
   const [phraseIdx, setPhraseIdx] = useState(0)
   const [phraseVis, setPhraseVis] = useState(true)
-  // La top card mantiene SEMPRE la sua inclinazione — come una carta appoggiata sul tavolo
-  const TOP_BASE_ROT = GHOST_ROTS[0]  // 2.5deg — stessa della ghost pos-1
+  // La top card usa la rotazione propria della carta (viaggia con lei)
 
   // ── Arena state ───────────────────────────────────────────────────────────
   const [arenaOpen, setArenaOpen] = useState(false)
@@ -392,8 +398,8 @@ export default function HomeScreen({
         transition: 'transform 0.32s ease-in',
       }
     }
-    // Drag: rotazione base + rotazione da drag
-    const rot = TOP_BASE_ROT + dragX / 30
+    // Drag: rotazione propria della carta + rotazione da drag
+    const rot = CARD_ROT[topCardId] + dragX / 30
     return {
       transform: `translateX(${dragX}px) rotate(${rot}deg)`,
       transition: snapback ? 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
@@ -401,10 +407,10 @@ export default function HomeScreen({
   }
 
   // ── Ghost card style ──────────────────────────────────────────────────────
-  const ghostStyle = (pos: number): React.CSSProperties => {
+  const ghostStyle = (pos: number, id: CardId): React.CSSProperties => {
     const p = pos - 1
     return {
-      transform: `translateX(${GHOST_TX[p]}px) translateY(${GHOST_TY[p]}px) rotate(${GHOST_ROTS[p]}deg) scale(${GHOST_SCALES[p]})`,
+      transform: `translateX(${GHOST_TX[p]}px) translateY(${GHOST_TY[p]}px) rotate(${CARD_ROT[id]}deg) scale(${GHOST_SCALES[p]})`,
       opacity: GHOST_OPAC[p],
       zIndex: 10 - pos,
       pointerEvents: 'none',
@@ -481,7 +487,7 @@ export default function HomeScreen({
                 overflow: 'hidden',
                 display: 'flex', flexDirection: 'column',
                 padding: '24px 22px 22px',
-                ...ghostStyle(pos),
+                ...ghostStyle(pos, id),
               }}>
                 {/* Phrase */}
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
@@ -611,17 +617,17 @@ export default function HomeScreen({
                     onClick={e => { e.stopPropagation(); setQuestion(dailyTopic) }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8,
-                      background: `${topColor}12`, border: `1px solid ${topColor}25`,
+                      background: `${CARD_DARK[topCardId]}08`, border: `1px solid ${CARD_DARK[topCardId]}20`,
                       borderRadius: 10, padding: '8px 12px',
                       cursor: 'pointer', textAlign: 'left',
                     }}>
-                    <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke={topColor} strokeWidth={2.5} strokeLinecap="round">
+                    <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke={CARD_DARK[topCardId]} strokeWidth={2.5} strokeLinecap="round">
                       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                     </svg>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: topColor, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: CARD_DARK[topCardId], letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       {t('dailyTopicLabel')}
                     </span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 12, color: CARD_MID[topCardId], flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {dailyTopic}
                     </span>
                   </button>
@@ -644,7 +650,7 @@ export default function HomeScreen({
                     onClick={e => { e.stopPropagation(); setArenaOpen(false); setQuestion('') }}
                     style={{
                       background: 'none', border: 'none', padding: '6px',
-                      fontSize: 11, color: 'rgba(255,255,255,0.2)',
+                      fontSize: 11, color: `${CARD_DARK[topCardId]}40`,
                       cursor: 'pointer', textAlign: 'center', width: '100%',
                       letterSpacing: '0.08em', textTransform: 'uppercase',
                     }}>
