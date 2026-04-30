@@ -64,7 +64,7 @@ function buildNudge(aiId: string): {
       }
     case 'perplexity':
       return {
-        line1: "Dato: il 73% degli ospiti che tornano si registra entro 48 ore.",
+        line1: "Dato: l'87% degli ospiti che tornano si registra entro 48 ore.",
         line2: "Salta l'attesa. Entra adesso e inizia ad accumulare storia.",
         cta: "Unisciti all'arena",
         ctaSub: "registrazione gratuita",
