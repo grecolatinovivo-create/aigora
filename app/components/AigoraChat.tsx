@@ -6,6 +6,7 @@ import HomeScreen from './HomeScreen'
 import FirstRunScreen from './FirstRunScreen'
 import AINameScreen, { loadUserTraits, type UserTraits } from './AINameScreen'
 import DailyGreetingScreen, { shouldShowDailyGreeting, markGreetingShown } from './DailyGreetingScreen'
+import GuestNudgeScreen, { shouldShowGuestNudge, markNudgeShown } from './GuestNudgeScreen'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -172,6 +173,7 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   const twoVsTwoAudioRef = useRef<HTMLAudioElement | null>(null)
   const [showBattleEnd, setShowBattleEnd] = useState(false) // overlay BATTAGLIA CONCLUSA
   const battleEndAisRef = useRef<string[]>([]) // AI partecipanti all'ultima battaglia
+  const [showGuestNudge, setShowGuestNudge] = useState(false) // nudge registrazione ospiti
   const [aiNetworkError, setAiNetworkError] = useState(false) // true quando tutte le AI falliscono consecutivamente
   const consecutiveFailsRef = useRef(0)
   const [confirmLeave, setConfirmLeave] = useState<(() => void) | null>(null) // callback da eseguire se confermato
@@ -4091,7 +4093,23 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
           setShowBattleEnd(false)
           setPhase('done')
           saveCurrentChat()
+          // Nudge registrazione: mostra solo agli ospiti, max 1 volta ogni 24h
+          if (shouldShowGuestNudge(userPlan)) {
+            setTimeout(() => setShowGuestNudge(true), 400)
+          }
         }}
+      />,
+      document.body
+    )}
+
+    {/* ── GuestNudgeScreen: invito cinematico alla registrazione ── */}
+    {showGuestNudge && typeof window !== 'undefined' && createPortal(
+      <GuestNudgeScreen
+        onRegister={() => {
+          setShowGuestNudge(false)
+          chatRouter.push(`/${chatLocale}/register`)
+        }}
+        onDismiss={() => setShowGuestNudge(false)}
       />,
       document.body
     )}
