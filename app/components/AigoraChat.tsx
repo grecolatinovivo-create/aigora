@@ -70,20 +70,27 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── Primo accesso — mostra FirstRunScreen invece di HomeScreen ───────────────
   // Nessuna chiamata API: usiamo localStorage. Dopo la prima azione → flag settato.
+  // IMPORTANTE: se l'utente è loggato (propUserName dal server), saltiamo sempre
+  // l'onboarding — un account esistente non deve mai rivedere AINameScreen.
   const [isFirstRun, setIsFirstRun] = useState(false)
   useEffect(() => {
     if (typeof window === 'undefined') return
+    // Utente loggato: allinea localStorage e salta tutto l'onboarding
+    if (propUserName) {
+      localStorage.setItem('aigora_onboarded', '1')
+      return
+    }
     // Non mostrare il first-run se l'utente sta riprendendo una sessione
     if (resumeChatId || startMode) return
     const done = localStorage.getItem('aigora_onboarded')
     if (!done) setIsFirstRun(true)
-  }, [resumeChatId, startMode])
+  }, [resumeChatId, startMode, propUserName])
 
   // Stato intermedio: FirstRunScreen → AINameScreen → arena
   const [showAINameScreen, setShowAINameScreen] = useState(false)
   const pendingStartTopicRef = useRef<string>('')
 
-  // Daily greeting: saluto di ritorno (max 1 ogni 8h)
+  // Daily greeting: saluto di ritorno (max 4h)
   const [showDailyGreeting, setShowDailyGreeting] = useState(false)
   const [userTraits, setUserTraits] = useState<UserTraits | null>(null)
   useEffect(() => {
