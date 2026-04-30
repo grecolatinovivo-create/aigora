@@ -1,7 +1,7 @@
 'use client'
-// HomeScreen v2 — Card Stack
+// HomeScreen v3 — Card Stack (playing card layout)
 // Sprint 3 — 30 apr 2026
-// Design: overlapping playing-card stack, swipe to cycle modes
+// Tall cards, content anchored bottom, ghost stack, prev/next nav
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -21,7 +21,7 @@ export interface HomeScreenProps {
   onOpenHistory: () => void
 }
 
-// ── Palette ufficiale ────────────────────────────────────────────────────────
+// ── Palette ───────────────────────────────────────────────────────────────────
 
 const C = {
   arena:      '#A78BFA',
@@ -31,12 +31,10 @@ const C = {
   bg:         '#07070f',
 }
 
-// ── Tier check ───────────────────────────────────────────────────────────────
-
 const PAID = ['pro', 'premium', 'admin', 'freemium', 'max']
 const isPaid = (plan: string) => PAID.includes(plan)
 
-// ── Argomento del giorno — deterministico per data ───────────────────────────
+// ── Daily topics ──────────────────────────────────────────────────────────────
 
 const DAILY_TOPICS_IT = [
   "L'intelligenza artificiale sostituirà il lavoro creativo?",
@@ -106,13 +104,13 @@ const DAILY_TOPICS_EN = [
 
 function getDailyTopic(locale: string): string {
   const topics = locale === 'it' ? DAILY_TOPICS_IT : DAILY_TOPICS_EN
-  const now = new Date()
-  const start = new Date(now.getFullYear(), 0, 0)
-  const dayOfYear = Math.floor((now.getTime() - start.getTime()) / 86400000)
-  return topics[dayOfYear % topics.length]
+  const now    = new Date()
+  const start  = new Date(now.getFullYear(), 0, 0)
+  const day    = Math.floor((now.getTime() - start.getTime()) / 86400000)
+  return topics[day % topics.length]
 }
 
-// ── Frasi provocatorie per card ───────────────────────────────────────────────
+// ── Frasi provocatorie ────────────────────────────────────────────────────────
 
 const PHRASES: Record<string, string[]> = {
   arena: [
@@ -141,22 +139,26 @@ const PHRASES: Record<string, string[]> = {
   ],
 }
 
-// ── Ordine e tipi card ────────────────────────────────────────────────────────
+// ── Card types ────────────────────────────────────────────────────────────────
 
 type CardId = 'arena' | 'twoVsTwo' | 'devil' | 'brainstorm'
 const CARD_ORDER: CardId[] = ['arena', 'twoVsTwo', 'devil', 'brainstorm']
 
-// ── Icone SVG ────────────────────────────────────────────────────────────────
+const CARD_COLOR: Record<CardId, string> = {
+  arena: C.arena, twoVsTwo: C.twoVsTwo, devil: C.devil, brainstorm: C.brainstorm,
+}
 
-const IcoArena = ({ color }: { color: string }) => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none"
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+const IcoArena = ({ color, size = 20 }: { color: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
     stroke={color} strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
   </svg>
 )
 
-const Ico2v2 = ({ color }: { color: string }) => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none"
+const Ico2v2 = ({ color, size = 20 }: { color: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
     stroke={color} strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
     <circle cx="9" cy="7" r="4"/>
@@ -165,15 +167,15 @@ const Ico2v2 = ({ color }: { color: string }) => (
   </svg>
 )
 
-const IcoDevil = ({ color }: { color: string }) => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none"
+const IcoDevil = ({ color, size = 20 }: { color: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
     stroke={color} strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round">
     <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
   </svg>
 )
 
-const IcoBrainstorm = ({ color }: { color: string }) => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none"
+const IcoBrainstorm = ({ color, size = 20 }: { color: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
     stroke={color} strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round">
     <line x1="9" y1="18" x2="15" y2="18"/>
     <line x1="10" y1="22" x2="14" y2="22"/>
@@ -181,32 +183,19 @@ const IcoBrainstorm = ({ color }: { color: string }) => (
   </svg>
 )
 
-const IcoLock = () => (
+const IcoLock = ({ color = 'rgba(255,255,255,0.4)' }: { color?: string }) => (
   <svg width={13} height={13} viewBox="0 0 24 24" fill="none"
-    stroke="rgba(255,255,255,0.5)" strokeWidth={2.2} strokeLinecap="round">
+    stroke={color} strokeWidth={2.2} strokeLinecap="round">
     <rect x="3" y="11" width="18" height="11" rx="2"/>
     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
   </svg>
 )
 
-const IcoSpark = () => (
-  <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
-    stroke={C.arena} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-  </svg>
-)
-
-function CardIcon({ id, color }: { id: CardId; color: string }) {
-  if (id === 'arena')      return <IcoArena color={color} />
-  if (id === 'twoVsTwo')   return <Ico2v2 color={color} />
-  if (id === 'devil')      return <IcoDevil color={color} />
-  return <IcoBrainstorm color={color} />
-}
-
-// ── Configurazione card ───────────────────────────────────────────────────────
-
-const CARD_COLOR: Record<CardId, string> = {
-  arena: C.arena, twoVsTwo: C.twoVsTwo, devil: C.devil, brainstorm: C.brainstorm,
+function CardIcon({ id, color, size }: { id: CardId; color: string; size?: number }) {
+  if (id === 'arena')      return <IcoArena color={color} size={size} />
+  if (id === 'twoVsTwo')   return <Ico2v2 color={color} size={size} />
+  if (id === 'devil')      return <IcoDevil color={color} size={size} />
+  return <IcoBrainstorm color={color} size={size} />
 }
 
 // ── Componente principale ─────────────────────────────────────────────────────
@@ -221,81 +210,57 @@ export default function HomeScreen({
   const t          = useTranslations('home')
   const dailyTopic = getDailyTopic(locale)
 
-  // ── Card stack state ──────────────────────────────────────────────────────
-  const [topIdx,     setTopIdx]     = useState(0)
-  const [dragX,      setDragX]      = useState(0)
-  const [flyDir,     setFlyDir]     = useState<'left' | 'right' | null>(null)
-  const [flyActive,  setFlyActive]  = useState(false)
-  const [snapback,   setSnapback]   = useState(false)
-  const [phraseIdx,  setPhraseIdx]  = useState(0)
-  const [phraseVis,  setPhraseVis]  = useState(true)
+  // ── Stack state ───────────────────────────────────────────────────────────
+  const [topIdx,    setTopIdx]    = useState(0)
+  const [dragX,     setDragX]     = useState(0)
+  const [flyDir,    setFlyDir]    = useState<'left' | 'right' | null>(null)
+  const [flyActive, setFlyActive] = useState(false)
+  const [snapback,  setSnapback]  = useState(false)
+  const [phraseIdx, setPhraseIdx] = useState(0)
+  const [phraseVis, setPhraseVis] = useState(true)
 
   // ── Arena state ───────────────────────────────────────────────────────────
-  const [arenaOpen,  setArenaOpen]  = useState(false)
-  const [question,   setQuestion]   = useState('')
-  const textareaRef  = useRef<HTMLTextAreaElement>(null)
+  const [arenaOpen, setArenaOpen] = useState(false)
+  const [question,  setQuestion]  = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // ── Touch tracking ────────────────────────────────────────────────────────
+  // ── Touch / mouse ─────────────────────────────────────────────────────────
   const touchStartX  = useRef(0)
   const touchStartY  = useRef(0)
   const isDragging   = useRef(false)
   const isHoriz      = useRef(false)
+  const mouseStartX  = useRef<number | null>(null)
 
   // ── UpgradeDrawer ─────────────────────────────────────────────────────────
   const [upgradeDrawer, setUpgradeDrawer] = useState<UpgradeMode | null>(null)
 
-  // ── Free session counter ──────────────────────────────────────────────────
-  const [weeklyUsed,  setWeeklyUsed]  = useState<number | null>(null)
-  const [weeklyLimit, setWeeklyLimit] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (paid) return
-    const CACHE_KEY = 'aigora_limits_cache'
-    const TTL_MS    = 60 * 60 * 1000
-    try {
-      const raw = localStorage.getItem(CACHE_KEY)
-      if (raw) {
-        const { ts, used, limit } = JSON.parse(raw)
-        if (Date.now() - ts < TTL_MS) { setWeeklyUsed(used); setWeeklyLimit(limit); return }
-      }
-    } catch { /* */ }
-    fetch('/api/limits').then(r => r.json()).then(data => {
-      if (data.weeklyDebates) {
-        const { used, limit } = data.weeklyDebates
-        setWeeklyUsed(used); setWeeklyLimit(limit)
-        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), used, limit })) } catch { /* */ }
-      }
-    }).catch(() => {})
-  }, [paid])
-
-  // ── Auto-cycle phrase ogni 4s ─────────────────────────────────────────────
+  // ── Phrase cycling ────────────────────────────────────────────────────────
   useEffect(() => {
     if (arenaOpen) return
     const iv = setInterval(() => {
       setPhraseVis(false)
-      setTimeout(() => {
-        setPhraseIdx(i => (i + 1) % PHRASES[CARD_ORDER[topIdx]].length)
-        setPhraseVis(true)
-      }, 250)
+      setTimeout(() => { setPhraseIdx(i => (i + 1) % PHRASES[CARD_ORDER[topIdx]].length); setPhraseVis(true) }, 250)
     }, 4000)
     return () => clearInterval(iv)
   }, [topIdx, arenaOpen])
 
-  // Reset phrase on card change
-  useEffect(() => {
-    setPhraseIdx(0)
-    setPhraseVis(true)
-    setArenaOpen(false)
-    setQuestion('')
-  }, [topIdx])
+  useEffect(() => { setPhraseIdx(0); setPhraseVis(true); setArenaOpen(false); setQuestion('') }, [topIdx])
+  useEffect(() => { if (arenaOpen) setTimeout(() => textareaRef.current?.focus(), 120) }, [arenaOpen])
 
-  // Focus textarea when arena opens
+  // Keyboard arrows (desktop)
   useEffect(() => {
-    if (arenaOpen) setTimeout(() => textareaRef.current?.focus(), 120)
-  }, [arenaOpen])
+    const onKey = (e: KeyboardEvent) => {
+      if (flyActive) return
+      if (e.key === 'ArrowLeft')  advance('right')
+      if (e.key === 'ArrowRight') advance('left')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [flyActive]) // eslint-disable-line
 
-  // ── Swipe logic ───────────────────────────────────────────────────────────
+  // ── Advance ───────────────────────────────────────────────────────────────
   const advance = useCallback((dir: 'left' | 'right') => {
+    if (flyActive) return
     setFlyDir(dir)
     setFlyActive(true)
     setTimeout(() => {
@@ -303,169 +268,136 @@ export default function HomeScreen({
         ? (i + 1) % CARD_ORDER.length
         : (i - 1 + CARD_ORDER.length) % CARD_ORDER.length
       )
-      setDragX(0)
-      setFlyDir(null)
-      setFlyActive(false)
-      setSnapback(false)
+      setDragX(0); setFlyDir(null); setFlyActive(false); setSnapback(false)
     }, 320)
-  }, [])
+  }, [flyActive])
 
+  // ── Touch handlers ────────────────────────────────────────────────────────
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (flyActive) return
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
-    isDragging.current  = false
-    isHoriz.current     = false
+    isDragging.current = false; isHoriz.current = false
   }, [flyActive])
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (flyActive) return
     const dx = e.touches[0].clientX - touchStartX.current
     const dy = e.touches[0].clientY - touchStartY.current
-
     if (!isDragging.current) {
       if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return
       isHoriz.current = Math.abs(dx) > Math.abs(dy) * 0.8
       isDragging.current = true
     }
-
     if (!isHoriz.current) return
-    if (arenaOpen && Math.abs(dx) < 20) return // don't swipe when arena input is open & minimal drag
     e.preventDefault()
-    setSnapback(false)
-    setDragX(dx)
-  }, [flyActive, arenaOpen])
+    setSnapback(false); setDragX(dx)
+  }, [flyActive])
 
   const onTouchEnd = useCallback(() => {
     if (!isDragging.current || !isHoriz.current) return
-    if (Math.abs(dragX) > 80) {
-      advance(dragX < 0 ? 'left' : 'right')
-    } else {
-      setSnapback(true)
-      setDragX(0)
-      setTimeout(() => setSnapback(false), 280)
-    }
+    if (Math.abs(dragX) > 70) { advance(dragX < 0 ? 'left' : 'right') }
+    else { setSnapback(true); setDragX(0); setTimeout(() => setSnapback(false), 280) }
     isDragging.current = false
   }, [dragX, advance])
 
-  // Desktop mouse swipe
-  const mouseStartX = useRef<number | null>(null)
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    mouseStartX.current = e.clientX
-  }, [])
-  const onMouseUp = useCallback((e: React.MouseEvent) => {
+  const onMouseDown = useCallback((e: React.MouseEvent) => { mouseStartX.current = e.clientX }, [])
+  const onMouseUp   = useCallback((e: React.MouseEvent) => {
     if (mouseStartX.current === null) return
-    const dx = e.clientX - mouseStartX.current
-    mouseStartX.current = null
-    if (Math.abs(dx) > 80) advance(dx < 0 ? 'left' : 'right')
+    const dx = e.clientX - mouseStartX.current; mouseStartX.current = null
+    if (Math.abs(dx) > 70) advance(dx < 0 ? 'left' : 'right')
   }, [advance])
 
   // ── Card action ───────────────────────────────────────────────────────────
-  const handleCardAction = useCallback((id: CardId) => {
-    if (id === 'arena') {
-      setArenaOpen(o => !o)
-      return
-    }
-    if (id === 'twoVsTwo') { onStart2v2(); return }
-    if (id === 'devil') {
-      if (paid) onStartDevil()
-      else setUpgradeDrawer('devil')
-      return
-    }
-    if (id === 'brainstorm') {
-      if (paid) router.push(`/${locale}/brainstorm`)
-      else setUpgradeDrawer('brainstorm')
-    }
-  }, [paid, onStart2v2, onStartDevil, router, locale])
+  const handleCardTap = useCallback(() => {
+    if (Math.abs(dragX) > 8 || flyActive) return
+    const id = CARD_ORDER[topIdx]
+    if (id === 'arena')      { setArenaOpen(o => !o); return }
+    if (id === 'twoVsTwo')   { onStart2v2(); return }
+    if (id === 'devil')      { paid ? onStartDevil() : setUpgradeDrawer('devil'); return }
+    if (id === 'brainstorm') { paid ? router.push(`/${locale}/brainstorm`) : setUpgradeDrawer('brainstorm') }
+  }, [dragX, flyActive, topIdx, paid, onStart2v2, onStartDevil, router, locale])
 
-  // ── Avatar / greeting ─────────────────────────────────────────────────────
+  // ── Computed ──────────────────────────────────────────────────────────────
   const planColor: Record<string, string> = {
-    admin: '#F59E0B', premium: '#FF6B2B', max: '#FF6B2B',
-    pro: '#A78BFA', free: '#10A37F', starter: '#10A37F',
+    admin: '#F59E0B', premium: '#FF6B2B', max: '#FF6B2B', pro: '#A78BFA', free: '#10A37F', starter: '#10A37F',
   }
   const avatarColor = planColor[userPlan] ?? '#10A37F'
   const initial     = (userName || 'U')[0].toUpperCase()
   const h = new Date().getHours()
-  const greetKey = h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'
-  const firstName  = userName?.split(' ')[0] || ''
-  const greetText  = firstName ? `${t(`greet.${greetKey}`)}, ${firstName}.` : `${t(`greet.${greetKey}`)}!`
+  const greetKey    = h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening'
+  const firstName   = userName?.split(' ')[0] || ''
+  const greetText   = firstName ? `${t(`greet.${greetKey}`)}, ${firstName}.` : `${t(`greet.${greetKey}`)}!`
 
-  // ── Stack transform per posizione ─────────────────────────────────────────
-  const stackTransform = (pos: number, isDraggingTop: boolean): React.CSSProperties => {
-    if (pos === 0) {
-      // Top card
-      if (flyActive && flyDir) {
-        const tx = flyDir === 'left' ? -600 : 600
-        const rot = flyDir === 'left' ? -20 : 20
-        return {
-          transform: `translateX(${tx}px) rotate(${rot}deg)`,
-          transition: 'transform 0.32s ease-in',
-          zIndex: 10,
-        }
-      }
-      return {
-        transform: `translateX(${dragX}px) rotate(${dragX / 28}deg)`,
-        transition: snapback ? 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
-        zIndex: 10,
-      }
-    }
-    const ROTATIONS = [2.2, -1.8, 1.2]
-    const OFFSETS   = [12, 22, 30]
-    const SCALES    = [0.965, 0.93, 0.895]
-    const OPACITIES = [0.85, 0.65, 0.45]
-    const p = pos - 1
-    return {
-      transform: `translateY(${OFFSETS[p]}px) rotate(${ROTATIONS[p]}deg) scale(${SCALES[p]})`,
-      opacity: OPACITIES[p],
-      transition: flyActive ? 'transform 0.32s ease, opacity 0.32s ease' : 'none',
-      zIndex: 10 - pos,
-      pointerEvents: 'none',
-    }
-  }
-
-  // ── Card content (top card only) ─────────────────────────────────────────
-  const topCardId   = CARD_ORDER[topIdx]
-  const topColor    = CARD_COLOR[topCardId]
-  const topPhrase   = PHRASES[topCardId][phraseIdx]
-  const topRequires = ['devil', 'brainstorm'].includes(topCardId)
-  const isLocked    = topRequires && !paid
+  const topCardId  = CARD_ORDER[topIdx]
+  const topColor   = CARD_COLOR[topCardId]
+  const topPhrase  = PHRASES[topCardId][phraseIdx]
+  const isLocked   = ['devil', 'brainstorm'].includes(topCardId) && !paid
 
   const cardLabel: Record<CardId, string> = {
     arena: t('arena.title'), twoVsTwo: t('twoVsTwo.title'),
     devil: t('devil.title'), brainstorm: t('brainstorm.title'),
   }
-  const cardTag: Record<CardId, string> = {
-    arena: t('arena.tag'), twoVsTwo: '2v2', devil: "Devil's", brainstorm: 'Brainstormer',
+  const cardDesc: Record<CardId, string> = {
+    arena: t('arena.desc'), twoVsTwo: t('twoVsTwo.desc'),
+    devil: t('devil.desc'), brainstorm: t('brainstorm.desc'),
   }
   const cardCta: Record<CardId, string> = {
-    arena: t('arena.cta'), twoVsTwo: 'Entra nella stanza →', devil: 'Inizia il duello →', brainstorm: 'Avvia sessione →',
+    arena: t('arena.cta'), twoVsTwo: 'Entra nella stanza →',
+    devil: 'Inizia il duello →', brainstorm: 'Avvia sessione →',
   }
 
+  // ── Top card transform ────────────────────────────────────────────────────
+  const topTransform = (): React.CSSProperties => {
+    if (flyActive && flyDir) {
+      return {
+        transform: `translateX(${flyDir === 'left' ? -640 : 640}px) rotate(${flyDir === 'left' ? -18 : 18}deg)`,
+        transition: 'transform 0.32s ease-in',
+      }
+    }
+    return {
+      transform: `translateX(${dragX}px) rotate(${dragX / 30}deg)`,
+      transition: snapback ? 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
+    }
+  }
+
+  // Ghost card offsets (pos 1,2,3)
+  const ghostStyle = (pos: number): React.CSSProperties => {
+    const ROTS    = [2.5, -2, 1.2]
+    const OFFS    = [14, 26, 36]
+    const SCALES  = [0.96, 0.92, 0.88]
+    const OPACITY = [0.8, 0.6, 0.42]
+    const p = pos - 1
+    return {
+      transform: `translateY(${OFFS[p]}px) rotate(${ROTS[p]}deg) scale(${SCALES[p]})`,
+      opacity: OPACITY[p],
+      zIndex: 10 - pos,
+      pointerEvents: 'none',
+    }
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{
       position: 'fixed', inset: 0,
-      display: 'flex', flexDirection: 'column',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
       backgroundColor: C.bg,
       paddingTop:    'env(safe-area-inset-top, 0px)',
       paddingBottom: 'calc(var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px))',
     }}>
 
-      {/* ─── Header ─────────────────────────────────────────────────────── */}
-      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+      {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{
-        width: '100%', maxWidth: 480,
-        padding: '14px 20px 8px',
+        width: '100%', maxWidth: 480, flexShrink: 0,
+        padding: '14px 20px 0',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        {/* Logo */}
-        <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em', lineHeight: 1 }}>
+        <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em' }}>
           <span style={{ color: '#fff' }}>Ai</span>
           <span style={{ color: C.arena }}>GORÀ</span>
         </span>
-
-        {/* Greeting + avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
             {greetText}
           </span>
           <button onClick={() => router.push(`/${locale}/dashboard`)} style={{
@@ -474,7 +406,7 @@ export default function HomeScreen({
             boxShadow: `0 2px 10px ${avatarColor}44`,
             border: 'none', cursor: 'pointer', overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 700, color: '#fff', fontSize: 14, flexShrink: 0,
+            fontWeight: 700, color: '#fff', fontSize: 14,
           }}>
             {userImage
               ? <img src={userImage} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -482,184 +414,139 @@ export default function HomeScreen({
           </button>
         </div>
       </div>
-      </div>
 
-      {/* ─── Scroll area ────────────────────────────────────────────────── */}
-      <div style={{
-        flex: 1, overflowY: 'auto', overflowX: 'hidden',
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-      }}>
+      {/* ── Hint text ──────────────────────────────────────────────────── */}
       <div style={{
         width: '100%', maxWidth: 480,
-        padding: '8px 18px 28px',
-        display: 'flex', flexDirection: 'column', gap: 16,
+        padding: '12px 20px 10px',
+        fontSize: 11, color: 'rgba(255,255,255,0.22)',
+        letterSpacing: '0.04em', textAlign: 'center',
+        flexShrink: 0,
       }}>
+        trascina la carta in cima &nbsp;·&nbsp; oppure usa le frecce
+      </div>
 
-        {/* Free session counter */}
-        {!paid && weeklyLimit !== null && weeklyUsed !== null && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ flex: 1, height: 3, borderRadius: 99, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-              <div style={{
-                height: '100%', borderRadius: 99,
-                width: `${Math.min(1, weeklyUsed / weeklyLimit) * 100}%`,
-                background: weeklyUsed >= weeklyLimit ? '#F87171' : '#A78BFA',
-                transition: 'width 0.6s ease',
-              }} />
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: weeklyUsed >= weeklyLimit ? '#F87171' : 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>
-              {weeklyUsed}/{weeklyLimit} {t('weeklyDebates')}
-            </span>
-          </div>
-        )}
-
-        {/* ─── Card Stack ─────────────────────────────────────────────── */}
+      {/* ── Card stack ─────────────────────────────────────────────────── */}
+      <div style={{
+        flex: 1, width: '100%', maxWidth: 480,
+        padding: '0 20px',
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        minHeight: 0,
+      }}>
         <div
-          style={{ position: 'relative', paddingBottom: 44, userSelect: 'none', cursor: flyActive ? 'grabbing' : 'grab' }}
+          style={{ position: 'relative', paddingBottom: 44, cursor: flyActive ? 'grabbing' : 'grab', userSelect: 'none' }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}
           onMouseUp={onMouseUp}
         >
-          {/* ── Ghost cards (positions 3→1, rendered back-to-front) ── */}
+          {/* Ghost cards — back to front */}
           {[3, 2, 1].map(pos => {
-            const cardId = CARD_ORDER[(topIdx + pos) % CARD_ORDER.length]
-            const color  = CARD_COLOR[cardId]
-            const style  = stackTransform(pos, false)
+            const id    = CARD_ORDER[(topIdx + pos) % CARD_ORDER.length]
+            const color = CARD_COLOR[id]
             return (
               <div key={pos} style={{
                 position: 'absolute', top: 0, left: 0, right: 0,
                 borderRadius: 24,
-                background: `linear-gradient(145deg, ${color}28, ${color}14)`,
+                background: `linear-gradient(160deg, ${color}20 0%, ${color}0c 100%)`,
                 border: `1px solid ${color}30`,
-                ...style,
-              }}>
-                {/* Ghost card body — minimal, just icon + label */}
-                <div style={{
-                  padding: '18px 20px 20px',
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  // Minimum height to show something of the ghost
-                  minHeight: 90,
-                }}>
-                  <div style={{
-                    width: 38, height: 38, borderRadius: 11,
-                    background: `${color}20`, border: `1px solid ${color}25`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <CardIcon id={cardId} color={color} />
-                  </div>
-                  <span style={{ fontSize: 15, fontWeight: 800, color: 'rgba(255,255,255,0.55)' }}>
-                    {cardLabel[cardId]}
-                  </span>
-                </div>
-              </div>
+                height: '100%',
+                ...ghostStyle(pos),
+              }} />
             )
           })}
 
-          {/* ── Top card ─────────────────────────────────────────────── */}
+          {/* Top card */}
           <div
+            onClick={handleCardTap}
             style={{
-              position: 'relative',
+              position: 'relative', zIndex: 10,
               borderRadius: 24,
-              background: `linear-gradient(145deg, ${topColor}22, ${topColor}0d)`,
-              border: `1.5px solid ${topColor}50`,
-              boxShadow: `0 8px 40px ${topColor}28, 0 0 0 1px ${topColor}20`,
+              background: `linear-gradient(160deg, ${topColor}1e 0%, ${topColor}0a 100%)`,
+              border: `1.5px solid ${topColor}48`,
+              boxShadow: `0 12px 50px ${topColor}25, 0 0 0 1px ${topColor}18`,
               overflow: 'hidden',
-              ...stackTransform(0, isDragging.current),
-            }}
-            onClick={() => {
-              if (Math.abs(dragX) < 8 && !flyActive) handleCardAction(topCardId)
+              display: 'flex', flexDirection: 'column',
+              cursor: 'pointer',
+              ...topTransform(),
             }}
           >
-            {/* Glow background */}
+            {/* Radial glow */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: `radial-gradient(circle at 30% 20%, ${topColor}15 0%, transparent 65%)`,
+              background: `radial-gradient(ellipse at 40% 25%, ${topColor}18 0%, transparent 65%)`,
               pointerEvents: 'none',
             }} />
 
-            {/* Pro lock badge */}
+            {/* Pro badge */}
             {isLocked && (
               <div style={{
-                position: 'absolute', top: 14, right: 14,
+                position: 'absolute', top: 16, right: 16, zIndex: 2,
                 display: 'flex', alignItems: 'center', gap: 4,
-                background: 'rgba(7,7,15,0.75)',
-                border: `1px solid ${topColor}35`,
-                borderRadius: 999, padding: '4px 9px 4px 6px', zIndex: 2,
+                background: 'rgba(7,7,15,0.8)',
+                border: `1px solid ${topColor}30`,
+                borderRadius: 999, padding: '4px 10px 4px 7px',
               }}>
-                <IcoLock />
-                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: topColor }}>Pro</span>
+                <IcoLock color={topColor} />
+                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: topColor }}>Pro</span>
               </div>
             )}
 
-            <div style={{ padding: '20px 20px 22px' }}>
-              {/* Header: icon + label + tag */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                  <div style={{
-                    width: 42, height: 42, borderRadius: 12,
-                    background: `${topColor}1e`, border: `1px solid ${topColor}30`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <CardIcon id={topCardId} color={topColor} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 17, fontWeight: 900, color: '#fff', lineHeight: 1.15 }}>
-                      {cardLabel[topCardId]}
-                    </div>
-                    <div style={{ fontSize: 11, color: `${topColor}99`, marginTop: 2, fontWeight: 600 }}>
-                      {topCardId === 'arena' ? t('arena.desc') :
-                       topCardId === 'twoVsTwo' ? t('twoVsTwo.desc') :
-                       topCardId === 'devil' ? t('devil.desc') : t('brainstorm.desc')}
-                    </div>
-                  </div>
-                </div>
-                {!isLocked && (
-                  <div style={{
-                    fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
-                    color: topColor, background: `${topColor}18`, border: `1px solid ${topColor}28`,
-                    padding: '4px 9px', borderRadius: 999,
-                  }}>
-                    {cardTag[topCardId]}
-                  </div>
-                )}
-              </div>
+            <div style={{ padding: '28px 24px 24px', display: 'flex', flexDirection: 'column', minHeight: '52vh' }}>
 
-              {/* ── Arena: input espandibile ── */}
+              {/* ── Arena input (when open) ── */}
               {topCardId === 'arena' && arenaOpen ? (
-                <div onClick={e => e.stopPropagation()}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }} onClick={e => e.stopPropagation()}>
+                  <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: `${topColor}99`, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    Di cosa vuoi dibattere?
+                  </p>
                   <textarea
                     ref={textareaRef}
                     value={question}
                     onChange={e => setQuestion(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        if (question.trim()) onStartArena(question.trim())
-                      }
-                    }}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (question.trim()) onStartArena(question.trim()) } }}
                     placeholder={t('arena.placeholder')}
-                    rows={3}
+                    rows={4}
                     style={{
-                      width: '100%', boxSizing: 'border-box',
+                      flex: 1, width: '100%', boxSizing: 'border-box',
                       background: 'rgba(255,255,255,0.05)',
                       border: `1px solid ${topColor}28`,
                       borderRadius: 14, padding: '12px 14px',
-                      fontSize: 14, color: '#fff',
+                      fontSize: 15, color: '#fff',
                       resize: 'none', outline: 'none', lineHeight: 1.6,
-                      marginBottom: 12,
                     }}
                   />
+                  {/* Argomento del giorno */}
                   <button
-                    onClick={() => { if (question.trim()) onStartArena(question.trim()) }}
+                    onClick={e => { e.stopPropagation(); setQuestion(dailyTopic) }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      background: `${topColor}12`, border: `1px solid ${topColor}25`,
+                      borderRadius: 10, padding: '8px 12px',
+                      cursor: 'pointer', textAlign: 'left',
+                    }}>
+                    <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke={topColor} strokeWidth={2.5} strokeLinecap="round">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: topColor, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                      {t('dailyTopicLabel')}
+                    </span>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {dailyTopic}
+                    </span>
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); if (question.trim()) onStartArena(question.trim()) }}
                     disabled={!question.trim()}
                     style={{
-                      width: '100%', padding: '13px', borderRadius: 14, border: 'none',
-                      fontSize: 14, fontWeight: 700, color: '#fff',
-                      cursor: question.trim() ? 'pointer' : 'not-allowed',
+                      width: '100%', padding: '14px',
+                      borderRadius: 14, border: 'none',
+                      fontSize: 15, fontWeight: 800, color: '#fff',
                       background: question.trim() ? `linear-gradient(135deg, #7C3AED, #5B21B6)` : 'rgba(255,255,255,0.07)',
-                      opacity: question.trim() ? 1 : 0.5,
-                      boxShadow: question.trim() ? '0 4px 18px rgba(124,58,237,0.38)' : 'none',
+                      opacity: question.trim() ? 1 : 0.45,
+                      boxShadow: question.trim() ? '0 4px 20px rgba(124,58,237,0.4)' : 'none',
+                      cursor: question.trim() ? 'pointer' : 'not-allowed',
                       transition: 'all 0.2s',
                     }}>
                     {t('arena.cta')}
@@ -667,184 +554,146 @@ export default function HomeScreen({
                   <button
                     onClick={e => { e.stopPropagation(); setArenaOpen(false); setQuestion('') }}
                     style={{
-                      display: 'block', width: '100%', marginTop: 10, background: 'none', border: 'none',
-                      padding: 6, fontSize: 11, color: 'rgba(255,255,255,0.25)',
-                      cursor: 'pointer', textAlign: 'center', letterSpacing: '0.08em', textTransform: 'uppercase',
+                      background: 'none', border: 'none', padding: '6px',
+                      fontSize: 11, color: 'rgba(255,255,255,0.2)',
+                      cursor: 'pointer', textAlign: 'center', width: '100%',
+                      letterSpacing: '0.08em', textTransform: 'uppercase',
                     }}>
                     Annulla
                   </button>
                 </div>
               ) : (
                 <>
-                  {/* Provocative phrase */}
+                  {/* ── Phrase area (grows) ── */}
                   <div style={{
-                    minHeight: 80,
+                    flex: 1,
+                    display: 'flex', alignItems: 'center',
                     opacity: phraseVis ? 1 : 0,
-                    transform: phraseVis ? 'translateY(0)' : 'translateY(6px)',
+                    transform: phraseVis ? 'translateY(0)' : 'translateY(8px)',
                     transition: 'opacity 0.25s ease, transform 0.25s ease',
-                    marginBottom: 22,
                   }}>
                     <p style={{
-                      fontSize: 'clamp(20px, 6vw, 26px)',
+                      margin: 0,
+                      fontSize: 'clamp(26px, 7vw, 34px)',
                       fontWeight: 900,
                       color: '#fff',
-                      lineHeight: 1.3,
-                      letterSpacing: '-0.02em',
-                      margin: 0,
+                      lineHeight: 1.22,
+                      letterSpacing: '-0.025em',
                       whiteSpace: 'pre-line',
                     }}>
                       {topPhrase}
                     </p>
                   </div>
 
-                  {/* CTA */}
-                  <div style={{
-                    width: '100%', padding: '13px 16px',
-                    borderRadius: 14,
-                    background: isLocked
-                      ? 'rgba(255,255,255,0.05)'
-                      : `linear-gradient(135deg, ${topColor}cc, ${topColor}88)`,
-                    border: isLocked ? `1px solid ${topColor}20` : 'none',
-                    boxShadow: isLocked ? 'none' : `0 4px 22px ${topColor}38`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    cursor: 'pointer',
-                  }}>
-                    {isLocked && <IcoLock />}
-                    <span style={{
-                      fontSize: 14, fontWeight: 800, color: isLocked ? `${topColor}88` : '#fff',
-                      letterSpacing: isLocked ? '0.05em' : '0.01em',
+                  {/* ── CTA ── */}
+                  <div style={{ marginBottom: 18, marginTop: 16 }}>
+                    <div style={{
+                      width: '100%', padding: '13px 18px',
+                      borderRadius: 14,
+                      background: isLocked
+                        ? 'rgba(255,255,255,0.05)'
+                        : `linear-gradient(135deg, ${topColor}cc, ${topColor}88)`,
+                      border: isLocked ? `1px solid ${topColor}20` : 'none',
+                      boxShadow: isLocked ? 'none' : `0 4px 24px ${topColor}35`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                     }}>
-                      {isLocked ? 'Sblocca con Pro' : cardCta[topCardId]}
-                    </span>
+                      {isLocked && <IcoLock color={`${topColor}80`} />}
+                      <span style={{ fontSize: 14, fontWeight: 800, color: isLocked ? `${topColor}70` : '#fff' }}>
+                        {isLocked ? 'Sblocca con Pro' : cardCta[topCardId]}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* ── Bottom identity row ── */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    paddingTop: 16,
+                    borderTop: `1px solid ${topColor}18`,
+                  }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                      background: `${topColor}20`, border: `1px solid ${topColor}28`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <CardIcon id={topCardId} color={topColor} size={20} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>
+                        {cardLabel[topCardId]}
+                      </div>
+                      <div style={{ fontSize: 12, color: `${topColor}80`, marginTop: 2 }}>
+                        {cardDesc[topCardId]}
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+                      color: topColor, background: `${topColor}18`, border: `1px solid ${topColor}28`,
+                      padding: '4px 10px', borderRadius: 999,
+                    }}>
+                      {topIdx + 1} / 4
+                    </div>
                   </div>
                 </>
               )}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ─── Dot indicators ────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+      {/* ── Navigation ─────────────────────────────────────────────────── */}
+      <div style={{
+        width: '100%', maxWidth: 480, flexShrink: 0,
+        padding: '8px 20px 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+      }}>
+        <button
+          onClick={() => advance('right')}
+          disabled={flyActive}
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            padding: '10px 24px', borderRadius: 14,
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            cursor: flyActive ? 'not-allowed' : 'pointer', color: 'rgba(255,255,255,0.6)',
+            fontSize: 15, fontWeight: 300, transition: 'opacity 0.15s',
+            opacity: flyActive ? 0.4 : 1,
+          }}>
+          <span>←</span>
+          <span style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>prev</span>
+        </button>
+
+        {/* Dot indicators */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center' }}>
           {CARD_ORDER.map((id, i) => (
-            <button
-              key={id}
-              onClick={() => {
-                if (i === topIdx || flyActive) return
-                advance(i > topIdx ? 'left' : 'right')
-              }}
-              style={{
-                width:  i === topIdx ? 22 : 7,
-                height: 7,
-                borderRadius: 99,
-                background: i === topIdx ? CARD_COLOR[id] : 'rgba(255,255,255,0.15)',
-                border: 'none', cursor: 'pointer', padding: 0,
-                transition: 'width 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s',
-              }}
-            />
+            <div key={id} style={{
+              height: 5, borderRadius: 99,
+              width: i === topIdx ? 22 : 6,
+              background: i === topIdx ? CARD_COLOR[id] : 'rgba(255,255,255,0.15)',
+              transition: 'width 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s',
+            }} />
           ))}
         </div>
 
-        {/* ─── Argomento del giorno ────────────────────────────────────── */}
         <button
-          onClick={() => {
-            setTopIdx(0) // porta Arena in cima
-            setQuestion(dailyTopic)
-            setArenaOpen(true)
-          }}
+          onClick={() => advance('left')}
+          disabled={flyActive}
           style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '11px 14px', borderRadius: 15,
-            background: 'rgba(167,139,250,0.07)',
-            border: '1px solid rgba(167,139,250,0.16)',
-            cursor: 'pointer', textAlign: 'left',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          <div style={{
-            width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-            background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.22)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            padding: '10px 24px', borderRadius: 14,
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            cursor: flyActive ? 'not-allowed' : 'pointer', color: 'rgba(255,255,255,0.6)',
+            fontSize: 15, fontWeight: 300, transition: 'opacity 0.15s',
+            opacity: flyActive ? 0.4 : 1,
           }}>
-            <IcoSpark />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.arena, marginBottom: 2 }}>
-              {t('dailyTopicLabel')}
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {dailyTopic}
-            </div>
-          </div>
-          <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
-            stroke="rgba(167,139,250,0.45)" strokeWidth={2.5} strokeLinecap="round">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
+          <span>→</span>
+          <span style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>next</span>
         </button>
-
-        {/* ─── Ultima sessione ─────────────────────────────────────────── */}
-        {lastChat && (
-          <button onClick={onOpenHistory} style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '11px 14px', borderRadius: 15,
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            cursor: 'pointer', textAlign: 'left',
-            WebkitTapHighlightColor: 'transparent',
-          }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 9, flexShrink: 0,
-              background: 'rgba(167,139,250,0.09)', border: '1px solid rgba(167,139,250,0.16)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width={13} height={13} viewBox="0 0 24 24" fill="none"
-                stroke="rgba(167,139,250,0.65)" strokeWidth={2.2} strokeLinecap="round">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.arena, letterSpacing: '0.05em', marginBottom: 1 }}>
-                {t('lastSession')}
-              </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {lastChat.title}
-              </div>
-            </div>
-            <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
-              stroke="rgba(255,255,255,0.2)" strokeWidth={2.5} strokeLinecap="round">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
-        )}
-
-        {/* ─── Upgrade hint per Free ───────────────────────────────────── */}
-        {!paid && (
-          <button onClick={() => router.push(`/${locale}/pricing`)} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-            padding: '10px', borderRadius: 13,
-            background: 'rgba(167,139,250,0.06)',
-            border: '1px solid rgba(167,139,250,0.14)',
-            cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
-          }}>
-            <svg width={11} height={11} viewBox="0 0 24 24" fill="none"
-              stroke={C.arena} strokeWidth={2.5} strokeLinecap="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            <span style={{ fontSize: 12, fontWeight: 700, color: C.arena }}>
-              {t('upgradeHint')}
-            </span>
-          </button>
-        )}
-
-      </div>
       </div>
 
       {/* UpgradeDrawer */}
       {upgradeDrawer && (
-        <UpgradeDrawer
-          mode={upgradeDrawer}
-          onClose={() => setUpgradeDrawer(null)}
-        />
+        <UpgradeDrawer mode={upgradeDrawer} onClose={() => setUpgradeDrawer(null)} />
       )}
     </div>
   )
