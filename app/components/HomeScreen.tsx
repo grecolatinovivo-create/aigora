@@ -545,10 +545,9 @@ export default function HomeScreen({
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                   <p style={{
                     margin: 0,
-                    fontSize: 'clamp(20px, 5.5vw, 26px)', fontWeight: 900,
+                    fontSize: 'clamp(26px, 7vw, 34px)', fontWeight: 900,
                     color: dark, lineHeight: 1.22,
-                    letterSpacing: '-0.02em', whiteSpace: 'pre-line',
-                    opacity: 0.55,
+                    letterSpacing: '-0.025em', whiteSpace: 'pre-line',
                   }}>
                     {phrase}
                   </p>
