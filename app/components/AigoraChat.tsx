@@ -2480,6 +2480,9 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
   if (phase === 'start') {
     return (
       <>
+        {/* Navbar desktop — dropdown profilo/admin/signout */}
+        <Navbar {...navbarProps} />
+
         {/* HomeScreen — 4 card: Arena, 2v2, Devil, Brainstorm */}
         <HomeScreen
           userPlan={effectivePlan}

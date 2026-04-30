@@ -1,5 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { loadUserTraits } from '@/app/components/AINameScreen'
 
 async function compressImage(file: File, maxW: number, maxH: number): Promise<File> {
@@ -39,6 +41,8 @@ export default function ProfileScreen({ displayName, userEmail, userPlan, savedC
   dbUserName?: string | null
   isBeta?: boolean
 }) {
+  const router = useRouter()
+  const locale = useLocale()
   const [following, setFollowing] = useState<any[]>([])
   const [followers, setFollowers] = useState<any[]>([])
   const [profileTab, setProfileTab] = useState<'chat' | 'following' | 'followers'>('chat')
@@ -195,6 +199,13 @@ export default function ProfileScreen({ displayName, userEmail, userPlan, savedC
               }}>
               <div className="text-2xl font-black text-white">⚔ Multiplayer</div>
               <div className="text-[12px] text-center" style={{ color: 'rgba(255,255,255,0.65)' }}>Sfida un altro utente con le AI al tuo fianco</div>
+            </button>
+          )}
+          {effectivePlan === 'admin' && (
+            <button onClick={() => router.push(`/${locale}/admin`)}
+              className="w-full py-3.5 rounded-2xl text-sm font-semibold active:scale-[0.98] transition-transform"
+              style={{ backgroundColor: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', color: '#F59E0B' }}>
+              ⚙️ Admin Panel
             </button>
           )}
           <button onClick={onSignOut}

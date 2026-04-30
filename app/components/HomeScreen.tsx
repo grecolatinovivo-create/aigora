@@ -469,8 +469,11 @@ export default function HomeScreen({
       paddingBottom: 'calc(var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px))',
     }}>
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div style={{
+      {/* Spacer Navbar desktop — occupa l'altezza della Navbar fissa (56px) */}
+      <div className="hidden lg:block" style={{ width: '100%', height: 56, flexShrink: 0 }} />
+
+      {/* ── Header — solo mobile (su desktop c'è la Navbar) ────────────── */}
+      <div className="lg:hidden" style={{
         width: '100%', maxWidth: 480, flexShrink: 0,
         padding: '14px 20px 0',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
