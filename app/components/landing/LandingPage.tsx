@@ -230,6 +230,28 @@ export default function LandingPage() {
   return (
     <div style={{ minHeight: '100dvh', color: '#fff' }}>
 
+      {/* Estensione locale safe area top — no z-index:-1, no opacity animation */}
+      <div style={{
+        position: 'fixed',
+        top: 'calc(-1 * env(safe-area-inset-top, 0px))',
+        left: 0, right: 0,
+        height: 'env(safe-area-inset-top, 0px)',
+        background: '#07070f',
+        pointerEvents: 'none',
+        zIndex: 9999,
+      }} />
+
+      {/* Estensione locale safe area bottom */}
+      <div style={{
+        position: 'fixed',
+        bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
+        left: 0, right: 0,
+        height: 'env(safe-area-inset-bottom, 0px)',
+        background: '#07070f',
+        pointerEvents: 'none',
+        zIndex: 9999,
+      }} />
+
       {/* Glow di sfondo */}
       <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', width: 800, height: 600, background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.09) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
