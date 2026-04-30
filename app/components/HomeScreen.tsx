@@ -458,6 +458,19 @@ export default function HomeScreen({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
+    <>
+      {/* Backdrop fuori dal container — identico ad AigoraChat riga 2631
+          Estende oltre il viewport nella safe area in alto e in basso */}
+      <div style={{
+        position: 'fixed',
+        top:    'calc(-1 * env(safe-area-inset-top, 50px))',
+        bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))',
+        left: 0, right: 0,
+        background: '#f8f7ff',
+        zIndex: -1,
+        pointerEvents: 'none',
+      }} />
+
     <div className="desktop-bg" style={{
       position: 'fixed', inset: 0,
       zIndex: 50,
@@ -466,16 +479,6 @@ export default function HomeScreen({
       paddingTop:    'env(safe-area-inset-top, 0px)',
       paddingBottom: 'calc(var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px))',
     }}>
-
-      {/* Backdrop che sfonda nella safe area inferiore — come le chat */}
-      <div style={{
-        position: 'fixed',
-        top: 0, left: 0, right: 0,
-        bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))',
-        background: '#f8f7ff',
-        zIndex: -1,
-        pointerEvents: 'none',
-      }} />
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{
@@ -862,5 +865,6 @@ export default function HomeScreen({
         <UpgradeDrawer mode={upgradeDrawer} onClose={() => setUpgradeDrawer(null)} />
       )}
     </div>
+    </>
   )
 }
