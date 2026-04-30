@@ -451,8 +451,9 @@ export default function HomeScreen({
     }}>
 
       {/* ─── Header ─────────────────────────────────────────────────────── */}
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
       <div style={{
-        flexShrink: 0,
+        width: '100%', maxWidth: 480,
         padding: '14px 20px 8px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
@@ -481,10 +482,15 @@ export default function HomeScreen({
           </button>
         </div>
       </div>
+      </div>
 
       {/* ─── Scroll area ────────────────────────────────────────────────── */}
       <div style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+      }}>
+      <div style={{
+        width: '100%', maxWidth: 480,
         padding: '8px 18px 28px',
         display: 'flex', flexDirection: 'column', gap: 16,
       }}>
@@ -830,6 +836,7 @@ export default function HomeScreen({
           </button>
         )}
 
+      </div>
       </div>
 
       {/* UpgradeDrawer */}
