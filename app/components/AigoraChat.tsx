@@ -855,8 +855,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── Colore sfondo body/html + chrome browser ──
   useEffect(() => {
-    const color = (phase === 'start') ? '#07070f' : mobileBg.value
-    const headerColor = (phase === 'start') ? '#07070f' : mobileBg.header
+    const color = (phase === 'start') ? '#f8f7ff' : mobileBg.value
+    const headerColor = (phase === 'start') ? '#f8f7ff' : mobileBg.header
     document.body.style.setProperty('background-color', color, 'important')
     document.documentElement.style.setProperty('background-color', color, 'important')
     const metaTheme = document.querySelector('meta[name="theme-color"]')
