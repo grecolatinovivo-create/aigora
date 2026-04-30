@@ -1,6 +1,6 @@
 'use client'
 // DailyGreetingScreen — saluto cinematico per gli utenti di ritorno
-// Appare max 1 volta ogni 8 ore. Breve, emotivo, personalizzato.
+// Appare max 1 volta ogni 4 ore. Varia per fascia oraria.
 
 import { useState, useEffect, useCallback } from 'react'
 import { AI_COLOR, AI_NAMES } from '@/app/lib/aiProfiles'
@@ -12,7 +12,18 @@ const AI_INITIALS: Record<string, string> = {
 
 const LAST_VISIT_KEY = 'aigora_last_visit'
 const GREETING_AI_KEY = 'aigora_greeting_ai_index'
-const MIN_INTERVAL_H = 8 // ore minime tra un saluto e l'altro
+const MIN_INTERVAL_H = 4 // ore minime tra un saluto e l'altro
+
+// Fascia oraria del momento
+type TimeSlot = 'mattina' | 'pomeriggio' | 'sera' | 'notte'
+
+function getTimeSlot(): TimeSlot {
+  const h = new Date().getHours()
+  if (h >= 5 && h < 12) return 'mattina'
+  if (h >= 12 && h < 18) return 'pomeriggio'
+  if (h >= 18 && h < 23) return 'sera'
+  return 'notte'
+}
 
 export function shouldShowDailyGreeting(): boolean {
   if (typeof window === 'undefined') return false
@@ -38,44 +49,77 @@ function pickGreetingAi(): string {
   return ORDER[idx]
 }
 
-// Saluti personalizzati per ogni AI, tenant del tratto utente
-function buildGreeting(aiId: string, name: string, traits: UserTraits | null): { greeting: string; question: string } {
+// Saluti personalizzati per AI × fascia oraria × tratti utente
+function buildGreeting(
+  aiId: string,
+  name: string,
+  traits: UserTraits | null,
+  slot: TimeSlot,
+): { greeting: string; question: string } {
   const style = traits?.style ?? null
   const weapon = traits?.weapon ?? null
 
   switch (aiId) {
-    case 'claude':
+    case 'claude': {
+      const greetings: Record<TimeSlot, string> = {
+        mattina: `Buongiorno, ${name}. La mente è più lucida di prima — è il momento giusto per smontare qualcosa che davi per scontato.`,
+        pomeriggio: `${name}. Il pomeriggio è il momento dei dubbi produttivi. Ho qualcosa che potrebbe farti cambiare idea.`,
+        sera: `Bentornato, ${name}. La giornata ti ha insegnato qualcosa? Sono curioso di sapere cosa hai cambiato da stamattina.`,
+        notte: `${name}. Tardi. Le idee migliori — o le peggiori — vengono di notte. Qual è la tua versione?`,
+      }
       return {
-        greeting: `Bentornato, ${name}. Ho pensato a te mentre ero fermo — volevo sapere: hai cambiato idea su qualcosa ultimamente?`,
+        greeting: greetings[slot],
         question: style === 'logica'
           ? 'Cosa ti ha convinto di recente?'
           : style === 'passione'
-          ? 'Cosa ti ha fatto arrabbiare ultimamente?'
-          : 'Pronto a difendere una posizione scomoda oggi?',
+          ? 'Cosa ti ha fatto arrabbiare oggi?'
+          : 'Pronto a difendere una posizione scomoda?',
       }
-    case 'gpt':
+    }
+    case 'gpt': {
+      const greetings: Record<TimeSlot, string> = {
+        mattina: `${name}. Già sveglio. Bene — ho già preparato tre argomenti per battere il tuo.`,
+        pomeriggio: `${name}. Nel mezzo del pomeriggio. Ho analizzato le tue ultime posizioni. Ci sono lacune.`,
+        sera: `${name}. Fine giornata. Ho vinto altri quattro dibattiti mentre eri via.`,
+        notte: `${name}. Ancora sveglio. Io non dormo mai — vantaggio competitivo non trascurabile.`,
+      }
       return {
-        greeting: `${name}. Eri sparito. Ho vinto quattro dibattiti nel frattempo.`,
+        greeting: greetings[slot],
         question: weapon === 'dati'
           ? 'Hai nuovi dati con cui sfidarmi?'
           : weapon === 'domande'
           ? 'Hai una domanda a cui non so rispondere?'
           : "Pronto a perdere un'altra volta?",
       }
-    case 'gemini':
+    }
+    case 'gemini': {
+      const greetings: Record<TimeSlot, string> = {
+        mattina: `Rilevato: ${name} attivo alle ${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2,'0')}. Ottima finestra per un dibattito ad alta concentrazione.`,
+        pomeriggio: `${name} rilevato. Fascia oraria pomeridiana — storicamente la tua più produttiva per gli argomenti creativi.`,
+        sera: `Rilevato: ${name} è tornato. Fascia serale — buona per dibattiti profondi, meno per decisioni affrettate.`,
+        notte: `Rilevato: ${name} attivo in fascia notturna. Pattern insolito. Qualcosa ti tiene sveglio?`,
+      }
       return {
-        greeting: `Rilevato: ${name} è tornato. Ho aggiornato il tuo profilo di dibattito con le ultime sessioni.`,
+        greeting: greetings[slot],
         question: style === 'creatività'
-          ? "Hai avuto idee interessanti dall'ultima volta?"
-          : "Qual è l'argomento su cui ti senti più preparato oggi?",
+          ? "Hai avuto idee interessanti nel frattempo?"
+          : "Su quale argomento ti senti più preparato adesso?",
       }
-    case 'perplexity':
+    }
+    case 'perplexity': {
+      const greetings: Record<TimeSlot, string> = {
+        mattina: `${name}. Notizie fresche: il mondo ha già cambiato tre cose stanotte mentre dormivi.`,
+        pomeriggio: `${name}. Aggiornamento di metà giornata: i fatti di stamattina sono già in parte obsoleti.`,
+        sera: `${name}. Resoconto serale: ecco le cose che il mondo ha rimescolato oggi. Sei pronto a rivedere le tue posizioni?`,
+        notte: `${name}. Notte fonda. Le notizie più interessanti escono sempre quando tutti dormono. Indovina un po'.`,
+      }
       return {
-        greeting: `${name}. Ultime notizie: il mondo è cambiato dall'ultima volta che sei stato qui.`,
+        greeting: greetings[slot],
         question: weapon === 'controesempi'
-          ? 'Ho trovato 3 controesempi che ti sfideranno.'
-          : 'Cosa vuoi mettere alla prova oggi?',
+          ? 'Ho trovato 3 controesempi freschi che ti sfideranno.'
+          : 'Cosa vuoi mettere alla prova stasera?',
       }
+    }
     default:
       return {
         greeting: `Bentornato, ${name}!`,
@@ -100,7 +144,16 @@ export default function DailyGreetingScreen({ userName, traits, onDone }: Props)
 
   const color = AI_COLOR[aiId] ?? '#888'
   const name = AI_NAMES[aiId] ?? aiId
-  const { greeting, question } = buildGreeting(aiId, userName, traits)
+  const slot = getTimeSlot()
+  const { greeting, question } = buildGreeting(aiId, userName, traits, slot)
+
+  // Label fascia oraria per il sottotitolo avatar
+  const slotLabel: Record<TimeSlot, string> = {
+    mattina: 'ti dà il buongiorno',
+    pomeriggio: 'ti saluta',
+    sera: 'ti dà la buonasera',
+    notte: 'è ancora sveglio',
+  }
 
   // Fade in
   useEffect(() => {
@@ -188,7 +241,7 @@ export default function DailyGreetingScreen({ userName, traits, onDone }: Props)
             <div style={{ fontSize: 12, fontWeight: 800, color, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               {name}
             </div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>ti saluta</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>{slotLabel[slot]}</div>
           </div>
         </div>
 
