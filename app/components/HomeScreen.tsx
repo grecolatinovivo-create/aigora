@@ -144,6 +144,12 @@ const PHRASES: Record<string, string[]> = {
 type CardId = 'arena' | 'twoVsTwo' | 'devil' | 'brainstorm'
 const CARD_ORDER: CardId[] = ['arena', 'twoVsTwo', 'devil', 'brainstorm']
 
+// Rotazioni ghost card (pos 1,2,3) — costanti a livello modulo
+const GHOST_ROTS   = [2.5, -2, 1.2]
+const GHOST_OFFS   = [14,  26, 36]
+const GHOST_SCALES = [0.96, 0.92, 0.88]
+const GHOST_OPAC   = [0.85, 0.65, 0.45]
+
 const CARD_COLOR: Record<CardId, string> = {
   arena: C.arena, twoVsTwo: C.twoVsTwo, devil: C.devil, brainstorm: C.brainstorm,
 }
@@ -219,6 +225,8 @@ export default function HomeScreen({
   const [snapback,  setSnapback]  = useState(false)
   const [phraseIdx, setPhraseIdx] = useState(0)
   const [phraseVis, setPhraseVis] = useState(true)
+  // La top card mantiene SEMPRE la sua inclinazione — come una carta appoggiata sul tavolo
+  const TOP_BASE_ROT = GHOST_ROTS[0]  // 2.5deg — stessa della ghost pos-1
 
   // ── Arena state ───────────────────────────────────────────────────────────
   const [arenaOpen, setArenaOpen] = useState(false)
@@ -263,10 +271,7 @@ export default function HomeScreen({
   const advance = useCallback((dir: 'left' | 'right') => {
     if (flyActive) return
     setShowSwipeHint(false)
-    // Haptic feedback — vibrazione breve sul flip
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate(12)
-    }
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(12)
     setFlyDir(dir)
     setFlyActive(true)
     setTimeout(() => {
@@ -355,28 +360,27 @@ export default function HomeScreen({
 
   // ── Top card transform ────────────────────────────────────────────────────
   const topTransform = (): React.CSSProperties => {
+    // Fly away
     if (flyActive && flyDir) {
       return {
-        transform: `translateX(${flyDir === 'left' ? -640 : 640}px) rotate(${flyDir === 'left' ? -18 : 18}deg)`,
+        transform: `translateX(${flyDir === 'left' ? -640 : 640}px) rotate(${flyDir === 'left' ? -22 : 22}deg)`,
         transition: 'transform 0.32s ease-in',
       }
     }
+    // Drag: rotazione base + rotazione da drag
+    const rot = TOP_BASE_ROT + dragX / 30
     return {
-      transform: `translateX(${dragX}px) rotate(${dragX / 30}deg)`,
+      transform: `translateX(${dragX}px) rotate(${rot}deg)`,
       transition: snapback ? 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
     }
   }
 
-  // Ghost card offsets (pos 1,2,3)
+  // ── Ghost card style ──────────────────────────────────────────────────────
   const ghostStyle = (pos: number): React.CSSProperties => {
-    const ROTS    = [2.5, -2, 1.2]
-    const OFFS    = [14, 26, 36]
-    const SCALES  = [0.96, 0.92, 0.88]
-    const OPACITY = [0.8, 0.6, 0.42]
     const p = pos - 1
     return {
-      transform: `translateY(${OFFS[p]}px) rotate(${ROTS[p]}deg) scale(${SCALES[p]})`,
-      opacity: OPACITY[p],
+      transform: `translateY(${GHOST_OFFS[p]}px) rotate(${GHOST_ROTS[p]}deg) scale(${GHOST_SCALES[p]})`,
+      opacity: GHOST_OPAC[p],
       zIndex: 10 - pos,
       pointerEvents: 'none',
     }
@@ -436,20 +440,62 @@ export default function HomeScreen({
           onMouseDown={onMouseDown}
           onMouseUp={onMouseUp}
         >
-          {/* Ghost cards — back to front */}
+          {/* Ghost cards — back to front — con contenuto reale */}
           {[3, 2, 1].map(pos => {
             const id    = CARD_ORDER[(topIdx + pos) % CARD_ORDER.length]
             const color = CARD_COLOR[id]
+            const phrase = PHRASES[id][0]
             return (
               <div key={pos} style={{
-                position: 'absolute', top: 0, left: 0, right: 0,
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                 borderRadius: 24,
-                background: `#0f0c1e`,
+                background: '#0f0c1e',
                 border: `1.5px solid ${color}40`,
                 boxShadow: `inset 0 0 40px ${color}12`,
-                height: '100%',
+                overflow: 'hidden',
+                display: 'flex', flexDirection: 'column',
+                padding: '24px 22px 22px',
                 ...ghostStyle(pos),
-              }} />
+              }}>
+                {/* Glow */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: `radial-gradient(ellipse at 40% 25%, ${color}12 0%, transparent 60%)`,
+                  pointerEvents: 'none',
+                }} />
+                {/* Phrase */}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                  <p style={{
+                    margin: 0,
+                    fontSize: 'clamp(22px, 6vw, 28px)', fontWeight: 900,
+                    color: 'rgba(255,255,255,0.7)', lineHeight: 1.22,
+                    letterSpacing: '-0.02em', whiteSpace: 'pre-line',
+                  }}>
+                    {phrase}
+                  </p>
+                </div>
+                {/* Bottom identity */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  paddingTop: 14, borderTop: `1px solid ${color}18`,
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                    background: `${color}20`, border: `1px solid ${color}28`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <CardIcon id={id} color={color} size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: 'rgba(255,255,255,0.75)', lineHeight: 1.1 }}>
+                      {cardLabel[id]}
+                    </div>
+                    <div style={{ fontSize: 11, color: `${color}80`, marginTop: 1 }}>
+                      {cardDesc[id]}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )
           })}
 
