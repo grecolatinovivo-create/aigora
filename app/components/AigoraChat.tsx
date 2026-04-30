@@ -855,15 +855,13 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
 
   // ── Colore sfondo body/html + chrome browser ──
   useEffect(() => {
-    const color = (phase === 'start') ? '#f8f7ff' : mobileBg.value
+    const bg = (phase === 'start') ? '#f8f7ff' : mobileBg.value
     const headerColor = (phase === 'start') ? '#f8f7ff' : mobileBg.header
-    document.body.style.setProperty('background-color', color, 'important')
-    document.documentElement.style.setProperty('background-color', color, 'important')
+    document.documentElement.style.setProperty('--app-bg', bg)
     const metaTheme = document.querySelector('meta[name="theme-color"]')
     if (metaTheme) metaTheme.setAttribute('content', headerColor)
     return () => {
-      document.body.style.setProperty('background-color', '#07070f', 'important')
-      document.documentElement.style.setProperty('background-color', '#07070f', 'important')
+      document.documentElement.style.setProperty('--app-bg', '#07070f')
       if (metaTheme) metaTheme.setAttribute('content', '#07070f')
     }
   }, [phase, mobileBg.value, mobileBg.header])

@@ -459,18 +459,6 @@ export default function HomeScreen({
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      {/* Backdrop fuori dal container — identico ad AigoraChat riga 2631
-          Estende oltre il viewport nella safe area in alto e in basso */}
-      <div style={{
-        position: 'fixed',
-        top:    'calc(-1 * env(safe-area-inset-top, 50px))',
-        bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))',
-        left: 0, right: 0,
-        background: '#f8f7ff',
-        zIndex: -1,
-        pointerEvents: 'none',
-      }} />
-
     <div className="desktop-bg" style={{
       position: 'fixed', inset: 0,
       zIndex: 50,
