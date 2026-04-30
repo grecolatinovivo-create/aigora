@@ -124,8 +124,8 @@ export default function PricingPage() {
         <button onClick={() => router.push('/')}
           className="absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none lg:flex lg:justify-center font-black text-lg tracking-tight hover:opacity-80 transition-opacity"
           style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ color: '#A78BFA' }}>Ai</span>
-          <span style={{ color: '#fff' }}>GORÀ</span>
+          <span style={{ color: '#fff' }}>Ai</span>
+          <span style={{ color: '#A78BFA' }}>GORÀ</span>
         </button>
         {/* Destra — vuoto per simmetria */}
         <div />
