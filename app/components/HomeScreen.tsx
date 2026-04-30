@@ -158,8 +158,8 @@ const CARD_ORDER: CardId[] = ['arena', 'twoVsTwo', 'devil', 'brainstorm']
 // pos 1 → spostata a destra e leggermente in basso
 // pos 2 → spostata a sinistra e più in basso
 // pos 3 → leggermente a destra, più in fondo
-const GHOST_TX     = [13,  -10, 5]     // translateX — mazzo compatto
-const GHOST_TY     = [8,    15, 20]    // translateY
+const GHOST_TX     = [8,  -6, 4]      // translateX — mazzo compatto
+const GHOST_TY     = [2,   4, 6]      // translateY
 const GHOST_SCALES = [1, 1, 1]
 const GHOST_OPAC   = [1,    0.78, 0.62]
 
@@ -362,11 +362,27 @@ export default function HomeScreen({
     isDragging.current = false
   }, [dragX, advance])
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => { mouseStartX.current = e.clientX }, [])
-  const onMouseUp   = useCallback((e: React.MouseEvent) => {
-    if (mouseStartX.current === null) return
-    const dx = e.clientX - mouseStartX.current; mouseStartX.current = null
-    if (Math.abs(dx) > 70) advance(dx < 0 ? 'left' : 'right')
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    mouseStartX.current = e.clientX
+    setSnapback(false)
+  }, [])
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    if (mouseStartX.current === null || flyActive) return
+    setDragX(e.clientX - mouseStartX.current)
+  }, [flyActive])
+
+  // Listener globale mouseup: scatta anche se il mouse esce dal div
+  useEffect(() => {
+    const onGlobalMouseUp = (e: MouseEvent) => {
+      if (mouseStartX.current === null) return
+      const dx = e.clientX - mouseStartX.current
+      mouseStartX.current = null
+      if (Math.abs(dx) > 60) advance(dx < 0 ? 'left' : 'right')
+      else { setSnapback(true); setDragX(0); setTimeout(() => setSnapback(false), 280) }
+    }
+    window.addEventListener('mouseup', onGlobalMouseUp)
+    return () => window.removeEventListener('mouseup', onGlobalMouseUp)
   }, [advance])
 
   // ── Card action ───────────────────────────────────────────────────────────
@@ -491,7 +507,7 @@ export default function HomeScreen({
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}
-          onMouseUp={onMouseUp}
+          onMouseMove={onMouseMove}
         >
           {/* Ghost cards — back to front */}
           {[3, 2, 1].map(pos => {
