@@ -548,8 +548,26 @@ export default function HomeScreen({
                     {phrase}
                   </p>
                 </div>
+                {/* CTA button */}
+                <div style={{ marginBottom: 18, marginTop: 16 }}>
+                  <div style={{
+                    width: '100%', padding: '13px 18px',
+                    borderRadius: 14,
+                    background: dark,
+                    boxShadow: `0 4px 24px ${dark}35`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                  }}>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>
+                      {cardCta[id]}
+                    </span>
+                  </div>
+                </div>
                 {/* Bottom identity */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  paddingTop: 16,
+                  borderTop: `1px solid ${dark}18`,
+                }}>
                   <div style={{
                     width: 38, height: 38, borderRadius: 11, flexShrink: 0,
                     background: CARD_COLOR[id],
@@ -557,13 +575,20 @@ export default function HomeScreen({
                   }}>
                     <CardIcon id={id} color="#fff" size={19} />
                   </div>
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 900, color: dark, lineHeight: 1.1 }}>
                       {cardLabel[id]}
                     </div>
                     <div style={{ fontSize: 11, color: mid, marginTop: 1 }}>
                       {cardDesc[id]}
                     </div>
+                  </div>
+                  <div style={{
+                    fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+                    color: dark, background: `${dark}12`, border: `1px solid ${dark}25`,
+                    padding: '4px 10px', borderRadius: 999,
+                  }}>
+                    {(['Arena', '2v2', "Devil's", 'Brain'] as const)[CARD_ORDER.indexOf(id)]}
                   </div>
                 </div>
               </div>
