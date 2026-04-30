@@ -862,8 +862,8 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     const metaTheme = document.querySelector('meta[name="theme-color"]')
     if (metaTheme) metaTheme.setAttribute('content', headerColor)
     return () => {
-      document.body.style.removeProperty('background-color')
-      document.documentElement.style.removeProperty('background-color')
+      document.body.style.setProperty('background-color', '#07070f', 'important')
+      document.documentElement.style.setProperty('background-color', '#07070f', 'important')
       if (metaTheme) metaTheme.setAttribute('content', '#07070f')
     }
   }, [phase, mobileBg.value, mobileBg.header])

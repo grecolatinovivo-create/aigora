@@ -55,6 +55,7 @@
 }
 
 html, body {
+  background: #07070f;
   max-width: 100vw;
   overflow-x: hidden;
   color: #f0f0f0;
