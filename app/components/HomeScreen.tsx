@@ -442,10 +442,9 @@ export default function HomeScreen({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{
+    <div className="desktop-bg" style={{
       position: 'fixed', inset: 0,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      backgroundColor: C.bg,
       paddingTop:    'env(safe-area-inset-top, 0px)',
       paddingBottom: 'calc(var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px))',
     }}>
