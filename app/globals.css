@@ -66,7 +66,7 @@ html, body {
   /* Disabilita pull-to-refresh su Safari iOS */
   overscroll-behavior-y: none;
   /* Chrome del browser segue la modalità sistema (chiaro di giorno, scuro di notte) */
-  color-scheme: dark light;
+  color-scheme: light dark;
   /* Previene lo zoom automatico sui campi input (iOS) */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
