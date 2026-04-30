@@ -7,6 +7,16 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import UpgradeDrawer, { type UpgradeMode } from '@/app/components/ui/UpgradeDrawer'
+import { Haptics, ImpactStyle } from '@capacitor/haptics'
+
+// Haptic wrapper: Capacitor nativo (iOS/Android) con fallback Web Vibration API
+async function hapticTap() {
+  try {
+    await Haptics.impact({ style: ImpactStyle.Light })
+  } catch {
+    try { navigator.vibrate?.(12) } catch {}
+  }
+}
 
 // ── Tipi ─────────────────────────────────────────────────────────────────────
 
@@ -305,19 +315,17 @@ export default function HomeScreen({
   }, [flyActive]) // eslint-disable-line
 
   // ── Advance ───────────────────────────────────────────────────────────────
+  // dir = direzione visiva del volo (segue il gesto), ma topIdx avanza sempre +1
   const advance = useCallback((dir: 'left' | 'right') => {
     if (flyActive) return
     setShowSwipeHint(false)
-    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(12)
+    hapticTap()
     setFlyDir(dir)
     setFlyActive(true)
     // Anticipa il cambio di topIdx a 260ms — mentre flyActive è ancora true
     // le ghost cards hanno le transizioni attive e scorrono fluidamente
     setTimeout(() => {
-      setTopIdx(i => dir === 'left'
-        ? (i + 1) % CARD_ORDER.length
-        : (i - 1 + CARD_ORDER.length) % CARD_ORDER.length
-      )
+      setTopIdx(i => (i + 1) % CARD_ORDER.length)  // sempre avanti, indipendente dalla direzione
       setDragX(0); setFlyDir(null)
     }, 260)
     setTimeout(() => {
@@ -495,7 +503,7 @@ export default function HomeScreen({
             const phrase = PHRASES[id][0]
             return (
               <div key={pos} style={{
-                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 44,
                 borderRadius: 24,
                 background: bg,
                 boxShadow: '0 4px 24px rgba(0,0,0,0.28)',
