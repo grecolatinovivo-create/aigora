@@ -181,7 +181,6 @@ function ModeSection({
 }) {
   return (
     <section style={{ width: '100%', maxWidth: 1100, margin: '0 auto', padding: '80px 40px', display: 'flex', flexDirection: 'column', gap: 60 }}>
-      {/* Desktop */}
       <div
         style={{ alignItems: 'center', justifyContent: 'space-between', gap: 64, flexDirection: reverse ? 'row-reverse' : 'row' }}
         className="hidden lg:flex"
@@ -194,8 +193,6 @@ function ModeSection({
           <button onClick={onCta} style={{ padding: '13px 28px', borderRadius: 13, border: 'none', cursor: 'pointer', background: btnGradient, color: '#fff', fontSize: 15, fontWeight: 700, boxShadow: btnShadow, letterSpacing: '-0.01em' }}>{cta}</button>
         </div>
       </div>
-
-      {/* Mobile */}
       <div className="lg:hidden flex flex-col items-center" style={{ gap: 24 }}>
         <div style={{ position: 'relative', height: 220, overflow: 'hidden', width: '100%', display: 'flex', justifyContent: 'center' }}>
           <div style={{ flexShrink: 0, transform: 'scale(0.85)', transformOrigin: 'top center' }}>{phone}</div>
@@ -228,34 +225,15 @@ export default function LandingPage() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', color: '#fff' }}>
-
-      {/* Estensione locale safe area top — no z-index:-1, no opacity animation */}
-      <div style={{
-        position: 'fixed',
-        top: 'calc(-1 * env(safe-area-inset-top, 0px))',
-        left: 0, right: 0,
-        height: 'env(safe-area-inset-top, 0px)',
+    <div
+      style={{
+        minHeight: '100dvh',
+        color: '#fff',
         background: '#07070f',
-        pointerEvents: 'none',
-        zIndex: 9999,
-      }} />
-
-      {/* Estensione locale safe area bottom */}
-      <div style={{
-        position: 'fixed',
-        bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
-        left: 0, right: 0,
-        height: 'env(safe-area-inset-bottom, 0px)',
-        background: '#07070f',
-        pointerEvents: 'none',
-        zIndex: 9999,
-      }} />
-
-      {/* Glow di sfondo */}
+      }}
+    >
       <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', width: 800, height: 600, background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.09) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
-      {/* Navbar */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 32px', background: 'rgba(7,7,15,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <span style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-0.01em' }}>
           <span style={{ color: '#fff' }}>Ai</span><span style={{ color: '#A78BFA' }}>GORÀ</span>
@@ -264,13 +242,12 @@ export default function LandingPage() {
           <button onClick={scrollToModes} style={{ padding: '7px 14px', borderRadius: 9, background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {tNav('discoverFormats')}
           </button>
-<button onClick={() => router.push('/login')} style={{ padding: '8px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => router.push('/login')} style={{ padding: '8px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {tNav('signIn')}
           </button>
         </div>
       </nav>
 
-      {/* ── HERO ── */}
       <section style={{ position: 'relative', zIndex: 1, minHeight: '88vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 24px 80px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 999, marginBottom: 22, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(167,139,250,0.25)', fontSize: 12, fontWeight: 600, color: 'rgba(167,139,250,0.9)' }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#A78BFA', display: 'inline-block' }} />
@@ -305,18 +282,14 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Scroll indicator */}
         <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, opacity: 0.3, animation: 'bounce 2s ease-in-out infinite' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
         </div>
       </section>
 
-      {/* ── SEZIONI MODALITÀ ── */}
       <div id="modalita" style={{ position: 'relative', zIndex: 1 }}>
-
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.2), transparent)' }} />
 
-        {/* 1 — Dibattito */}
         <ModeSection
           reverse={false}
           accent="#A78BFA"
@@ -346,7 +319,6 @@ export default function LandingPage() {
 
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(56,189,248,0.15), transparent)' }} />
 
-        {/* 2 — 2 vs 2 */}
         <ModeSection
           reverse={true}
           accent="#38BDF8"
@@ -374,7 +346,6 @@ export default function LandingPage() {
 
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(239,68,68,0.15), transparent)' }} />
 
-        {/* 3 — Devil's Advocate */}
         <ModeSection
           reverse={false}
           accent="#f87171"
@@ -398,7 +369,6 @@ export default function LandingPage() {
 
         <div style={{ width: '100%', height: 1, background: 'linear-gradient(to right, transparent, rgba(245,158,11,0.15), transparent)' }} />
 
-        {/* 4 — Brainstormer */}
         <ModeSection
           reverse={true}
           accent="#FCD34D"
@@ -423,11 +393,9 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* ── PRICING ── */}
       <section style={{ position: 'relative', zIndex: 1, padding: '100px 24px 120px', borderTop: '1px solid rgba(167,139,250,0.1)' }}>
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 700, height: 500, background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 960, margin: '0 auto' }}>
-          {/* Heading */}
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <h2 style={{ fontWeight: 900, fontSize: 'clamp(1.9rem, 4vw, 3rem)', color: '#fff', letterSpacing: '-0.02em', marginBottom: 12, lineHeight: 1.1 }}>
               {tPricing('title')}
@@ -437,10 +405,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
 
-            {/* Free */}
             <div style={{ borderRadius: 20, padding: '32px 28px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B7280', marginBottom: 4 }}>Free</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
@@ -457,7 +423,6 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Pro — highlighted */}
             <div style={{ borderRadius: 20, padding: '32px 28px', background: 'rgba(124,58,237,0.12)', border: '1.5px solid rgba(167,139,250,0.35)', display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', boxShadow: '0 0 40px rgba(124,58,237,0.18)' }}>
               <div style={{ position: 'absolute', top: -11, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', borderRadius: 999, padding: '3px 12px', fontSize: 10, fontWeight: 800, color: '#fff', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                 {tPricing('mostPopular')}
@@ -478,7 +443,6 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Premium */}
             <div style={{ borderRadius: 20, padding: '32px 28px', background: 'rgba(255,107,43,0.06)', border: '1px solid rgba(255,107,43,0.2)', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#FF6B2B', marginBottom: 4 }}>Premium</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
@@ -497,7 +461,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Link to full pricing page */}
           <div style={{ textAlign: 'center', marginTop: 32 }}>
             <button
               onClick={() => router.push('/pricing')}
@@ -509,7 +472,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA FINALE ── */}
       <section style={{ padding: '80px 24px', textAlign: 'center', background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(124,58,237,0.12) 0%, transparent 70%)' }}>
         <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900, color: '#fff', lineHeight: 1.1, marginBottom: 16, letterSpacing: '-0.02em' }}>
           {t('ctaFinalTitle')}
