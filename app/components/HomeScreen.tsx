@@ -587,7 +587,7 @@ export default function HomeScreen({
               {/* ── Arena input (when open) ── */}
               {topCardId === 'arena' && arenaOpen ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }} onClick={e => e.stopPropagation()}>
-                  <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: `${topColor}99`, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: CARD_MID[topCardId], textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                     Di cosa vuoi dibattere?
                   </p>
                   <textarea
@@ -599,10 +599,10 @@ export default function HomeScreen({
                     rows={4}
                     style={{
                       flex: 1, width: '100%', boxSizing: 'border-box',
-                      background: 'rgba(255,255,255,0.05)',
-                      border: `1px solid ${topColor}28`,
+                      background: 'rgba(0,0,0,0.05)',
+                      border: `1px solid ${CARD_DARK[topCardId]}28`,
                       borderRadius: 14, padding: '12px 14px',
-                      fontSize: 15, color: '#fff',
+                      fontSize: 15, color: CARD_DARK[topCardId],
                       resize: 'none', outline: 'none', lineHeight: 1.6,
                     }}
                   />
@@ -697,26 +697,26 @@ export default function HomeScreen({
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     paddingTop: 16,
-                    borderTop: `1px solid ${topColor}18`,
+                    borderTop: `1px solid ${CARD_DARK[topCardId]}18`,
                   }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                      background: `${topColor}20`, border: `1px solid ${topColor}28`,
+                      background: CARD_COLOR[topCardId],
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <CardIcon id={topCardId} color={topColor} size={20} />
+                      <CardIcon id={topCardId} color="#fff" size={20} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>
+                      <div style={{ fontSize: 16, fontWeight: 900, color: CARD_DARK[topCardId], lineHeight: 1.1 }}>
                         {cardLabel[topCardId]}
                       </div>
-                      <div style={{ fontSize: 12, color: `${topColor}80`, marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: CARD_MID[topCardId], marginTop: 2 }}>
                         {cardDesc[topCardId]}
                       </div>
                     </div>
                     <div style={{
                       fontSize: 11, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
-                      color: topColor, background: `${topColor}18`, border: `1px solid ${topColor}28`,
+                      color: CARD_DARK[topCardId], background: `${CARD_DARK[topCardId]}12`, border: `1px solid ${CARD_DARK[topCardId]}25`,
                       padding: '4px 10px', borderRadius: 999,
                     }}>
                       {['Arena','2v2',"Devil's",'Brain'][topIdx]}
