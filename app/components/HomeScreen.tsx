@@ -148,17 +148,23 @@ const CARD_ORDER: CardId[] = ['arena', 'twoVsTwo', 'devil', 'brainstorm']
 // pos 1 → spostata a destra e leggermente in basso
 // pos 2 → spostata a sinistra e più in basso
 // pos 3 → leggermente a destra, più in fondo
-const GHOST_TX     = [22,  -20, 8]    // translateX
-const GHOST_TY     = [12,   22, 30]   // translateY
+const GHOST_TX     = [13,  -10, 5]     // translateX — mazzo compatto
+const GHOST_TY     = [8,    15, 20]    // translateY
 const GHOST_SCALES = [0.97, 0.94, 0.91]
-const GHOST_OPAC   = [1,    0.9, 0.8]
+const GHOST_OPAC   = [1,    0.78, 0.62]
 
 // Rotazione fissa per carta — viaggia con la carta (non con la posizione)
+// Range stretto: max 4 gradi tra adiacenti
 const CARD_ROT: Record<string, number> = {
-  arena:      5,
-  twoVsTwo:  -4,
-  devil:      8,
-  brainstorm: -2,
+  arena:       2,
+  twoVsTwo:   -1,
+  devil:        3,
+  brainstorm:   0,
+}
+
+// Label angolo superiore destro — come un mazzo di carte
+const CARD_CORNER: Record<string, string> = {
+  arena: 'A', twoVsTwo: '2', devil: 'D', brainstorm: 'B',
 }
 
 const CARD_COLOR: Record<CardId, string> = {
@@ -305,13 +311,18 @@ export default function HomeScreen({
     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(12)
     setFlyDir(dir)
     setFlyActive(true)
+    // Anticipa il cambio di topIdx a 260ms — mentre flyActive è ancora true
+    // le ghost cards hanno le transizioni attive e scorrono fluidamente
     setTimeout(() => {
       setTopIdx(i => dir === 'left'
         ? (i + 1) % CARD_ORDER.length
         : (i - 1 + CARD_ORDER.length) % CARD_ORDER.length
       )
-      setDragX(0); setFlyDir(null); setFlyActive(false); setSnapback(false)
-    }, 320)
+      setDragX(0); setFlyDir(null)
+    }, 260)
+    setTimeout(() => {
+      setFlyActive(false); setSnapback(false)
+    }, 360)
   }, [flyActive])
 
   // ── Touch handlers ────────────────────────────────────────────────────────
@@ -414,6 +425,10 @@ export default function HomeScreen({
       opacity: GHOST_OPAC[p],
       zIndex: 10 - pos,
       pointerEvents: 'none',
+      // Quando flyActive, le ghost transitano fluidamente alle nuove posizioni
+      transition: flyActive
+        ? 'transform 0.3s ease-out, opacity 0.3s ease-out'
+        : 'none',
     }
   }
 
@@ -489,6 +504,15 @@ export default function HomeScreen({
                 padding: '24px 22px 22px',
                 ...ghostStyle(pos, id),
               }}>
+                {/* Corner label — stile carta da gioco */}
+                <div style={{
+                  position: 'absolute', top: 14, right: 16,
+                  fontSize: 18, fontWeight: 900, color: dark,
+                  opacity: 0.35, lineHeight: 1, letterSpacing: '-0.02em',
+                  fontFamily: 'Georgia, serif',
+                }}>
+                  {CARD_CORNER[id]}
+                </div>
                 {/* Phrase */}
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                   <p style={{
@@ -573,6 +597,19 @@ export default function HomeScreen({
                 12%,55% { opacity: 1; transform: scale(1); }
               }
             `}</style>
+
+            {/* Corner label — stile carta da gioco */}
+            {!isLocked && (
+              <div style={{
+                position: 'absolute', top: 14, right: 16, zIndex: 2,
+                fontSize: 20, fontWeight: 900, color: CARD_DARK[topCardId],
+                opacity: 0.3, lineHeight: 1, letterSpacing: '-0.02em',
+                fontFamily: 'Georgia, serif',
+                pointerEvents: 'none',
+              }}>
+                {CARD_CORNER[topCardId]}
+              </div>
+            )}
 
             {/* Pro badge */}
             {isLocked && (
