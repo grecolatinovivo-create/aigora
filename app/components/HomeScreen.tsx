@@ -839,7 +839,7 @@ export default function HomeScreen({
           <div key={id} style={{
             height: 5, borderRadius: 99,
             width: i === topIdx ? 22 : 6,
-            background: i === topIdx ? CARD_COLOR[id] : 'rgba(255,255,255,0.15)',
+            background: i === topIdx ? CARD_COLOR[id] : 'rgba(0,0,0,0.15)',
             transition: 'width 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s',
           }} />
         ))}
