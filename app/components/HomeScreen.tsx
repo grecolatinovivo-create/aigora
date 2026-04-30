@@ -465,6 +465,16 @@ export default function HomeScreen({
       paddingBottom: 'calc(var(--bottom-nav-height, 0px) + env(safe-area-inset-bottom, 0px))',
     }}>
 
+      {/* Backdrop che sfonda nella safe area inferiore — come le chat */}
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0,
+        bottom: 'calc(-1 * env(safe-area-inset-bottom, 34px))',
+        background: '#f8f7ff',
+        zIndex: -1,
+        pointerEvents: 'none',
+      }} />
+
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{
         width: '100%', maxWidth: 480, flexShrink: 0,
