@@ -527,11 +527,16 @@ export default function HomeScreen({
                 padding: '24px 22px 22px',
                 ...ghostStyle(pos, id),
               }}>
-                {/* Corner label — stile carta da gioco */}
+                {/* Corner label — box stile carta da gioco */}
                 <div style={{
                   position: 'absolute', top: 14, right: 16,
-                  fontSize: 18, fontWeight: 900, color: dark,
-                  opacity: 0.35, lineHeight: 1, letterSpacing: '-0.02em',
+                  width: 30, height: 30,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: 7,
+                  background: `${dark}14`,
+                  border: `1.5px solid ${dark}28`,
+                  fontSize: 15, fontWeight: 900, color: dark,
+                  opacity: 0.7, lineHeight: 1,
                   fontFamily: 'Georgia, serif',
                 }}>
                   {CARD_CORNER[id]}
@@ -646,12 +651,17 @@ export default function HomeScreen({
               }
             `}</style>
 
-            {/* Corner label — stile carta da gioco */}
+            {/* Corner label — box stile carta da gioco */}
             {!isLocked && (
               <div style={{
                 position: 'absolute', top: 14, right: 16, zIndex: 2,
-                fontSize: 20, fontWeight: 900, color: CARD_DARK[topCardId],
-                opacity: 0.3, lineHeight: 1, letterSpacing: '-0.02em',
+                width: 30, height: 30,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: 7,
+                background: `${CARD_DARK[topCardId]}14`,
+                border: `1.5px solid ${CARD_DARK[topCardId]}28`,
+                fontSize: 15, fontWeight: 900, color: CARD_DARK[topCardId],
+                opacity: 0.7, lineHeight: 1,
                 fontFamily: 'Georgia, serif',
                 pointerEvents: 'none',
               }}>
@@ -673,7 +683,7 @@ export default function HomeScreen({
               </div>
             )}
 
-            <div style={{ padding: '28px 24px 24px', display: 'flex', flexDirection: 'column', minHeight: '52vh' }}>
+            <div style={{ padding: '28px 24px 24px', display: 'flex', flexDirection: 'column', minHeight: '60vh' }}>
 
               {/* ── Arena input (when open) ── */}
               {topCardId === 'arena' && arenaOpen ? (
