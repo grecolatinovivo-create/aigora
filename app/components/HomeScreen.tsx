@@ -211,6 +211,7 @@ export default function HomeScreen({
   const dailyTopic = getDailyTopic(locale)
 
   // ── Stack state ───────────────────────────────────────────────────────────
+  const [showSwipeHint, setShowSwipeHint] = useState(true)
   const [topIdx,    setTopIdx]    = useState(0)
   const [dragX,     setDragX]     = useState(0)
   const [flyDir,    setFlyDir]    = useState<'left' | 'right' | null>(null)
@@ -261,6 +262,7 @@ export default function HomeScreen({
   // ── Advance ───────────────────────────────────────────────────────────────
   const advance = useCallback((dir: 'left' | 'right') => {
     if (flyActive) return
+    setShowSwipeHint(false)
     // Haptic feedback — vibrazione breve sul flip
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(12)
@@ -419,17 +421,6 @@ export default function HomeScreen({
         </div>
       </div>
 
-      {/* ── Hint text ──────────────────────────────────────────────────── */}
-      <div style={{
-        width: '100%', maxWidth: 480,
-        padding: '12px 20px 10px',
-        fontSize: 11, color: 'rgba(255,255,255,0.22)',
-        letterSpacing: '0.04em', textAlign: 'center',
-        flexShrink: 0,
-      }}>
-        trascina la carta in cima &nbsp;·&nbsp; oppure usa le frecce
-      </div>
-
       {/* ── Card stack ─────────────────────────────────────────────────── */}
       <div style={{
         flex: 1, width: '100%', maxWidth: 480,
@@ -483,6 +474,42 @@ export default function HomeScreen({
               background: `radial-gradient(ellipse at 40% 25%, ${topColor}18 0%, transparent 65%)`,
               pointerEvents: 'none',
             }} />
+
+            {/* Swipe hint finger */}
+            {showSwipeHint && !arenaOpen && (
+              <div style={{
+                position: 'absolute', bottom: 36, left: '50%',
+                transform: 'translateX(-50%)',
+                pointerEvents: 'none', zIndex: 20,
+                animation: 'swipe-hint 2.2s ease-in-out infinite',
+              }}>
+                {/* Finger SVG */}
+                <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+                  {/* Palm */}
+                  <ellipse cx="14" cy="28" rx="9" ry="7" fill="rgba(255,255,255,0.18)" />
+                  {/* Finger */}
+                  <rect x="11" y="8" width="6" height="18" rx="3" fill="rgba(255,255,255,0.22)" />
+                  {/* Knuckle line */}
+                  <line x1="11" y1="20" x2="17" y2="20" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                  {/* Tap ring */}
+                  <circle cx="14" cy="11" r="5" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" fill="none"
+                    style={{ animation: 'swipe-ring 2.2s ease-in-out infinite' }} />
+                </svg>
+              </div>
+            )}
+            <style>{`
+              @keyframes swipe-hint {
+                0%   { opacity: 0;   transform: translateX(calc(-50% + 36px)); }
+                12%  { opacity: 1;   transform: translateX(calc(-50% + 36px)); }
+                55%  { opacity: 1;   transform: translateX(calc(-50% - 36px)); }
+                72%  { opacity: 0;   transform: translateX(calc(-50% - 56px)); }
+                100% { opacity: 0;   transform: translateX(calc(-50% + 36px)); }
+              }
+              @keyframes swipe-ring {
+                0%,100% { opacity: 0; transform: scale(0.7); }
+                12%,55% { opacity: 1; transform: scale(1); }
+              }
+            `}</style>
 
             {/* Pro badge */}
             {isLocked && (
@@ -645,55 +672,20 @@ export default function HomeScreen({
         </div>
       </div>
 
-      {/* ── Navigation ─────────────────────────────────────────────────── */}
+      {/* ── Dot indicators ─────────────────────────────────────────────── */}
       <div style={{
         width: '100%', maxWidth: 480, flexShrink: 0,
-        padding: '8px 20px 16px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+        padding: '10px 20px 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
       }}>
-        <button
-          onClick={() => advance('right')}
-          disabled={flyActive}
-          style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-            padding: '10px 24px', borderRadius: 14,
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            cursor: flyActive ? 'not-allowed' : 'pointer', color: 'rgba(255,255,255,0.6)',
-            fontSize: 15, fontWeight: 300, transition: 'opacity 0.15s',
-            opacity: flyActive ? 0.4 : 1,
-          }}>
-          <span>←</span>
-          <span style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>prev</span>
-        </button>
-
-        {/* Dot indicators */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center' }}>
-          {CARD_ORDER.map((id, i) => (
-            <div key={id} style={{
-              height: 5, borderRadius: 99,
-              width: i === topIdx ? 22 : 6,
-              background: i === topIdx ? CARD_COLOR[id] : 'rgba(255,255,255,0.15)',
-              transition: 'width 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s',
-            }} />
-          ))}
-        </div>
-
-        <button
-          onClick={() => advance('left')}
-          disabled={flyActive}
-          style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-            padding: '10px 24px', borderRadius: 14,
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            cursor: flyActive ? 'not-allowed' : 'pointer', color: 'rgba(255,255,255,0.6)',
-            fontSize: 15, fontWeight: 300, transition: 'opacity 0.15s',
-            opacity: flyActive ? 0.4 : 1,
-          }}>
-          <span>→</span>
-          <span style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>next</span>
-        </button>
+        {CARD_ORDER.map((id, i) => (
+          <div key={id} style={{
+            height: 5, borderRadius: 99,
+            width: i === topIdx ? 22 : 6,
+            background: i === topIdx ? CARD_COLOR[id] : 'rgba(255,255,255,0.15)',
+            transition: 'width 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s',
+          }} />
+        ))}
       </div>
 
       {/* UpgradeDrawer */}
