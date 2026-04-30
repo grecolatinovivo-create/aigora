@@ -150,7 +150,7 @@ const CARD_ORDER: CardId[] = ['arena', 'twoVsTwo', 'devil', 'brainstorm']
 // pos 3 → leggermente a destra, più in fondo
 const GHOST_TX     = [13,  -10, 5]     // translateX — mazzo compatto
 const GHOST_TY     = [8,    15, 20]    // translateY
-const GHOST_SCALES = [0.97, 0.94, 0.91]
+const GHOST_SCALES = [1, 1, 1]
 const GHOST_OPAC   = [1,    0.78, 0.62]
 
 // Rotazione fissa per carta — viaggia con la carta (non con la posizione)
