@@ -18,7 +18,7 @@ const SCORE_LABELS: { min: number; label: string; color: string }[] = [
 ]
 
 const PLACEHOLDERS = [
-  'Difendi la tua posizione…',
+  'Rispondi all\'attacco…',
   'Continua a difendere…',
   'Resisti…',
   'Tieni duro…',
@@ -419,17 +419,22 @@ export default function DevilsAdvocateScreen({
 
       {/* Messaggi */}
       <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-3 relative z-10">
-        {/* Empty state — posizione in evidenza */}
+        {/* Empty state — l'AI sta per attaccare */}
         {session.messages.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-8">
             <div className="text-4xl" style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.7))' }}>😈</div>
-            <div className="text-[9px] font-black uppercase tracking-[0.25em]" style={{ color: 'rgba(239,68,68,0.6)' }}>difendi questa posizione</div>
+            <div className="text-[9px] font-black uppercase tracking-[0.25em]" style={{ color: 'rgba(239,68,68,0.6)' }}>dovrai difendere questa posizione</div>
             <div className="px-5 py-4 rounded-2xl text-center max-w-[85%]"
               style={{ background: 'rgba(139,0,0,0.2)', border: '1px solid rgba(239,68,68,0.3)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
               <div className="text-base font-black text-white leading-snug">"{session.position}"</div>
             </div>
-            <div className="text-[11px] text-center" style={{ color: 'rgba(255,255,255,0.25)' }}>
-              Scrivi il tuo primo argomento
+            <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              <div className="flex gap-1">
+                {[0, 150, 300].map(d => (
+                  <span key={d} className="w-1.5 h-1.5 rounded-full bg-red-500/50 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                ))}
+              </div>
+              <span className="text-[11px]">L'attacco sta arrivando…</span>
             </div>
           </div>
         )}

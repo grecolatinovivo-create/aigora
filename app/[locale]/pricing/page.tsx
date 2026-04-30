@@ -108,12 +108,31 @@ export default function PricingPage() {
   return (
     <div className="desktop-bg min-h-dvh flex flex-col items-center justify-start px-4 py-16">
 
-      {/* Header */}
-      <div className="text-center mb-4">
-        <button onClick={() => router.push('/')} className="font-black text-2xl tracking-tight mb-6 inline-block hover:opacity-80 transition-opacity">
-          <span className="text-white">Ai</span>
-          <span style={{ color: '#A78BFA' }}>GORÀ</span>
+      {/* Navbar — stessa estetica della Navbar principale */}
+      <div className="fixed top-0 left-0 right-0 z-40 h-14 flex items-center lg:grid lg:grid-cols-3 px-6"
+        style={{ backgroundColor: 'rgba(7,7,15,0.4)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
+        {/* Sinistra — torna indietro */}
+        <div className="flex items-center">
+          <button onClick={() => router.back()}
+            className="flex items-center gap-2 text-sm font-medium hover:text-white transition-colors"
+            style={{ color: 'rgba(255,255,255,0.45)' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Indietro
+          </button>
+        </div>
+        {/* Centro — Logo */}
+        <button onClick={() => router.push('/')}
+          className="absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none lg:flex lg:justify-center font-black text-lg tracking-tight hover:opacity-80 transition-opacity"
+          style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ color: '#A78BFA' }}>Ai</span>
+          <span style={{ color: '#fff' }}>GORÀ</span>
         </button>
+        {/* Destra — vuoto per simmetria */}
+        <div />
+      </div>
+
+      {/* Header */}
+      <div className="text-center mb-4 pt-14">
         <h1 className="text-4xl font-black text-white mb-3">{t('title')}</h1>
         <p className="text-white/50 text-base max-w-md mx-auto">
           {t('subtitle')}

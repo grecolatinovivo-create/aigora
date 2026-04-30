@@ -40,32 +40,34 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
   const close = () => setShowProfileMenu(false)
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 h-14"
+    <div className="fixed top-0 left-0 right-0 z-40 h-14 flex items-center lg:grid lg:grid-cols-3 px-6"
       style={{ backgroundColor: 'rgba(7,7,15,0.4)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
 
       {/* Sinistra — Cronologia */}
-      {!hideCronologia ? (
-        <button onClick={onCronologia}
-          className="flex items-center gap-2 text-sm font-medium transition-all hover:text-white"
-          style={{ color: 'rgba(255,255,255,0.45)' }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z"/><path d="M12 7v5l3 3"/>
-          </svg>
-          {t('history')}
-        </button>
-      ) : (
-        <div style={{ width: '100px' }} />
-      )}
+      <div className="flex items-center">
+        {!hideCronologia ? (
+          <button onClick={onCronologia}
+            className="flex items-center gap-2 text-sm font-medium transition-all hover:text-white"
+            style={{ color: 'rgba(255,255,255,0.45)' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 18 0A9 9 0 0 0 3 12z"/><path d="M12 7v5l3 3"/>
+            </svg>
+            {t('history')}
+          </button>
+        ) : (
+          <div />
+        )}
+      </div>
 
-      {/* Centro — Logo o Label 2v2 */}
+      {/* Centro — Logo o Label 2v2 — absolute su mobile, grid-col su desktop */}
       <button onClick={onNewChat}
-        className="absolute left-1/2 -translate-x-1/2 font-black text-lg tracking-tight hover:opacity-80 active:scale-95 transition-all text-center"
+        className="absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none lg:flex lg:justify-center font-black text-lg tracking-tight hover:opacity-80 active:scale-95 transition-all text-center"
         style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {show2v2Label === 'topic' && twoVsTwoTopic ? (
           <span className="text-white text-sm font-bold max-w-[200px] truncate block">{twoVsTwoTopic}</span>
         ) : (
           <>
-            <span style={{ color: '#fff' }}>Ai</span>
+            <span style={{ color: '#A78BFA' }}>Ai</span>
             <span style={{ color: '#fff' }}>GORÀ</span>
           </>
         )}
@@ -82,7 +84,7 @@ export default function Navbar({ onCronologia, onFeed, onCrea, onNewChat, onMult
       </button>
 
       {/* Destra — Profilo */}
-      <div className="flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-3">
         <div className="relative">
           {/* Avatar */}
           <button onClick={() => setShowProfileMenu(p => !p)}

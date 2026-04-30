@@ -1310,9 +1310,12 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     }
   }
 
+  const devilFirstAttackDoneRef = useRef(false)
+
   const handleDevilStart = (position: string) => {
     if (!devilIntroData) return
     devilVerdictRunningRef.current = false
+    devilFirstAttackDoneRef.current = false // reset: la prima mossa spetta all'AI
     setDevilSession({
       position,
       difficulty: devilIntroData.difficulty,
@@ -1330,6 +1333,50 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     setDevilIntroData(null)
     setPhase('running')
   }
+
+  // Prima mossa: l'AI apre l'attacco senza aspettare l'utente
+  useEffect(() => {
+    if (!devilSession) return
+    if (devilSession.phase !== 'playing') return
+    if (devilSession.messages.length > 0) return
+    if (devilFirstAttackDoneRef.current) return
+    if (devilLoading) return
+    devilFirstAttackDoneRef.current = true
+
+    const fireFirstAttack = async () => {
+      setDevilLoading(true)
+      try {
+        const attackerId = 'claude' // Round 1: Claude apre sempre
+        const diffLabel = devilSession.difficulty === 'easy' ? 'Facile' : devilSession.difficulty === 'medium' ? 'Media' : 'Impossibile'
+        const profile = AI_PROFILES[attackerId]
+        const systemPrompt = `Sei ${AI_NAMES[attackerId]} nel gioco Devil's Advocate (difficoltà: ${diffLabel}).
+Chi sei: ${profile.chi}
+Il tuo carattere: ${profile.carattere}
+
+L'utente è qui per difendere questa posizione: "${devilSession.position}".
+Il tuo ruolo: aprire l'attacco. Smonta questa posizione con la tua voce autentica — diretta, tagliente, senza sconti.
+Fai sentire subito la pressione. 2-3 frasi max, incisive. Non spiegare chi sei. Non fare domande retoriche vuote.`
+
+        setDevilSession(prev => prev ? {
+          ...prev,
+          messages: [{ role: 'ai' as const, aiId: attackerId, content: '' }],
+        } : prev)
+
+        await streamDevilAIInPlace(attackerId, systemPrompt, [], (displayText) => {
+          setDevilSession(prev => {
+            if (!prev) return prev
+            const msgs = [...prev.messages]
+            msgs[msgs.length - 1] = { role: 'ai', aiId: attackerId, content: displayText }
+            return { ...prev, messages: msgs }
+          })
+        })
+      } catch {}
+      setDevilLoading(false)
+    }
+
+    fireFirstAttack()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [devilSession?.position, devilSession?.phase])
 
   const handle2v2Start = (config: TwoVsTwoConfig & { roomCode?: string; roomId?: string }) => {
     // Reset dei ref di controllo per la nuova partita
@@ -1960,27 +2007,54 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
     return text
   }
 
-  // Streaming con aggiornamento in-place dell'ultimo messaggio
-  const streamDevilAIInPlace = async (aiId: string, systemPrompt: string, history: { name: string; content: string }[], onChunk: (text: string) => void): Promise<string> => {
+  // Streaming Devil: accumula tutto il testo, poi typewriter carattere per carattere (identico alla chat principale)
+  const streamDevilAIInPlace = async (
+    aiId: string,
+    systemPrompt: string,
+    history: { name: string; content: string }[],
+    onUpdate: (displayText: string) => void,
+  ): Promise<string> => {
+    // ── 1. Scarica tutto il testo via SSE ───────────────────────────────────────
     const res = await fetch('/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'turn', aiId, history: [{ name: 'Sistema', content: systemPrompt }, ...history], needsWebSearch: false }),
     })
     if (!res.ok || !res.body) return ''
-    const reader = res.body.getReader(); const decoder = new TextDecoder()
-    let buffer = '', text = '', done = false
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = '', fullText = '', done = false
     while (!done) {
       const { done: sd, value } = await reader.read()
       if (value) buffer += decoder.decode(value, { stream: true })
       const lines = buffer.split('\n'); buffer = lines.pop() ?? ''
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue
-        const d = line.slice(6).trim(); if (d === '[DONE]') { done = true; break }
-        try { const chunk = JSON.parse(d).text; if (typeof chunk === 'string') { text += chunk; onChunk(text) } } catch {}
+        const d = line.slice(6).trim()
+        if (d === '[DONE]') { done = true; break }
+        try { const chunk = JSON.parse(d).text; if (typeof chunk === 'string') fullText += chunk } catch {}
       }
       if (sd) break
     }
-    return text
+    // Flush buffer residuo
+    for (const line of buffer.split('\n')) {
+      if (!line.startsWith('data: ')) continue
+      const d = line.slice(6).trim()
+      if (d !== '[DONE]') try { const chunk = JSON.parse(d).text; if (typeof chunk === 'string') fullText += chunk } catch {}
+    }
+
+    // ── 2. Typewriter carattere per carattere — identico a typewriteText ────────
+    await new Promise<void>(resolve => {
+      let i = 0
+      const iv = setInterval(() => {
+        if (i >= fullText.length) { clearInterval(iv); resolve(); return }
+        i++
+        // Passa il testo pulito (senza [SCORE:X.X]) per il display
+        const displayText = fullText.slice(0, i).replace(/\[SCORE:\d+\.?\d*\]/gi, '').trimEnd()
+        onUpdate(displayText)
+      }, TYPEWRITER_DELAY)
+    })
+
+    return fullText
   }
 
   const handleDevilMessage = async (text: string) => {
@@ -2006,19 +2080,16 @@ Rimani in personaggio — usa il tuo tono caratteristico, le tue insofferenze, i
 Alla fine del tuo attacco, su una nuova riga, scrivi ESATTAMENTE: [SCORE:X.X] dove X.X è il tuo voto da 0.0 a 10.0 per la qualità degli argomenti dell'utente in questo turno (non per la posizione — valuta COME l'ha difesa).`
 
       setDevilSession(prev => prev ? { ...prev, messages: [...updatedMsgs, { role: 'ai' as const, aiId: attackerId, content: '' }] } : prev)
-      let rawText = ''
-      await streamDevilAIInPlace(attackerId, systemPrompt, shortHistory, (partial) => {
-        // Rimuovi [SCORE:X.X] dal testo visualizzato
-        const clean = partial.replace(/\[SCORE:\d+\.?\d*\]/gi, '').trim()
-        rawText = partial
+      // streamDevilAIInPlace ora accumula tutto il testo e poi typewrite — onUpdate riceve già testo pulito
+      const rawText = await streamDevilAIInPlace(attackerId, systemPrompt, shortHistory, (displayText) => {
         setDevilSession(prev => {
           if (!prev) return prev
           const msgs = [...prev.messages]
-          msgs[msgs.length - 1] = { role: 'ai', aiId: attackerId, content: clean }
+          msgs[msgs.length - 1] = { role: 'ai', aiId: attackerId, content: displayText }
           return { ...prev, messages: msgs }
         })
       })
-      // Estrai punteggio e aggiorna score
+      // Estrai punteggio dal testo raw (con [SCORE:X.X]) e aggiorna score
       const scoreMatch = rawText.match(/\[SCORE:(\d+\.?\d*)\]/i)
       if (scoreMatch) {
         const aiScore = parseFloat(scoreMatch[1])
