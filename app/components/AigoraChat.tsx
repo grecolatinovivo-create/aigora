@@ -4,7 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import HomeScreen from './HomeScreen'
 import FirstRunScreen from './FirstRunScreen'
-import AINameScreen from './AINameScreen'
+import AINameScreen, { loadUserTraits, type UserTraits } from './AINameScreen'
+import DailyGreetingScreen, { shouldShowDailyGreeting, markGreetingShown } from './DailyGreetingScreen'
 import MessageBubble, { Message } from './MessageBubble'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -80,6 +81,22 @@ export default function AigoraChat({ allowedAis, userPlan, userName: propUserNam
   // Stato intermedio: FirstRunScreen → AINameScreen → arena
   const [showAINameScreen, setShowAINameScreen] = useState(false)
   const pendingStartTopicRef = useRef<string>('')
+
+  // Daily greeting: saluto di ritorno (max 1 ogni 8h)
+  const [showDailyGreeting, setShowDailyGreeting] = useState(false)
+  const [userTraits, setUserTraits] = useState<UserTraits | null>(null)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const traits = loadUserTraits()
+    setUserTraits(traits)
+    // Mostra solo se: utente già onboardato, nessuna sessione in ripresa, tempo giusto
+    if (resumeChatId || startMode) return
+    if (localStorage.getItem('aigora_onboarded') && shouldShowDailyGreeting()) {
+      const t = setTimeout(() => setShowDailyGreeting(true), 600)
+      return () => clearTimeout(t)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const completeFirstRun = () => {
     if (typeof window !== 'undefined') localStorage.setItem('aigora_onboarded', '1')
@@ -2326,6 +2343,17 @@ Mantieni il tuo carattere riflessivo. NON ricominciare il dibattito.`
           </button>
         </div>
       </div>
+    )
+  }
+
+  // ── UTENTE DI RITORNO — DailyGreetingScreen ──────────────────────────────────
+  if (showDailyGreeting) {
+    return (
+      <DailyGreetingScreen
+        userName={userName || 'tu'}
+        traits={userTraits}
+        onDone={() => setShowDailyGreeting(false)}
+      />
     )
   }
 

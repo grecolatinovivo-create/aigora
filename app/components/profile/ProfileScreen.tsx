@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { loadUserTraits } from '@/app/components/AINameScreen'
 
 async function compressImage(file: File, maxW: number, maxH: number): Promise<File> {
   return new Promise((resolve) => {
@@ -44,6 +45,15 @@ export default function ProfileScreen({ displayName, userEmail, userPlan, savedC
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const planColors: Record<string, string> = { max:'#FF6B2B', pro:'#7C3AED', starter:'#1A73E8', free:'#10A37F', admin:'#F59E0B', none:'#6B7280' }
+  const planLabels: Record<string, string> = { max:'MAX', pro:'PRO', starter:'STARTER', free:'FREE', admin:'ADMIN', none:'OSPITE' }
+
+  // Traits utente da localStorage (raccolte in AINameScreen)
+  const traits = useMemo(() => loadUserTraits(), [])
+  const TRAIT_LABELS: Record<string, Record<string, string>> = {
+    style: { logica:'🧠 Logica', passione:'🔥 Passione', ironia:'😏 Ironia', creatività:'🎨 Creatività' },
+    weapon: { dati:'📊 Dati', controesempi:'🔁 Controesempi', domande:'❓ Domande', paradossi:'💥 Paradossi' },
+    weakness: { emozione:'🌪️ Emotivo', lentezza:'🐢 Lento', ascolto:'🪞 Empatico', direttezza:'🎯 Diretto' },
+  }
   // Il piano 'admin' viene impostato dal session callback — usiamo direttamente userPlan
   const effectivePlan = userPlan ?? 'none'
   const planColor = planColors[effectivePlan] ?? '#6B7280'
@@ -126,10 +136,39 @@ export default function ProfileScreen({ displayName, userEmail, userPlan, savedC
             <div className="text-xs truncate" style={{ color: subColor }}>{userEmail}</div>
             <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
               style={{ backgroundColor: `${planColor}20`, color: planColor, border: `1px solid ${planColor}40` }}>
-              {effectivePlan.toUpperCase()}
+              {planLabels[effectivePlan] ?? effectivePlan.toUpperCase()}
             </div>
           </div>
         </div>
+
+        {/* Traits combattente — visibili solo se esistono */}
+        {traits && (traits.style || traits.weapon || traits.weakness) && (
+          <div className="px-5 py-4 border-b" style={{ borderColor, backgroundColor: bgPreset.header }}>
+            <div className="text-[10px] font-bold mb-3 tracking-widest uppercase" style={{ color: 'rgba(167,139,250,0.7)' }}>
+              Il tuo stile da combattente
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {traits.style && (
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                  style={{ background: 'rgba(167,139,250,0.1)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.2)' }}>
+                  {TRAIT_LABELS.style[traits.style] ?? traits.style}
+                </span>
+              )}
+              {traits.weapon && (
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                  style={{ background: 'rgba(56,189,248,0.1)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.2)' }}>
+                  {TRAIT_LABELS.weapon[traits.weapon] ?? traits.weapon}
+                </span>
+              )}
+              {traits.weakness && (
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                  style={{ background: 'rgba(248,113,113,0.08)', color: '#F87171', border: '1px solid rgba(248,113,113,0.2)' }}>
+                  {TRAIT_LABELS.weakness[traits.weakness] ?? traits.weakness}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="flex border-b" style={{ borderColor, backgroundColor: bgPreset.header }}>
